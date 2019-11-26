@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apicurio-registry-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: apicurio-registry-operator
+  template:
+    metadata:
+      labels:
+        name: apicurio-registry-operator
+    spec:
+      serviceAccountName: apicurio-registry-operator
+      containers:
+        - name: apicurio-registry-operator
+          # Replace this with the built image name
+          image: {OPERATOR_IMAGE}
+          #command:
+          #- apicurio-registry # TODO remove?
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "apicurio-registry-operator"
