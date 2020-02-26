@@ -3,36 +3,10 @@ kind: ApicurioRegistry
 metadata:
   name: example-apicurioregistry
 spec:
-  # config
   image:
     registry: "docker.io/apicurio"
     version: "latest"
   configuration:
-    persistence: "mem" # mem / jpa / kafka / streams
-    # JPA
-#    datasource:
-#      url: ""
-#      username: ""
-#      password: ""
-#    # KAFKA
-#    kafka:
-#      bootstrapServers: ""
-#    # STREAMS
-#    streams:
-#      bootstrapServers: ""
-#      applicationId: ""
-#  deployment:
-#    replicas: 2
-#    route: "registry.example.com"
-#    resources:
-#      cpu:
-#        requests: "0.1"
-#        limit: "1"
-#      memory:
-#        requests: "600Mi"
-#        limit: "1300Mi"
-
-
-  # Add fields here
-
-  #image: "docker.io/apicurio/apicurio-registry-mem:latest"
+    persistence: "mem"
+  deployment:
+    route: "registry.example.com"
