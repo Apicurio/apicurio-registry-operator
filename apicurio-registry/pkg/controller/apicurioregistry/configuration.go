@@ -2,6 +2,7 @@ package apicurioregistry
 
 import (
 	ar "github.com/apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1"
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	"strconv"
 	"strings"
@@ -38,21 +39,25 @@ const CFG_STA_DEPLOYMENT_NAME = "CFG_STA_DEPLOYMENT_NAME"
 const CFG_STA_SERVICE_NAME = "CFG_STA_SERVICE_NAME"
 const CFG_STA_INGRESS_NAME = "CFG_STA_INGRESS_NAME"
 const CFG_STA_REPLICA_COUNT = "CFG_STA_REPLICA_COUNT"
+const CFG_STA_ROUTE = "CFG_STA_ROUTE"
 
 type Configuration struct {
-	spec      *ar.ApicurioRegistry
-	config    map[string]string
-	envConfig map[string]string
-	errors    *[]string
+	spec          *ar.ApicurioRegistry
+	config        map[string]string
+	envConfig     map[string]string
+	prevEnvConfig map[string]string
+	errors        *[]string
+	log           logr.Logger
 }
 
-func NewConfiguration() *Configuration {
+func NewConfiguration(log logr.Logger) *Configuration {
 
 	res := &Configuration{
 		//spec:      spec,
 		config:    make(map[string]string),
 		envConfig: make(map[string]string),
 		errors:    new([]string),
+		log:       log,
 	}
 	res.init()
 	//res.update()
@@ -61,7 +66,11 @@ func NewConfiguration() *Configuration {
 
 func (this *Configuration) Update(spec *ar.ApicurioRegistry) {
 	if spec == nil {
-		panic("Run 'Update' after constructing a new instance.")
+		panic("Fatal: Run 'Update' after constructing a new instance.")
+	}
+	this.prevEnvConfig = make(map[string]string)
+	for k, v := range this.envConfig {
+		this.prevEnvConfig[k] = v
 	}
 	this.spec = spec
 	this.update()
@@ -91,10 +100,10 @@ func (this *Configuration) update() {
 	}
 
 	if this.spec.Spec.Deployment.Replicas == 0 {
-		this.spec.Spec.Deployment.Replicas = 2
+		this.spec.Spec.Deployment.Replicas = 1
 	}
 	this.set(this.config, CFG_DEP_REPLICAS, strconv.FormatInt(int64(this.spec.Spec.Deployment.Replicas), 10), required) // :(
-	this.set(this.config, CFG_DEP_ROUTE, this.spec.Spec.Deployment.Route, defaultValue("registry.example.com"))
+	this.set(this.config, CFG_DEP_ROUTE, this.spec.Spec.Deployment.Route, noOp /*defaultValue("registry.example.com")*/)
 
 	this.set(this.config, CFG_DEP_CPU_REQUESTS, this.spec.Spec.Deployment.Resources.Cpu.Requests, defaultValue("0.1"))
 	this.set(this.config, CFG_DEP_CPU_LIMIT, this.spec.Spec.Deployment.Resources.Cpu.Limit, defaultValue("1"))
@@ -111,37 +120,26 @@ func (this *Configuration) init() {
 	this.set(this.config, CFG_STA_SERVICE_NAME, "", noOp)
 	this.set(this.config, CFG_STA_INGRESS_NAME, "", noOp)
 	this.set(this.config, CFG_STA_REPLICA_COUNT, "", noOp)
+	this.set(this.config, CFG_STA_ROUTE, "", noOp)
 }
 
 func (this *Configuration) fail(error string) {
-	//foo := append(*this.errors, "Configuration error: "+error)
-	//this.errors = &foo
-	// TODO ^
-	panic(error)
+	t := append(*this.errors, "Warning: Configuration error: "+error)
+	this.errors = &t
 }
 
 // TODO remove ?
-func (this *Configuration) GetErrors() (errorsPresent bool, errors string) {
-	if len(*this.errors) > 0 {
-		errors := ""
-		for _, v := range *this.errors {
-			errors = errors + v + ". "
-		}
-		return true, errors
-	}
-	return false, ""
+func (this *Configuration) GetErrors() (errorsPresent *[]string) {
+	return this.errors
 }
 
 func (this *Configuration) set(mapp map[string]string, key string, value string, validate func(*string) (bool, string)) {
 	ptr := &value
 	if key == "" {
-		panic("Empty key for " + *ptr)
+		panic("Fatal: Empty key for " + *ptr)
 	}
 	ok, errStr := validate(ptr)
 	if ok {
-		//if *ptr == "" {
-		//	panic("Empty value for key " + key)
-		//}
 		mapp[key] = *ptr
 	} else {
 		this.fail("Value '" + *ptr + "' for key '" + key + "' is not valid: " + errStr)
@@ -152,6 +150,10 @@ func (this *Configuration) set(mapp map[string]string, key string, value string,
 
 func (this *Configuration) SetConfig(key string, value string) {
 	this.set(this.config, key, value, required)
+}
+
+func (this *Configuration) ClearConfig(key string) {
+	this.set(this.config, key, "", noOp)
 }
 
 func (this *Configuration) SetConfigInt32P(key string, value *int32) {
@@ -206,13 +208,16 @@ func enum(enums ...string) func(*string) (bool, string) {
 // =====
 
 func (this *Configuration) GetImage() string {
+	if this.spec.Spec.Image.Override != "" {
+		return this.spec.Spec.Image.Override
+	}
 	return this.spec.Spec.Image.Registry + "/" +
 		"apicurio-registry-" + strings.ToLower(this.spec.Spec.Configuration.Persistence) + ":" +
 		this.spec.Spec.Image.Version
 }
 
 func (this *Configuration) getEnv() []corev1.EnvVar {
-	var env = []corev1.EnvVar{}
+	var env = *new([]corev1.EnvVar)
 	for k, v := range this.envConfig {
 		env = append(env, corev1.EnvVar{
 			Name:  k,
@@ -220,6 +225,20 @@ func (this *Configuration) getEnv() []corev1.EnvVar {
 		})
 	}
 	return env
+}
+
+func (this *Configuration) EnvChanged() bool {
+	//return !reflect.DeepEqual(this.prevEnvConfig, this.envConfig)
+	if len(this.prevEnvConfig) != len(this.envConfig) {
+		return true
+	}
+	for k1, v1 := range this.envConfig {
+		v2, exists := this.prevEnvConfig[k1]
+		if !exists || v1 != v2 {
+			return true
+		}
+	}
+	return false
 }
 
 func (this *Configuration) GetSpecName() string {

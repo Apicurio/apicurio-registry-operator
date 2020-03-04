@@ -71,10 +71,14 @@ func (this *ServiceCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Reques
 		return nil
 	}
 	// bad bad bad!
-	this.ctx.log.Info("Warning: Inconsistent Service(s) found. Deleting them to reset.")
+	this.ctx.log.Info("Warning: Inconsistent Service state found.")
+	this.ctx.configuration.ClearConfig(CFG_STA_SERVICE_NAME)
 	for _, service := range services.Items {
 		// nuke them...
-		_ = this.ctx.kubecl.client.AppsV1().Deployments(this.ctx.configuration.GetSpecNamespace()).Delete(service.Name, &meta.DeleteOptions{})
+		this.ctx.log.Info("Warning: Deleting Service '" + service.Name + "'.")
+		_ = this.ctx.kubecl.client.AppsV1().
+			Deployments(this.ctx.configuration.GetSpecNamespace()).
+			Delete(service.Name, &meta.DeleteOptions{})
 	}
 	return nil
 }

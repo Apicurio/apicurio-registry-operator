@@ -67,6 +67,12 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 		cf = NewConfReplicasCF(this.ctx)
 		this.AddControlFunction(cf)
 
+		cf = NewHostConfigCF(this.ctx)
+		this.AddControlFunction(cf)
+
+		cf = NewEnvCF(this.ctx)
+		this.AddControlFunction(cf)
+
 		this.notInitialized = false
 	}
 
@@ -74,10 +80,12 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 	this.ctx.update(spec)
 
 	// GetConfig possible config errors
-	if e, s := this.ctx.configuration.GetErrors(); e {
-		err := errors.New(s)
-		log.Error(err, s)
-		return reconcile.Result{Requeue: true}, err
+	if errs := this.ctx.configuration.GetErrors(); len(*errs) > 0 {
+		for _, v := range *errs {
+			err := errors.New(v)
+			log.Error(err, v)
+		}
+		return reconcile.Result{Requeue: true}, nil
 	}
 
 	// The LOOP
@@ -111,15 +119,8 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 		}
 	}
 
-	// Update the spec
-	spec = this.ctx.factory.CreateSpec(spec)
-	err = this.client.Update(context.TODO(), spec)
-	if err != nil {
-		log.Error(err, "Error updating spec")
-		return reconcile.Result{}, err
-	}
 	// Update the status
-	//spec = this.ctx.factory.CreateSpec(spec)
+	spec = this.ctx.factory.CreateSpec(spec)
 	err = this.client.Status().Update(context.TODO(), spec)
 	if err != nil {
 		log.Error(err, "Error updating status")

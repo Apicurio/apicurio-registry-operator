@@ -178,6 +178,7 @@ func (this *Factory) CreateSpec(spec *ar.ApicurioRegistry) *ar.ApicurioRegistry 
 			ServiceName:    this.ctx.configuration.GetConfig(CFG_STA_SERVICE_NAME),
 			IngressName:    this.ctx.configuration.GetConfig(CFG_STA_INGRESS_NAME),
 			ReplicaCount:   *this.ctx.configuration.GetConfigInt32P(CFG_STA_REPLICA_COUNT),
+			Route:          this.ctx.configuration.GetConfig(CFG_STA_ROUTE),
 			// TODO add the rest
 		},
 	}

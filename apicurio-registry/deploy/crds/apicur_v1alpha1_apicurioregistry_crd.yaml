@@ -89,6 +89,8 @@ spec:
               type: object
             image:
               properties:
+                override:
+                  type: string
                 registry:
                   type: string
                 version:
@@ -107,6 +109,8 @@ spec:
             replicaCount:
               format: int32
               type: integer
+            route:
+              type: string
             serviceName:
               type: string
           type: object

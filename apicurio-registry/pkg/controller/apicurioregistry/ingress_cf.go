@@ -71,9 +71,11 @@ func (this *IngressCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Reques
 		return nil
 	}
 	// bad bad bad!
-	this.ctx.log.Info("Warning: Inconsistent Ingress(es) found. Deleting them to reset.")
+	this.ctx.log.Info("Warning: Inconsistent Ingress state found.")
+	this.ctx.configuration.ClearConfig(CFG_STA_INGRESS_NAME)
 	for _, ingress := range ingresses.Items {
 		// nuke them...
+		this.ctx.log.Info("Warning: Deleting Ingress '" + ingress.Name + "'.")
 		_ = this.ctx.kubecl.client.ExtensionsV1beta1().
 			Ingresses(this.ctx.configuration.GetSpecNamespace()).
 			Delete(ingress.Name, &meta.DeleteOptions{})
@@ -82,7 +84,9 @@ func (this *IngressCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Reques
 }
 
 func (this *IngressCF) Compare(spec *ar.ApicurioRegistry) (bool, error) {
-	return this.ctx.configuration.GetConfig(CFG_STA_INGRESS_NAME) == "" &&
+	// Do not create ingress if "route" is not defined
+	return this.ctx.configuration.GetConfig(CFG_DEP_ROUTE) != "" &&
+		this.ctx.configuration.GetConfig(CFG_STA_INGRESS_NAME) == "" &&
 		this.ctx.configuration.GetConfig(CFG_STA_SERVICE_NAME) != "", nil
 }
 
