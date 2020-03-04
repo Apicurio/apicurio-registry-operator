@@ -5,7 +5,7 @@ metadata:
 spec:
   image:
     registry: "docker.io/apicurio"
-    version: "latest"
+    version: "latest-snapshot"
   configuration:
     persistence: "mem"
   deployment:

@@ -303,6 +303,12 @@ func schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecImage(ref common.Refere
 							Format: "",
 						},
 					},
+					"override": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 				},
 			},
 		},
@@ -345,6 +351,12 @@ func schema_pkg_apis_apicur_v1alpha1_ApicurioRegistryStatus(ref common.Reference
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"integer"},
 							Format: "int32",
+						},
+					},
+					"route": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 				},

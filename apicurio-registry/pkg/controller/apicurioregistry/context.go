@@ -26,7 +26,7 @@ type Context struct {
 // Create a new context when the operator is deployed, provide mostly static data
 func NewContext(c controller.Controller, scheme *runtime.Scheme, log logr.Logger, client client.Client) *Context {
 	self := &Context{c: c, scheme: scheme, log: log, client: client}
-	self.configuration = NewConfiguration()
+	self.configuration = NewConfiguration(log)
 	self.kubecl = NewKubeCl(self)
 	self.patcher = NewPatcher(self)
 	self.factory = NewFactory(self)

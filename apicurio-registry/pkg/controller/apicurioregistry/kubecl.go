@@ -125,18 +125,20 @@ func (this *KubeCl) GetDeployment() (*apps.Deployment, error) {
 	return nil, errors.New("No deployment name in status yet.")
 }
 
-func (this *KubeCl) GetService() (service *core.Service, err error) {
+func (this *KubeCl) GetService() (*core.Service, error) {
 	// TODO cache?
 	if name := this.ctx.configuration.GetConfig(CFG_STA_SERVICE_NAME); name != "" {
-		service, err = this.client.CoreV1().Services(this.ctx.configuration.GetSpecNamespace()).Get(name, meta.GetOptions{})
+		service, err := this.client.CoreV1().Services(this.ctx.configuration.GetSpecNamespace()).Get(name, meta.GetOptions{})
+		return service, err
 	}
 	return nil, errors.New("No service name in status yet.")
 }
 
-func (this *KubeCl) GetIngress() (ingress *extensions.Ingress, err error) {
+func (this *KubeCl) GetIngress() (*extensions.Ingress, error) {
 	// TODO cache?
 	if name := this.ctx.configuration.GetConfig(CFG_STA_INGRESS_NAME); name != "" {
-		ingress, err = this.client.ExtensionsV1beta1().Ingresses(this.ctx.configuration.GetSpecNamespace()).Get(name, meta.GetOptions{})
+		ingress, err := this.client.ExtensionsV1beta1().Ingresses(this.ctx.configuration.GetSpecNamespace()).Get(name, meta.GetOptions{})
+		return ingress, err
 	}
 	return nil, errors.New("No ingress name in status yet.")
 }

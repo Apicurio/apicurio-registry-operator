@@ -36,6 +36,7 @@ type ApicurioRegistrySpec struct {
 type ApicurioRegistrySpecImage struct {
 	Registry string `json:"registry,omitempty"`
 	Version  string `json:"version,omitempty"`
+	Override string `json:"override,omitempty"`
 }
 
 // +k8s:openapi-gen=true
@@ -94,7 +95,7 @@ type ApicurioRegistryStatus struct {
 	ServiceName string `json:"serviceName,omitempty"`
 	IngressName string `json:"ingressName,omitempty"`
 	ReplicaCount int32 `json:"replicaCount,omitempty"`
-	//Host string `json:"host,omitempty"`
+	Route string `json:"route,omitempty"`
 	//CpuRequests string `json:"cpuRequests,omitempty"`
 	//CpuLimits string `json:"cpuLimits,omitempty"`
 	//MemoryRequests string `json:"memoryRequests,omitempty"`

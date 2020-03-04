@@ -35,7 +35,6 @@ func (this *Patcher) patchDeployment() {
 			for _, v := range this.deploymentUFs {
 				v(deployment)
 			}
-			this.ctx.log.Info("Patching Deployment:" + deployment.Spec.Template.Spec.Containers[0].Image)
 		})
 		if err != nil {
 			this.ctx.log.Error(err, "Error during Deployment patching")
@@ -90,4 +89,8 @@ func (this *Patcher) Execute() {
 	this.patchDeployment()
 	this.patchService()
 	this.patchIngress()
+	// reset
+	this.deploymentUFs = *new([]DeploymentUF)
+	this.serviceUFs = *new([]ServiceUF)
+	this.ingressUFs = *new([]IngressUF)
 }
