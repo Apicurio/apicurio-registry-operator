@@ -12,7 +12,10 @@ help() {
   echo "  mkundeploy"
   echo "  push"
   echo -e "\nParameters:"
-  echo "  -r|--repository Operator image repository"
+  echo "  -r|--repository [repository] Operator image repository"
+  echo "  --cr [file] Path to a file with 'ApicurioRegistry' custom resource to be deployed"
+  echo "  --nocr Do not deploy default 'ApicurioRegistry' custom resource"
+  echo "  --crname [name] Name of the 'ApicurioRegistry' custom resource (e.g. for mkundeploy), default is 'example-apicurioregistry'"
   exit 1
 }
 
@@ -53,22 +56,30 @@ build() {
   unreplace
 }
 
+minikube_deploy_cr() {
+  if [[ -z "$CR_PATH" ]]; then
+    if [[ -z "$NO_DEFAULT_CR" ]]; then
+      kubectl create -f ./deploy/crds/apicur_v1alpha1_apicurioregistry_cr.yaml
+    fi
+  else
+    kubectl create -f "$CR_PATH"
+  fi
+}
+
 minikube_deploy() {
   replace
-  # oc login -u system:admin
   kubectl create -f ./deploy/service_account.yaml
   kubectl create -f ./deploy/role.yaml
   kubectl create -f ./deploy/role_binding.yaml
   kubectl create -f ./deploy/crds/apicur_v1alpha1_apicurioregistry_crd.yaml
   kubectl create -f ./deploy/operator.yaml
-  kubectl create -f ./deploy/crds/apicur_v1alpha1_apicurioregistry_cr.yaml
+  minikube_deploy_cr
   kubectl get deployments
   unreplace
 }
 
 minikube_undeploy() {
-  # oc login -u system:admin
-  kubectl delete ApicurioRegistry example-apicurioregistry
+  kubectl delete ApicurioRegistry "$CR_NAME"
   kubectl delete deployment apicurio-registry-operator
   kubectl delete CustomResourceDefinition apicurioregistries.apicur.io
   kubectl delete RoleBinding apicurio-registry-operator
@@ -91,6 +102,18 @@ while [[ "$#" -gt 0 ]]; do
     OPERATOR_IMAGE_REPOSITORY="$2"
     shift
     ;;
+  --cr)
+    CR_PATH="$2"
+    shift
+    ;;
+  --nocr)
+    NO_DEFAULT_CR="true"
+    shift
+    ;;
+  --crname)
+    CR_NAME="$2"
+    shift
+    ;;
   *)
     echo -e "Unknown parameter: '$1'.\n"
     help
@@ -98,6 +121,10 @@ while [[ "$#" -gt 0 ]]; do
   esac
   shift
 done
+
+if [[ -z "$CR_NAME" ]]; then
+  CR_NAME="example-apicurioregistry"
+fi
 
 case "$TARGET" in
 build) build ;;

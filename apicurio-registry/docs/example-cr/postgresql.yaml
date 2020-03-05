@@ -1,0 +1,17 @@
+apiVersion: apicur.io/v1alpha1
+kind: ApicurioRegistry
+metadata:
+  name: example-apicurioregistry
+spec:
+  image:
+    registry: "docker.io/apicurio"
+    version: "latest-snapshot"
+  configuration:
+    persistence: "jpa"
+    dataSource:
+      url: "jdbc:postgresql://acid-minimal-cluster.default.svc:5432/registry"
+      userName: "postgres"
+      password: "bVwhpsPoDpn0fYC30ePcU6UEdHJDRk9c7SYzXHpvRaoj6HqgHT2EKvzzn4UP0BT6"
+  deployment:
+    replicas: 2
+    route: "registry.example.com"
