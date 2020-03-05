@@ -14,14 +14,18 @@ Build
 
 Clone this repo under your `$GOPATH/src` dir and `cd` inside.
 
-Pick a registry, e.g. `quay.io` and use `build.sh` script (or Operator SDK directly) 
+Pick a registry, e.g. [quay.io](quay.io) and use `build.sh` script (or Operator SDK directly) 
 to build the image:
 
-`./build.sh build -r "$REGISTRY"`
+```
+$ ./build.sh build -r "$REGISTRY"
+```
 
 And push it to the registry:
 
-`./build.sh push -r "$REGISTRY"`
+```
+$ ./build.sh push -r "$REGISTRY"
+```
 
 Installation
 ---
@@ -29,41 +33,51 @@ Installation
 If you are testing on `minikube`, you can use the following commands 
 to deploy and undeploy the operator, respectively, with an example CR:
 
-`./build.sh mkdeploy -r "$REGISTRY"`
-
-`./build.sh mkundeploy -r "$REGISTRY"`
+```
+$ ./build.sh mkdeploy -r "$REGISTRY"
+$ ./build.sh mkundeploy -r "$REGISTRY"
+```
 
 Or you can perform the steps manually (see the `build.sh`):
 
 1. Create resources and resource definitions on your cluster:
    
-   `kubecl create -f deploy/service_account.yaml`
-   
-   `kubecl create -f deploy/role.yaml`
-   
-   `kubecl create -f deploy/role_binding.yaml`
+```
+$ kubecl create -f deploy/service_account.yaml
+$ kubecl create -f deploy/role.yaml
+$ kubecl create -f deploy/role_binding.yaml
+```
 
 1. Create operator CRD:
    
-   `kubecl create -f deploy/crds/apicur_v1alpha1_apicurioregistry_crd.yaml`
+```
+$ kubecl create -f deploy/crds/apicur_v1alpha1_apicurioregistry_crd.yaml
+```
 
 1. Deploy the operator:
 
-   `kubecl create -f deploy/operator.yaml`
+```
+$ kubecl create -f deploy/operator.yaml
+```
 
 1. Create an example deployment of Apicurio Registry (*mem*) using the operator:
 
-   `kubecl create -f apicur_v1alpha1_apicurioregistry_cr.yaml`
+```
+$ kubecl create -f apicur_v1alpha1_apicurioregistry_cr.yaml
+```
 
 Verify the deployment is active:
 
-`kubecl get deployments`
-
-`kubecl get pods`
+```
+$ kubecl get deployments
+$ kubecl get pods
+```
 
 (If the host is configured using `minikube ip` and `/etc/hosts` :)
 
-`curl -v http://registry.example.com/health`
+```
+$ curl -v http://registry.example.com/health
+```
 
 Development
 ---

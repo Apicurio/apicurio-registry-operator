@@ -1,0 +1,15 @@
+apiVersion: apicur.io/v1alpha1
+kind: ApicurioRegistry
+metadata:
+  name: example-apicurioregistry
+spec:
+  image:
+    registry: "docker.io/apicurio"
+    version: "latest-snapshot"
+  configuration:
+    persistence: "kafka"
+    kafka:
+      bootstrapServers: "my-cluster-kafka-bootstrap.kafka.svc:9092"
+  deployment:
+    replicas: 2
+    route: "registry.example.com"
