@@ -17,7 +17,9 @@ const ENV_QUARKUS_DATASOURCE_PASSWORD = "QUARKUS_DATASOURCE_PASSWORD"
 
 const ENV_KAFKA_BOOTSTRAP_SERVERS = "KAFKA_BOOTSTRAP_SERVERS"
 
-const ENV_APPLICATION_SERVER = "APPLICATION_SERVER"
+const ENV_APPLICATION_SERVER_HOST = "APPLICATION_SERVER_HOST"
+const ENV_APPLICATION_SERVER_PORT = "APPLICATION_SERVER_PORT"
+
 const ENV_APPLICATION_ID = "APPLICATION_ID"
 
 // cfg
@@ -53,14 +55,12 @@ type Configuration struct {
 func NewConfiguration(log logr.Logger) *Configuration {
 
 	res := &Configuration{
-		//spec:      spec,
 		config:    make(map[string]string),
 		envConfig: make(map[string]string),
 		errors:    new([]string),
 		log:       log,
 	}
 	res.init()
-	//res.update()
 	return res
 }
 
@@ -95,15 +95,15 @@ func (this *Configuration) update() {
 	}
 	if "streams" == this.spec.Spec.Configuration.Persistence {
 		this.set(this.envConfig, ENV_KAFKA_BOOTSTRAP_SERVERS, this.spec.Spec.Configuration.Streams.BootstrapServers, required)
-		this.set(this.envConfig, ENV_APPLICATION_SERVER, this.spec.Spec.Configuration.Streams.ApplicationServer, required)
+		this.set(this.envConfig, ENV_APPLICATION_SERVER_PORT, this.spec.Spec.Configuration.Streams.ApplicationServerPort, defaultValue("9000"))
 		this.set(this.envConfig, ENV_APPLICATION_ID, this.spec.Spec.Configuration.Streams.ApplicationId, required)
 	}
 
 	if this.spec.Spec.Deployment.Replicas == 0 {
 		this.spec.Spec.Deployment.Replicas = 1
 	}
-	this.set(this.config, CFG_DEP_REPLICAS, strconv.FormatInt(int64(this.spec.Spec.Deployment.Replicas), 10), required) // :(
-	this.set(this.config, CFG_DEP_ROUTE, this.spec.Spec.Deployment.Route, noOp /*defaultValue("registry.example.com")*/)
+	this.set(this.config, CFG_DEP_REPLICAS, strconv.FormatInt(int64(this.spec.Spec.Deployment.Replicas), 10), required)
+	this.set(this.config, CFG_DEP_ROUTE, this.spec.Spec.Deployment.Route, noOp)
 
 	this.set(this.config, CFG_DEP_CPU_REQUESTS, this.spec.Spec.Deployment.Resources.Cpu.Requests, defaultValue("0.1"))
 	this.set(this.config, CFG_DEP_CPU_LIMIT, this.spec.Spec.Deployment.Resources.Cpu.Limit, defaultValue("1"))
@@ -128,7 +128,6 @@ func (this *Configuration) fail(error string) {
 	this.errors = &t
 }
 
-// TODO remove ?
 func (this *Configuration) GetErrors() (errorsPresent *[]string) {
 	return this.errors
 }
@@ -164,7 +163,6 @@ func (this *Configuration) GetConfig(key string) string {
 	v, ok := this.config[key]
 	if !ok {
 		panic("Fatal: Configuration key '" + key + "' not found.")
-		// TODO maybe just return "" ?
 	}
 	return v
 }
@@ -222,6 +220,17 @@ func (this *Configuration) getEnv() []corev1.EnvVar {
 		env = append(env, corev1.EnvVar{
 			Name:  k,
 			Value: v,
+		})
+	}
+	// specifics ===
+	if this.GetConfig(CFG_PERSISTENCE_TYPE) == "streams" {
+		env = append(env, corev1.EnvVar{
+			Name: ENV_APPLICATION_SERVER_HOST,
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "status.podIP",
+				},
+			},
 		})
 	}
 	return env

@@ -9,9 +9,10 @@ spec:
   configuration:
     persistence: "jpa"
     dataSource:
-      url: "jdbc:postgresql://acid-minimal-cluster.default.svc:5432/registry"
+      url: "jdbc:postgresql://<service name>.<namespace>.svc:5432/<database name>"
+      # e.g. url: "jdbc:postgresql://acid-minimal-cluster.default.svc:5432/registry"
       userName: "postgres"
-      password: "bVwhpsPoDpn0fYC30ePcU6UEdHJDRk9c7SYzXHpvRaoj6HqgHT2EKvzzn4UP0BT6"
+      password: "<password>"
   deployment:
     replicas: 2
     route: "registry.example.com"
