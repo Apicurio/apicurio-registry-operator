@@ -73,7 +73,6 @@ func (this *DeploymentCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Req
 	// bad bad bad!
 	this.ctx.log.Info("Warning: Inconsistent Deployment state found.")
 	this.ctx.configuration.ClearConfig(CFG_STA_DEPLOYMENT_NAME)
-	this.ctx.log.Info(">>>>> Deployment: " + this.ctx.configuration.GetConfig(CFG_STA_DEPLOYMENT_NAME))
 	for _, deployment := range deployments.Items {
 		// nuke them...
 		this.ctx.log.Info("Warning: Deleting Deployment '" + deployment.Name + "'.")

@@ -9,7 +9,8 @@ spec:
   configuration:
     persistence: "kafka"
     kafka:
-      bootstrapServers: "my-cluster-kafka-bootstrap.kafka.svc:9092"
+      bootstrapServers: "<service name>.<namespace>.svc:9092"
+      # e.g. bootstrapServers: "my-cluster-kafka-bootstrap.kafka.svc:9092"
   deployment:
     replicas: 2
     route: "registry.example.com"

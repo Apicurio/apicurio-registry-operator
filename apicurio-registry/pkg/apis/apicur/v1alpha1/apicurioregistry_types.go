@@ -62,14 +62,14 @@ type ApicurioRegistrySpecConfigurationKafka struct {
 
 // +k8s:openapi-gen=true
 type ApicurioRegistrySpecConfigurationStreams struct {
-	BootstrapServers string `json:"bootstrapServers,omitempty"`
-	ApplicationServer    string `json:"applicationServer,omitempty"`
-	ApplicationId    string `json:"applicationId,omitempty"`
+	BootstrapServers      string `json:"bootstrapServers,omitempty"`
+	ApplicationServerPort string `json:"applicationServerPort,omitempty"`
+	ApplicationId         string `json:"applicationId,omitempty"`
 }
 
 // +k8s:openapi-gen=true
 type ApicurioRegistrySpecDeployment struct {
-	Replicas  int32                                  `json:"replicas,omitempty"`
+	Replicas  int32                                   `json:"replicas,omitempty"`
 	Route     string                                  `json:"route,omitempty"`
 	Resources ApicurioRegistrySpecDeploymentResources `json:"resources,omitempty"`
 }
@@ -89,13 +89,12 @@ type ApicurioRegistrySpecDeploymentResourcesRequestsLimit struct {
 // ApicurioRegistryStatus defines the observed state of ApicurioRegistry
 // +k8s:openapi-gen=true
 type ApicurioRegistryStatus struct {
-	//Replicas int32    `json:"replicas,omitempty"`
-	Image string `json:"image,omitempty"`
+	Image          string `json:"image,omitempty"`
 	DeploymentName string `json:"deploymentName,omitempty"`
-	ServiceName string `json:"serviceName,omitempty"`
-	IngressName string `json:"ingressName,omitempty"`
-	ReplicaCount int32 `json:"replicaCount,omitempty"`
-	Route string `json:"route,omitempty"`
+	ServiceName    string `json:"serviceName,omitempty"`
+	IngressName    string `json:"ingressName,omitempty"`
+	ReplicaCount   int32  `json:"replicaCount,omitempty"`
+	Route          string `json:"route,omitempty"`
 	//CpuRequests string `json:"cpuRequests,omitempty"`
 	//CpuLimits string `json:"cpuLimits,omitempty"`
 	//MemoryRequests string `json:"memoryRequests,omitempty"`

@@ -9,8 +9,8 @@ spec:
   configuration:
     persistence: "streams"
     streams:
-      bootstrapServers: "my-cluster-kafka-bootstrap.kafka.svc:9092"
-      applicationServer: "$(POD_IP):9000"
+      bootstrapServers: "<service name>.<namespace>.svc:9092"
+      # e.g. bootstrapServers: "my-cluster-kafka-bootstrap.kafka.svc:9092"
       applicationId: "example-apicurioregistry"
   deployment:
     replicas: 2
