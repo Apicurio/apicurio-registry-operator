@@ -190,7 +190,7 @@ func schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecConfigurationStreams(re
 							Format: "",
 						},
 					},
-					"applicationServer": {
+					"applicationServerPort": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
@@ -324,9 +324,8 @@ func schema_pkg_apis_apicur_v1alpha1_ApicurioRegistryStatus(ref common.Reference
 				Properties: map[string]spec.Schema{
 					"image": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Replicas int32    `json:\"replicas,omitempty\"`",
-							Type:        []string{"string"},
-							Format:      "",
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"deploymentName": {
