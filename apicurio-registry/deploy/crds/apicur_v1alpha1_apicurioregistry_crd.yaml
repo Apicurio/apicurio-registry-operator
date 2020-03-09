@@ -56,7 +56,7 @@ spec:
                   properties:
                     applicationId:
                       type: string
-                    applicationServer:
+                    applicationServerPort:
                       type: string
                     bootstrapServers:
                       type: string
@@ -102,7 +102,6 @@ spec:
             deploymentName:
               type: string
             image:
-              description: Replicas int32    `json:"replicas,omitempty"`
               type: string
             ingressName:
               type: string
