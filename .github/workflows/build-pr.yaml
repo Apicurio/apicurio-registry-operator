@@ -1,0 +1,21 @@
+name: Apicurio Registry Operator - Build a pull request
+
+on: [pull_request]
+
+env:
+  IMAGE_REGISTRY: docker.io
+  IMAGE_REGISTRY_ORG: apicurio
+
+jobs:
+  main:
+    name: Build a pull request
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Setup the environment
+        run: ./.github/scripts/setup.sh
+
+      - name: Build
+        id: build
+        run: ./build.sh build -r "${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}"
