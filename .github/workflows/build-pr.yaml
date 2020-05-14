@@ -1,0 +1,21 @@
+name: Apicurio Registry Operator - Build a pull request
+
+on: [pull_request]
+
+env:
+  IMAGE_REGISTRY: quay.io
+  IMAGE_REGISTRY_ORG: jsenko
+
+jobs:
+  main:
+    name: Build and publish from master
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Setup the environment
+        run: ./.github/scripts/setup.sh
+
+      - name: Build
+        id: build
+        run: ./build.sh build -r "${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}"
