@@ -6,7 +6,7 @@ on:
 
 env:
   IMAGE_REGISTRY: quay.io
-  IMAGE_REGISTRY_ORG: jsenko
+  IMAGE_REGISTRY_ORG: jsenkorh
 
 jobs:
   main:
