@@ -12,3 +12,4 @@ sudo mv operator-sdk /usr/local/bin/operator-sdk
 
 echo "Clean cache"
 sudo apt-get clean
+
