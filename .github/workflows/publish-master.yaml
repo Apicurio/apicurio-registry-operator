@@ -1,0 +1,31 @@
+name: Apicurio Registry Operator - Build and publish from master
+on:
+  push:
+    branches:
+      - master
+
+env:
+  IMAGE_REGISTRY: docker.io
+  IMAGE_REGISTRY_ORG: apicurio
+
+jobs:
+  main:
+    name: Build and publish from master
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Setup the environment
+        run: ./.github/scripts/setup.sh
+
+      - name: Setup Docker
+        run: |
+          docker login -u "${{ secrets.REGISTRY_USER }}" -p "${{ secrets.REGISTRY_SECRET }}" "${IMAGE_REGISTRY}"
+
+      - name: Build
+        id: build
+        run: ./build.sh build -r "${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}"
+
+      - name: Publish
+        id: publish
+        run: ./build.sh push -r "${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}" --latest
