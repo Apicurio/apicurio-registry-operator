@@ -11,17 +11,17 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistry":                                     schema_pkg_apis_apicur_v1alpha1_ApicurioRegistry(ref),
-		"github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpec":                                 schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpec(ref),
-		"github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfiguration":                    schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecConfiguration(ref),
-		"github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationDataSource":          schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecConfigurationDataSource(ref),
-		"github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationKafka":               schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecConfigurationKafka(ref),
-		"github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationStreams":             schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecConfigurationStreams(ref),
-		"github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeployment":                       schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecDeployment(ref),
-		"github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeploymentResources":              schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecDeploymentResources(ref),
-		"github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeploymentResourcesRequestsLimit": schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecDeploymentResourcesRequestsLimit(ref),
-		"github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecImage":                            schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecImage(ref),
-		"github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistryStatus":                               schema_pkg_apis_apicur_v1alpha1_ApicurioRegistryStatus(ref),
+		"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistry":                                     schema_pkg_apis_apicur_v1alpha1_ApicurioRegistry(ref),
+		"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpec":                                 schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpec(ref),
+		"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfiguration":                    schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecConfiguration(ref),
+		"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationDataSource":          schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecConfigurationDataSource(ref),
+		"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationKafka":               schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecConfigurationKafka(ref),
+		"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationStreams":             schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecConfigurationStreams(ref),
+		"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeployment":                       schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecDeployment(ref),
+		"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeploymentResources":              schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecDeploymentResources(ref),
+		"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeploymentResourcesRequestsLimit": schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecDeploymentResourcesRequestsLimit(ref),
+		"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecImage":                            schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecImage(ref),
+		"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistryStatus":                               schema_pkg_apis_apicur_v1alpha1_ApicurioRegistryStatus(ref),
 	}
 }
 
@@ -52,19 +52,19 @@ func schema_pkg_apis_apicur_v1alpha1_ApicurioRegistry(ref common.ReferenceCallba
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpec"),
+							Ref: ref("github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistryStatus"),
+							Ref: ref("github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistryStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpec", "github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistryStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpec", "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistryStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -76,24 +76,24 @@ func schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpec(ref common.ReferenceCa
 				Properties: map[string]spec.Schema{
 					"image": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecImage"),
+							Ref: ref("github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecImage"),
 						},
 					},
 					"configuration": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfiguration"),
+							Ref: ref("github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfiguration"),
 						},
 					},
 					"deployment": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeployment"),
+							Ref: ref("github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeployment"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfiguration", "github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeployment", "github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecImage"},
+			"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfiguration", "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeployment", "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecImage"},
 	}
 }
 
@@ -110,24 +110,24 @@ func schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecConfiguration(ref commo
 					},
 					"dataSource": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationDataSource"),
+							Ref: ref("github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationDataSource"),
 						},
 					},
 					"kafka": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationKafka"),
+							Ref: ref("github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationKafka"),
 						},
 					},
 					"streams": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationStreams"),
+							Ref: ref("github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationStreams"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationDataSource", "github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationKafka", "github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationStreams"},
+			"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationDataSource", "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationKafka", "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecConfigurationStreams"},
 	}
 }
 
@@ -228,14 +228,14 @@ func schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecDeployment(ref common.R
 					},
 					"resources": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeploymentResources"),
+							Ref: ref("github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeploymentResources"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeploymentResources"},
+			"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeploymentResources"},
 	}
 }
 
@@ -246,19 +246,19 @@ func schema_pkg_apis_apicur_v1alpha1_ApicurioRegistrySpecDeploymentResources(ref
 				Properties: map[string]spec.Schema{
 					"cpu": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeploymentResourcesRequestsLimit"),
+							Ref: ref("github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeploymentResourcesRequestsLimit"),
 						},
 					},
 					"memory": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeploymentResourcesRequestsLimit"),
+							Ref: ref("github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeploymentResourcesRequestsLimit"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/Apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeploymentResourcesRequestsLimit"},
+			"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1.ApicurioRegistrySpecDeploymentResourcesRequestsLimit"},
 	}
 }
 

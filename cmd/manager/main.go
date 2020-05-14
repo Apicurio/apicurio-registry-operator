@@ -11,8 +11,8 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 
-	"github.com/apicurio/apicurio-operators/apicurio-registry/pkg/apis"
-	"github.com/apicurio/apicurio-operators/apicurio-registry/pkg/controller"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/apis"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"

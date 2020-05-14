@@ -1,7 +1,7 @@
 package apicurioregistry
 
 import (
-	ar "github.com/apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1"
+	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 

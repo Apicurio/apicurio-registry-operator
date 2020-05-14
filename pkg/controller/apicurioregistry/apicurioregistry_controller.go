@@ -1,7 +1,7 @@
 package apicurioregistry
 
 import (
-	registry "github.com/apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1"
+	registry "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
