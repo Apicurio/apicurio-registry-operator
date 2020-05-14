@@ -16,6 +16,7 @@ help() {
   echo "  --cr [file] Path to a file with 'ApicurioRegistry' custom resource to be deployed"
   echo "  --nocr Do not deploy default 'ApicurioRegistry' custom resource"
   echo "  --crname [name] Name of the 'ApicurioRegistry' custom resource (e.g. for mkundeploy), default is 'example-apicurioregistry'"
+  echo "  --latest Also push the image with the 'latest' tag"
   exit 1
 }
 
@@ -32,7 +33,8 @@ require() {
 
 init_image() {
   require "$OPERATOR_IMAGE_REPOSITORY" "Parameter '-r' is required."
-  VERSION=$(sed -n 's/^.*Version.*=.*"\([0-9\.]*\)".*$/\1/p' ./version/version.go)
+  VERSION=$(sed -n 's/^.*Version.*=.*"\(.*\)".*$/\1/p' ./version/version.go)
+  DASH_VERSION_RELEASE=$(echo "$VERSION" | sed -n 's/^[0-9\.]*-\([^-+]*\).*$/-\1/p')
   require "$VERSION" "Could not read project version."
   OPERATOR_IMAGE_NAME="$OPERATOR_IMAGE_REPOSITORY/apicurio-registry-operator"
   OPERATOR_IMAGE="$OPERATOR_IMAGE_NAME:$VERSION"
@@ -52,7 +54,7 @@ build() {
   operator-sdk generate k8s
   operator-sdk generate openapi
   operator-sdk build "$OPERATOR_IMAGE"
-  docker tag "$OPERATOR_IMAGE" "$OPERATOR_IMAGE_NAME:latest"
+  docker tag "$OPERATOR_IMAGE" "$OPERATOR_IMAGE_NAME:latest$DASH_VERSION_RELEASE"
   unreplace
 }
 
@@ -90,7 +92,9 @@ minikube_undeploy() {
 push() {
   init_image
   docker push "$OPERATOR_IMAGE"
-  docker push "$OPERATOR_IMAGE_NAME:latest"
+  if [[ -n "$PUSH_LATEST" ]]; then
+    docker push "$OPERATOR_IMAGE_NAME:latest$DASH_VERSION_RELEASE"
+  fi
 }
 
 TARGET="$1"
@@ -112,6 +116,10 @@ while [[ "$#" -gt 0 ]]; do
     ;;
   --crname)
     CR_NAME="$2"
+    shift
+    ;;
+  --latest)
+    PUSH_LATEST="true"
     shift
     ;;
   *)

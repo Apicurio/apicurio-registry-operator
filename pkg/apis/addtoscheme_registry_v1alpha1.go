@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"github.com/apicurio/apicurio-operators/apicurio-registry/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 )
 
 func init() {

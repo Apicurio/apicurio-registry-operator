@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/apicurio/apicurio-operators/apicurio-registry/pkg/controller/apicurioregistry"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry"
 )
 
 func init() {

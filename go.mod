@@ -1,4 +1,4 @@
-module github.com/apicurio/apicurio-operators/apicurio-registry
+module github.com/Apicurio/apicurio-registry-operator
 
 require (
 	github.com/NYTimes/gziphandler v1.0.1 // indirect

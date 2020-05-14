@@ -5,7 +5,7 @@ ENV OPERATOR=/usr/local/bin/apicurio-registry \
     USER_NAME=apicurio-registry
 
 # install operator binary
-COPY build/_output/bin/apicurio-registry ${OPERATOR}
+COPY build/_output/bin/apicurio-registry-operator ${OPERATOR}
 
 COPY build/bin /usr/local/bin
 RUN  /usr/local/bin/user_setup
