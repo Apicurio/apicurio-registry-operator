@@ -22,31 +22,31 @@ func (this *ImageConfigCF) Describe() string {
 }
 
 func (this *ImageConfigCF) Sense(spec *registryv1alpha1.ApicurioRegistry, request reconcile.Request) error {
-	deployment, err := this.ctx.kubecl.GetDeployment()
+	deployment, err := this.ctx.GetKubeCl().GetDeployment()
 	if err == nil {
 		if c := deployment.Spec.Template.Spec.Containers; len(c) == 1 {
-			this.ctx.configuration.SetConfig(CFG_STA_IMAGE, c[0].Image)
+			this.ctx.GetConfiguration().SetConfig(CFG_STA_IMAGE, c[0].Image)
 		} else {
 			// TODO nuke the deployment?
-			this.ctx.log.Info("Warning: Unexpected contents of the Deployment resource '" + deployment.Name + "': More that one container")
+			this.ctx.GetLog().Info("Warning: Unexpected contents of the Deployment resource '" + deployment.Name + "': More that one container")
 		}
 	} else {
-		this.ctx.log.Error(err, "error getting deployment")
+		this.ctx.GetLog().Error(err, "error getting deployment")
 	}
 	return nil
 }
 
 func (this *ImageConfigCF) Compare(spec *registryv1alpha1.ApicurioRegistry) (bool, error) {
-	return this.ctx.configuration.GetConfig(CFG_STA_IMAGE) != this.ctx.configuration.GetImage(), nil
+	return this.ctx.GetConfiguration().GetConfig(CFG_STA_IMAGE) != this.ctx.GetConfiguration().GetImage(), nil
 }
 
 func (this *ImageConfigCF) Respond(spec *registryv1alpha1.ApicurioRegistry) (bool, error) {
-	this.ctx.patcher.AddDeploymentPatch(func(deployment *apps.Deployment) {
+	this.ctx.GetPatcher().AddDeploymentPatch(func(deployment *apps.Deployment) {
 		if c := deployment.Spec.Template.Spec.Containers; len(c) == 1 {
-			c[0].Image = this.ctx.configuration.GetImage()
+			c[0].Image = this.ctx.GetConfiguration().GetImage()
 		} else {
 			// TODO nuke the deployment?
-			log.Info("Warning: Unexpected contents of the Deployment resource '" + deployment.Name + "': More that one container")
+			this.ctx.GetLog().Info("Warning: Unexpected contents of the Deployment resource '" + deployment.Name + "': More that one container")
 		}
 	})
 	return true, nil

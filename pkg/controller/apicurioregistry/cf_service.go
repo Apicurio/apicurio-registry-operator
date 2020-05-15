@@ -19,7 +19,7 @@ type ServiceCF struct {
 
 func NewServiceCF(ctx *Context) ControlFunction {
 
-	err := ctx.c.Watch(&source.Kind{Type: &core.Service{}}, &handler.EnqueueRequestForOwner{
+	err := ctx.GetController().Watch(&source.Kind{Type: &core.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &ar.ApicurioRegistry{},
 	})
@@ -37,11 +37,11 @@ func (this *ServiceCF) Describe() string {
 
 func (this *ServiceCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Request) error {
 
-	serviceName := this.ctx.configuration.GetConfig(CFG_STA_SERVICE_NAME)
+	serviceName := this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME)
 
-	services, err := this.ctx.kubecl.client.CoreV1().Services(this.ctx.configuration.GetSpecNamespace()).List(
+	services, err := this.ctx.GetKubeCl().GetClient().CoreV1().Services(this.ctx.GetConfiguration().GetSpecNamespace()).List(
 		meta.ListOptions{
-			LabelSelector: "app=" + this.ctx.configuration.GetSpecName(),
+			LabelSelector: "app=" + this.ctx.GetConfiguration().GetSpecName(),
 		})
 	if err != nil {
 		return err
@@ -67,39 +67,39 @@ func (this *ServiceCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Reques
 	if serviceName == "" && count == 1 && lastService != nil {
 		// Also OK, but should not happen
 		// save to status
-		this.ctx.configuration.SetConfig(CFG_STA_SERVICE_NAME, lastService.Name)
+		this.ctx.GetConfiguration().SetConfig(CFG_STA_SERVICE_NAME, lastService.Name)
 		return nil
 	}
 	// bad bad bad!
-	this.ctx.log.Info("Warning: Inconsistent Service state found.")
-	this.ctx.configuration.ClearConfig(CFG_STA_SERVICE_NAME)
+	this.ctx.GetLog().Info("Warning: Inconsistent Service state found.")
+	this.ctx.GetConfiguration().ClearConfig(CFG_STA_SERVICE_NAME)
 	for _, service := range services.Items {
 		// nuke them...
-		this.ctx.log.Info("Warning: Deleting Service '" + service.Name + "'.")
-		_ = this.ctx.kubecl.client.AppsV1().
-			Deployments(this.ctx.configuration.GetSpecNamespace()).
+		this.ctx.GetLog().Info("Warning: Deleting Service '" + service.Name + "'.")
+		_ = this.ctx.GetKubeCl().GetClient().AppsV1().
+			Deployments(this.ctx.GetConfiguration().GetSpecNamespace()).
 			Delete(service.Name, &meta.DeleteOptions{})
 	}
 	return nil
 }
 
 func (this *ServiceCF) Compare(spec *ar.ApicurioRegistry) (bool, error) {
-	return this.ctx.configuration.GetConfig(CFG_STA_SERVICE_NAME) == "", nil
+	return this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME) == "", nil
 }
 
 func (this *ServiceCF) Respond(spec *ar.ApicurioRegistry) (bool, error) {
-	service := this.ctx.factory.CreateService()
+	service := this.ctx.GetFactory().CreateService()
 
-	if err := controllerutil.SetControllerReference(spec, service, this.ctx.scheme); err != nil {
-		log.Error(err, "Cannot set controller reference.")
+	if err := controllerutil.SetControllerReference(spec, service, this.ctx.GetScheme()); err != nil {
+		this.ctx.GetLog().Error(err, "Cannot set controller reference.")
 		return true, err
 	}
-	if err := this.ctx.client.Create(context.TODO(), service); err != nil {
-		log.Error(err, "Failed to create a new Service.")
+	if err := this.ctx.GetClient().Create(context.TODO(), service); err != nil {
+		this.ctx.GetLog().Error(err, "Failed to create a new Service.")
 		return true, err
 	} else {
-		this.ctx.configuration.SetConfig(CFG_STA_SERVICE_NAME, service.Name)
-		log.Info("New Service name is " + service.Name)
+		this.ctx.GetConfiguration().SetConfig(CFG_STA_SERVICE_NAME, service.Name)
+		this.ctx.GetLog().Info("New Service name is " + service.Name)
 	}
 
 	return true, nil

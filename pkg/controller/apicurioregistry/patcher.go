@@ -29,14 +29,14 @@ func (this *Patcher) AddDeploymentPatch(updateFunc DeploymentUF) {
 }
 
 func (this *Patcher) patchDeployment() {
-	if name := this.ctx.configuration.GetConfig(CFG_STA_DEPLOYMENT_NAME); name != "" {
-		err := this.ctx.kubecl.PatchDeployment(this.ctx.configuration.GetSpecNamespace(), name, func(deployment *apps.Deployment) {
+	if name := this.ctx.GetConfiguration().GetConfig(CFG_STA_DEPLOYMENT_NAME); name != "" {
+		err := this.ctx.GetKubeCl().PatchDeployment(this.ctx.GetConfiguration().GetSpecNamespace(), name, func(deployment *apps.Deployment) {
 			for _, v := range this.deploymentUFs {
 				v(deployment)
 			}
 		})
 		if err != nil {
-			this.ctx.log.Error(err, "Error during Deployment patching")
+			this.ctx.GetLog().Error(err, "Error during Deployment patching")
 		}
 	}
 }
@@ -49,14 +49,14 @@ func (this *Patcher) AddServicePatch(updateFunc ServiceUF) {
 }
 
 func (this *Patcher) patchService() {
-	if name := this.ctx.configuration.GetConfig(CFG_STA_SERVICE_NAME); name != "" {
-		err := this.ctx.kubecl.PatchService(this.ctx.configuration.GetSpecNamespace(), name, func(service *core.Service) {
+	if name := this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME); name != "" {
+		err := this.ctx.GetKubeCl().PatchService(this.ctx.GetConfiguration().GetSpecNamespace(), name, func(service *core.Service) {
 			for _, v := range this.serviceUFs {
 				v(service)
 			}
 		})
 		if err != nil {
-			this.ctx.log.Error(err, "Error during Service patching")
+			this.ctx.GetLog().Error(err, "Error during Service patching")
 		}
 	}
 }
@@ -69,14 +69,14 @@ func (this *Patcher) AddIngressPatch(updateFunc IngressUF) {
 }
 
 func (this *Patcher) patchIngress() {
-	if name := this.ctx.configuration.GetConfig(CFG_STA_INGRESS_NAME); name != "" {
-		err := this.ctx.kubecl.PatchIngress(this.ctx.configuration.GetSpecNamespace(), name, func(ingress *extensions.Ingress) {
+	if name := this.ctx.GetConfiguration().GetConfig(CFG_STA_INGRESS_NAME); name != "" {
+		err := this.ctx.GetKubeCl().PatchIngress(this.ctx.GetConfiguration().GetSpecNamespace(), name, func(ingress *extensions.Ingress) {
 			for _, v := range this.ingressUFs {
 				v(ingress)
 			}
 		})
 		if err != nil {
-			this.ctx.log.Error(err, "Error during Ingress patching")
+			this.ctx.GetLog().Error(err, "Error during Ingress patching")
 		}
 	}
 }

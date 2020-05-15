@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -17,10 +17,8 @@ var _ reconcile.Reconciler = &ApicurioRegistryReconciler{}
 type ApicurioRegistryReconciler struct {
 	client           client.Client
 	scheme           *runtime.Scheme
-	controlFunctions []ControlFunction
-	notInitialized   bool
-	ctx              *Context
 	controller       controller.Controller
+	contexts         map[string]*Context
 }
 
 func NewApicurioRegistryReconciler(mgr manager.Manager) *ApicurioRegistryReconciler {
@@ -28,8 +26,7 @@ func NewApicurioRegistryReconciler(mgr manager.Manager) *ApicurioRegistryReconci
 	return &ApicurioRegistryReconciler{
 		client:           mgr.GetClient(),
 		scheme:           mgr.GetScheme(),
-		controlFunctions: []ControlFunction{},
-		notInitialized:   true,
+		contexts: make(map[string]*Context),
 	}
 }
 
@@ -37,70 +34,96 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("ApicurioRegistryReconciler executing.")
 
+	app := request.Name
+
 	// GetConfig the spec
-	spec := &ar.ApicurioRegistry{}
-	err := this.client.Get(context.TODO(), request.NamespacedName, spec)
+	specList := &ar.ApicurioRegistryList{}
+	listOps := client.ListOptions{Namespace: request.Namespace}
+	err := this.client.List(context.TODO(), &listOps, specList)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
+		if api_errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
 		return reconcile.Result{}, err
 	}
 
-	// Init
-	if this.notInitialized {
-		this.ctx = NewContext(this.controller, this.scheme, reqLogger, this.client)
+	var spec *ar.ApicurioRegistry = nil
 
-		var cf ControlFunction
-		cf = NewDeploymentCF(this.ctx)
-		this.AddControlFunction(cf)
+	for i,specItem := range specList.Items {
 
-		cf = NewServiceCF(this.ctx)
-		this.AddControlFunction(cf)
+		key := specItem.Name
 
-		cf = NewIngressCF(this.ctx)
-		this.AddControlFunction(cf)
+		c, ok := this.contexts[key]
+		if !ok {
+			reqLogger.Info("Creating new context")
+			c = NewContext(this.controller, this.scheme, reqLogger.WithValues("app", key), this.client)
 
-		cf = NewImageConfigCF(this.ctx)
-		this.AddControlFunction(cf)
+			var f ControlFunction
+			f = NewDeploymentCF(c)
+			c.AddControlFunction(f)
 
-		cf = NewConfReplicasCF(this.ctx)
-		this.AddControlFunction(cf)
+			f = NewServiceCF(c)
+			c.AddControlFunction(f)
 
-		cf = NewHostConfigCF(this.ctx)
-		this.AddControlFunction(cf)
+			f = NewIngressCF(c)
+			c.AddControlFunction(f)
 
-		cf = NewEnvCF(this.ctx)
-		this.AddControlFunction(cf)
+			f = NewImageConfigCF(c)
+			c.AddControlFunction(f)
 
-		this.notInitialized = false
+			f = NewConfReplicasCF(c)
+			c.AddControlFunction(f)
+
+			f = NewHostConfigCF(c)
+			c.AddControlFunction(f)
+
+			f = NewEnvCF(c)
+			c.AddControlFunction(f)
+
+			this.contexts[key] = c
+		}
+
+		if app == key {
+			spec = &specList.Items[i] // Do not use spec = &specItem
+		}
 	}
 
+	if spec == nil {
+		_, ok := this.contexts[app];
+		if ok {
+			reqLogger.WithValues("app", app).Info("Deleting context")
+			delete(this.contexts, app);
+		}
+		return reconcile.Result{}, nil
+	}
+
+	ctx := this.contexts[app]
+
 	// Context update
-	this.ctx.update(spec)
+	ctx.Update(spec)
 
 	// GetConfig possible config errors
-	if errs := this.ctx.configuration.GetErrors(); len(*errs) > 0 {
+	if errs := ctx.GetConfiguration().GetErrors(); len(*errs) > 0 {
 		for _, v := range *errs {
 			err := errors.New(v)
-			log.Error(err, v)
+			ctx.GetLog().Error(err, v)
 		}
 		return reconcile.Result{Requeue: true}, nil
 	}
 
 	// The LOOP
 	requeue := false
-	for _, v := range this.controlFunctions {
+	for _, v := range ctx.GetControlFunctions() {
 		err = v.Sense(spec, request)
 		if err != nil {
-			log.Error(err, "Error during the SENSE phase of '"+v.Describe()+"' CF.")
+			ctx.GetLog().Error(err, "Error during the SENSE phase of '"+v.Describe()+"' CF.")
 			requeue = true
 			continue
 		}
 		var discrepancy bool
 		discrepancy, err = v.Compare(spec)
 		if err != nil {
-			log.Error(err, "Error during the COMPARE phase of '"+v.Describe()+"' CF.")
+			ctx.GetLog().Error(err, "Error during the COMPARE phase of '"+v.Describe()+"' CF.")
 			requeue = true
 			continue
 		}
@@ -113,30 +136,27 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 			requeue = true
 		}
 		if err != nil {
-			log.Error(err, "Error during the RESPOND phase of '"+v.Describe()+"' CF.")
+			ctx.GetLog().Error(err, "Error during the RESPOND phase of '"+v.Describe()+"' CF.")
 			requeue = true
 			continue
 		}
 	}
 
 	// Update the status
-	spec = this.ctx.factory.CreateSpec(spec)
+	spec = ctx.GetFactory().CreateSpec(spec)
 	err = this.client.Status().Update(context.TODO(), spec)
 	if err != nil {
-		log.Error(err, "Error updating status")
+		ctx.GetLog().Error(err, "Error updating status")
 		return reconcile.Result{}, err
 	}
 
 	// Run patcher
-	this.ctx.patcher.Execute()
+	ctx.GetPatcher().Execute()
 
-	// TODO should we return errors or rely on panic to signal a critical failure?
 	return reconcile.Result{Requeue: requeue}, nil // err
 }
 
-func (this *ApicurioRegistryReconciler) AddControlFunction(cf ControlFunction) {
-	this.controlFunctions = append(this.controlFunctions, cf)
-}
+
 
 func (this *ApicurioRegistryReconciler) setController(c controller.Controller) {
 	this.controller = c
