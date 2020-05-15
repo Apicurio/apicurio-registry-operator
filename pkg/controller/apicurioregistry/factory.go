@@ -24,14 +24,14 @@ func NewFactory(ctx *Context) *Factory {
 
 func (this *Factory) GetLabels() map[string]string {
 	return map[string]string{
-		"app": this.ctx.configuration.GetSpecName(),
+		"app": this.ctx.GetConfiguration().GetSpecName(),
 	};
 }
 
 func (this *Factory) createObjectMeta(typeTag string) meta.ObjectMeta {
 	return meta.ObjectMeta{
-		GenerateName: this.ctx.configuration.GetSpecName() + "-" + typeTag + "-",
-		Namespace:    this.ctx.configuration.GetSpecNamespace(),
+		GenerateName: this.ctx.GetConfiguration().GetSpecName() + "-" + typeTag + "-",
+		Namespace:    this.ctx.GetConfiguration().GetSpecNamespace(),
 		Labels:       this.GetLabels(),
 	}
 }
@@ -42,7 +42,7 @@ func (this *Factory) CreateDeployment() *apps.Deployment {
 	return &apps.Deployment{
 		ObjectMeta: this.createObjectMeta("deployment"),
 		Spec: apps.DeploymentSpec{
-			Replicas: this.ctx.configuration.GetConfigInt32P(CFG_DEP_REPLICAS),
+			Replicas: this.ctx.GetConfiguration().GetConfigInt32P(CFG_DEP_REPLICAS),
 			Selector: &meta.LabelSelector{MatchLabels: this.GetLabels()},
 			Template: core.PodTemplateSpec{
 				ObjectMeta: meta.ObjectMeta{
@@ -50,23 +50,23 @@ func (this *Factory) CreateDeployment() *apps.Deployment {
 				},
 				Spec: core.PodSpec{
 					Containers: []core.Container{{
-						Name:  this.ctx.configuration.GetSpecName(),
-						Image: this.ctx.configuration.GetImage(),
+						Name:  this.ctx.GetConfiguration().GetSpecName(),
+						Image: this.ctx.GetConfiguration().GetImage(),
 						Ports: []core.ContainerPort{
 							{
 								ContainerPort: 8080,
 								Protocol:      "TCP",
 							},
 						},
-						Env: this.ctx.configuration.getEnv(),
+						Env: this.ctx.GetConfiguration().GetEnv(),
 						Resources: core.ResourceRequirements{
 							Limits: core.ResourceList{
-								core.ResourceCPU:    resource.MustParse(this.ctx.configuration.GetConfig(CFG_DEP_CPU_LIMIT)),
-								core.ResourceMemory: resource.MustParse(this.ctx.configuration.GetConfig(CFG_DEP_MEMORY_LIMIT)),
+								core.ResourceCPU:    resource.MustParse(this.ctx.GetConfiguration().GetConfig(CFG_DEP_CPU_LIMIT)),
+								core.ResourceMemory: resource.MustParse(this.ctx.GetConfiguration().GetConfig(CFG_DEP_MEMORY_LIMIT)),
 							},
 							Requests: core.ResourceList{
-								core.ResourceCPU:    resource.MustParse(this.ctx.configuration.GetConfig(CFG_DEP_CPU_REQUESTS)),
-								core.ResourceMemory: resource.MustParse(this.ctx.configuration.GetConfig(CFG_DEP_MEMORY_REQUESTS)),
+								core.ResourceCPU:    resource.MustParse(this.ctx.GetConfiguration().GetConfig(CFG_DEP_CPU_REQUESTS)),
+								core.ResourceMemory: resource.MustParse(this.ctx.GetConfiguration().GetConfig(CFG_DEP_MEMORY_REQUESTS)),
 							},
 						},
 						LivenessProbe: &core.Probe{
@@ -146,7 +146,7 @@ func (this *Factory) CreateIngress(serviceName string) *v1beta1.Ingress {
 		Spec: v1beta1.IngressSpec{
 			Rules: []v1beta1.IngressRule{
 				{
-					Host: this.ctx.configuration.GetConfig(CFG_DEP_ROUTE),
+					Host: this.ctx.GetConfiguration().GetConfig(CFG_DEP_ROUTE),
 					IngressRuleValue: v1beta1.IngressRuleValue{
 						HTTP: &v1beta1.HTTPIngressRuleValue{
 							Paths: []v1beta1.HTTPIngressPath{
@@ -173,12 +173,12 @@ func (this *Factory) CreateSpec(spec *ar.ApicurioRegistry) *ar.ApicurioRegistry 
 		ObjectMeta: spec.ObjectMeta,
 		Spec:       spec.Spec,
 		Status: ar.ApicurioRegistryStatus{
-			Image:          this.ctx.configuration.GetConfig(CFG_STA_IMAGE),
-			DeploymentName: this.ctx.configuration.GetConfig(CFG_STA_DEPLOYMENT_NAME),
-			ServiceName:    this.ctx.configuration.GetConfig(CFG_STA_SERVICE_NAME),
-			IngressName:    this.ctx.configuration.GetConfig(CFG_STA_INGRESS_NAME),
-			ReplicaCount:   *this.ctx.configuration.GetConfigInt32P(CFG_STA_REPLICA_COUNT),
-			Route:          this.ctx.configuration.GetConfig(CFG_STA_ROUTE),
+			Image:          this.ctx.GetConfiguration().GetConfig(CFG_STA_IMAGE),
+			DeploymentName: this.ctx.GetConfiguration().GetConfig(CFG_STA_DEPLOYMENT_NAME),
+			ServiceName:    this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME),
+			IngressName:    this.ctx.GetConfiguration().GetConfig(CFG_STA_INGRESS_NAME),
+			ReplicaCount:   *this.ctx.GetConfiguration().GetConfigInt32P(CFG_STA_REPLICA_COUNT),
+			Route:          this.ctx.GetConfiguration().GetConfig(CFG_STA_ROUTE),
 			// TODO add the rest
 		},
 	}

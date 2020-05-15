@@ -24,10 +24,10 @@ func (this *ConfReplicasCF) Describe() string {
 }
 
 func (this *ConfReplicasCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Request) error {
-	log := this.ctx.log.WithValues("CF", this.Describe())
+	log := this.ctx.GetLog().WithValues("CF", this.Describe())
 
-	if deployment, err := this.ctx.kubecl.GetDeployment(); err == nil {
-		this.ctx.configuration.SetConfigInt32P(CFG_STA_REPLICA_COUNT, deployment.Spec.Replicas)
+	if deployment, err := this.ctx.GetKubeCl().GetDeployment(); err == nil {
+		this.ctx.GetConfiguration().SetConfigInt32P(CFG_STA_REPLICA_COUNT, deployment.Spec.Replicas)
 	} else {
 		log.Info("Warn: Could not get deployment.")
 		return err
@@ -37,14 +37,14 @@ func (this *ConfReplicasCF) Sense(spec *ar.ApicurioRegistry, request reconcile.R
 
 func (this *ConfReplicasCF) Compare(spec *ar.ApicurioRegistry) (bool, error) {
 
-	return /* this.ctx.configuration.GetConfig(CFG_STA_REPLICA_COUNT) != "" && */ this.
-		ctx.configuration.GetConfig(CFG_STA_REPLICA_COUNT) != this.ctx.configuration.GetConfig(CFG_DEP_REPLICAS), nil
+	return /* this.ctx.GetConfiguration().GetConfig(CFG_STA_REPLICA_COUNT) != "" && */ this.
+		ctx.GetConfiguration().GetConfig(CFG_STA_REPLICA_COUNT) != this.ctx.GetConfiguration().GetConfig(CFG_DEP_REPLICAS), nil
 }
 
 func (this *ConfReplicasCF) Respond(spec *ar.ApicurioRegistry) (bool, error) {
 
-	this.ctx.patcher.AddDeploymentPatch(func(deployment *apps.Deployment) {
-		deployment.Spec.Replicas = this.ctx.configuration.GetConfigInt32P(CFG_DEP_REPLICAS)
+	this.ctx.GetPatcher().AddDeploymentPatch(func(deployment *apps.Deployment) {
+		deployment.Spec.Replicas = this.ctx.GetConfiguration().GetConfigInt32P(CFG_DEP_REPLICAS)
 	})
 	return true, nil
 }

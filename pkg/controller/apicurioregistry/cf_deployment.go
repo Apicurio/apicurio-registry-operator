@@ -19,7 +19,7 @@ type DeploymentCF struct {
 
 func NewDeploymentCF(ctx *Context) ControlFunction {
 
-	err := ctx.c.Watch(&source.Kind{Type: &apps.Deployment{}}, &handler.EnqueueRequestForOwner{
+	err := ctx.GetController().Watch(&source.Kind{Type: &apps.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &ar.ApicurioRegistry{},
 	})
@@ -37,11 +37,11 @@ func (this *DeploymentCF) Describe() string {
 
 func (this *DeploymentCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Request) error {
 	// Try to check if there is an existing deployment resource
-	deploymentName := this.ctx.configuration.GetConfig(CFG_STA_DEPLOYMENT_NAME)
+	deploymentName := this.ctx.GetConfiguration().GetConfig(CFG_STA_DEPLOYMENT_NAME)
 
-	deployments, err := this.ctx.kubecl.client.AppsV1().Deployments(this.ctx.configuration.GetSpecNamespace()).List(
+	deployments, err := this.ctx.GetKubeCl().GetClient().AppsV1().Deployments(this.ctx.GetConfiguration().GetSpecNamespace()).List(
 		meta.ListOptions{
-			LabelSelector: "app=" + this.ctx.configuration.GetSpecName(),
+			LabelSelector: "app=" + this.ctx.GetConfiguration().GetSpecName(),
 		})
 	if err != nil {
 		return err
@@ -67,39 +67,39 @@ func (this *DeploymentCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Req
 	if deploymentName == "" && count == 1 && lastDeployment != nil {
 		// Also OK, but should not happen
 		// save to status
-		this.ctx.configuration.SetConfig(CFG_STA_DEPLOYMENT_NAME, lastDeployment.Name)
+		this.ctx.GetConfiguration().SetConfig(CFG_STA_DEPLOYMENT_NAME, lastDeployment.Name)
 		return nil
 	}
 	// bad bad bad!
-	this.ctx.log.Info("Warning: Inconsistent Deployment state found.")
-	this.ctx.configuration.ClearConfig(CFG_STA_DEPLOYMENT_NAME)
+	this.ctx.GetLog().Info("Warning: Inconsistent Deployment state found.")
+	this.ctx.GetConfiguration().ClearConfig(CFG_STA_DEPLOYMENT_NAME)
 	for _, deployment := range deployments.Items {
 		// nuke them...
-		this.ctx.log.Info("Warning: Deleting Deployment '" + deployment.Name + "'.")
-		_ = this.ctx.kubecl.client.AppsV1().
-			Deployments(this.ctx.configuration.GetSpecNamespace()).
+		this.ctx.GetLog().Info("Warning: Deleting Deployment '" + deployment.Name + "'.")
+		_ = this.ctx.GetKubeCl().GetClient().AppsV1().
+			Deployments(this.ctx.GetConfiguration().GetSpecNamespace()).
 			Delete(deployment.Name, &meta.DeleteOptions{})
 	}
 	return nil
 }
 
 func (this *DeploymentCF) Compare(spec *ar.ApicurioRegistry) (bool, error) {
-	return this.ctx.configuration.GetConfig(CFG_STA_DEPLOYMENT_NAME) == "", nil
+	return this.ctx.GetConfiguration().GetConfig(CFG_STA_DEPLOYMENT_NAME) == "", nil
 }
 
 func (this *DeploymentCF) Respond(spec *ar.ApicurioRegistry) (bool, error) {
-	deployment := this.ctx.factory.CreateDeployment()
+	deployment := this.ctx.GetFactory().CreateDeployment()
 
-	if err := controllerutil.SetControllerReference(spec, deployment, this.ctx.scheme); err != nil {
-		log.Error(err, "Cannot set controller reference.")
+	if err := controllerutil.SetControllerReference(spec, deployment, this.ctx.GetScheme()); err != nil {
+		this.ctx.GetLog().Error(err, "Cannot set controller reference.")
 		return true, err
 	}
-	if err := this.ctx.client.Create(context.TODO(), deployment); err != nil {
-		log.Error(err, "Failed to create a new Deployment.")
+	if err := this.ctx.GetClient().Create(context.TODO(), deployment); err != nil {
+		this.ctx.GetLog().Error(err, "Failed to create a new Deployment.")
 		return true, err
 	} else {
-		this.ctx.configuration.SetConfig(CFG_STA_DEPLOYMENT_NAME, deployment.Name)
-		log.Info("New Deployment name is " + deployment.Name)
+		this.ctx.GetConfiguration().SetConfig(CFG_STA_DEPLOYMENT_NAME, deployment.Name)
+		this.ctx.GetLog().Info("New Deployment name is " + deployment.Name)
 	}
 
 	return true, nil

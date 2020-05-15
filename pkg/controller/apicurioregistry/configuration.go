@@ -214,7 +214,7 @@ func (this *Configuration) GetImage() string {
 		this.spec.Spec.Image.Version
 }
 
-func (this *Configuration) getEnv() []corev1.EnvVar {
+func (this *Configuration) GetEnv() []corev1.EnvVar {
 	var env = *new([]corev1.EnvVar)
 	for k, v := range this.envConfig {
 		env = append(env, corev1.EnvVar{

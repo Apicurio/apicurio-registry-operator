@@ -118,8 +118,8 @@ func (this *KubeCl) PatchIngress(namespace, name string, updateFunc func(*extens
 
 func (this *KubeCl) GetDeployment() (*apps.Deployment, error) {
 	// TODO cache?
-	if name := this.ctx.configuration.GetConfig(CFG_STA_DEPLOYMENT_NAME); name != "" {
-		deployment, err := this.client.AppsV1().Deployments(this.ctx.configuration.GetSpecNamespace()).Get(name, meta.GetOptions{})
+	if name := this.ctx.GetConfiguration().GetConfig(CFG_STA_DEPLOYMENT_NAME); name != "" {
+		deployment, err := this.client.AppsV1().Deployments(this.ctx.GetConfiguration().GetSpecNamespace()).Get(name, meta.GetOptions{})
 		return deployment, err
 	}
 	return nil, errors.New("No deployment name in status yet.")
@@ -127,8 +127,8 @@ func (this *KubeCl) GetDeployment() (*apps.Deployment, error) {
 
 func (this *KubeCl) GetService() (*core.Service, error) {
 	// TODO cache?
-	if name := this.ctx.configuration.GetConfig(CFG_STA_SERVICE_NAME); name != "" {
-		service, err := this.client.CoreV1().Services(this.ctx.configuration.GetSpecNamespace()).Get(name, meta.GetOptions{})
+	if name := this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME); name != "" {
+		service, err := this.client.CoreV1().Services(this.ctx.GetConfiguration().GetSpecNamespace()).Get(name, meta.GetOptions{})
 		return service, err
 	}
 	return nil, errors.New("No service name in status yet.")
@@ -136,13 +136,13 @@ func (this *KubeCl) GetService() (*core.Service, error) {
 
 func (this *KubeCl) GetIngress() (*extensions.Ingress, error) {
 	// TODO cache?
-	if name := this.ctx.configuration.GetConfig(CFG_STA_INGRESS_NAME); name != "" {
-		ingress, err := this.client.ExtensionsV1beta1().Ingresses(this.ctx.configuration.GetSpecNamespace()).Get(name, meta.GetOptions{})
+	if name := this.ctx.GetConfiguration().GetConfig(CFG_STA_INGRESS_NAME); name != "" {
+		ingress, err := this.client.ExtensionsV1beta1().Ingresses(this.ctx.GetConfiguration().GetSpecNamespace()).Get(name, meta.GetOptions{})
 		return ingress, err
 	}
 	return nil, errors.New("No ingress name in status yet.")
 }
 
-func (this *KubeCl) Client() kubernetes.Interface {
+func (this *KubeCl) GetClient() kubernetes.Interface {
 	return this.client
 }

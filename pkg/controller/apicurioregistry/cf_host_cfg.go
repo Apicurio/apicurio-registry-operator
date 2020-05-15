@@ -21,29 +21,29 @@ func (this *HostConfigCF) Describe() string {
 }
 
 func (this *HostConfigCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Request) error {
-	ingress, err := this.ctx.kubecl.GetIngress()
+	ingress, err := this.ctx.GetKubeCl().GetIngress()
 	if err == nil {
-		_, _, host := extractHost(this.ctx.configuration.GetConfig(CFG_STA_SERVICE_NAME), ingress)
+		_, _, host := extractHost(this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME), ingress)
 		if host != nil {
-			this.ctx.configuration.SetConfig(CFG_STA_ROUTE, *host)
+			this.ctx.GetConfiguration().SetConfig(CFG_STA_ROUTE, *host)
 		}
 	} else {
-		this.ctx.log.Error(err, "Warning: Error getting Ingress.")
+		this.ctx.GetLog().Error(err, "Warning: Error getting Ingress.")
 	}
 	return nil
 }
 
 func (this *HostConfigCF) Compare(spec *ar.ApicurioRegistry) (bool, error) {
-	return this.ctx.configuration.GetConfig(CFG_STA_ROUTE) != this.ctx.configuration.GetConfig(CFG_DEP_ROUTE), nil
+	return this.ctx.GetConfiguration().GetConfig(CFG_STA_ROUTE) != this.ctx.GetConfiguration().GetConfig(CFG_DEP_ROUTE), nil
 }
 
 func (this *HostConfigCF) Respond(spec *ar.ApicurioRegistry) (bool, error) {
-	this.ctx.patcher.AddIngressPatch(func(ingress *extensions.Ingress) {
+	this.ctx.GetPatcher().AddIngressPatch(func(ingress *extensions.Ingress) {
 		for i, rule := range ingress.Spec.Rules {
 			for _, path := range rule.HTTP.Paths {
-				if path.Backend.ServiceName == this.ctx.configuration.GetConfig(CFG_STA_SERVICE_NAME) {
+				if path.Backend.ServiceName == this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME) {
 					ingress.Spec.Rules[i] = extensions.IngressRule{
-						Host:             this.ctx.configuration.GetConfig(CFG_DEP_ROUTE),
+						Host:             this.ctx.GetConfiguration().GetConfig(CFG_DEP_ROUTE),
 						IngressRuleValue: rule.IngressRuleValue,
 					}
 					return
