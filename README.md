@@ -6,15 +6,35 @@ Requirements
 * Docker
 * [go](https://github.com/golang/go) (1.13+, with `export GO111MODULE='on'`), and `$GOPATH` and `$GOROOT` set. 
 * [Operator SDK](https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md) v0.9.0+    
-* A running Kubernetes or [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) cluster, 
-with `system:admin` access.
+* A running Kubernetes, [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/), 
+  OpenShift, or Minishift deployment with system admin access.
+
+Quickstart
+---
+
+You can deploy the latest published operator version using a single command:
+
+`kubecl create -f https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/master/docs/resources/install.yaml`
+
+(If you are deploying to OpenShift, you can use `oc` with the same arguments.)
+ 
+This will deploy the latest development version of the operator from the `master` branch, 
+but you can deploy other versions as well. 
+Use a different branch or tag, or edit the operator image reference in the file. 
+
+To create a new Apicurio Registry deployment, the fastest way is to use in-memory persistence option and one of the example CRs:
+ 
+`kubecl create -f https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/master/docs/resources/example-cr/in-memory.yaml`
+
+Note: The in-memory deployment is not suitable for production. We recommend using Kafka Streams persistence option for that.
+See the contents of `./docs` for more information.
 
 Build
 ---
 
-Clone this repo under your `$GOPATH/src` dir and `cd` inside.
+Clone this repo under your `$GOPATH/src/github.com/Apicurio` dir and `cd` inside.
 
-Pick a registry, e.g. [quay.io](quay.io) and use `build.sh` script (or Operator SDK directly) 
+Pick a registry, e.g. [quay.io](quay.io)/user and use `build.sh` script (or Operator SDK directly) 
 to build the image:
 
 ```
@@ -30,7 +50,7 @@ $ ./build.sh push -r "$REGISTRY"
 Installation
 ---
 
-If you are testing on `minikube`, you can use the following commands 
+If you are testing on Minikube, you can use the following commands 
 to deploy and undeploy the operator, respectively, with an example CR:
 
 ```
@@ -42,57 +62,52 @@ Or you can perform the steps manually (see the `build.sh`):
 
 1. Create resources and resource definitions on your cluster:
    
-```
-$ kubecl create -f deploy/service_account.yaml
-$ kubecl create -f deploy/role.yaml
-$ kubecl create -f deploy/role_binding.yaml
-```
+    ```
+    $ kubecl create -f ./deploy/service_account.yaml
+    $ kubecl create -f ./deploy/role.yaml
+    $ kubecl create -f ./deploy/role_binding.yaml
+    ```
 
 1. Create operator CRD:
    
-```
-$ kubecl create -f deploy/crds/apicur_v1alpha1_apicurioregistry_crd.yaml
-```
+    ```
+    $ kubecl create -f ./deploy/crds/apicur_v1alpha1_apicurioregistry_crd.yaml
+    ```
 
 1. Deploy the operator:
 
-```
-$ kubecl create -f deploy/operator.yaml
-```
+    ```
+    $ kubecl create -f ./deploy/operator.yaml
+    ```
 
-1. Create an example deployment of Apicurio Registry (*mem*) using the operator:
+1. Create an example deployment of Apicurio Registry (in-memory) using the operator:
 
-```
-$ kubecl create -f apicur_v1alpha1_apicurioregistry_cr.yaml
-```
+    ```
+    $ kubecl create -f ./deploy/crds/apicur_v1alpha1_apicurioregistry_cr.yaml
+    ```
 
-Verify the deployment is active:
+1. Verify that the deployment is active:
 
-```
-$ kubecl get deployments
-$ kubecl get pods
-```
+    ```
+    $ kubecl get deployments
+    $ kubecl get pods
+    ```
+   
+1. Make an HTTP request:
+    
+    ```
+    $ curl -H "Host: registry.example.com" http://$(minikube ip)/health
+    ```
 
-(If the host is configured using `minikube ip` and `/etc/hosts` :)
+    You can also configure the host using `minikube ip` and `/etc/hosts`: 
 
-```
-$ curl -v http://registry.example.com/health
-```
+    ```
+    $ curl -v http://registry.example.com/health
+    ```
 
-Development
+Notes
 ---
 
-Use the script to see the steps to build manually.
+This operator is still in development. Please create an issue on GitHub if you come across any problems.
 
-Apicurio Registry CRD
----
-
-TODO
-
-Note
----
-
-This operator is in *alpha* stage, which means that while it's working and is able to replace the [registry templates](https://github.com/Apicurio/apicurio-registry/tree/master/distro/openshift-template),
-some planned features are not implemented yet. 
-
-It's been tested on `minikube`, but it has not been released on operator hub.
+You can find more documentation in `./docs`.
