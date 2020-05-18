@@ -55,7 +55,7 @@ To deploy AR with the in-memory storage, you don't need to deploy anything else,
 You can use one of the example CRs:
 
 ```
-$ ./build.sh mkdeploy -r "$REGISTRY" --cr ./docs/example-cr/in-memory.yaml
+$ ./build.sh mkdeploy -r "$REGISTRY" --cr ./docs/resources/example-cr/in-memory.yaml
 ```
 
 5\. Test Queries
@@ -116,7 +116,7 @@ Verify that the `bootstrapServers` configuration option in  the CR is correct.
 Run `minikube service -n kafka list`, the URL should be `<name>.<namespace>.svc:9092`.
 
 ```
-$ ./build.sh mkdeploy -r "$REGISTRY" --cr ./docs/example-cr/streams.yaml
+$ ./build.sh mkdeploy -r "$REGISTRY" --cr ./docs/resources/example-cr/streams.yaml
 ```
 
 7\. Kafka Deployment

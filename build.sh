@@ -55,6 +55,7 @@ build() {
   operator-sdk generate openapi
   operator-sdk build "$OPERATOR_IMAGE"
   docker tag "$OPERATOR_IMAGE" "$OPERATOR_IMAGE_NAME:latest$DASH_VERSION_RELEASE"
+  compile_qs_yaml
   unreplace
 }
 
@@ -80,8 +81,22 @@ minikube_deploy() {
   unreplace
 }
 
+compile_qs_yaml() {
+  FILE="./docs/resources/install.yaml"
+  echo "Warning: Make sure '$FILE' contains correct image references before committing."
+  if [ -f "$FILE" ]; then
+    rm "$FILE"
+  fi
+  echo -e "\n---"  >> "$FILE" && cat ./deploy/service_account.yaml >> "$FILE"
+  echo -e "\n---"  >> "$FILE" && cat ./deploy/role.yaml >> "$FILE"
+  echo -e "\n---"  >> "$FILE" && cat ./deploy/role_binding.yaml >> "$FILE"
+  echo -e "\n---"  >> "$FILE" && cat ./deploy/crds/apicur_v1alpha1_apicurioregistry_crd.yaml >> "$FILE"
+  echo -e "\n---"  >> "$FILE" && cat ./deploy/operator.yaml >> "$FILE"
+  echo ""  >> "$FILE"
+}
+
 minikube_undeploy() {
-  kubectl delete ApicurioRegistry "$CR_NAME"
+  #kubectl delete ApicurioRegistry "$CR_NAME"
   kubectl delete deployment apicurio-registry-operator
   kubectl delete CustomResourceDefinition apicurioregistries.apicur.io
   kubectl delete RoleBinding apicurio-registry-operator
@@ -96,6 +111,11 @@ push() {
     docker push "$OPERATOR_IMAGE_NAME:latest$DASH_VERSION_RELEASE"
   fi
 }
+
+if [ ! -f "./version/version.go" ]; then
+    echo "Please run this script from the repository root."
+    exit 1
+fi
 
 TARGET="$1"
 shift
@@ -141,7 +161,7 @@ mkundeploy) minikube_undeploy ;;
 push) push ;;
 help) help ;;
 *)
-  echo -e "Unknown target: '$TARGET'.\n"
+  echo -e "Unknown command: '$TARGET'.\n"
   help
   ;;
 esac
