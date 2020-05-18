@@ -12,6 +12,7 @@ jobs:
   main:
     name: Build and publish from master
     runs-on: ubuntu-latest
+    if: github.repository_owner == 'Apicurio'
     steps:
       - uses: actions/checkout@master
 
