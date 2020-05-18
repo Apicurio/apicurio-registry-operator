@@ -7,6 +7,7 @@ rules:
   - apiGroups:
       - ""
       - "extensions" # ingress
+      - route.openshift.io
     resources:
       - pods
       - services
@@ -16,6 +17,7 @@ rules:
       - configmaps
       - secrets
       - ingresses # ingress
+      - routes/custom-host
     verbs:
       - '*'
   - apiGroups:
