@@ -20,13 +20,13 @@ func NewConfReplicasCF(ctx *Context) ControlFunction {
 }
 
 func (this *ConfReplicasCF) Describe() string {
-	return "Align configured replica count"
+	return "Align configured replica count (OCP)"
 }
 
 func (this *ConfReplicasCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Request) error {
 	log := this.ctx.GetLog().WithValues("CF", this.Describe())
 
-	if deployment, err := this.ctx.GetKubeCl().GetDeployment(); err == nil {
+	if deployment, err := this.ctx.GetClients().Kube().GetCurrentDeployment(); err == nil {
 		this.ctx.GetConfiguration().SetConfigInt32P(CFG_STA_REPLICA_COUNT, deployment.Spec.Replicas)
 	} else {
 		log.Info("Warn: Could not get deployment.")
@@ -43,7 +43,7 @@ func (this *ConfReplicasCF) Compare(spec *ar.ApicurioRegistry) (bool, error) {
 
 func (this *ConfReplicasCF) Respond(spec *ar.ApicurioRegistry) (bool, error) {
 
-	this.ctx.GetPatcher().AddDeploymentPatch(func(deployment *apps.Deployment) {
+	this.ctx.GetPatchers().Kube().AddDeploymentPatch(func(deployment *apps.Deployment) {
 		deployment.Spec.Replicas = this.ctx.GetConfiguration().GetConfigInt32P(CFG_DEP_REPLICAS)
 	})
 	return true, nil

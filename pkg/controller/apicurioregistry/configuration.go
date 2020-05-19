@@ -237,7 +237,6 @@ func (this *Configuration) GetEnv() []corev1.EnvVar {
 }
 
 func (this *Configuration) EnvChanged() bool {
-	//return !reflect.DeepEqual(this.prevEnvConfig, this.envConfig)
 	if len(this.prevEnvConfig) != len(this.envConfig) {
 		return true
 	}
@@ -250,10 +249,10 @@ func (this *Configuration) EnvChanged() bool {
 	return false
 }
 
-func (this *Configuration) GetSpecName() string {
+func (this *Configuration) GetAppName() string {
 	return this.spec.Name
 }
 
-func (this *Configuration) GetSpecNamespace() string {
+func (this *Configuration) GetAppNamespace() string {
 	return this.spec.Namespace
 }
