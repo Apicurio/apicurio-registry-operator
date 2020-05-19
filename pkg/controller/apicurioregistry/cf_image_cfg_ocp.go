@@ -2,27 +2,27 @@ package apicurioregistry
 
 import (
 	registryv1alpha1 "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
-	apps "k8s.io/api/apps/v1"
+	ocp_apps "github.com/openshift/api/apps/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var _ ControlFunction = &ImageConfigCF{}
+var _ ControlFunction = &ImageConfigOCPCF{}
 
 // This CF takes care of keeping the "image" section of the CRD applied.
-type ImageConfigCF struct {
+type ImageConfigOCPCF struct {
 	ctx *Context
 }
 
-func NewImageConfigCF(ctx *Context) ControlFunction {
-	return &ImageConfigCF{ctx: ctx}
+func NewImageConfigOCPCF(ctx *Context) ControlFunction {
+	return &ImageConfigOCPCF{ctx: ctx}
 }
 
-func (this *ImageConfigCF) Describe() string {
-	return "Image Configuration"
+func (this *ImageConfigOCPCF) Describe() string {
+	return "Image Configuration (OCP)"
 }
 
-func (this *ImageConfigCF) Sense(spec *registryv1alpha1.ApicurioRegistry, request reconcile.Request) error {
-	deployment, err := this.ctx.GetClients().Kube().GetCurrentDeployment()
+func (this *ImageConfigOCPCF) Sense(spec *registryv1alpha1.ApicurioRegistry, request reconcile.Request) error {
+	deployment, err := this.ctx.GetClients().OCP().GetCurrentDeployment()
 	if err == nil {
 		if c := deployment.Spec.Template.Spec.Containers; len(c) == 1 {
 			this.ctx.GetConfiguration().SetConfig(CFG_STA_IMAGE, c[0].Image)
@@ -36,12 +36,12 @@ func (this *ImageConfigCF) Sense(spec *registryv1alpha1.ApicurioRegistry, reques
 	return nil
 }
 
-func (this *ImageConfigCF) Compare(spec *registryv1alpha1.ApicurioRegistry) (bool, error) {
+func (this *ImageConfigOCPCF) Compare(spec *registryv1alpha1.ApicurioRegistry) (bool, error) {
 	return this.ctx.GetConfiguration().GetConfig(CFG_STA_IMAGE) != this.ctx.GetConfiguration().GetImage(), nil
 }
 
-func (this *ImageConfigCF) Respond(spec *registryv1alpha1.ApicurioRegistry) (bool, error) {
-	this.ctx.GetPatchers().Kube().AddDeploymentPatch(func(deployment *apps.Deployment) {
+func (this *ImageConfigOCPCF) Respond(spec *registryv1alpha1.ApicurioRegistry) (bool, error) {
+	this.ctx.GetPatchers().OCP().AddDeploymentPatch(func(deployment *ocp_apps.DeploymentConfig) {
 		if c := deployment.Spec.Template.Spec.Containers; len(c) == 1 {
 			c[0].Image = this.ctx.GetConfiguration().GetImage()
 		} else {

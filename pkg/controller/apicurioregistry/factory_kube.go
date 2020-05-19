@@ -10,33 +10,31 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-type Factory struct {
+type KubeFactory struct {
 	ctx *Context
 }
 
-// Factory creates new resources for the operator,
-// afterwards, they should not be recreated unless there is an otherwise unrecoverable error
-func NewFactory(ctx *Context) *Factory {
-	return &Factory{
+func NewKubeFactory(ctx *Context) *KubeFactory {
+	return &KubeFactory{
 		ctx: ctx,
 	}
 }
 
-func (this *Factory) GetLabels() map[string]string {
+func (this *KubeFactory) GetLabels() map[string]string {
 	return map[string]string{
-		"app": this.ctx.GetConfiguration().GetSpecName(),
+		"app": this.ctx.GetConfiguration().GetAppName(),
 	};
 }
 
-func (this *Factory) createObjectMeta(typeTag string) meta.ObjectMeta {
+func (this *KubeFactory) createObjectMeta(typeTag string) meta.ObjectMeta {
 	return meta.ObjectMeta{
-		GenerateName: this.ctx.GetConfiguration().GetSpecName() + "-" + typeTag + "-",
-		Namespace:    this.ctx.GetConfiguration().GetSpecNamespace(),
+		GenerateName: this.ctx.GetConfiguration().GetAppName() + "-" + typeTag + "-",
+		Namespace:    this.ctx.GetConfiguration().GetAppNamespace(),
 		Labels:       this.GetLabels(),
 	}
 }
 
-func (this *Factory) CreateDeployment() *apps.Deployment {
+func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 	var terminationGracePeriodSeconds int64 = 30
 
 	return &apps.Deployment{
@@ -50,7 +48,7 @@ func (this *Factory) CreateDeployment() *apps.Deployment {
 				},
 				Spec: core.PodSpec{
 					Containers: []core.Container{{
-						Name:  this.ctx.GetConfiguration().GetSpecName(),
+						Name:  this.ctx.GetConfiguration().GetAppName(),
 						Image: this.ctx.GetConfiguration().GetImage(),
 						Ports: []core.ContainerPort{
 							{
@@ -114,7 +112,7 @@ func (this *Factory) CreateDeployment() *apps.Deployment {
 	}
 }
 
-func (this *Factory) CreateService() *core.Service {
+func (this *KubeFactory) CreateService() *core.Service {
 	labels := this.GetLabels()
 	service := &core.Service{
 		ObjectMeta: this.createObjectMeta("service"),
@@ -134,15 +132,15 @@ func (this *Factory) CreateService() *core.Service {
 	return service
 }
 
-func (this *Factory) CreateIngress(serviceName string) *v1beta1.Ingress {
-	meta := this.createObjectMeta("ingress")
-	meta.Annotations = map[string]string{
+func (this *KubeFactory) CreateIngress(serviceName string) *v1beta1.Ingress {
+	metaData := this.createObjectMeta("ingress")
+	metaData.Annotations = map[string]string{
 		"nginx.ingress.kubernetes.io/force-ssl-redirect": "false",
 		"nginx.ingress.kubernetes.io/rewrite-target":     "/",
 		"nginx.ingress.kubernetes.io/ssl-redirect":       "false",
 	}
 	res := &v1beta1.Ingress{
-		ObjectMeta: meta,
+		ObjectMeta: metaData,
 		Spec: v1beta1.IngressSpec{
 			Rules: []v1beta1.IngressRule{
 				{
@@ -167,7 +165,7 @@ func (this *Factory) CreateIngress(serviceName string) *v1beta1.Ingress {
 	return res
 }
 
-func (this *Factory) CreateSpec(spec *ar.ApicurioRegistry) *ar.ApicurioRegistry {
+func (this *KubeFactory) CreateSpec(spec *ar.ApicurioRegistry) *ar.ApicurioRegistry {
 	res := &ar.ApicurioRegistry{
 		TypeMeta:   spec.TypeMeta,
 		ObjectMeta: spec.ObjectMeta,

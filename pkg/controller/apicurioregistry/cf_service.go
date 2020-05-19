@@ -39,9 +39,9 @@ func (this *ServiceCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Reques
 
 	serviceName := this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME)
 
-	services, err := this.ctx.GetKubeCl().GetClient().CoreV1().Services(this.ctx.GetConfiguration().GetSpecNamespace()).List(
+	services, err := this.ctx.GetClients().Kube().GetRawClient().CoreV1().Services(this.ctx.GetConfiguration().GetAppNamespace()).List(
 		meta.ListOptions{
-			LabelSelector: "app=" + this.ctx.GetConfiguration().GetSpecName(),
+			LabelSelector: "app=" + this.ctx.GetConfiguration().GetAppName(),
 		})
 	if err != nil {
 		return err
@@ -76,8 +76,8 @@ func (this *ServiceCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Reques
 	for _, service := range services.Items {
 		// nuke them...
 		this.ctx.GetLog().Info("Warning: Deleting Service '" + service.Name + "'.")
-		_ = this.ctx.GetKubeCl().GetClient().AppsV1().
-			Deployments(this.ctx.GetConfiguration().GetSpecNamespace()).
+		_ = this.ctx.GetClients().Kube().GetRawClient().AppsV1().
+			Deployments(this.ctx.GetConfiguration().GetAppNamespace()).
 			Delete(service.Name, &meta.DeleteOptions{})
 	}
 	return nil
@@ -88,13 +88,13 @@ func (this *ServiceCF) Compare(spec *ar.ApicurioRegistry) (bool, error) {
 }
 
 func (this *ServiceCF) Respond(spec *ar.ApicurioRegistry) (bool, error) {
-	service := this.ctx.GetFactory().CreateService()
+	service := this.ctx.GetKubeFactory().CreateService()
 
 	if err := controllerutil.SetControllerReference(spec, service, this.ctx.GetScheme()); err != nil {
 		this.ctx.GetLog().Error(err, "Cannot set controller reference.")
 		return true, err
 	}
-	if err := this.ctx.GetClient().Create(context.TODO(), service); err != nil {
+	if err := this.ctx.GetNativeClient().Create(context.TODO(), service); err != nil {
 		this.ctx.GetLog().Error(err, "Failed to create a new Service.")
 		return true, err
 	} else {

@@ -13,6 +13,7 @@ help() {
   echo "  push"
   echo -e "\nParameters:"
   echo "  -r|--repository [repository] Operator image repository"
+  echo "  -n|--namespace [namespace] Namespace where the operator is deployed"
   echo "  --cr [file] Path to a file with 'ApicurioRegistry' custom resource to be deployed"
   echo "  --nocr Do not deploy default 'ApicurioRegistry' custom resource"
   echo "  --crname [name] Name of the 'ApicurioRegistry' custom resource (e.g. for mkundeploy), default is 'example-apicurioregistry'"
@@ -52,7 +53,7 @@ unreplace() {
 build() {
   replace
   operator-sdk generate k8s
-  operator-sdk generate openapi
+  operator-sdk generate crds
   operator-sdk build "$OPERATOR_IMAGE"
   docker tag "$OPERATOR_IMAGE" "$OPERATOR_IMAGE_NAME:latest$DASH_VERSION_RELEASE"
   compile_qs_yaml
@@ -70,10 +71,13 @@ minikube_deploy_cr() {
 }
 
 minikube_deploy() {
+  require "$OPERATOR_NAMESPACE" "Argument -n or --namespace is required."
   replace
   kubectl create -f ./deploy/service_account.yaml
   kubectl create -f ./deploy/role.yaml
   kubectl create -f ./deploy/role_binding.yaml
+  kubectl create -f ./deploy/cluster_role.yaml
+  cat ./deploy/cluster_role_binding.yaml | sed "s/{NAMESPACE}/$NAMESPACE # replaced {NAMESPACE}/g" | kubectl apply -f -
   kubectl create -f ./deploy/crds/apicur_v1alpha1_apicurioregistry_crd.yaml
   kubectl create -f ./deploy/operator.yaml
   minikube_deploy_cr
@@ -90,6 +94,8 @@ compile_qs_yaml() {
   echo -e "\n---"  >> "$FILE" && cat ./deploy/service_account.yaml >> "$FILE"
   echo -e "\n---"  >> "$FILE" && cat ./deploy/role.yaml >> "$FILE"
   echo -e "\n---"  >> "$FILE" && cat ./deploy/role_binding.yaml >> "$FILE"
+  echo -e "\n---"  >> "$FILE" && cat ./deploy/cluster_role.yaml >> "$FILE"
+  echo -e "\n---"  >> "$FILE" && cat ./deploy/cluster_role_binding.yaml >> "$FILE"
   echo -e "\n---"  >> "$FILE" && cat ./deploy/crds/apicur_v1alpha1_apicurioregistry_crd.yaml >> "$FILE"
   echo -e "\n---"  >> "$FILE" && cat ./deploy/operator.yaml >> "$FILE"
   echo ""  >> "$FILE"
@@ -101,6 +107,8 @@ minikube_undeploy() {
   kubectl delete CustomResourceDefinition apicurioregistries.apicur.io
   kubectl delete RoleBinding apicurio-registry-operator
   kubectl delete Role apicurio-registry-operator
+  kubectl delete ClusterRoleBinding apicurio-registry-operator
+  kubectl delete ClusterRole apicurio-registry-operator
   kubectl delete ServiceAccount apicurio-registry-operator
 }
 
@@ -124,6 +132,10 @@ while [[ "$#" -gt 0 ]]; do
   case $1 in
   -r | --repository)
     OPERATOR_IMAGE_REPOSITORY="$2"
+    shift
+    ;;
+  -n | --namespace)
+    OPERATOR_NAMESPACE="$2"
     shift
     ;;
   --cr)

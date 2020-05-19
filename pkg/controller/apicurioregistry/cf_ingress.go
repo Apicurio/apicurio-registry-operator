@@ -39,9 +39,9 @@ func (this *IngressCF) Describe() string {
 func (this *IngressCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Request) error {
 	ingressName := this.ctx.GetConfiguration().GetConfig(CFG_STA_INGRESS_NAME)
 
-	ingresses, err := this.ctx.GetKubeCl().GetClient().ExtensionsV1beta1().Ingresses(this.ctx.GetConfiguration().GetSpecNamespace()).List(
+	ingresses, err := this.ctx.GetClients().Kube().GetRawClient().ExtensionsV1beta1().Ingresses(this.ctx.GetConfiguration().GetAppNamespace()).List(
 		meta.ListOptions{
-			LabelSelector: "app=" + this.ctx.GetConfiguration().GetSpecName(),
+			LabelSelector: "app=" + this.ctx.GetConfiguration().GetAppName(),
 		})
 	if err != nil {
 		return err
@@ -76,8 +76,8 @@ func (this *IngressCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Reques
 	for _, ingress := range ingresses.Items {
 		// nuke them...
 		this.ctx.GetLog().Info("Warning: Deleting Ingress '" + ingress.Name + "'.")
-		_ = this.ctx.GetKubeCl().GetClient().ExtensionsV1beta1().
-			Ingresses(this.ctx.GetConfiguration().GetSpecNamespace()).
+		_ = this.ctx.GetClients().Kube().GetRawClient().ExtensionsV1beta1().
+			Ingresses(this.ctx.GetConfiguration().GetAppNamespace()).
 			Delete(ingress.Name, &meta.DeleteOptions{})
 	}
 	return nil
@@ -95,13 +95,13 @@ func (this *IngressCF) Respond(spec *ar.ApicurioRegistry) (bool, error) {
 	if serviceName == "" {
 		return true, nil
 	}
-	ingress := this.ctx.GetFactory().CreateIngress(serviceName)
+	ingress := this.ctx.GetKubeFactory().CreateIngress(serviceName)
 
 	if err := controllerutil.SetControllerReference(spec, ingress, this.ctx.GetScheme()); err != nil {
 		this.ctx.GetLog().Error(err, "Cannot set controller reference.")
 		return true, err
 	}
-	if err := this.ctx.GetClient().Create(context.TODO(), ingress); err != nil {
+	if err := this.ctx.GetNativeClient().Create(context.TODO(), ingress); err != nil {
 		this.ctx.GetLog().Error(err, "Failed to create a new Ingress.")
 		return true, err
 	} else {

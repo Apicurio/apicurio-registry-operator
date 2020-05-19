@@ -4,6 +4,14 @@ metadata:
   creationTimestamp: null
   name: apicurio-registry-operator
 rules:
+  - apiGroups: # OCP
+      - route.openshift.io
+      - apps.openshift.io
+    resources:
+      - routes/custom-host
+      - deploymentconfigs
+    verbs:
+      - '*'
   - apiGroups:
       - ""
       - "extensions" # ingress

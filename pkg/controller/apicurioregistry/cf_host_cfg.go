@@ -21,7 +21,7 @@ func (this *HostConfigCF) Describe() string {
 }
 
 func (this *HostConfigCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Request) error {
-	ingress, err := this.ctx.GetKubeCl().GetIngress()
+	ingress, err := this.ctx.GetClients().Kube().GetCurrentIngress()
 	if err == nil {
 		_, _, host := extractHost(this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME), ingress)
 		if host != nil {
@@ -38,7 +38,7 @@ func (this *HostConfigCF) Compare(spec *ar.ApicurioRegistry) (bool, error) {
 }
 
 func (this *HostConfigCF) Respond(spec *ar.ApicurioRegistry) (bool, error) {
-	this.ctx.GetPatcher().AddIngressPatch(func(ingress *extensions.Ingress) {
+	this.ctx.GetPatchers().Kube().AddIngressPatch(func(ingress *extensions.Ingress) {
 		for i, rule := range ingress.Spec.Rules {
 			for _, path := range rule.HTTP.Paths {
 				if path.Backend.ServiceName == this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME) {

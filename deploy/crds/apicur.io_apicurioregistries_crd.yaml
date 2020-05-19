@@ -14,6 +14,7 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
+      description: ApicurioRegistry is the Schema for the apicurioregistries API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -28,6 +29,7 @@ spec:
         metadata:
           type: object
         spec:
+          description: ApicurioRegistrySpec defines the desired state of ApicurioRegistry
           properties:
             configuration:
               properties:
@@ -98,6 +100,7 @@ spec:
               type: object
           type: object
         status:
+          description: ApicurioRegistryStatus defines the observed state of ApicurioRegistry
           properties:
             deploymentName:
               type: string
@@ -113,6 +116,7 @@ spec:
             serviceName:
               type: string
           type: object
+      type: object
   version: v1alpha1
   versions:
   - name: v1alpha1
