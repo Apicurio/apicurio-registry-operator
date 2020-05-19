@@ -5,16 +5,16 @@ Requirements
 ---
 * Docker
 * [go](https://github.com/golang/go) (1.13+, with `export GO111MODULE='on'`), and `$GOPATH` and `$GOROOT` set. 
-* [Operator SDK](https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md) v0.9.0+    
+* [Operator SDK](https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md) v11+    
 * A running Kubernetes, [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/), 
   OpenShift, or Minishift deployment with system admin access.
 
 Quickstart
 ---
 
-You can deploy the latest published operator version using a single command:
+Choose your `$NAMESPACE` and you can deploy the latest published operator version using a single command:
 
-`kubecl create -f https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/master/docs/resources/install.yaml`
+`curl -sSL https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/master/docs/resources/install.yaml | sed "s/{NAMESPACE}/$NAMESPACE/g" | kubectl apply -f -`
 
 (If you are deploying to OpenShift, you can use `oc` with the same arguments.)
  
@@ -60,12 +60,14 @@ $ ./build.sh mkundeploy -r "$REGISTRY"
 
 Or you can perform the steps manually (see the `build.sh`):
 
-1. Create resources and resource definitions on your cluster:
+1. Create resources and resource definitions on your cluster (choose your $NAMESPACE):
    
     ```
     $ kubecl create -f ./deploy/service_account.yaml
     $ kubecl create -f ./deploy/role.yaml
-    $ kubecl create -f ./deploy/role_binding.yaml
+    $ cat ./deploy/cluster_role_binding.yaml | sed "s/{NAMESPACE}/$NAMESPACE/g" | kubectl apply -f -
+    $ kubecl create -f ./deploy/cluster_role.yaml
+    $ kubecl create -f ./deploy/cluster_role_binding.yaml
     ```
 
 1. Create operator CRD:

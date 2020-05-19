@@ -31,7 +31,7 @@ func (this *EnvCF) Compare(spec *ar.ApicurioRegistry) (bool, error) {
 
 func (this *EnvCF) Respond(spec *ar.ApicurioRegistry) (bool, error) {
 	this.ctx.GetLog().Info("Updating environment variables.")
-	this.ctx.GetPatcher().AddDeploymentPatch(func(deployment *apps.Deployment) {
+	this.ctx.GetPatchers().Kube().AddDeploymentPatch(func(deployment *apps.Deployment) {
 		for i, _ := range deployment.Spec.Template.Spec.Containers {
 			deployment.Spec.Template.Spec.Containers[i].Env = this.ctx.GetConfiguration().GetEnv()
 			this.ctx.GetLog().Info("Environment variables updated.")

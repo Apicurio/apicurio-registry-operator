@@ -15,17 +15,17 @@ import (
 var _ reconcile.Reconciler = &ApicurioRegistryReconciler{}
 
 type ApicurioRegistryReconciler struct {
-	client           client.Client
-	scheme           *runtime.Scheme
-	controller       controller.Controller
-	contexts         map[string]*Context
+	client     client.Client
+	scheme     *runtime.Scheme
+	controller controller.Controller
+	contexts   map[string]*Context
 }
 
 func NewApicurioRegistryReconciler(mgr manager.Manager) *ApicurioRegistryReconciler {
 
 	return &ApicurioRegistryReconciler{
-		client:           mgr.GetClient(),
-		scheme:           mgr.GetScheme(),
+		client:   mgr.GetClient(),
+		scheme:   mgr.GetScheme(),
 		contexts: make(map[string]*Context),
 	}
 }
@@ -39,7 +39,7 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 	// GetConfig the spec
 	specList := &ar.ApicurioRegistryList{}
 	listOps := client.ListOptions{Namespace: request.Namespace}
-	err := this.client.List(context.TODO(), &listOps, specList)
+	err := this.client.List(context.TODO(), specList, &listOps)
 	if err != nil {
 		if api_errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -49,7 +49,7 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 
 	var spec *ar.ApicurioRegistry = nil
 
-	for i,specItem := range specList.Items {
+	for i, specItem := range specList.Items {
 
 		key := specItem.Name
 
@@ -58,27 +58,32 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 			reqLogger.Info("Creating new context")
 			c = NewContext(this.controller, this.scheme, reqLogger.WithValues("app", key), this.client)
 
-			var f ControlFunction
-			f = NewDeploymentCF(c)
-			c.AddControlFunction(f)
+			isOCP, _ := c.GetClients().IsOCP()
+			if isOCP {
+				ver := c.GetClients().GetOCPVersion()
+				reqLogger.WithValues("version", ver).Info("The operator is running on OpenShift")
+			} else {
+				ver := c.GetClients().GetOCPVersion()
+				reqLogger.WithValues("version", ver).Info("The operator is running on Kubernetes")
+			}
 
-			f = NewServiceCF(c)
-			c.AddControlFunction(f)
-
-			f = NewIngressCF(c)
-			c.AddControlFunction(f)
-
-			f = NewImageConfigCF(c)
-			c.AddControlFunction(f)
-
-			f = NewConfReplicasCF(c)
-			c.AddControlFunction(f)
-
-			f = NewHostConfigCF(c)
-			c.AddControlFunction(f)
-
-			f = NewEnvCF(c)
-			c.AddControlFunction(f)
+			if isOCP {
+				c.AddControlFunction(NewDeploymentOCPCF(c))
+				c.AddControlFunction(NewServiceCF(c))
+				c.AddControlFunction(NewIngressCF(c))
+				c.AddControlFunction(NewImageConfigOCPCF(c))
+				c.AddControlFunction(NewConfReplicasOCPCF(c))
+				c.AddControlFunction(NewHostConfigCF(c))
+				c.AddControlFunction(NewEnvOCPCF(c))
+			} else {
+				c.AddControlFunction(NewDeploymentCF(c))
+				c.AddControlFunction(NewServiceCF(c))
+				c.AddControlFunction(NewIngressCF(c))
+				c.AddControlFunction(NewImageConfigCF(c))
+				c.AddControlFunction(NewConfReplicasCF(c))
+				c.AddControlFunction(NewHostConfigCF(c))
+				c.AddControlFunction(NewEnvCF(c))
+			}
 
 			this.contexts[key] = c
 		}
@@ -89,10 +94,10 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 	}
 
 	if spec == nil {
-		_, ok := this.contexts[app];
+		_, ok := this.contexts[app]
 		if ok {
 			reqLogger.WithValues("app", app).Info("Deleting context")
-			delete(this.contexts, app);
+			delete(this.contexts, app)
 		}
 		return reconcile.Result{}, nil
 	}
@@ -143,20 +148,18 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 	}
 
 	// Update the status
-	spec = ctx.GetFactory().CreateSpec(spec)
+	spec = ctx.GetKubeFactory().CreateSpec(spec)
 	err = this.client.Status().Update(context.TODO(), spec)
 	if err != nil {
 		ctx.GetLog().Error(err, "Error updating status")
 		return reconcile.Result{}, err
 	}
 
-	// Run patcher
-	ctx.GetPatcher().Execute()
+	// Run patchers
+	ctx.GetPatchers().Execute()
 
-	return reconcile.Result{Requeue: requeue}, nil // err
+	return reconcile.Result{Requeue: requeue}, nil
 }
-
-
 
 func (this *ApicurioRegistryReconciler) setController(c controller.Controller) {
 	this.controller = c

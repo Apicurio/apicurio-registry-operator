@@ -41,7 +41,7 @@ type ApicurioRegistrySpecImage struct {
 
 // +k8s:openapi-gen=true
 type ApicurioRegistrySpecConfiguration struct {
-	// +kubebuilder:validation:Enum=mem,jpa,kafka,streams
+	// +kubebuilder:validation:Enum=mem;jpa;kafka;streams
 	Persistence string                                      `json:"persistence,omitempty"`
 	DataSource  ApicurioRegistrySpecConfigurationDataSource `json:"dataSource,omitempty"`
 	Kafka       ApicurioRegistrySpecConfigurationKafka      `json:"kafka,omitempty"`

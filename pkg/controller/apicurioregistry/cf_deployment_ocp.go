@@ -3,7 +3,7 @@ package apicurioregistry
 import (
 	"context"
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
-	apps "k8s.io/api/apps/v1"
+	ocp_apps "github.com/openshift/api/apps/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -11,35 +11,35 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var _ ControlFunction = &DeploymentCF{}
+var _ ControlFunction = &DeploymentOCPCF{}
 
-type DeploymentCF struct {
+type DeploymentOCPCF struct {
 	ctx *Context
 }
 
-func NewDeploymentCF(ctx *Context) ControlFunction {
+func NewDeploymentOCPCF(ctx *Context) ControlFunction {
 
-	err := ctx.GetController().Watch(&source.Kind{Type: &apps.Deployment{}}, &handler.EnqueueRequestForOwner{
+	err := ctx.GetController().Watch(&source.Kind{Type: &ocp_apps.DeploymentConfig{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &ar.ApicurioRegistry{},
 	})
 
 	if err != nil {
-		panic("Error creating Deployment watch.")
+		fatal(ctx.GetLog(), err, "Error creating Deployment watch.")
 	}
 
-	return &DeploymentCF{ctx: ctx}
+	return &DeploymentOCPCF{ctx: ctx}
 }
 
-func (this *DeploymentCF) Describe() string {
-	return "Deployment Creation"
+func (this *DeploymentOCPCF) Describe() string {
+	return "Deploymentconfiguration Creation (OCP)"
 }
 
-func (this *DeploymentCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Request) error {
+func (this *DeploymentOCPCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Request) error {
 	// Try to check if there is an existing deployment resource
 	deploymentName := this.ctx.GetConfiguration().GetConfig(CFG_STA_DEPLOYMENT_NAME)
 
-	deployments, err := this.ctx.GetClients().Kube().GetRawClient().AppsV1().Deployments(this.ctx.GetConfiguration().GetAppNamespace()).List(
+	deployments, err := this.ctx.GetClients().OCP().GetDeployments(
 		meta.ListOptions{
 			LabelSelector: "app=" + this.ctx.GetConfiguration().GetAppName(),
 		})
@@ -48,7 +48,7 @@ func (this *DeploymentCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Req
 	}
 
 	count := 0
-	var lastDeployment *apps.Deployment = nil
+	var lastDeployment *ocp_apps.DeploymentConfig = nil
 	for _, deployment := range deployments.Items {
 		if deployment.GetObjectMeta().GetDeletionTimestamp() == nil {
 			count++
@@ -76,25 +76,23 @@ func (this *DeploymentCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Req
 	for _, deployment := range deployments.Items {
 		// nuke them...
 		this.ctx.GetLog().Info("Warning: Deleting Deployment '" + deployment.Name + "'.")
-		_ = this.ctx.GetClients().Kube().GetRawClient().AppsV1().
-			Deployments(this.ctx.GetConfiguration().GetAppNamespace()).
-			Delete(deployment.Name, &meta.DeleteOptions{})
+		_ = this.ctx.GetClients().OCP().DeleteDeployment(deployment.Name, &meta.DeleteOptions{})
 	}
 	return nil
 }
 
-func (this *DeploymentCF) Compare(spec *ar.ApicurioRegistry) (bool, error) {
+func (this *DeploymentOCPCF) Compare(spec *ar.ApicurioRegistry) (bool, error) {
 	return this.ctx.GetConfiguration().GetConfig(CFG_STA_DEPLOYMENT_NAME) == "", nil
 }
 
-func (this *DeploymentCF) Respond(spec *ar.ApicurioRegistry) (bool, error) {
-	deployment := this.ctx.GetKubeFactory().CreateDeployment()
+func (this *DeploymentOCPCF) Respond(spec *ar.ApicurioRegistry) (bool, error) {
+	deployment := this.ctx.GetOCPFactory().CreateDeployment()
 
 	if err := controllerutil.SetControllerReference(spec, deployment, this.ctx.GetScheme()); err != nil {
 		this.ctx.GetLog().Error(err, "Cannot set controller reference.")
 		return true, err
 	}
-	if err := this.ctx.GetNativeClient().Create(context.TODO(), deployment); err != nil {
+	if err := this.ctx.GetNativeClient().Create(context.TODO(), deployment); err != nil { // Create runtime object is generic
 		this.ctx.GetLog().Error(err, "Failed to create a new Deployment.")
 		return true, err
 	} else {
