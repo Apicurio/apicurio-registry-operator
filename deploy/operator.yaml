@@ -16,7 +16,7 @@ spec:
       containers:
         - name: apicurio-registry-operator
           # Replace this with the built image name
-          image: apicurio/apicurio-registry-operator:0.0.1 # {OPERATOR_IMAGE}
+          image: {OPERATOR_IMAGE}
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE
