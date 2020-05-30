@@ -23,6 +23,13 @@ type Context struct {
 	ocpFactory    *OCPFactory
 	patchers      *Patchers
 	clients       *Clients
+
+	// ===
+	resourceCache ResourceCache
+	envCache      EnvCache
+
+	// ===
+	requeue bool
 }
 
 // Create a new context when the operator is deployed, provide mostly static data
@@ -32,6 +39,7 @@ func NewContext(c controller.Controller, scheme *runtime.Scheme, log logr.Logger
 		scheme:       scheme,
 		log:          log,
 		nativeClient: client,
+		requeue:      false,
 	}
 	self.controlFunctions = *new([]ControlFunction)
 	self.configuration = NewConfiguration(log)
@@ -42,18 +50,27 @@ func NewContext(c controller.Controller, scheme *runtime.Scheme, log logr.Logger
 	self.kubeFactory = NewKubeFactory(self)
 	self.ocpFactory = NewOCPFactory(self)
 
-	return self
-}
+	self.resourceCache = NewResourceCache()
+	self.envCache = NewEnvCache()
 
-func (this *Context) AddControlFunction(cf ControlFunction) {
-	this.controlFunctions = append(this.controlFunctions, cf)
+	return self
 }
 
 // Refresh context's state on each reconciliation loop execution,
 // BEFORE CF execution
 func (this *Context) Update(spec *ar.ApicurioRegistry) {
 	this.configuration.Update(spec)
+
+	specEntry := NewResourceCacheEntry(spec.Name, spec)
+	this.resourceCache.Set(RC_KEY_SPEC, specEntry)
 }
+
+func (this *Context) AddControlFunction(cf ControlFunction) {
+	this.controlFunctions = append(this.controlFunctions, cf)
+}
+
+// ===
+// Getters
 
 func (this *Context) GetControlFunctions() []ControlFunction {
 	return this.controlFunctions
@@ -91,6 +108,25 @@ func (this *Context) GetScheme() *runtime.Scheme {
 	return this.scheme
 }
 
+// Do not use unless necessary, use `GetClients()`
 func (this *Context) GetNativeClient() client.Client {
 	return this.nativeClient
+}
+
+func (this *Context) GetResourceCache() ResourceCache {
+	return this.resourceCache
+}
+
+func (this *Context) GetEnvCache() EnvCache {
+	return this.envCache
+}
+
+func (this *Context) SetRequeue() {
+	this.requeue = true
+}
+
+func (this *Context) GetAndResetRequeue() bool {
+	res := this.requeue
+	this.requeue = false
+	return res
 }

@@ -63,7 +63,7 @@ build() {
 minikube_deploy_cr() {
   if [[ -z "$CR_PATH" ]]; then
     if [[ -z "$NO_DEFAULT_CR" ]]; then
-      kubectl create -f ./deploy/crds/apicur_v1alpha1_apicurioregistry_cr.yaml
+      kubectl create -f ./deploy/crds/apicur.io_apicurioregistries_cr.yaml
     fi
   else
     kubectl create -f "$CR_PATH"
@@ -78,7 +78,7 @@ minikube_deploy() {
   kubectl create -f ./deploy/role_binding.yaml
   kubectl create -f ./deploy/cluster_role.yaml
   cat ./deploy/cluster_role_binding.yaml | sed "s/{NAMESPACE}/$NAMESPACE # replaced {NAMESPACE}/g" | kubectl apply -f -
-  kubectl create -f ./deploy/crds/apicur_v1alpha1_apicurioregistry_crd.yaml
+  kubectl create -f ./deploy/crds/apicur.io_apicurioregistries_crd.yaml
   kubectl create -f ./deploy/operator.yaml
   minikube_deploy_cr
   kubectl get deployments
@@ -96,7 +96,7 @@ compile_qs_yaml() {
   echo -e "\n---"  >> "$FILE" && cat ./deploy/role_binding.yaml >> "$FILE"
   echo -e "\n---"  >> "$FILE" && cat ./deploy/cluster_role.yaml >> "$FILE"
   echo -e "\n---"  >> "$FILE" && cat ./deploy/cluster_role_binding.yaml >> "$FILE"
-  echo -e "\n---"  >> "$FILE" && cat ./deploy/crds/apicur_v1alpha1_apicurioregistry_crd.yaml >> "$FILE"
+  echo -e "\n---"  >> "$FILE" && cat ./deploy/crds/apicur.io_apicurioregistries_crd.yaml >> "$FILE"
   echo -e "\n---"  >> "$FILE" && cat ./deploy/operator.yaml >> "$FILE"
   echo ""  >> "$FILE"
 }
