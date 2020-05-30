@@ -19,17 +19,11 @@ func NewOCPFactory(ctx *Context) *OCPFactory {
 }
 
 func (this *OCPFactory) GetLabels() map[string]string {
-	return map[string]string{
-		"app": this.ctx.GetConfiguration().GetAppName(),
-	};
+	return this.ctx.GetKubeFactory().GetLabels()
 }
 
 func (this *OCPFactory) createObjectMeta(typeTag string) meta.ObjectMeta {
-	return meta.ObjectMeta{
-		GenerateName: this.ctx.GetConfiguration().GetAppName() + "-" + typeTag + "-",
-		Namespace:    this.ctx.GetConfiguration().GetAppNamespace(),
-		Labels:       this.GetLabels(),
-	}
+	return this.ctx.GetKubeFactory().createObjectMeta(typeTag)
 }
 
 func (this *OCPFactory) CreateDeployment() *ocp_apps.DeploymentConfig {
@@ -38,7 +32,7 @@ func (this *OCPFactory) CreateDeployment() *ocp_apps.DeploymentConfig {
 	return &ocp_apps.DeploymentConfig{
 		ObjectMeta: this.createObjectMeta("deployment"),
 		Spec: ocp_apps.DeploymentConfigSpec{
-			Replicas: *this.ctx.GetConfiguration().GetConfigInt32P(CFG_DEP_REPLICAS),
+			Replicas: 1,
 			Selector: this.GetLabels(),
 			Template: &core.PodTemplateSpec{
 				ObjectMeta: meta.ObjectMeta{
@@ -47,29 +41,29 @@ func (this *OCPFactory) CreateDeployment() *ocp_apps.DeploymentConfig {
 				Spec: core.PodSpec{
 					Containers: []core.Container{{
 						Name:  this.ctx.GetConfiguration().GetAppName(),
-						Image: this.ctx.GetConfiguration().GetImage(),
+						Image: "",
 						Ports: []core.ContainerPort{
 							{
 								ContainerPort: 8080,
 								Protocol:      "TCP",
 							},
 						},
-						Env: this.ctx.GetConfiguration().GetEnv(),
+						Env: []core.EnvVar{},
 						Resources: core.ResourceRequirements{
 							Limits: core.ResourceList{
-								core.ResourceCPU:    resource.MustParse(this.ctx.GetConfiguration().GetConfig(CFG_DEP_CPU_LIMIT)),
-								core.ResourceMemory: resource.MustParse(this.ctx.GetConfiguration().GetConfig(CFG_DEP_MEMORY_LIMIT)),
+								core.ResourceCPU:    resource.MustParse("1"),
+								core.ResourceMemory: resource.MustParse("1300Mi"),
 							},
 							Requests: core.ResourceList{
-								core.ResourceCPU:    resource.MustParse(this.ctx.GetConfiguration().GetConfig(CFG_DEP_CPU_REQUESTS)),
-								core.ResourceMemory: resource.MustParse(this.ctx.GetConfiguration().GetConfig(CFG_DEP_MEMORY_REQUESTS)),
+								core.ResourceCPU:    resource.MustParse("0.1"),
+								core.ResourceMemory: resource.MustParse("600Mi"),
 							},
 						},
 						LivenessProbe: &core.Probe{
 							Handler: core.Handler{
 								HTTPGet: &core.HTTPGetAction{
 									Path: "/health/live",
-									Port: intstr.IntOrString{Type: intstr.Int, IntVal: 8080},
+									Port: intstr.FromInt(8080),
 								},
 							},
 							InitialDelaySeconds: 5,
@@ -82,7 +76,7 @@ func (this *OCPFactory) CreateDeployment() *ocp_apps.DeploymentConfig {
 							Handler: core.Handler{
 								HTTPGet: &core.HTTPGetAction{
 									Path: "/health/ready",
-									Port: intstr.IntOrString{Type: intstr.Int, IntVal: 8080},
+									Port: intstr.FromInt(8080),
 								},
 							},
 							InitialDelaySeconds: 5,

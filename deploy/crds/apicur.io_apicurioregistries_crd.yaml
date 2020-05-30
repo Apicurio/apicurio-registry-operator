@@ -42,6 +42,11 @@ spec:
                     userName:
                       type: string
                   type: object
+                infinispan:
+                  properties:
+                    clusterName:
+                      type: string
+                  type: object
                 kafka:
                   properties:
                     bootstrapServers:
@@ -53,6 +58,7 @@ spec:
                   - jpa
                   - kafka
                   - streams
+                  - infinispan
                   type: string
                 streams:
                   properties:
@@ -66,36 +72,17 @@ spec:
               type: object
             deployment:
               properties:
+                host:
+                  type: string
                 replicas:
                   format: int32
                   type: integer
-                resources:
-                  properties:
-                    cpu:
-                      properties:
-                        limit:
-                          type: string
-                        requests:
-                          type: string
-                      type: object
-                    memory:
-                      properties:
-                        limit:
-                          type: string
-                        requests:
-                          type: string
-                      type: object
-                  type: object
-                route:
-                  type: string
               type: object
             image:
               properties:
-                override:
-                  type: string
-                registry:
-                  type: string
-                version:
+                name:
+                  description: Registry string `json:"registry,omitempty"` Version  string
+                    `json:"version,omitempty"` Override string `json:"override,omitempty"`
                   type: string
               type: object
           type: object
@@ -104,6 +91,8 @@ spec:
           properties:
             deploymentName:
               type: string
+            host:
+              type: string
             image:
               type: string
             ingressName:
@@ -111,8 +100,6 @@ spec:
             replicaCount:
               format: int32
               type: integer
-            route:
-              type: string
             serviceName:
               type: string
           type: object

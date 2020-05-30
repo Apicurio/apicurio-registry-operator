@@ -36,11 +36,12 @@ func (this *KubeFactory) createObjectMeta(typeTag string) meta.ObjectMeta {
 
 func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 	var terminationGracePeriodSeconds int64 = 30
+	var replicas int32 = 1
 
 	return &apps.Deployment{
 		ObjectMeta: this.createObjectMeta("deployment"),
 		Spec: apps.DeploymentSpec{
-			Replicas: this.ctx.GetConfiguration().GetConfigInt32P(CFG_DEP_REPLICAS),
+			Replicas: &replicas,
 			Selector: &meta.LabelSelector{MatchLabels: this.GetLabels()},
 			Template: core.PodTemplateSpec{
 				ObjectMeta: meta.ObjectMeta{
@@ -49,29 +50,29 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 				Spec: core.PodSpec{
 					Containers: []core.Container{{
 						Name:  this.ctx.GetConfiguration().GetAppName(),
-						Image: this.ctx.GetConfiguration().GetImage(),
+						Image: "",
 						Ports: []core.ContainerPort{
 							{
 								ContainerPort: 8080,
 								Protocol:      "TCP",
 							},
 						},
-						Env: this.ctx.GetConfiguration().GetEnv(),
+						Env: []core.EnvVar{},
 						Resources: core.ResourceRequirements{
 							Limits: core.ResourceList{
-								core.ResourceCPU:    resource.MustParse(this.ctx.GetConfiguration().GetConfig(CFG_DEP_CPU_LIMIT)),
-								core.ResourceMemory: resource.MustParse(this.ctx.GetConfiguration().GetConfig(CFG_DEP_MEMORY_LIMIT)),
+								core.ResourceCPU:    resource.MustParse("1"),
+								core.ResourceMemory: resource.MustParse("1300Mi"),
 							},
 							Requests: core.ResourceList{
-								core.ResourceCPU:    resource.MustParse(this.ctx.GetConfiguration().GetConfig(CFG_DEP_CPU_REQUESTS)),
-								core.ResourceMemory: resource.MustParse(this.ctx.GetConfiguration().GetConfig(CFG_DEP_MEMORY_REQUESTS)),
+								core.ResourceCPU:    resource.MustParse("0.1"),
+								core.ResourceMemory: resource.MustParse("600Mi"),
 							},
 						},
 						LivenessProbe: &core.Probe{
 							Handler: core.Handler{
 								HTTPGet: &core.HTTPGetAction{
 									Path: "/health/live",
-									Port: intstr.IntOrString{Type: intstr.Int, IntVal: 8080},
+									Port: intstr.FromInt(8080),
 								},
 							},
 							InitialDelaySeconds: 5,
@@ -84,7 +85,7 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 							Handler: core.Handler{
 								HTTPGet: &core.HTTPGetAction{
 									Path: "/health/ready",
-									Port: intstr.IntOrString{Type: intstr.Int, IntVal: 8080},
+									Port: intstr.FromInt(8080),
 								},
 							},
 							InitialDelaySeconds: 5,
@@ -133,6 +134,9 @@ func (this *KubeFactory) CreateService() *core.Service {
 }
 
 func (this *KubeFactory) CreateIngress(serviceName string) *v1beta1.Ingress {
+	if serviceName == "" {
+		panic("Required argument.")
+	}
 	metaData := this.createObjectMeta("ingress")
 	metaData.Annotations = map[string]string{
 		"nginx.ingress.kubernetes.io/force-ssl-redirect": "false",
@@ -144,7 +148,7 @@ func (this *KubeFactory) CreateIngress(serviceName string) *v1beta1.Ingress {
 		Spec: v1beta1.IngressSpec{
 			Rules: []v1beta1.IngressRule{
 				{
-					Host: this.ctx.GetConfiguration().GetConfig(CFG_DEP_ROUTE),
+					Host: "",
 					IngressRuleValue: v1beta1.IngressRuleValue{
 						HTTP: &v1beta1.HTTPIngressRuleValue{
 							Paths: []v1beta1.HTTPIngressPath{
@@ -165,20 +169,14 @@ func (this *KubeFactory) CreateIngress(serviceName string) *v1beta1.Ingress {
 	return res
 }
 
-func (this *KubeFactory) CreateSpec(spec *ar.ApicurioRegistry) *ar.ApicurioRegistry {
-	res := &ar.ApicurioRegistry{
-		TypeMeta:   spec.TypeMeta,
-		ObjectMeta: spec.ObjectMeta,
-		Spec:       spec.Spec,
-		Status: ar.ApicurioRegistryStatus{
-			Image:          this.ctx.GetConfiguration().GetConfig(CFG_STA_IMAGE),
-			DeploymentName: this.ctx.GetConfiguration().GetConfig(CFG_STA_DEPLOYMENT_NAME),
-			ServiceName:    this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME),
-			IngressName:    this.ctx.GetConfiguration().GetConfig(CFG_STA_INGRESS_NAME),
-			ReplicaCount:   *this.ctx.GetConfiguration().GetConfigInt32P(CFG_STA_REPLICA_COUNT),
-			Route:          this.ctx.GetConfiguration().GetConfig(CFG_STA_ROUTE),
-			// TODO add the rest
-		},
+func (this *KubeFactory) CreateStatus(spec *ar.ApicurioRegistry) *ar.ApicurioRegistryStatus {
+	res := &ar.ApicurioRegistryStatus{
+		Image:          this.ctx.GetConfiguration().GetConfig(CFG_STA_IMAGE),
+		DeploymentName: this.ctx.GetConfiguration().GetConfig(CFG_STA_DEPLOYMENT_NAME),
+		ServiceName:    this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME),
+		IngressName:    this.ctx.GetConfiguration().GetConfig(CFG_STA_INGRESS_NAME),
+		ReplicaCount:   *this.ctx.GetConfiguration().GetConfigInt32P(CFG_STA_REPLICA_COUNT),
+		Host:           this.ctx.GetConfiguration().GetConfig(CFG_STA_ROUTE),
 	}
 	return res
 }

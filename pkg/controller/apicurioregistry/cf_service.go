@@ -1,20 +1,21 @@
 package apicurioregistry
 
 import (
-	"context"
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 var _ ControlFunction = &ServiceCF{}
 
 type ServiceCF struct {
-	ctx *Context
+	ctx            *Context
+	isCached       bool
+	services       []core.Service
+	serviceName    string
+	deploymentName string
 }
 
 func NewServiceCF(ctx *Context) ControlFunction {
@@ -25,82 +26,106 @@ func NewServiceCF(ctx *Context) ControlFunction {
 	})
 
 	if err != nil {
-		panic("Error creating Service watch!")
+		panic("Error creating Service watch.")
 	}
 
-	return &ServiceCF{ctx: ctx}
+	return &ServiceCF{
+		ctx:            ctx,
+		isCached:       false,
+		services:       make([]core.Service, 0),
+		serviceName:    RC_EMPTY_NAME,
+		deploymentName: RC_EMPTY_NAME,
+	}
 }
 
 func (this *ServiceCF) Describe() string {
-	return "Service Creation"
+	return "ServiceCF"
 }
 
-func (this *ServiceCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Request) error {
+func (this *ServiceCF) Sense() {
 
-	serviceName := this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME)
+	// Observation #1
+	// Get cached Service
+	serviceEntry, serviceExists := this.ctx.GetResourceCache().Get(RC_KEY_SERVICE)
+	if serviceExists {
+		this.serviceName = serviceEntry.GetName()
+	} else {
+		this.serviceName = RC_EMPTY_NAME
+	}
+	this.isCached = serviceExists
 
-	services, err := this.ctx.GetClients().Kube().GetRawClient().CoreV1().Services(this.ctx.GetConfiguration().GetAppNamespace()).List(
-		meta.ListOptions{
+	// Observation #2
+	// Get service(s) we *should* track
+	this.services = make([]core.Service, 0)
+	services, err := this.ctx.GetClients().Kube().GetServices(
+		this.ctx.GetConfiguration().GetAppNamespace(),
+		&meta.ListOptions{
 			LabelSelector: "app=" + this.ctx.GetConfiguration().GetAppName(),
 		})
-	if err != nil {
-		return err
-	}
-
-	count := 0
-	var lastService *core.Service = nil
-	for _, service := range services.Items {
-		if service.GetObjectMeta().GetDeletionTimestamp() == nil {
-			count++
-			lastService = &service
+	if err == nil {
+		for _, service := range services.Items {
+			if service.GetObjectMeta().GetDeletionTimestamp() == nil {
+				this.services = append(this.services, service)
+			}
 		}
 	}
 
-	if serviceName == "" && count == 0 {
-		// OK -> No svc. yet
-		return nil
+	this.deploymentName = RC_EMPTY_NAME
+
+	// Observation #3
+	// Is there a Deployment already? It must have been created (has a name)
+	deploymentEntry, deploymentExists := this.ctx.GetResourceCache().Get(RC_KEY_DEPLOYMENT)
+	if deploymentExists {
+		this.deploymentName = deploymentEntry.GetName()
 	}
-	if serviceName != "" && count == 1 && lastService != nil && serviceName == lastService.Name {
-		// OK -> svc. exists
-		return nil
+
+	// Observation #4
+	// Same for OCP !!!
+	deploymentEntry, deploymentExists = this.ctx.GetResourceCache().Get(RC_KEY_DEPLOYMENT_OCP)
+	if deploymentExists {
+		this.deploymentName = deploymentEntry.GetName()
 	}
-	if serviceName == "" && count == 1 && lastService != nil {
-		// Also OK, but should not happen
-		// save to status
-		this.ctx.GetConfiguration().SetConfig(CFG_STA_SERVICE_NAME, lastService.Name)
-		return nil
-	}
-	// bad bad bad!
-	this.ctx.GetLog().Info("Warning: Inconsistent Service state found.")
-	this.ctx.GetConfiguration().ClearConfig(CFG_STA_SERVICE_NAME)
-	for _, service := range services.Items {
-		// nuke them...
-		this.ctx.GetLog().Info("Warning: Deleting Service '" + service.Name + "'.")
-		_ = this.ctx.GetClients().Kube().GetRawClient().AppsV1().
-			Deployments(this.ctx.GetConfiguration().GetAppNamespace()).
-			Delete(service.Name, &meta.DeleteOptions{})
-	}
-	return nil
+
+	// Update the status
+	this.ctx.GetConfiguration().SetConfig(CFG_STA_SERVICE_NAME, this.serviceName)
 }
 
-func (this *ServiceCF) Compare(spec *ar.ApicurioRegistry) (bool, error) {
-	return this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME) == "", nil
+func (this *ServiceCF) Compare() bool {
+	// Condition #1
+	// If we already have a service cached, skip
+	// Condition #2
+	// The deployment has been created
+	return !this.isCached && this.deploymentName != RC_EMPTY_NAME
 }
 
-func (this *ServiceCF) Respond(spec *ar.ApicurioRegistry) (bool, error) {
-	service := this.ctx.GetKubeFactory().CreateService()
-
-	if err := controllerutil.SetControllerReference(spec, service, this.ctx.GetScheme()); err != nil {
-		this.ctx.GetLog().Error(err, "Cannot set controller reference.")
-		return true, err
+func (this *ServiceCF) Respond() {
+	// Response #1
+	// We already know about a service (name), and it is in the list
+	if this.serviceName != RC_EMPTY_NAME {
+		contains := false
+		for _, val := range this.services {
+			if val.Name == this.serviceName {
+				contains = true
+				this.ctx.GetResourceCache().Set(RC_KEY_SERVICE, NewResourceCacheEntry(val.Name, &val))
+				break
+			}
+		}
+		if !contains {
+			this.serviceName = RC_EMPTY_NAME
+		}
 	}
-	if err := this.ctx.GetNativeClient().Create(context.TODO(), service); err != nil {
-		this.ctx.GetLog().Error(err, "Failed to create a new Service.")
-		return true, err
-	} else {
-		this.ctx.GetConfiguration().SetConfig(CFG_STA_SERVICE_NAME, service.Name)
-		this.ctx.GetLog().Info("New Service name is " + service.Name)
+	// Response #2
+	// Can follow #1, but there must be a single service available
+	if this.serviceName == RC_EMPTY_NAME && len(this.services) == 1 {
+		service := this.services[0]
+		this.serviceName = service.Name
+		this.ctx.GetResourceCache().Set(RC_KEY_SERVICE, NewResourceCacheEntry(service.Name, &service))
 	}
-
-	return true, nil
+	// Response #3 (and #4)
+	// If there is no service available (or there are more than 1), just create a new one
+	if this.serviceName == RC_EMPTY_NAME && len(this.services) != 1 {
+		service := this.ctx.GetKubeFactory().CreateService()
+		// leave the creation itself to patcher+creator so other CFs can update
+		this.ctx.GetResourceCache().Set(RC_KEY_SERVICE, NewResourceCacheEntry(RC_EMPTY_NAME, service))
+	}
 }

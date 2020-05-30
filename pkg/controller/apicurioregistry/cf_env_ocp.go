@@ -1,42 +1,95 @@
 package apicurioregistry
 
 import (
-	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	ocp_apps "github.com/openshift/api/apps/v1"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var _ ControlFunction = &EnvOCPCF{}
+var _ ControlFunction = &EnvOcpCF{}
 
-type EnvOCPCF struct {
-	ctx *Context
+type EnvOcpCF struct {
+	ctx              *Context
+	deploymentExists bool
+	deploymentEntry  ResourceCacheEntry
+	deploymentName   string
+	lastDeploymentName string
+	envCacheUpdated  bool
 }
 
-func NewEnvOCPCF(ctx *Context) ControlFunction {
-	return &EnvOCPCF{ctx: ctx}
+// Is responsible for managing environment variables from the env cache
+func NewEnvOcpCF(ctx *Context) ControlFunction {
+	return &EnvOcpCF{
+		ctx:              ctx,
+		deploymentExists: false,
+		deploymentEntry:  nil,
+		deploymentName:   RC_EMPTY_NAME,
+		lastDeploymentName:   RC_EMPTY_NAME,
+		envCacheUpdated:  false,
+	}
 }
 
-func (this *EnvOCPCF) Describe() string {
-	return "Environment Vars Update (OCP)"
+func (this *EnvOcpCF) Describe() string {
+	return "EnvOcpCF"
 }
 
-func (this *EnvOCPCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Request) error {
-	// noop
-	return nil
+func (this *EnvOcpCF) Sense() {
+	// Observation #1
+	// Is deployment available and/or is it already created
+	deploymentEntry, deploymentExists := this.ctx.GetResourceCache().Get(RC_KEY_DEPLOYMENT_OCP)
+	this.deploymentExists = deploymentExists
+	this.deploymentEntry = deploymentEntry
+	this.deploymentName = deploymentEntry.GetName()
+
+	// Observation #2
+	// Was the env cache updated?
+	this.envCacheUpdated = this.ctx.GetEnvCache().IsChanged()
+
 }
 
-func (this *EnvOCPCF) Compare(spec *ar.ApicurioRegistry) (bool, error) {
-	return this.ctx.GetConfiguration().EnvChanged(), nil
+func (this *EnvOcpCF) Compare() bool {
+	// Condition #1
+	// We have something to update
+	// Condition #2
+	// There is a deployment
+	return (this.envCacheUpdated || this.deploymentName != this.lastDeploymentName) && this.deploymentExists
 }
 
-func (this *EnvOCPCF) Respond(spec *ar.ApicurioRegistry) (bool, error) {
-	this.ctx.GetLog().Info("Updating environment variables.")
-	this.ctx.GetPatchers().OCP().AddDeploymentPatch(func(deployment *ocp_apps.DeploymentConfig) {
-		for i, _ := range deployment.Spec.Template.Spec.Containers {
-			deployment.Spec.Template.Spec.Containers[i].Env = this.ctx.GetConfiguration().GetEnv()
-			this.ctx.GetLog().Info("Environment variables updated.")
-			return
+func (this *EnvOcpCF) Respond() {
+	// Response #1
+	// First, read the existing env variables, and the add them to cache,
+	// so they stay at the end where possible, keeping the order where possible, because
+	// we do not have dependency info about those.
+	// The operator overwrites user defined ones only when necessary
+	deployment := this.deploymentEntry.GetValue().(*ocp_apps.DeploymentConfig)
+	for i, c := range deployment.Spec.Template.Spec.Containers {
+		if c.Name == this.ctx.GetConfiguration().GetAppName() {
+			for _, e := range deployment.Spec.Template.Spec.Containers[i].Env {
+				// Add to the cache
+				if v, exists := this.ctx.GetEnvCache().Get(e.Name); exists {
+					if !v.IsManaged() { // TODO this avoids overwriting of managed env variables
+						this.ctx.GetEnvCache().Set(NewEnvCacheEntryUnmanaged(e.DeepCopy()))
+					}
+				} else {
+					this.ctx.GetEnvCache().Set(NewEnvCacheEntryUnmanaged(e.DeepCopy()))
+				}
+			}
 		}
+	} // TODO report a problem if not found?
+
+	// Response #2
+	// Write the sorted env vars
+	this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
+		deployment := value.(*ocp_apps.DeploymentConfig).DeepCopy()
+		for i, c := range deployment.Spec.Template.Spec.Containers {
+			if c.Name == this.ctx.GetConfiguration().GetAppName() {
+				deployment.Spec.Template.Spec.Containers[i].Env = this.ctx.GetEnvCache().GetSorted()
+			}
+		} // TODO report a problem if not found?
+		return deployment
 	})
-	return true, nil
+
+	// Response #3
+	// Do not clear the cache, but reset the change mark
+	this.ctx.GetEnvCache().ResetChanged()
+
+	this.lastDeploymentName = this.deploymentName
 }

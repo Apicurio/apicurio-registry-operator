@@ -9,3 +9,9 @@ rules:
       - clusterversions
     verbs:
       - get
+  - apiGroups:
+      - apicur.io
+    resources:
+      - apicurioregistries
+    verbs:
+      - "*"

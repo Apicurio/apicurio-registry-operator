@@ -1,11 +1,12 @@
 package apicurioregistry
 
 import (
-	"errors"
 	ocp_apps "github.com/openshift/api/apps/v1"
 	ocp_apps_client "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 type OCPClient struct {
@@ -21,11 +22,23 @@ func NewOCPClient(ctx *Context, clientConfig *rest.Config) *OCPClient {
 	return this
 }
 
-func (this *OCPClient) GetCurrentDeployment() (*ocp_apps.DeploymentConfig, error) {
-	if name := this.ctx.GetConfiguration().GetConfig(CFG_STA_DEPLOYMENT_NAME); name != "" {
-		return this.GetDeployment(this.ctx.GetConfiguration().GetAppNamespace(), name, &meta.GetOptions{})
+// ===
+// Deployment
+
+func (this *OCPClient) CreateDeployment(namespace string, value *ocp_apps.DeploymentConfig) (*ocp_apps.DeploymentConfig, error) {
+	res, err := this.ocpAppsClient.DeploymentConfigs(namespace).
+		Create(value)
+	if err != nil {
+		return nil, err
 	}
-	return nil, errors.New("No deployment name in status yet.")
+	if err := controllerutil.SetControllerReference(this.ctx.GetConfiguration().GetSpec(), res, this.ctx.GetScheme()); err != nil {
+		panic("Could not set controller reference.")
+	}
+	res, err = this.UpdateDeployment(namespace, res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func (this *OCPClient) GetDeployment(namespace string, name string, options *meta.GetOptions) (*ocp_apps.DeploymentConfig, error) {
@@ -33,12 +46,22 @@ func (this *OCPClient) GetDeployment(namespace string, name string, options *met
 		Get(name, *options)
 }
 
-func (this *OCPClient) DeleteDeployment(name string, options *meta.DeleteOptions) error {
-	return this.ocpAppsClient.DeploymentConfigs(this.ctx.GetConfiguration().GetAppNamespace()).
+func (this *OCPClient) UpdateDeployment(namespace string, value *ocp_apps.DeploymentConfig) (*ocp_apps.DeploymentConfig, error) {
+	return this.ocpAppsClient.DeploymentConfigs(namespace).
+		Update(value)
+}
+
+func (this *OCPClient) PatchDeployment(namespace, name string, patchData []byte) (*ocp_apps.DeploymentConfig, error) {
+	return this.ocpAppsClient.DeploymentConfigs(namespace).
+		Patch(name, types.StrategicMergePatchType, patchData)
+}
+
+func (this *OCPClient) DeleteDeployment(namespace string, name string, options *meta.DeleteOptions) error {
+	return this.ocpAppsClient.DeploymentConfigs(namespace).
 		Delete(name, options)
 }
 
-func (this *OCPClient) GetDeployments(options meta.ListOptions) (*ocp_apps.DeploymentConfigList, error) {
-	return this.ocpAppsClient.DeploymentConfigs(this.ctx.GetConfiguration().GetAppNamespace()).
-		List(options)
+func (this *OCPClient) GetDeployments(namespace string, options *meta.ListOptions) (*ocp_apps.DeploymentConfigList, error) {
+	return this.ocpAppsClient.DeploymentConfigs(namespace).
+		List(*options)
 }

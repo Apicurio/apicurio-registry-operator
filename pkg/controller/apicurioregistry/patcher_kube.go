@@ -1,22 +1,15 @@
 package apicurioregistry
 
 import (
+	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 )
 
-type DeploymentUF = func(spec *apps.Deployment)
-type ServiceUF = func(spec *core.Service)
-type IngressUF = func(spec *extensions.Ingress)
-
 type KubePatcher struct {
-	ctx           *Context
-	deploymentUFs []DeploymentUF
-	serviceUFs    []ServiceUF
-	ingressUFs    []IngressUF
+	ctx *Context
 }
 
 func NewKubePatcher(ctx *Context) *KubePatcher {
@@ -27,122 +20,170 @@ func NewKubePatcher(ctx *Context) *KubePatcher {
 
 // ===
 
-func (this *KubePatcher) AddDeploymentPatch(updateFunc DeploymentUF) {
-	this.deploymentUFs = append(this.deploymentUFs, updateFunc)
+func (this *KubePatcher) patchApicurioRegistry() { // TODO move to separate file/class?
+	patchGeneric(
+		this.ctx,
+		RC_KEY_SPEC,
+		func(namespace string, name string) (interface{}, error) {
+			return this.ctx.GetClients().CRD().GetApicurioRegistry(namespace, name, &meta.GetOptions{})
+		},
+		func(value interface{}) string {
+			return value.(*ar.ApicurioRegistry).ObjectMeta.String()
+		},
+		&ar.ApicurioRegistry{},
+		"ar.ApicurioRegistry",
+		func(namespace string, value interface{}) (interface{}, error) {
+			// This should be not used (at the moment)
+			panic("Unsupported operation.")
+		},
+		func(namespace string, name string, data []byte) (interface{}, error) {
+			return this.ctx.GetClients().CRD().PatchApicurioRegistry(namespace, name, data)
+		},
+		func(value interface{}) string {
+			return value.(*ar.ApicurioRegistry).GetName()
+		},
+		func(value interface{}) interface{} {
+			return value.(*ar.ApicurioRegistry)
+		},
+	)
 }
 
-func (this *KubePatcher) patchDeployment() {
-	if name := this.ctx.GetConfiguration().GetConfig(CFG_STA_DEPLOYMENT_NAME); name != "" {
-		err := this.ctx.GetClients().Kube().PatchDeployment(this.ctx.GetConfiguration().GetAppNamespace(), name, func(deployment *apps.Deployment) {
-			for _, v := range this.deploymentUFs {
-				v(deployment)
-			}
-		})
-		if err != nil {
-			this.ctx.GetLog().Error(err, "Error during Deployment patching")
+func (this *KubePatcher) reloadDeployment() {
+	if entry, exists := this.ctx.GetResourceCache().Get(RC_KEY_DEPLOYMENT); exists {
+		r, e := this.ctx.GetClients().Kube().
+			GetDeployment(this.ctx.GetConfiguration().GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
+		if e != nil {
+			this.ctx.GetLog().WithValues("name", entry.GetName()).Info("Resource not found. (May have been deleted).")
+			this.ctx.GetResourceCache().Remove(RC_KEY_DEPLOYMENT)
+			this.ctx.SetRequeue()
+		} else {
+			this.ctx.GetResourceCache().Set(RC_KEY_DEPLOYMENT, NewResourceCacheEntry(r.Name, r))
 		}
 	}
 }
 
-// ===
 
-func (this *KubePatcher) AddServicePatch(updateFunc ServiceUF) {
-	this.serviceUFs = append(this.serviceUFs, updateFunc)
+func (this *KubePatcher) patchDeployment() {
+	patchGeneric(
+		this.ctx,
+		RC_KEY_DEPLOYMENT,
+		func(namespace string, name string) (interface{}, error) {
+			return this.ctx.GetClients().Kube().GetDeployment(namespace, name, &meta.GetOptions{})
+		},
+		func(value interface{}) string {
+			return value.(*apps.Deployment).String()
+		},
+		&apps.DeploymentSpec{},
+		"apps.Deployment",
+		func(namespace string, value interface{}) (interface{}, error) {
+			return this.ctx.GetClients().Kube().CreateDeployment(namespace, value.(*apps.Deployment))
+		},
+		func(namespace string, name string, data []byte) (interface{}, error) {
+			return this.ctx.GetClients().Kube().PatchDeployment(namespace, name, data)
+		},
+		func(value interface{}) string {
+			return value.(*apps.Deployment).GetName()
+		},
+		func(value interface{}) interface{} {
+			return value.(*apps.Deployment).Spec
+		},
+	)
+}
+
+func (this *KubePatcher) reloadService() {
+	if entry, exists := this.ctx.GetResourceCache().Get(RC_KEY_SERVICE); exists {
+		r, e := this.ctx.GetClients().Kube().
+			GetService(this.ctx.GetConfiguration().GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
+		if e != nil {
+			this.ctx.GetLog().WithValues("name", entry.GetName()).Info("Resource not found. (May have been deleted).")
+			this.ctx.GetResourceCache().Remove(RC_KEY_SERVICE)
+			this.ctx.SetRequeue()
+		} else {
+			this.ctx.GetResourceCache().Set(RC_KEY_SERVICE, NewResourceCacheEntry(r.Name, r))
+		}
+	}
 }
 
 func (this *KubePatcher) patchService() {
-	if name := this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME); name != "" {
-		err := this.ctx.GetClients().Kube().PatchService(this.ctx.GetConfiguration().GetAppNamespace(), name, func(service *core.Service) {
-			for _, v := range this.serviceUFs {
-				v(service)
-			}
-		})
-		if err != nil {
-			this.ctx.GetLog().Error(err, "Error during Service patching")
-		}
-	}
+	patchGeneric(
+		this.ctx,
+		RC_KEY_SERVICE,
+		func(namespace string, name string) (interface{}, error) {
+			return this.ctx.GetClients().Kube().GetService(namespace, name, &meta.GetOptions{})
+		},
+		func(value interface{}) string {
+			return value.(*core.Service).String()
+		},
+		&core.ServiceSpec{},
+		"core.Service",
+		func(namespace string, value interface{}) (interface{}, error) {
+			return this.ctx.GetClients().Kube().CreateService(namespace, value.(*core.Service))
+		},
+		func(namespace string, name string, data []byte) (interface{}, error) {
+			return this.ctx.GetClients().Kube().PatchService(namespace, name, data)
+		},
+		func(value interface{}) string {
+			return value.(*core.Service).GetName()
+		},
+		func(value interface{}) interface{} {
+			return value.(*core.Service).Spec
+		},
+	)
 }
 
-// ===
-
-func (this *KubePatcher) AddIngressPatch(updateFunc IngressUF) {
-	this.ingressUFs = append(this.ingressUFs, updateFunc)
+func (this *KubePatcher) reloadIngress() {
+	if entry, exists := this.ctx.GetResourceCache().Get(RC_KEY_INGRESS); exists {
+		r, e := this.ctx.GetClients().Kube().
+			GetIngress(this.ctx.GetConfiguration().GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
+		if e != nil {
+			this.ctx.GetLog().WithValues("name", entry.GetName()).Info("Resource not found. (May have been deleted).")
+			this.ctx.GetResourceCache().Remove(RC_KEY_INGRESS)
+			this.ctx.SetRequeue()
+		} else {
+			this.ctx.GetResourceCache().Set(RC_KEY_INGRESS, NewResourceCacheEntry(r.Name, r))
+		}
+	}
 }
 
 func (this *KubePatcher) patchIngress() {
-	if name := this.ctx.GetConfiguration().GetConfig(CFG_STA_INGRESS_NAME); name != "" {
-		err := this.ctx.GetClients().Kube().PatchIngress(this.ctx.GetConfiguration().GetAppNamespace(), name, func(ingress *extensions.Ingress) {
-			for _, v := range this.ingressUFs {
-				v(ingress)
-			}
-		})
-		if err != nil {
-			this.ctx.GetLog().Error(err, "Error during Ingress patching")
-		}
-	}
+	patchGeneric(
+		this.ctx,
+		RC_KEY_INGRESS,
+		func(namespace string, name string) (interface{}, error) {
+			return this.ctx.GetClients().Kube().GetIngress(namespace, name, &meta.GetOptions{})
+		},
+		func(value interface{}) string {
+			return value.(*extensions.Ingress).String()
+		},
+		&extensions.IngressSpec{},
+		"extensions.Ingress",
+		func(namespace string, value interface{}) (interface{}, error) {
+			return this.ctx.GetClients().Kube().CreateIngress(namespace, value.(*extensions.Ingress))
+		},
+		func(namespace string, name string, data []byte) (interface{}, error) {
+			return this.ctx.GetClients().Kube().PatchIngress(namespace, name, data)
+		},
+		func(value interface{}) string {
+			return value.(*extensions.Ingress).GetName()
+		},
+		func(value interface{}) interface{} {
+			return value.(*extensions.Ingress).Spec
+		},
+	)
 }
 
-// ===
+// =====
 
-func (this *KubeClient) PatchDeployment(namespace, name string, updateFunc func(*apps.Deployment)) error {
-	o, err := this.client.AppsV1().Deployments(namespace).Get(name, meta.GetOptions{})
-	if err != nil {
-		return err
-	}
-	n := o.DeepCopy()
-	updateFunc(n)
-	patchData, err := createPatch(o, n, apps.Deployment{})
-	if err != nil {
-		return err
-	}
-	_, err = this.client.AppsV1beta1().Deployments(namespace).Patch(name, types.StrategicMergePatchType, patchData)
-	return err
+
+func (this *KubePatcher) Reload() {
+	this.reloadDeployment()
+	this.reloadService()
+	this.reloadIngress()
 }
-
-func (this *KubeClient) PatchService(namespace, name string, updateFunc ServiceUF) error {
-	o, err := this.client.CoreV1().Services(namespace).Get(name, meta.GetOptions{})
-	if err != nil {
-		return err
-	}
-	n := o.DeepCopy()
-	updateFunc(n)
-	patchData, err := createPatch(o, n, core.Service{})
-	if err != nil {
-		return err
-	}
-	_, err = this.client.CoreV1().Services(namespace).Patch(name, types.StrategicMergePatchType, patchData)
-	return err
-}
-
-func (this *KubeClient) PatchIngress(namespace, name string, updateFunc func(*extensions.Ingress)) error {
-	o, err := this.client.ExtensionsV1beta1().Ingresses(namespace).Get(name, meta.GetOptions{})
-	if err != nil {
-		return err
-	}
-	n := o.DeepCopy()
-	updateFunc(n)
-	patchData, err := createPatch(o, n, extensions.Ingress{})
-	if err != nil {
-		return err
-	}
-	_, err = this.client.ExtensionsV1beta1().Ingresses(namespace).Patch(name, types.StrategicMergePatchType, patchData)
-	return err
-}
-
-// ===
 
 func (this *KubePatcher) Execute() {
-	if len(this.deploymentUFs) > 0 {
-		this.patchDeployment()
-	}
-	if len(this.serviceUFs) > 0 {
-		this.patchService()
-	}
-	if len(this.ingressUFs) > 0 {
-		this.patchIngress()
-	}
-	// reset
-	this.deploymentUFs = *new([]DeploymentUF)
-	this.serviceUFs = *new([]ServiceUF)
-	this.ingressUFs = *new([]IngressUF)
+	this.patchApicurioRegistry()
+	this.patchDeployment()
+	this.patchService()
+	this.patchIngress()
 }
