@@ -1,13 +1,14 @@
 package apicurioregistry
 
 import (
-	"errors"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 // =====
@@ -24,32 +25,119 @@ func NewKubeClient(ctx *Context, config *rest.Config) *KubeClient {
 	}
 }
 
-// =====
+// ===
+// Deployment
 
-func (this *KubeClient) GetCurrentDeployment() (*apps.Deployment, error) {
-	if name := this.ctx.GetConfiguration().GetConfig(CFG_STA_DEPLOYMENT_NAME); name != "" {
-		deployment, err := this.client.AppsV1().Deployments(this.ctx.GetConfiguration().GetAppNamespace()).Get(name, meta.GetOptions{})
-		return deployment, err
+func (this *KubeClient) CreateDeployment(namespace string, value *apps.Deployment) (*apps.Deployment, error) {
+	res, err := this.client.AppsV1().Deployments(namespace).
+		Create(value)
+	if err != nil {
+		return nil, err
 	}
-	return nil, errors.New("No deployment name in status yet.")
+	if err := controllerutil.SetControllerReference(this.ctx.GetConfiguration().GetSpec(), res, this.ctx.GetScheme()); err != nil {
+		panic("Could not set controller reference.")
+	}
+	res, err = this.UpdateDeployment(namespace, res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
-func (this *KubeClient) GetCurrentService() (*core.Service, error) {
-	if name := this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME); name != "" {
-		service, err := this.client.CoreV1().Services(this.ctx.GetConfiguration().GetAppNamespace()).Get(name, meta.GetOptions{})
-		return service, err
-	}
-	return nil, errors.New("No service name in status yet.")
+func (this *KubeClient) GetDeployment(namespace string, name string, options *meta.GetOptions) (*apps.Deployment, error) {
+	return this.client.AppsV1().Deployments(namespace).
+		Get(name, *options)
 }
 
-func (this *KubeClient) GetCurrentIngress() (*extensions.Ingress, error) {
-	if name := this.ctx.GetConfiguration().GetConfig(CFG_STA_INGRESS_NAME); name != "" {
-		ingress, err := this.client.ExtensionsV1beta1().Ingresses(this.ctx.GetConfiguration().GetAppNamespace()).Get(name, meta.GetOptions{})
-		return ingress, err
-	}
-	return nil, errors.New("No ingress name in status yet.")
+func (this *KubeClient) UpdateDeployment(namespace string, value *apps.Deployment) (*apps.Deployment, error) {
+	return this.client.AppsV1().Deployments(namespace).
+		Update(value)
 }
 
-func (this *KubeClient) GetRawClient() kubernetes.Interface {
-	return this.client
+func (this *KubeClient) PatchDeployment(namespace, name string, patchData []byte) (*apps.Deployment, error) {
+	return this.client.AppsV1().Deployments(namespace).
+		Patch(name, types.StrategicMergePatchType, patchData)
+}
+
+func (this *KubeClient) GetDeployments(namespace string, options *meta.ListOptions) (*apps.DeploymentList, error) {
+	return this.client.AppsV1().Deployments(namespace).
+		List(*options)
+}
+
+// ===
+// Service
+
+func (this *KubeClient) CreateService(namespace string, value *core.Service) (*core.Service, error) {
+	res, err := this.client.CoreV1().Services(namespace).
+		Create(value)
+	if err != nil {
+		return nil, err
+	}
+	if err := controllerutil.SetControllerReference(this.ctx.GetConfiguration().GetSpec(), res, this.ctx.GetScheme()); err != nil {
+		panic("Could not set controller reference.")
+	}
+	res, err = this.UpdateService(namespace, res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (this *KubeClient) GetService(namespace string, name string, options *meta.GetOptions) (*core.Service, error) {
+	return this.client.CoreV1().Services(namespace).
+		Get(name, meta.GetOptions{})
+}
+
+func (this *KubeClient) UpdateService(namespace string, value *core.Service) (*core.Service, error) {
+	return this.client.CoreV1().Services(namespace).
+		Update(value)
+}
+
+func (this *KubeClient) PatchService(namespace, name string, patchData []byte) (*core.Service, error) {
+	return this.client.CoreV1().Services(namespace).
+		Patch(name, types.StrategicMergePatchType, patchData)
+}
+
+func (this *KubeClient) GetServices(namespace string, options *meta.ListOptions) (*core.ServiceList, error) {
+	return this.client.CoreV1().Services(namespace).
+		List(*options)
+}
+
+// ===
+// Ingress
+
+func (this *KubeClient) CreateIngress(namespace string, value *extensions.Ingress) (*extensions.Ingress, error) {
+	res, err := this.client.ExtensionsV1beta1().Ingresses(namespace).
+		Create(value)
+	if err != nil {
+		return nil, err
+	}
+	if err := controllerutil.SetControllerReference(this.ctx.GetConfiguration().GetSpec(), res, this.ctx.GetScheme()); err != nil {
+		panic("Could not set controller reference.")
+	}
+	res, err = this.UpdateIngress(namespace, res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (this *KubeClient) GetIngress(namespace string, name string, options *meta.GetOptions) (*extensions.Ingress, error) {
+	return this.client.ExtensionsV1beta1().Ingresses(namespace).
+		Get(name, meta.GetOptions{})
+}
+
+func (this *KubeClient) UpdateIngress(namespace string, value *extensions.Ingress) (*extensions.Ingress, error) {
+	return this.client.ExtensionsV1beta1().Ingresses(namespace).
+		Update(value)
+}
+
+func (this *KubeClient) PatchIngress(namespace, name string, patchData []byte) (*extensions.Ingress, error) {
+	return this.client.ExtensionsV1beta1().Ingresses(namespace).
+		Patch(name, types.StrategicMergePatchType, patchData)
+}
+
+func (this *KubeClient) GetIngresses(namespace string, options *meta.ListOptions) (*extensions.IngressList, error) {
+	return this.client.ExtensionsV1beta1().Ingresses(namespace).
+		List(*options)
 }

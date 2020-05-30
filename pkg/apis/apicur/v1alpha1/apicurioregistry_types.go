@@ -34,18 +34,20 @@ type ApicurioRegistrySpec struct {
 
 // +k8s:openapi-gen=true
 type ApicurioRegistrySpecImage struct {
-	Registry string `json:"registry,omitempty"`
-	Version  string `json:"version,omitempty"`
-	Override string `json:"override,omitempty"`
+	//Registry string `json:"registry,omitempty"`
+	//Version  string `json:"version,omitempty"`
+	//Override string `json:"override,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 // +k8s:openapi-gen=true
 type ApicurioRegistrySpecConfiguration struct {
-	// +kubebuilder:validation:Enum=mem;jpa;kafka;streams
+	// +kubebuilder:validation:Enum=mem;jpa;kafka;streams;infinispan;
 	Persistence string                                      `json:"persistence,omitempty"`
 	DataSource  ApicurioRegistrySpecConfigurationDataSource `json:"dataSource,omitempty"`
 	Kafka       ApicurioRegistrySpecConfigurationKafka      `json:"kafka,omitempty"`
 	Streams     ApicurioRegistrySpecConfigurationStreams    `json:"streams,omitempty"`
+	Infinispan  ApicurioRegistrySpecConfigurationInfinispan `json:"infinispan,omitempty"`
 }
 
 // +k8s:openapi-gen=true
@@ -68,10 +70,16 @@ type ApicurioRegistrySpecConfigurationStreams struct {
 }
 
 // +k8s:openapi-gen=true
+type ApicurioRegistrySpecConfigurationInfinispan struct {
+	ClusterName string `json:"clusterName,omitempty"`
+}
+
+// +k8s:openapi-gen=true
 type ApicurioRegistrySpecDeployment struct {
-	Replicas  int32                                   `json:"replicas,omitempty"`
-	Route     string                                  `json:"route,omitempty"`
-	Resources ApicurioRegistrySpecDeploymentResources `json:"resources,omitempty"`
+	Replicas int32  `json:"replicas,omitempty"`
+	Host     string `json:"host,omitempty"`
+	//Route     string                                  `json:"route,omitempty"`
+	//Resources ApicurioRegistrySpecDeploymentResources `json:"resources,omitempty"`
 }
 
 // +k8s:openapi-gen=true
@@ -94,7 +102,8 @@ type ApicurioRegistryStatus struct {
 	ServiceName    string `json:"serviceName,omitempty"`
 	IngressName    string `json:"ingressName,omitempty"`
 	ReplicaCount   int32  `json:"replicaCount,omitempty"`
-	Route          string `json:"route,omitempty"`
+	Host           string `json:"host,omitempty"`
+	//Route          string `json:"route,omitempty"`
 	//CpuRequests string `json:"cpuRequests,omitempty"`
 	//CpuLimits string `json:"cpuLimits,omitempty"`
 	//MemoryRequests string `json:"memoryRequests,omitempty"`

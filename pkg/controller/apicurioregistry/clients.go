@@ -17,6 +17,7 @@ type Clients struct {
 	config     *rest.Config
 	kubeClient *KubeClient
 	ocpClient  *OCPClient
+	crdClient  *CRDClient
 }
 
 func NewClients(ctx *Context) *Clients {
@@ -28,8 +29,16 @@ func NewClients(ctx *Context) *Clients {
 		fatal(ctx.GetLog(), err, "Could not configure clients.")
 	}
 	this.config = config
+
+	config, err = inClusterConfig()
 	this.kubeClient = NewKubeClient(ctx, config)
+
+	config, err = inClusterConfig()
 	this.ocpClient = NewOCPClient(ctx, config)
+
+	config, err = inClusterConfig()
+	this.crdClient = NewCRDClient(ctx, config)
+
 	return this
 }
 
@@ -53,6 +62,10 @@ func (this *Clients) OCP() *OCPClient {
 
 func (this *Clients) Kube() *KubeClient {
 	return this.kubeClient
+}
+
+func (this *Clients) CRD() *CRDClient {
+	return this.crdClient
 }
 
 func (this *Clients) IsOCP() (bool, error) {

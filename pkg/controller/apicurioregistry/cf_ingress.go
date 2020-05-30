@@ -1,26 +1,27 @@
 package apicurioregistry
 
 import (
-	"context"
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
-	"k8s.io/api/extensions/v1beta1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 var _ ControlFunction = &IngressCF{}
 
 type IngressCF struct {
-	ctx *Context
+	ctx               *Context
+	isCached          bool
+	ingresses         []extensions.Ingress
+	ingressName       string
+	serviceName       string
+	targetHostIsEmpty bool
 }
 
 func NewIngressCF(ctx *Context) ControlFunction {
 
-	err := ctx.GetController().Watch(&source.Kind{Type: &v1beta1.Ingress{}}, &handler.EnqueueRequestForOwner{
+	err := ctx.GetController().Watch(&source.Kind{Type: &extensions.Ingress{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &ar.ApicurioRegistry{},
 	})
@@ -29,85 +30,108 @@ func NewIngressCF(ctx *Context) ControlFunction {
 		panic("Error creating Ingress watch.")
 	}
 
-	return &IngressCF{ctx: ctx}
+	return &IngressCF{
+		ctx:               ctx,
+		isCached:          false,
+		ingresses:         make([]extensions.Ingress, 0),
+		ingressName:       RC_EMPTY_NAME,
+		serviceName:       RC_EMPTY_NAME,
+		targetHostIsEmpty: true,
+	}
 }
 
 func (this *IngressCF) Describe() string {
-	return "Ingress Creation"
+	return "IngressCF"
 }
 
-func (this *IngressCF) Sense(spec *ar.ApicurioRegistry, request reconcile.Request) error {
-	ingressName := this.ctx.GetConfiguration().GetConfig(CFG_STA_INGRESS_NAME)
+func (this *IngressCF) Sense() {
 
-	ingresses, err := this.ctx.GetClients().Kube().GetRawClient().ExtensionsV1beta1().Ingresses(this.ctx.GetConfiguration().GetAppNamespace()).List(
-		meta.ListOptions{
+	// Observation #1
+	// Get cached Ingress
+	ingressEntry, ingressExists := this.ctx.GetResourceCache().Get(RC_KEY_INGRESS)
+	if ingressExists {
+		this.ingressName = ingressEntry.GetName()
+	} else {
+		this.ingressName = RC_EMPTY_NAME
+	}
+	this.isCached = ingressExists
+
+	// Observation #2
+	// Get ingress(s) we *should* track
+	this.ingresses = make([]extensions.Ingress, 0)
+	ingresses, err := this.ctx.GetClients().Kube().GetIngresses(
+		this.ctx.GetConfiguration().GetAppNamespace(),
+		&meta.ListOptions{
 			LabelSelector: "app=" + this.ctx.GetConfiguration().GetAppName(),
 		})
-	if err != nil {
-		return err
-	}
-
-	count := 0
-	var lastIngress *extensions.Ingress = nil
-	for _, ingress := range ingresses.Items {
-		if ingress.GetObjectMeta().GetDeletionTimestamp() == nil {
-			count++
-			lastIngress = &ingress
+	if err == nil {
+		for _, ingress := range ingresses.Items {
+			if ingress.GetObjectMeta().GetDeletionTimestamp() == nil {
+				this.ingresses = append(this.ingresses, ingress)
+			}
 		}
 	}
 
-	if ingressName == "" && count == 0 {
-		// OK -> No dep. yet
-		return nil
-	}
-	if ingressName != "" && count == 1 && lastIngress != nil && ingressName == lastIngress.Name {
-		// OK -> dep exists
-		return nil
-	}
-	if ingressName == "" && count == 1 && lastIngress != nil {
-		// Also OK, but should not happen
-		// save to status
-		this.ctx.GetConfiguration().SetConfig(CFG_STA_INGRESS_NAME, lastIngress.Name)
-		return nil
-	}
-	// bad bad bad!
-	this.ctx.GetLog().Info("Warning: Inconsistent Ingress state found.")
-	this.ctx.GetConfiguration().ClearConfig(CFG_STA_INGRESS_NAME)
-	for _, ingress := range ingresses.Items {
-		// nuke them...
-		this.ctx.GetLog().Info("Warning: Deleting Ingress '" + ingress.Name + "'.")
-		_ = this.ctx.GetClients().Kube().GetRawClient().ExtensionsV1beta1().
-			Ingresses(this.ctx.GetConfiguration().GetAppNamespace()).
-			Delete(ingress.Name, &meta.DeleteOptions{})
-	}
-	return nil
-}
-
-func (this *IngressCF) Compare(spec *ar.ApicurioRegistry) (bool, error) {
-	// Do not create ingress if "route" is not defined
-	return this.ctx.GetConfiguration().GetConfig(CFG_DEP_ROUTE) != "" &&
-		this.ctx.GetConfiguration().GetConfig(CFG_STA_INGRESS_NAME) == "" &&
-		this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME) != "", nil
-}
-
-func (this *IngressCF) Respond(spec *ar.ApicurioRegistry) (bool, error) {
-	serviceName := this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME)
-	if serviceName == "" {
-		return true, nil
-	}
-	ingress := this.ctx.GetKubeFactory().CreateIngress(serviceName)
-
-	if err := controllerutil.SetControllerReference(spec, ingress, this.ctx.GetScheme()); err != nil {
-		this.ctx.GetLog().Error(err, "Cannot set controller reference.")
-		return true, err
-	}
-	if err := this.ctx.GetNativeClient().Create(context.TODO(), ingress); err != nil {
-		this.ctx.GetLog().Error(err, "Failed to create a new Ingress.")
-		return true, err
+	// Observation #3
+	// Is there a Service already? It must have been created (has a name)
+	serviceEntry, serviceExists := this.ctx.GetResourceCache().Get(RC_KEY_SERVICE)
+	if serviceExists {
+		this.serviceName = serviceEntry.GetName()
 	} else {
-		this.ctx.GetConfiguration().SetConfig(CFG_STA_INGRESS_NAME, ingress.Name)
-		this.ctx.GetLog().Info("New Ingress name is " + ingress.Name)
+		this.serviceName = RC_EMPTY_NAME
 	}
 
-	return true, nil
+	// Observation #4
+	// See if the host in the config spec is not empty
+	this.targetHostIsEmpty = true
+	if specEntry, exists := this.ctx.GetResourceCache().Get(RC_KEY_SPEC); exists {
+		this.targetHostIsEmpty = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Host == ""
+	}
+
+	// Update the status
+	this.ctx.GetConfiguration().SetConfig(CFG_STA_INGRESS_NAME, this.ingressName)
+}
+
+func (this *IngressCF) Compare() bool {
+	// Condition #1
+	// If we already have a ingress cached, skip
+	// Condition #2
+	// The service has been created
+	// Condition #3
+	// We will create a new ingress only if the host is not empty
+	return !this.isCached &&
+		this.serviceName != RC_EMPTY_NAME &&
+		!this.targetHostIsEmpty
+}
+
+func (this *IngressCF) Respond() {
+	// Response #1
+	// We already know about a ingress (name), and it is in the list
+	if this.ingressName != RC_EMPTY_NAME {
+		contains := false
+		for _, val := range this.ingresses {
+			if val.Name == this.ingressName {
+				contains = true
+				this.ctx.GetResourceCache().Set(RC_KEY_INGRESS, NewResourceCacheEntry(val.Name, &val))
+				break
+			}
+		}
+		if !contains {
+			this.ingressName = RC_EMPTY_NAME
+		}
+	}
+	// Response #2
+	// Can follow #1, but there must be a single ingress available
+	if this.ingressName == RC_EMPTY_NAME && len(this.ingresses) == 1 {
+		ingress := this.ingresses[0]
+		this.ingressName = ingress.Name
+		this.ctx.GetResourceCache().Set(RC_KEY_INGRESS, NewResourceCacheEntry(ingress.Name, &ingress))
+	}
+	// Response #3 (and #4)
+	// If there is no ingress available (or there are more than 1), just create a new one
+	if this.ingressName == RC_EMPTY_NAME && len(this.ingresses) != 1 {
+		ingress := this.ctx.GetKubeFactory().CreateIngress(this.serviceName)
+		// leave the creation itself to patcher+creator so other CFs can update
+		this.ctx.GetResourceCache().Set(RC_KEY_INGRESS, NewResourceCacheEntry(RC_EMPTY_NAME, ingress))
+	}
 }
