@@ -151,11 +151,13 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 		c.AddControlFunction(NewIngressCF(c))
 		c.AddControlFunction(NewJpaCF(c))
 		c.AddControlFunction(NewKafkaCF(c))
-		c.AddControlFunction(NewProfileCF(c))
+		c.AddControlFunction(NewLogLevelCF(c))
 
+		c.AddControlFunction(NewProfileCF(c))
 		c.AddControlFunction(NewReplicasOcpCF(c))
 		c.AddControlFunction(NewServiceCF(c))
 		c.AddControlFunction(NewStreamsCF(c))
+		c.AddControlFunction(NewUICF(c))
 
 	} else {
 		log.Info("This operator is running on Kubernetes")
@@ -171,11 +173,13 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 		c.AddControlFunction(NewIngressCF(c))
 		c.AddControlFunction(NewJpaCF(c))
 		c.AddControlFunction(NewKafkaCF(c))
-		c.AddControlFunction(NewProfileCF(c))
+		c.AddControlFunction(NewLogLevelCF(c))
 
+		c.AddControlFunction(NewProfileCF(c))
 		c.AddControlFunction(NewReplicasCF(c))
 		c.AddControlFunction(NewServiceCF(c))
 		c.AddControlFunction(NewStreamsCF(c))
+		c.AddControlFunction(NewUICF(c))
 	}
 
 	return c

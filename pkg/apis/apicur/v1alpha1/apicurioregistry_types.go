@@ -48,6 +48,8 @@ type ApicurioRegistrySpecConfiguration struct {
 	Kafka       ApicurioRegistrySpecConfigurationKafka      `json:"kafka,omitempty"`
 	Streams     ApicurioRegistrySpecConfigurationStreams    `json:"streams,omitempty"`
 	Infinispan  ApicurioRegistrySpecConfigurationInfinispan `json:"infinispan,omitempty"`
+	UI          ApicurioRegistrySpecConfigurationUI         `json:"ui,omitempty"`
+	LogLevel    string                                      `json:"logLevel,omitempty"`
 }
 
 // +k8s:openapi-gen=true
@@ -72,6 +74,11 @@ type ApicurioRegistrySpecConfigurationStreams struct {
 // +k8s:openapi-gen=true
 type ApicurioRegistrySpecConfigurationInfinispan struct {
 	ClusterName string `json:"clusterName,omitempty"`
+}
+
+// +k8s:openapi-gen=true
+type ApicurioRegistrySpecConfigurationUI struct {
+	ReadOnly bool `json:"readOnly,omitempty"`
 }
 
 // +k8s:openapi-gen=true

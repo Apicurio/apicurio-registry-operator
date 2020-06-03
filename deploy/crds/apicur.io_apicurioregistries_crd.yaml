@@ -52,6 +52,8 @@ spec:
                     bootstrapServers:
                       type: string
                   type: object
+                logLevel:
+                  type: string
                 persistence:
                   enum:
                   - mem
@@ -68,6 +70,11 @@ spec:
                       type: string
                     bootstrapServers:
                       type: string
+                  type: object
+                ui:
+                  properties:
+                    readOnly:
+                      type: boolean
                   type: object
               type: object
             deployment:
