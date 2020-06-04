@@ -104,6 +104,12 @@ rules:
       - clusterversions
     verbs:
       - get
+  - apiGroups:
+      - apicur.io
+    resources:
+      - apicurioregistries
+    verbs:
+      - "*"
 
 ---
 kind: ClusterRoleBinding
@@ -136,6 +142,7 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
+      description: ApicurioRegistry is the Schema for the apicurioregistries API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -150,6 +157,7 @@ spec:
         metadata:
           type: object
         spec:
+          description: ApicurioRegistrySpec defines the desired state of ApicurioRegistry
           properties:
             configuration:
               properties:
@@ -162,17 +170,25 @@ spec:
                     userName:
                       type: string
                   type: object
+                infinispan:
+                  properties:
+                    clusterName:
+                      type: string
+                  type: object
                 kafka:
                   properties:
                     bootstrapServers:
                       type: string
                   type: object
+                logLevel:
+                  type: string
                 persistence:
                   enum:
                   - mem
                   - jpa
                   - kafka
                   - streams
+                  - infinispan
                   type: string
                 streams:
                   properties:
@@ -182,46 +198,45 @@ spec:
                       type: string
                     bootstrapServers:
                       type: string
+                    security:
+                      properties:
+                        tls:
+                          properties:
+                            keystoreSecretName:
+                              type: string
+                            truststoreSecretName:
+                              type: string
+                          type: object
+                      type: object
+                  type: object
+                ui:
+                  properties:
+                    readOnly:
+                      type: boolean
                   type: object
               type: object
             deployment:
               properties:
+                host:
+                  type: string
                 replicas:
                   format: int32
                   type: integer
-                resources:
-                  properties:
-                    cpu:
-                      properties:
-                        limit:
-                          type: string
-                        requests:
-                          type: string
-                      type: object
-                    memory:
-                      properties:
-                        limit:
-                          type: string
-                        requests:
-                          type: string
-                      type: object
-                  type: object
-                route:
-                  type: string
               type: object
             image:
               properties:
-                override:
-                  type: string
-                registry:
-                  type: string
-                version:
+                name:
+                  description: Registry string `json:"registry,omitempty"` Version  string
+                    `json:"version,omitempty"` Override string `json:"override,omitempty"`
                   type: string
               type: object
           type: object
         status:
+          description: ApicurioRegistryStatus defines the observed state of ApicurioRegistry
           properties:
             deploymentName:
+              type: string
+            host:
               type: string
             image:
               type: string
@@ -230,11 +245,10 @@ spec:
             replicaCount:
               format: int32
               type: integer
-            route:
-              type: string
             serviceName:
               type: string
           type: object
+      type: object
   version: v1alpha1
   versions:
   - name: v1alpha1
@@ -260,7 +274,7 @@ spec:
       containers:
         - name: apicurio-registry-operator
           # Replace this with the built image name
-          image: apicurio/apicurio-registry-operator:0.0.1 # replaced {OPERATOR_IMAGE}
+          image: quay.io/jsenkorh/apicurio-registry-operator:0.0.1-dev9 # replaced {OPERATOR_IMAGE}
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE

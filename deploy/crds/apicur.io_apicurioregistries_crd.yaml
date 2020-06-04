@@ -70,6 +70,16 @@ spec:
                       type: string
                     bootstrapServers:
                       type: string
+                    security:
+                      properties:
+                        tls:
+                          properties:
+                            keystoreSecretName:
+                              type: string
+                            truststoreSecretName:
+                              type: string
+                          type: object
+                      type: object
                   type: object
                 ui:
                   properties:
