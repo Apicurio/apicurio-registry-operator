@@ -1,0 +1,12 @@
+apiVersion: apicur.io/v1alpha1
+kind: ApicurioRegistry
+metadata:
+  name: example-apicurioregistry
+spec:
+  image:
+    name: "apicurio/apicurio-registry-infinispan:latest-release"
+  configuration:
+    persistence: "infinispan"
+    infinispan: # Currently, registry uses an embedded version of Infinispan
+      clusterName: "example-apicurioregistry"
+      # ^ Optional

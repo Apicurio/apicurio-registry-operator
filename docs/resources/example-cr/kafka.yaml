@@ -4,13 +4,9 @@ metadata:
   name: example-apicurioregistry
 spec:
   image:
-    registry: "docker.io/apicurio"
-    version: "latest-snapshot"
+    name: "apicurio/apicurio-registry-kafka:latest-release"
   configuration:
     persistence: "kafka"
     kafka:
       bootstrapServers: "<service name>.<namespace>.svc:9092"
       # e.g. bootstrapServers: "my-cluster-kafka-bootstrap.kafka.svc:9092"
-  deployment:
-    replicas: 2
-    route: "registry.example.com"

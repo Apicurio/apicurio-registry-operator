@@ -3,10 +3,4 @@ kind: ApicurioRegistry
 metadata:
   name: example-apicurioregistry
 spec:
-  image:
-    registry: "docker.io/apicurio"
-    version: "latest-snapshot"
-  configuration:
-    persistence: "mem"
-  deployment:
-    route: "registry.example.com"
+# No config required for dev deployment
