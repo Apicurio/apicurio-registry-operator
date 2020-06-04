@@ -4,8 +4,7 @@ metadata:
   name: example-apicurioregistry
 spec:
   image:
-    registry: "docker.io/apicurio"
-    version: "latest-snapshot"
+    name: "apicurio/apicurio-registry-jpa:latest-release"
   configuration:
     persistence: "jpa"
     dataSource:
@@ -13,6 +12,4 @@ spec:
       # e.g. url: "jdbc:postgresql://acid-minimal-cluster.default.svc:5432/registry"
       userName: "postgres"
       password: "<password>"
-  deployment:
-    replicas: 2
-    route: "registry.example.com"
+      # ^ Optional
