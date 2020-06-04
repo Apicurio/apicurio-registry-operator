@@ -72,6 +72,17 @@ spec:
                       type: string
                     security:
                       properties:
+                        scram:
+                          properties:
+                            mechanism:
+                              type: string
+                            passwordSecretName:
+                              type: string
+                            truststoreSecretName:
+                              type: string
+                            user:
+                              type: string
+                          type: object
                         tls:
                           properties:
                             keystoreSecretName:
