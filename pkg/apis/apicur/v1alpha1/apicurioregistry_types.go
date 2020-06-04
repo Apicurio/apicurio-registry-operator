@@ -66,9 +66,21 @@ type ApicurioRegistrySpecConfigurationKafka struct {
 
 // +k8s:openapi-gen=true
 type ApicurioRegistrySpecConfigurationStreams struct {
-	BootstrapServers      string `json:"bootstrapServers,omitempty"`
-	ApplicationServerPort string `json:"applicationServerPort,omitempty"`
-	ApplicationId         string `json:"applicationId,omitempty"`
+	BootstrapServers      string                                           `json:"bootstrapServers,omitempty"`
+	ApplicationServerPort string                                           `json:"applicationServerPort,omitempty"`
+	ApplicationId         string                                           `json:"applicationId,omitempty"`
+	Security              ApicurioRegistrySpecConfigurationStreamsSecurity `json:"security,omitempty"`
+}
+
+// +k8s:openapi-gen=true
+type ApicurioRegistrySpecConfigurationStreamsSecurity struct {
+	Tls ApicurioRegistrySpecConfigurationStreamsSecurityTls `json:"tls,omitempty"`
+}
+
+// +k8s:openapi-gen=true
+type ApicurioRegistrySpecConfigurationStreamsSecurityTls struct {
+	TruststoreSecretName string `json:"truststoreSecretName,omitempty"`
+	KeystoreSecretName   string `json:"keystoreSecretName,omitempty"`
 }
 
 // +k8s:openapi-gen=true
