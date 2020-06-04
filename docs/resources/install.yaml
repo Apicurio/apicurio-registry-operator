@@ -200,6 +200,17 @@ spec:
                       type: string
                     security:
                       properties:
+                        scram:
+                          properties:
+                            mechanism:
+                              type: string
+                            passwordSecretName:
+                              type: string
+                            truststoreSecretName:
+                              type: string
+                            user:
+                              type: string
+                          type: object
                         tls:
                           properties:
                             keystoreSecretName:
@@ -274,7 +285,7 @@ spec:
       containers:
         - name: apicurio-registry-operator
           # Replace this with the built image name
-          image: quay.io/jsenkorh/apicurio-registry-operator:0.0.1-dev9 # replaced {OPERATOR_IMAGE}
+          image: apicurio/apicurio-registry-operator:0.0.2 # replaced {OPERATOR_IMAGE}
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE

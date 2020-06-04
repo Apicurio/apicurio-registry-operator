@@ -157,8 +157,9 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 		c.AddControlFunction(NewReplicasOcpCF(c))
 		c.AddControlFunction(NewServiceCF(c))
 		c.AddControlFunction(NewStreamsCF(c))
-		c.AddControlFunction(NewStreamsSecurityTLSOcpCF(c))
+		c.AddControlFunction(NewStreamsSecurityScramOcpCF(c))
 
+		c.AddControlFunction(NewStreamsSecurityTLSOcpCF(c))
 		c.AddControlFunction(NewUICF(c))
 
 	} else {
@@ -181,8 +182,9 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 		c.AddControlFunction(NewReplicasCF(c))
 		c.AddControlFunction(NewServiceCF(c))
 		c.AddControlFunction(NewStreamsCF(c))
-		c.AddControlFunction(NewStreamsSecurityTLSCF(c))
+		c.AddControlFunction(NewStreamsSecurityScramCF(c))
 
+		c.AddControlFunction(NewStreamsSecurityTLSCF(c))
 		c.AddControlFunction(NewUICF(c))
 	}
 

@@ -75,12 +75,21 @@ type ApicurioRegistrySpecConfigurationStreams struct {
 // +k8s:openapi-gen=true
 type ApicurioRegistrySpecConfigurationStreamsSecurity struct {
 	Tls ApicurioRegistrySpecConfigurationStreamsSecurityTls `json:"tls,omitempty"`
+	Scram ApicurioRegistrySpecConfigurationStreamsSecurityScram `json:"scram,omitempty"`
 }
 
 // +k8s:openapi-gen=true
 type ApicurioRegistrySpecConfigurationStreamsSecurityTls struct {
 	TruststoreSecretName string `json:"truststoreSecretName,omitempty"`
 	KeystoreSecretName   string `json:"keystoreSecretName,omitempty"`
+}
+
+// +k8s:openapi-gen=true
+type ApicurioRegistrySpecConfigurationStreamsSecurityScram struct {
+	TruststoreSecretName string `json:"truststoreSecretName,omitempty"`
+	User   string `json:"user,omitempty"`
+	PasswordSecretName   string `json:"passwordSecretName,omitempty"`
+	Mechanism   string `json:"mechanism,omitempty"`
 }
 
 // +k8s:openapi-gen=true
