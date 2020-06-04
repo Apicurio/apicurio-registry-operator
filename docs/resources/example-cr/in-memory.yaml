@@ -2,5 +2,5 @@ apiVersion: apicur.io/v1alpha1
 kind: ApicurioRegistry
 metadata:
   name: example-apicurioregistry
-spec:
+# spec:
 # No config required for dev deployment

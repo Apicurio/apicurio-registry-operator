@@ -3,9 +3,16 @@ package apicurioregistry
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	apps "k8s.io/api/apps/v1"
+	"os"
 )
 
 var _ ControlFunction = &ImageCF{}
+
+const ENV_OPERATOR_REGISTRY_IMAGE_MEM = "REGISTRY_IMAGE_MEM"
+const ENV_OPERATOR_REGISTRY_IMAGE_KAFKA = "REGISTRY_IMAGE_KAFKA"
+const ENV_OPERATOR_REGISTRY_IMAGE_STREAMS = "REGISTRY_IMAGE_STREAMS"
+const ENV_OPERATOR_REGISTRY_IMAGE_JPA = "REGISTRY_IMAGE_JPA"
+const ENV_OPERATOR_REGISTRY_IMAGE_INFINISPAN = "REGISTRY_IMAGE_INFINISPAN"
 
 // This CF takes care of keeping the "image" section of the CRD applied.
 type ImageCF struct {
@@ -50,12 +57,35 @@ func (this *ImageCF) Sense() {
 
 	// Observation #3
 	// Get the target image name
+	persistence := ""
 	if specEntry, exists := this.ctx.GetResourceCache().Get(RC_KEY_SPEC); exists {
-		this.targetImage = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Image.Name
+		spec := specEntry.GetValue().(*ar.ApicurioRegistry).Spec
+		this.targetImage = spec.Image.Name
+		persistence = spec.Configuration.Persistence
 	}
+
 	if this.targetImage == "" {
-		// Warning! This is for testing purposes only
-		this.targetImage = "apicurio/apicurio-registry-mem:latest-release"
+		envImage := ""
+		switch persistence {
+		case "", "mem":
+			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_MEM)
+		case "kafka":
+			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_KAFKA)
+		case "streams":
+			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_STREAMS)
+		case "jpa":
+			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_JPA)
+		case "infinispan":
+			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_INFINISPAN)
+		}
+		if envImage != "" {
+			this.targetImage = envImage
+		} else {
+			this.ctx.GetLog().WithValues("type", "Warning").
+				Info("WARNING: The operand image is not selected. " +
+					"Set the 'spec.configuration.persistence' property in your 'apicurioregistry' resource " +
+					"to select the appropriate Service Registry image. You can override using 'spec.image.name'.")
+		}
 	}
 
 	// Update state

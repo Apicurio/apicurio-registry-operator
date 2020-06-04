@@ -19,6 +19,16 @@ spec:
           image: {OPERATOR_IMAGE}
           imagePullPolicy: Always
           env:
+            - name:  REGISTRY_IMAGE_MEM
+              value: "docker.io/apicurio/apicurio-registry-mem:1.2.2.Final"
+            - name:  REGISTRY_IMAGE_KAFKA
+              value: "docker.io/apicurio/apicurio-registry-kafka:1.2.2.Final"
+            - name:  REGISTRY_IMAGE_STREAMS
+              value: "docker.io/apicurio/apicurio-registry-streams:1.2.2.Final"
+            - name:  REGISTRY_IMAGE_JPA
+              value: "docker.io/apicurio/apicurio-registry-jpa:1.2.2.Final"
+            - name:  REGISTRY_IMAGE_INFINISPAN
+              value: "docker.io/apicurio/apicurio-registry-infinispan:1.2.2.Final"
             - name: WATCH_NAMESPACE
               valueFrom:
                 fieldRef:

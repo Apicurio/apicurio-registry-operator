@@ -3,8 +3,6 @@ kind: ApicurioRegistry
 metadata:
   name: example-apicurioregistry
 spec:
-  image:
-    name: "apicurio/apicurio-registry-streams:latest-release"
   configuration:
     persistence: "streams"
     streams:
