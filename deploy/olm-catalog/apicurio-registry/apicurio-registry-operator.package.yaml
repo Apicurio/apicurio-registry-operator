@@ -2,4 +2,4 @@ packageName: apicurio-registry
 defaultChannel: alpha
 channels:
   - name: alpha
-    currentCSV: apicurio-registry.v0.0.1
+    currentCSV: apicurio-registry.v0.0.2

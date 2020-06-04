@@ -4,14 +4,12 @@ metadata:
   name: example-apicurioregistry
 spec:
   image:
-    registry: "docker.io/apicurio"
-    version: "latest-snapshot"
+    name: "apicurio/apicurio-registry-streams:latest-release"
   configuration:
     persistence: "streams"
     streams:
       bootstrapServers: "<service name>.<namespace>.svc:9092"
       # e.g. bootstrapServers: "my-cluster-kafka-bootstrap.kafka.svc:9092"
       applicationId: "example-apicurioregistry"
-  deployment:
-    replicas: 2
-    route: "registry.example.com"
+      # ^ Optional
+      # ...optional security configuration, using TLS or SCRAM
