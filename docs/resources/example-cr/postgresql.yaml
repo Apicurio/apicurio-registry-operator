@@ -3,8 +3,6 @@ kind: ApicurioRegistry
 metadata:
   name: example-apicurioregistry
 spec:
-  image:
-    name: "apicurio/apicurio-registry-jpa:latest-release"
   configuration:
     persistence: "jpa"
     dataSource:
