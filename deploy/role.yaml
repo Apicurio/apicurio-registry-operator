@@ -8,6 +8,7 @@ rules:
       - route.openshift.io
       - apps.openshift.io
     resources:
+      - routes
       - routes/custom-host
       - deploymentconfigs
     verbs:

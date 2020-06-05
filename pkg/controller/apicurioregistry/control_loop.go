@@ -145,20 +145,21 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 		c.AddControlFunction(NewEnvOcpCF(c))
 		c.AddControlFunction(NewHostCF(c))
 		c.AddControlFunction(NewHostInitCF(c))
-		c.AddControlFunction(NewImageOcpCF(c))
+		c.AddControlFunction(NewHostInitRouteOcpCF(c))
 
+		c.AddControlFunction(NewImageOcpCF(c))
 		c.AddControlFunction(NewInfinispanCF(c))
 		c.AddControlFunction(NewIngressCF(c))
 		c.AddControlFunction(NewJpaCF(c))
 		c.AddControlFunction(NewKafkaCF(c))
-		c.AddControlFunction(NewLogLevelCF(c))
 
+		c.AddControlFunction(NewLogLevelCF(c))
 		c.AddControlFunction(NewProfileCF(c))
 		c.AddControlFunction(NewReplicasOcpCF(c))
 		c.AddControlFunction(NewServiceCF(c))
 		c.AddControlFunction(NewStreamsCF(c))
-		c.AddControlFunction(NewStreamsSecurityScramOcpCF(c))
 
+		c.AddControlFunction(NewStreamsSecurityScramOcpCF(c))
 		c.AddControlFunction(NewStreamsSecurityTLSOcpCF(c))
 		c.AddControlFunction(NewUICF(c))
 
