@@ -2,7 +2,9 @@ package apicurioregistry
 
 import (
 	ocp_apps "github.com/openshift/api/apps/v1"
+	ocp_route "github.com/openshift/api/route/v1"
 	ocp_apps_client "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
+	ocp_route_client "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
@@ -10,14 +12,16 @@ import (
 )
 
 type OCPClient struct {
-	ctx           *Context
-	ocpAppsClient *ocp_apps_client.AppsV1Client
+	ctx            *Context
+	ocpAppsClient  *ocp_apps_client.AppsV1Client
+	ocpRouteClient *ocp_route_client.RouteV1Client
 }
 
 func NewOCPClient(ctx *Context, clientConfig *rest.Config) *OCPClient {
 	this := &OCPClient{
-		ctx:           ctx,
-		ocpAppsClient: ocp_apps_client.NewForConfigOrDie(clientConfig),
+		ctx:            ctx,
+		ocpAppsClient:  ocp_apps_client.NewForConfigOrDie(clientConfig),
+		ocpRouteClient: ocp_route_client.NewForConfigOrDie(clientConfig),
 	}
 	return this
 }
@@ -63,5 +67,18 @@ func (this *OCPClient) DeleteDeployment(namespace string, name string, options *
 
 func (this *OCPClient) GetDeployments(namespace string, options *meta.ListOptions) (*ocp_apps.DeploymentConfigList, error) {
 	return this.ocpAppsClient.DeploymentConfigs(namespace).
+		List(*options)
+}
+
+// ======
+// Route
+
+func (this *OCPClient) GetRoute(namespace string, name string, options *meta.GetOptions) (*ocp_route.Route, error) {
+	return this.ocpRouteClient.Routes(namespace).
+		Get(name, *options)
+}
+
+func (this *OCPClient) GetRoutes(namespace string, options *meta.ListOptions) (*ocp_route.RouteList, error) {
+	return this.ocpRouteClient.Routes(namespace).
 		List(*options)
 }
