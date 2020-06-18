@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<licenseSummary>
+  <dependencies>
+          <dependency>
+        <packageName>github.com/Masterminds/semver</packageName>
+        <version>v1.5.0</version>
+        <licenses>
+                      <license>
+              <name>MIT</name>
+              <url>http://opensource.org/licenses/mit-license</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>github.com/go-logr/logr</packageName>
+        <version>v0.1.0</version>
+        <licenses>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>github.com/openshift/api</packageName>
+        <version>v0.0.0-20200205133042-34f0ec8dab87</version>
+        <licenses>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>github.com/openshift/client-go</packageName>
+        <version>v0.0.0-20200116152001-92a2713fa240</version>
+        <licenses>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>github.com/operator-framework/operator-sdk</packageName>
+        <version>v0.17.0</version>
+        <licenses>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>github.com/spf13/pflag</packageName>
+        <version>v1.0.5</version>
+        <licenses>
+                      <license>
+              <name>New BSD</name>
+              <url>http://opensource.org/licenses/BSD-3-Clause</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>k8s.io/api</packageName>
+        <version>v0.17.4</version>
+        <licenses>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>k8s.io/apimachinery</packageName>
+        <version>v0.17.4</version>
+        <licenses>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>k8s.io/client-go</packageName>
+        <version>v12.0.0+incompatible</version>
+        <licenses>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                  </licenses>
+      </dependency>
+          <dependency>
+        <packageName>sigs.k8s.io/controller-runtime</packageName>
+        <version>v0.5.2</version>
+        <licenses>
+                      <license>
+              <name>Apache 2.0</name>
+              <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </license>
+                  </licenses>
+      </dependency>
+      </dependencies>
+</licenseSummary>
