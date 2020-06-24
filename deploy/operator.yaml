@@ -18,6 +18,13 @@ spec:
           # Replace this with the built image name
           image: {OPERATOR_IMAGE}
           imagePullPolicy: Always
+          resources:
+            limits:
+              memory: "64Mi"
+              cpu: "4m"
+            requests:
+              memory: "32Mi"
+              cpu: "2m"
           env:
             - name:  REGISTRY_IMAGE_MEM
               value: "docker.io/apicurio/apicurio-registry-mem:1.2.2.Final"
