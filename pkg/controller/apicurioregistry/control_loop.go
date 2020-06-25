@@ -2,6 +2,8 @@ package apicurioregistry
 
 import (
 	"context"
+	"strconv"
+
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -9,7 +11,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"strconv"
 )
 
 var _ reconcile.Reconciler = &ApicurioRegistryReconciler{}
@@ -118,7 +119,7 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 	}
 
 	// ======
-    // Create or patch resources in resource cache
+	// Create or patch resources in resource cache
 	ctx.GetPatchers().Execute()
 
 	// ======
@@ -154,6 +155,7 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 		c.AddControlFunction(NewKafkaCF(c))
 
 		c.AddControlFunction(NewLogLevelCF(c))
+		c.AddControlFunction(NewPodDisruptionBudgetCF(c))
 		c.AddControlFunction(NewProfileCF(c))
 		c.AddControlFunction(NewReplicasOcpCF(c))
 		c.AddControlFunction(NewServiceCF(c))
@@ -179,6 +181,7 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 		c.AddControlFunction(NewKafkaCF(c))
 		c.AddControlFunction(NewLogLevelCF(c))
 
+		c.AddControlFunction(NewPodDisruptionBudgetCF(c))
 		c.AddControlFunction(NewProfileCF(c))
 		c.AddControlFunction(NewReplicasCF(c))
 		c.AddControlFunction(NewServiceCF(c))

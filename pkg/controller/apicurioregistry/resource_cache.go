@@ -6,6 +6,7 @@ const RC_KEY_DEPLOYMENT_OCP = "DEPLOYMENT_OCP"
 const RC_KEY_SERVICE = "SERVICE"
 const RC_KEY_INGRESS = "INGRESS"
 const RC_KEY_ROUTE_OCP = "ROUTE_OCP"
+const RC_KEY_POD_DISRUPTION_BUDGET = "POD_DISRUPTION_BUDGET"
 
 const RC_EMPTY_NAME = ""
 
@@ -36,10 +37,10 @@ type ResourceCacheEntry interface {
 }
 
 type resourceCacheEntry struct {
-	name      string
-	value     interface{}
-	originalValue     interface{}
-	isPatched bool
+	name          string
+	value         interface{}
+	originalValue interface{}
+	isPatched     bool
 }
 
 var _ ResourceCacheEntry = &resourceCacheEntry{}
