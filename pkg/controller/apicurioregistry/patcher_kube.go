@@ -5,6 +5,7 @@ import (
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
+	policy "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -61,7 +62,6 @@ func (this *KubePatcher) reloadDeployment() {
 		}
 	}
 }
-
 
 func (this *KubePatcher) patchDeployment() {
 	patchGeneric(
@@ -172,13 +172,54 @@ func (this *KubePatcher) patchIngress() {
 	)
 }
 
-// =====
+func (this *KubePatcher) reloadPodDisruptionBudget() {
+	if entry, exists := this.ctx.GetResourceCache().Get(RC_KEY_POD_DISRUPTION_BUDGET); exists {
+		r, e := this.ctx.GetClients().Kube().
+			GetPodDisruptionBudget(this.ctx.GetConfiguration().GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
+		if e != nil {
+			this.ctx.GetLog().WithValues("name", entry.GetName()).Info("Resource not found. (May have been deleted).")
+			this.ctx.GetResourceCache().Remove(RC_KEY_POD_DISRUPTION_BUDGET)
+			this.ctx.SetRequeue()
+		} else {
+			this.ctx.GetResourceCache().Set(RC_KEY_POD_DISRUPTION_BUDGET, NewResourceCacheEntry(r.Name, r))
+		}
+	}
+}
 
+func (this *KubePatcher) patchPodDisruptionBudget() {
+	patchGeneric(
+		this.ctx,
+		RC_KEY_POD_DISRUPTION_BUDGET,
+		func(namespace string, name string) (interface{}, error) {
+			return this.ctx.GetClients().Kube().GetPodDisruptionBudget(namespace, name, &meta.GetOptions{})
+		},
+		func(value interface{}) string {
+			return value.(*policy.PodDisruptionBudget).String()
+		},
+		&policy.PodDisruptionBudgetSpec{},
+		"policy.PodDisruptionBudget",
+		func(namespace string, value interface{}) (interface{}, error) {
+			return this.ctx.GetClients().Kube().CreatePodDisruptionBudget(namespace, value.(*policy.PodDisruptionBudget))
+		},
+		func(namespace string, name string, data []byte) (interface{}, error) {
+			return this.ctx.GetClients().Kube().PatchPodDisruptionBudget(namespace, name, data)
+		},
+		func(value interface{}) string {
+			return value.(*policy.PodDisruptionBudget).GetName()
+		},
+		func(value interface{}) interface{} {
+			return value.(*policy.PodDisruptionBudget).Spec
+		},
+	)
+}
+
+// =====
 
 func (this *KubePatcher) Reload() {
 	this.reloadDeployment()
 	this.reloadService()
 	this.reloadIngress()
+	this.reloadPodDisruptionBudget()
 }
 
 func (this *KubePatcher) Execute() {
@@ -186,4 +227,5 @@ func (this *KubePatcher) Execute() {
 	this.patchDeployment()
 	this.patchService()
 	this.patchIngress()
+	this.patchPodDisruptionBudget()
 }
