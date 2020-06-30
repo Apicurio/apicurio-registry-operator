@@ -1,0 +1,31 @@
+title: "Apicurio Registry Operator Documentation"
+
+theme: "just-the-docs"
+remote_theme: pmarsceill/just-the-docs
+
+color_scheme: apicurio
+
+#baseurl:
+#url:
+
+permalink: pretty
+
+search_enabled: true
+
+heading_anchors: true
+
+aux_links:
+  "Visit the project on GitHub":
+    - "//github.com/Apicurio/apicurio-registry-operator"
+  "apicur.io":
+    - "//apicur.io"
+
+aux_links_new_tab: true
+
+back_to_top: true
+back_to_top_text: "Back to top"
+
+footer_content: "Copyright &copy; 2020 Red Hat. Distributed under the <a href=\"https://github.com/Apicurio/apicurio-registry-operator/tree/master/LICENSE\">Apache License, Version 2.0</a>"
+
+plugins:
+  - jekyll-seo-tag
