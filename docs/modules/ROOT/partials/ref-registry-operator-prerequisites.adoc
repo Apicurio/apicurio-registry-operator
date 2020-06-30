@@ -1,0 +1,24 @@
+[#registry-operator-prerequisites]
+= Prerequisites
+
+Following
+ifdef::apicurio-registry[]
+platforms are
+endif::[]
+ifdef::service-registry[]
+platform is
+endif::[]
+supported:
+
+|===
+| Platform | Required Version
+ifdef::apicurio-registry[]
+| Kubernetes
+| 1.12+
+endif::[]
+| OpenShift
+| 3.11.200+, 4+
+|===
+
+NOTE: {operator} does not deploy and manage storage for the Registry yet.
+Therefore, some persistence options require that the storage service is already set up.

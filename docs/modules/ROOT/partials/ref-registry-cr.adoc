@@ -1,0 +1,47 @@
+[#apicurio-registry-custom-resource]
+= {registry} Custom Resource
+
+The operator defines an `ApicurioRegistry` https://docs.openshift.com/container-platform/4.6/operators/understanding/crds/crd-extending-api-with-crds.html[custom resource] (CR) that represents a single deployment of {registry} on OpenShift.
+
+These resource objects are created and maintained by users to instruct the {operator} how to deploy and configure {registry}.
+
+This is an example `ApicurioRegistry` resource:
+
+[source,bash]
+----
+oc edit apicurioregistry example-apicurioregistry
+----
+
+[source,yaml]
+----
+apiVersion: apicur.io/v1alpha1
+kind: ApicurioRegistry
+metadata:
+  name: example-apicurioregistry
+  namespace: demo-streams
+  # ...
+spec:
+  configuration:
+    persistence: streams
+    streams:
+      bootstrapServers: 'my-cluster-kafka-bootstrap.demo-streams.svc:9092'
+  deployment:
+    host: >-
+      example-apicurioregistry.demo-streams.example.com
+status:
+  deploymentName: example-apicurioregistry-deployment-qsdb7
+  host: >-
+    example-apicurioregistry.demo-streams.example.com
+  image: >-
+    registry.redhat.io/integration/service-registry-streams-rhel8@sha256:4b56da802333d2115cb3a0acc8d97445bd0dab67b639c361816df27b7f1aa296
+  ingressName: example-apicurioregistry-ingress-7mlnw
+  replicaCount: 1
+  serviceName: example-apicurioregistry-service-xvnmz
+----
+
+IMPORTANT: Currently, {operator} is only watching its own namespace (project).
+Therefore, `ApicurioRegistry` CR must be created in the same namespace.
+
+ifdef::apicurio-registry[]
+NOTE: These configuration options may change or be renamed until the operators leaves the alpha development stage.
+endif::[]

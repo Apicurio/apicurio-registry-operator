@@ -1,0 +1,54 @@
+[#install-olm]
+= Installation using Operator Lifecycle Manager
+
+The recommended way to install {operator} is to use link:{LinkOLMDocs}[{NameOLMDocs}] (OLM), which can automatically manage the operator deployment and upgrades.
+
+{operator} is released to link:{LinkOperatorHub}[{NameOperatorHub}], so if your cluster has OLM and OperatorHub installed, cluster administrator can use the web UI to deploy the {operator}.
+
+image::operator-hub-search-sr.png[]
+
+.Prerequisites
+* You must have cluster administrator access to an OpenShift cluster.
+
+.Procedure
+. In the OpenShift Container Platform web console, log in using an account with cluster administrator privileges.
+
+. Create a new OpenShift project:
+
+.. In the left navigation menu, click *Home* > *Project* > *Create Project*.
+.. Enter a project name, for example, `my-project`, and click *Create*.
+
+. In the left navigation menu, click *Catalog/Operators* > *OperatorHub*.
+
+ifdef::apicurio-registry[]
+. In the *Filter by keyword* text box, enter `registry` to find the *{operator}*.
+endif::[]
+ifdef::service-registry[]
+. In the *Filter by keyword* text box, enter `registry` to find the *Red Hat Integration - {operator}*.
+endif::[]
+. Read the information about the Operator, and click *Install*.
+This displays the *Create Operator Subscription* page.
+
+. Select your subscription settings, for example:
+** *Installation Mode* > *A specific namespace on the cluster* > *my-project*
+ifdef::service-registry[]
+** *Update Channel* > *serviceregistry-1.0* / *serviceregistry-1.1*
+endif::[]
+ifdef::apicurio-registry[]
+** *Update Channel* > *alpha*
+endif::[]
+ifdef::service-registry[]
+** *Approval Strategy* > *Manual*
+endif::[]
+ifdef::apicurio-registry[]
+** *Approval Strategy* > *Automatic*
+endif::[]
+
+. Click *Subscribe*.
+This displays the *Operators* > *Installed Operators* page.
+
+. Wait a few moments until the *Status* for the {operator} displays *Succeeded* and the subscription is *Up to Date*.
+
+.Additional resources
+* link:https://docs.openshift.com/container-platform/4.6/operators/olm-adding-operators-to-cluster.html[Adding Operators to an OpenShift cluster]
+* link:https://github.com/Apicurio/apicurio-registry-operator[Apicurio Registry Operator community in GitHub]

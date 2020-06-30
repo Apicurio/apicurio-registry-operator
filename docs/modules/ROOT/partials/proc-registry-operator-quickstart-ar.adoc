@@ -1,0 +1,35 @@
+[#registry-operator-quickstart]
+== {operator}
+
+There are several installation options, but the simplest one requires executing a single command.
+
+. Choose the `$NAMESPACE` to use:
++
+----
+export NAMESPACE="default"
+----
+
+. Decide which version you want to deploy:
++
+[source,bash]
+----
+export REF="master"
+----
+or
++
+[source,bash,subs="attributes"]
+----
+export REF="{operator-latest-version}"
+----
+
+. Get the installation file and apply it to your cluster:
++
+[source,bash]
+----
+curl -sSL "https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/$REF/docs/resources/install.yaml" |
+sed "s/{NAMESPACE}/$NAMESPACE/g" | kubectl apply -f -
+----
+
+NOTE: If you are deploying to OpenShift, use `oc` with the same arguments.
+
+You can find more information in the xref:assembly-installation.adoc[Installation] page.

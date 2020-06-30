@@ -1,0 +1,49 @@
+[#persistence-jpa]
+= Java Persistence API (PostgreSQL)
+
+.Prerequisites
+* You must have an OpenShift cluster with cluster administrator access.
+* You must have already installed {operator}.
+* You must have a PostgreaSQL database reachable from your OpenShift cluster.
+
+NOTE: See the xref:assembly-installation.adoc[] page for details about setting up {operator} and PostgreSQL database.
+
+.Procedure
+. In the OpenShift Container Platform web console, log in using an account with cluster administrator privileges.
+
+. Change to the OpenShift project in which {registry} and your PostgreSQL Operator are installed.
+For example, from the *Project* drop-down, select `my-project`.
+
+ifdef::apicurio-registry[]
+. Click *Installed Operators* > *{registry}* > *ApicurioRegistry* > *Create ApicurioRegistry*.
+endif::[]
+ifdef::rh-service-registry[]
+. Click *Installed Operators* > *Red Hat Integration - {registry}* > *ApicurioRegistry* > *Create ApicurioRegistry*.
+endif::[]
+
+. Paste in the following `ApicurioRegsitry` CR, and edit the values for the database `url` and credentials to match your environment:
++
+[source,yaml]
+----
+apiVersion: apicur.io/v1alpha1
+kind: ApicurioRegistry
+metadata:
+  name: example-apicurioregistry
+spec:
+  configuration:
+    persistence: "jpa"
+    dataSource:
+      url: "jdbc:postgresql://SERVICE_NAME.NAMESPACE.svc:5432/"
+      # e.g. url: "jdbc:postgresql://acid-minimal-cluster.my-project.svc:5432/"
+      userName: "postgres"
+      password: "PASSWORD"
+      # ^ Optional
+----
+
+. Click *Create* and wait for the {registry} route to be created on OpenShift.
+
+. Click *Networking* > *Route* to access the new route for the {registry} web console.
+
+.Additional resources
+* link:https://access.crunchydata.com/documentation/postgres-operator/4.3.2/quickstart/[Crunchy PostgreSQL Operator QuickStart]
+* https://github.com/Apicurio/apicurio-registry-operator/blob/master/docs/minikube-quickstart.md[Apicurio Registry Operator QuickStart]

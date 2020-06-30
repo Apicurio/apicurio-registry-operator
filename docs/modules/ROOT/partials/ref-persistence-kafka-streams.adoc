@@ -1,0 +1,383 @@
+[#kafka-streams-persistence-configuration]
+= Kafka Streams Persistence Configuration
+
+[#kafka-streams-prerequisites]
+== Prerequisites
+
+. Install the {operator} from Operator Hub or using command line tools.
+. Install the {kafka-streams} Operator or have Kafka accessible from your OpenShift cluster.
+
+NOTE: This guide assumes that {kafka-streams} Operator is available, however you can use any Kafka deployment.
+In that case, Openshift secrets that the {operator} expects have to be created manually.
+
+[#plain-no-auth]
+== Plain (no security configuration)
+
+[#kafka-cluster]
+=== Kafka Cluster
+
+To provision a new Kafka cluster for {registry} storage, create a `Kafka` resource.
+This can be done in the UI by navigating to *Installed Operators*, then selecting *{kafka-streams}* operator details, and opening the *Kafka* tab.
+Click on the *Create Kafka* button.
+
+You can use the default value, which should look something like:
+
+[source,yaml]
+----
+apiVersion: kafka.strimzi.io/v1beta1
+kind: Kafka
+metadata:
+  name: my-cluster
+  namespace: registry-example-streams-plain
+spec:
+  kafka:
+    version: 2.5.0
+    replicas: 3
+    listeners:
+      plain: {}
+      tls: {}
+    config:
+      offsets.topic.replication.factor: 3
+      transaction.state.log.replication.factor: 3
+      transaction.state.log.min.isr: 2
+      log.message.format.version: '2.5'
+    storage:
+      type: ephemeral
+  zookeeper:
+    replicas: 3
+    storage:
+      type: ephemeral
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+----
+
+NOTE: Your namespace may be different.
+
+After the cluster is ready, you can open the *Kafka* resource and examine the *status* block.
+There should be a `bootstrapServers` property, which we will later use to deploy {registry}.
+
+Example:
+
+[source,yaml]
+----
+status:
+  conditions:
+    ...
+  listeners:
+    - addresses:
+        - host: my-cluster-kafka-bootstrap.registry-example-streams-plain.svc
+          port: 9092
+      bootstrapServers: 'my-cluster-kafka-bootstrap.registry-example-streams-plain.svc:9092'
+      type: plain
+  ...
+----
+
+[#kafka-topics]
+=== Kafka Topics
+
+Before we can do a basic deployment, two topics have to be created: `global-id-topic` and `storage-topic`.
+These names are not configurable at the moment.
+
+As before, navigate to *Kafka Topic* tab, and click on *Create Kafka Topic*:
+
+[source,yaml]
+----
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: global-id-topic
+  labels:
+    strimzi.io/cluster: my-cluster
+  namespace: registry-example-streams-plain
+spec:
+  partitions: 2
+  replicas: 1
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+----
+
+Change the topic name to `global-id-topic`, and optionally decrease partition and replica count to minimum, which is going to be sufficient for our example deployment.
+
+Perform the same steps to create the other topic.
+
+[#deploy-the-apicurio-registry]
+=== {registry} deployment
+
+Switch to the *{operator}*, and in the *ApicurioRegistry* tab, click on *Create ApicurioRegistry*.
+
+Use the following example, but replace your value in the `bootstrapServers` property.
+
+[source,yaml]
+----
+apiVersion: apicur.io/v1alpha1
+kind: ApicurioRegistry
+metadata:
+  name: example-apicurioregistry
+spec:
+  configuration:
+    persistence: "streams"
+    streams:
+      bootstrapServers: "my-cluster-kafka-bootstrap.registry-example-streams-plain.svc:9092"
+----
+
+After a few minutes, you should see a *Route* being created, where you can access the application.
+
+[#tls-security]
+== TLS Security
+
+You can configure {kafka-streams} Operator and {operator} to use an encrypted TLS connection.
+
+[#kafka-cluster-2]
+=== Kafka Cluster
+
+To configure TLS authentication for the Kafka cluster, using {kafka-streams} Operator, see the following example:
+
+[source,yaml]
+----
+apiVersion: kafka.strimzi.io/v1beta1
+kind: Kafka
+metadata:
+  name: my-cluster
+  namespace: registry-example-streams-tls
+spec:
+  kafka:
+    authorization:
+      type: simple
+    version: 2.5.0
+    replicas: 3
+    listeners:
+      plain: {}
+      tls:
+        authentication:
+          type: tls
+    config:
+      offsets.topic.replication.factor: 3
+      transaction.state.log.replication.factor: 3
+      transaction.state.log.min.isr: 2
+      log.message.format.version: '2.5'
+    storage:
+      type: ephemeral
+  zookeeper:
+    replicas: 3
+    storage:
+      type: ephemeral
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+----
+
+See the `authorization` and `tls` sections.
+
+[#auth-setup]
+=== Auth setup
+
+Configuration of the topics works as before, but in addition, a *Kafka User* resource needs to be created.
+It is used to configure authentication and authorization for {registry} user.
+
+This is an example `spec` block:
+
+[source,yaml]
+----
+spec:
+  authentication:
+    type: tls
+  authorization:
+    acls:
+      - operation: All
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operation: All
+        resource:
+          name: '*'
+          patternType: literal
+          type: cluster
+      - operation: All
+        resource:
+          name: '*'
+          patternType: literal
+          type: transactionalId
+      - operation: All
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+----
+
+You can specify a user name in the `metadata` section or use the default `my-user`.
+
+NOTE: You should configure the authorization specifically for the topics and resources that {registry} needs, but this is a more compact example version.
+
+Afterwards, {kafka-streams} will create two secrets that are going to be used to enable {registry} to connect to the Kafka cluster.
+
+Navigate to *Workloads* and then *Secrets*, where you should find two secrets:
+
+* `my-cluster-cluster-ca-cert` containing PKCS12 truststore for the Kafka cluster
+* `my-user`, that contains user's keystore.
+
+NOTE: Name of the secret can vary based on your cluster or user name.
+
+If you are creating the secrets manually, they must contain the following key-value pairs:
+
+* *my-cluster-ca-cert*
+** `ca.p12` - the truststore in PKCS12 format
+** `ca.password` - truststore password
+* *my-user*
+** `user.p12` - the keystore in PKCS12 format
+** `user.password` - keystore password
+
+[#deploy-the-apicurio-registry-2]
+=== {registry} deployment
+
+Use the following example configuration to deploy the registry.
+
+[source,yaml]
+----
+apiVersion: apicur.io/v1alpha1
+kind: ApicurioRegistry
+metadata:
+  name: example-apicurioregistry
+spec:
+  configuration:
+    persistence: "streams"
+    streams:
+      bootstrapServers: "my-cluster-kafka-bootstrap.registry-example-streams-tls.svc:9093"
+      security:
+        tls:
+          keystoreSecretName: my-user
+          truststoreSecretName: my-cluster-cluster-ca-cert
+----
+
+IMPORTANT: You have to use a different `bootstrapServers` address than in the plain use-case.
+The address has to supports TLS connections and it can be found in the given *Kafka* resource under `type: tls` field.
+
+[#tlsscram-security]
+== TLS+SCRAM Security
+
+[#kafka-cluster-3]
+=== Kafka Cluster
+
+To configure SCRAM-SHA-512 authentication for the Kafka cluster, using {kafka-streams} Operator, see the following example:
+
+[source,yaml]
+----
+apiVersion: kafka.strimzi.io/v1beta1
+kind: Kafka
+metadata:
+  name: my-cluster
+  namespace: registry-example-streams-tls
+spec:
+  kafka:
+    authorization:
+      type: simple
+    version: 2.5.0
+    replicas: 3
+    listeners:
+      plain: {}
+      tls:
+        authentication:
+          type: scram-sha-512
+    config:
+      offsets.topic.replication.factor: 3
+      transaction.state.log.replication.factor: 3
+      transaction.state.log.min.isr: 2
+      log.message.format.version: '2.5'
+    storage:
+      type: ephemeral
+  zookeeper:
+    replicas: 3
+    storage:
+      type: ephemeral
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+----
+
+See the `authorization` and `tls` sections.
+
+[#auth-setup-2]
+=== Auth setup
+
+Configuration of the topics works as before, but in addition, a *Kafka User* resource needs to be created.
+It is used to configure authentication and authorization for {registry} user.
+
+This is an example `spec` block:
+
+[source,yaml]
+----
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    acls:
+      - operation: All
+        resource:
+          name: '*'
+          patternType: literal
+          type: topic
+      - operation: All
+        resource:
+          name: '*'
+          patternType: literal
+          type: cluster
+      - operation: All
+        resource:
+          name: '*'
+          patternType: literal
+          type: transactionalId
+      - operation: All
+        resource:
+          name: '*'
+          patternType: literal
+          type: group
+    type: simple
+----
+
+See the `authentication` section.
+
+As before, {kafka-streams} Operator will create two secrets that are going to enable {registry} to connect.
+
+Navigate to *Workloads* and then *Secrets*, where you should find two secrets:
+
+* `my-cluster-cluster-ca-cert` containing PKCS12 truststore for the Kafka cluster
+* `my-user`, that contains user's keystore.
+
+NOTE: Name of the secret can vary based on your cluster or user name.
+
+If you are creating the secrets manually, they must contain the following key-value pairs:
+
+* *my-cluster-ca-cert*
+** `ca.p12` - the truststore in PKCS12 format
+** `ca.password` - truststore password
+* *my-user*
+** `password` - user's password
+
+[#deploy-the-apicurio-registry-3]
+=== {registry} deployment
+
+Use the following example configuration to deploy the registry.
+
+[source,yaml]
+----
+apiVersion: apicur.io/v1alpha1
+kind: ApicurioRegistry
+metadata:
+  name: example-apicurioregistry
+spec:
+  configuration:
+    persistence: "streams"
+    streams:
+      bootstrapServers: "my-cluster-kafka-bootstrap.registry-example-streams-scram.svc:9093"
+      security:
+        scram:
+          truststoreSecretName: my-cluster-cluster-ca-cert
+          user: my-user
+          passwordSecretName: my-user
+----
+
+IMPORTANT: You have to use a different `bootstrapServers` address than in the plain use-case.
+The address has to supports TLS connections and it can be found in the given *Kafka* resource under `type: tls` field.

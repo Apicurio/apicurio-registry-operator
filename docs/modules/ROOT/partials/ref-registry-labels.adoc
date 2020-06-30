@@ -1,0 +1,26 @@
+[#registry-labels]
+= Labels
+
+Resources managed by the {operator} are usually labeled as follows:
+
+|===
+| Label | Description
+
+| *app*
+| Name of the {registry} deployment the resource belongs to, based on the name of the given `ApicurioRegistry` CR.
+
+| *apicur.io/type*
+| Type of the deployment, either `apicurio-registry` or `operator`
+
+| *apicur.io/name*
+| Name of the deployment, either the same value as *app* or `apicurio-registry-operator`
+
+| *apicur.io/version*
+| Version of the {registry} or the {operator}
+
+| *app.kubernetes.io/{star}*
+| A set of recommended https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/[Kubernetes labels for application deployments].
+
+| *com.company* and *rht.{star}*
+| Metering labels for Red Hat products.
+|===
