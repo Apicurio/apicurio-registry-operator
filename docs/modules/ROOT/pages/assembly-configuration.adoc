@@ -1,0 +1,27 @@
+include::partial$shared/all-attributes.adoc[]
+
+[#configuring-the-registry]
+= Configuration of {operator}
+
+This chapter explains how to configure {operator} to deploy {registry}.
+
+* xref:persistence-options[]
+* xref:apicurio-registry-custom-resource[]
+* xref:spec[]
+* xref:status[]
+* xref:registry-labels[]
+* xref:managed-resources[]
+* xref:persistence-infinispan[]
+* xref:kafka-streams-persistence-configuration[]
+* xref:persistence-jpa[]
+
+// INCLUDES
+include::partial$ref-persistence-options.adoc[leveloffset=+1]
+include::partial$ref-registry-cr.adoc[leveloffset=+1]
+include::partial$ref-registry-cr-spec.adoc[leveloffset=+1]
+include::partial$ref-registry-cr-status.adoc[leveloffset=+1]
+include::partial$ref-registry-labels.adoc[leveloffset=+1]
+include::partial$ref-registry-managed-resources.adoc[leveloffset=+1]
+include::partial$ref-persistence-infinispan.adoc[leveloffset=+1]
+include::partial$ref-persistence-kafka-streams.adoc[leveloffset=+1]
+include::partial$ref-persistence-jpa.adoc[leveloffset=+1]

@@ -1,0 +1,11 @@
+[#get-help]
+= Get Help
+
+Visit {registry} and {operator} projects on GitHub.
+Any contributions, suggestions, and issue reports are welcome.
+
+ifdef::apicurio-registry[]
+Please https://github.com/Apicurio/apicurio-registry-operator/issues/new[create an issue] on GitHub if you come across any problems.
+
+You can find more help and information about the project in the Troubleshooting and About pages.
+endif::[]

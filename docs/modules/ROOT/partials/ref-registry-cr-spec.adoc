@@ -1,0 +1,188 @@
+[#spec]
+= {registry} custom resource - Spec
+
+`Spec` is the part of the `ApicurioRegistry` CR that is used to provide the desired state (configuration) for the Operator to achieve.
+
+The following block contains the full tree of possible configuration options.
+Note that some fields may not be required or should not be defined at the same time.
+See more information below.
+
+[source,yaml]
+----
+spec:
+  configuration:
+    persistence: <string>
+    dataSource:
+      url: <string>
+      userName: <string>
+      password: <string>
+    kafka:
+      bootstrapServers: <string>
+    streams:
+      bootstrapServers: <string>
+      applicationId: <string>
+      applicationServerPort: <string>
+      security:
+        tls:
+          truststoreSecretName: <string>
+          keystoreSecretName: <string>
+        scram:
+          mechanism: <string>
+          truststoreSecretName: <string>
+          user: <string>
+          passwordSecretName: <string>
+    infinispan:
+      clusterName: <string>
+    ui:
+      readOnly: <string>
+    logLevel: <string>
+  deployment:
+    replicas: <int32>
+    host: <string>
+----
+
+The following table contains summary information for each defined configuration option:
+
+|===
+| Configuration Option | Type | Default Value | Description
+
+| configuration
+| -
+| -
+| Section for configuration of {registry} application
+
+| configuration/persistence
+| string
+| mem
+| Persistence backend to use;
+one of: mem, jpa, kafka, streams, infinispan
+
+| configuration/*dataSource*
+| -
+| -
+| Database connection configuration for JPA persistence backend
+
+| configuration/*dataSource*/url
+| string
+| _required_
+| Database connection URL string
+
+| configuration/*dataSource*/userName
+| string
+| _required_
+| Database connection user
+
+| configuration/*dataSource*/password
+| string
+| _empty_
+| Database connection password
+
+| configuration/*kafka*
+| -
+| -
+| Kafka backend configuration section
+
+| configuration/*kafka*/bootstrapServers
+| string
+| _required_
+| Kafka bootstrap server URL
+
+| configuration/*streams*
+| -
+| -
+| Kafka Streams persistence backend configuration
+
+| configuration/*streams*/bootstrapServers
+| string
+| _required_
+| Kafka bootstrap server URL, for Streams persistence backend
+
+| configuration/*streams*/applicationId
+| string
+| _ApicurioRegistry CR name_
+| Kafka Streams application ID
+
+| configuration/*streams*/applicationServerPort
+| string
+| 9000
+| -
+
+| configuration/*streams*/security/*tls*
+| -
+| -
+| Section to enable and configure TLS authentication for Kafka Streams persistence backend
+
+| configuration/*streams*/security/*tls*/truststoreSecretName
+| string
+| _required_
+| Name of a secret containing TLS truststore for Kafka
+
+| configuration/*streams*/security/*tls*/keystoreSecretName
+| string
+| _required_
+| Name of a secret containing user's TLS keystore
+
+| configuration/*streams*/security/*scram*/truststoreSecretName
+| string
+| _required_
+| Name of a secret containing TLS truststore for Kafka
+
+| configuration/*streams*/security/*scram*/user
+| string
+| _required_
+| SCRAM user name
+
+| configuration/*streams*/security/*scram*/passwordSecretName
+| string
+| _required_
+| Name of a secret containing SCRAM user password
+
+| configuration/*streams*/security/*scram*/mechanism
+| string
+| SCRAM-SHA-512
+| SASL mechanism
+
+| configuration/*infinispan*
+| -
+| -
+| Infinispan persistence configuration section
+
+| configuration/*infinispan*/clusterName
+| string
+| _ApicurioRegistry CR name_
+| Infinispan cluster name
+
+| configuration/*ui*
+| -
+| -
+| Web UI settings
+
+| configuration/*ui*/readOnly
+| string
+| false
+| Set web UI to read-only mode
+
+| configuration/logLevel
+| string
+| INFO
+| Operand log level;
+one of: INFO, DEBUG
+
+| deployment
+| -
+| -
+| Section for operand deployment settings
+
+| deployment/*replicas*
+| positive integer
+| 1
+| Number of {registry} pods to deploy
+
+| deployment/*host*
+| string
+| _auto-generated (from ApicurioRegistry CR name and namespace)_
+| Host/URL where the {registry} UI and API is available
+|===
+
+NOTE: If an option is marked as *required*, it may be conditional on other configuration options enabled.
+Empty value may be accepted, but the operator will not perform given action.
