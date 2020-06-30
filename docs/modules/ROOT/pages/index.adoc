@@ -1,0 +1,31 @@
+include::partial$shared/all-attributes.adoc[]
+
+[#apicurio-registry-operator]
+= {operator} Documentation
+
+Welcome to the user
+ifdef::apicurio-registry[]
+and developer
+endif::[]
+documentation for {operator}.
+
+* xref:quickstart[Get Started]
+
+ifdef::apicurio-registry[]
+* https://github.com/Apicurio/apicurio-registry-operator[View the project on GitHub]
+endif::[]
+
+include::partial$con-registry-intro.adoc[leveloffset=+1]
+
+include::partial$con-registry-operator-intro.adoc[leveloffset=+1]
+
+include::partial$ref-registry-operator-prerequisites.adoc[leveloffset=+1]
+
+[#quickstart]
+== Quickstart
+
+include::partial$proc-registry-operator-quickstart-sr.adoc[leveloffset=+1]
+
+include::partial$proc-registry-quickstart-sr.adoc[leveloffset=+1]
+
+include::partial$ref-get-help.adoc[leveloffset=+1]

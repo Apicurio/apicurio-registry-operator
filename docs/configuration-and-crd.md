@@ -1,3 +1,0 @@
-Apicurio Registry Operator Configuration
-===
-

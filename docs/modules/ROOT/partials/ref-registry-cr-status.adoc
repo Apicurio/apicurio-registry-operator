@@ -1,0 +1,45 @@
+[#status]
+= Service Registry custom resource - Status
+
+This is the section of the CR, managed by the {operator}, that contains description of the current deployment and application state.
+
+[source,yaml]
+----
+status:
+  image: <string>
+  deploymentName: <string>
+  serviceName: <string>
+  ingressName: <string>
+  replicaCount: <int32>
+  host: <string>
+----
+
+|===
+| Status Entry | Type | Description
+
+| image
+| string
+| Operand image that the operator deploys.
+May change based on the persistence option selected in the configuration.
+
+| deploymentName
+| string
+| Name of the `Deployment` or `DeploymentConfig` managed by the Operator, used to deploy the {registry}.
+
+| serviceName
+| string
+| Name of the `Service` managed by the Operator, to expose the Operand as a service.
+
+| ingressName
+| string
+| Name of the `Ingress` managed by the Operator, to make the {registry} accessible via HTTP.
+On OCP, a `Route` is created as well.
+
+| replicaCount
+| int32
+| Number of the Operand pods deployed.
+
+| host
+| string
+| URL where the {registry} UI and REST API are accessible.
+|===

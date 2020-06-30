@@ -1,0 +1,26 @@
+[#registry-operator-quickstart]
+= Command-Line {operator} Installation
+
+The recommended installation option for production environments is to use the xref::assembly-installation.adoc[OperatorHub].
+
+However, in order to quickly deploy the {operator} without using link:{LinkOLMDocs}[{NameOLMDocs}], you can download a set of installation files and examples from link:{LinkRedHatIntegrationDownloads}[{NameRedHatIntegrationDownloads}].
+
+. Select the product version and download Service Registry CRDs zip file.
+
+. Create a project for the installation, e.g., `service-registry`:
++
+[source,bash]
+----
+oc new-project service-registry
+----
+
+. Set the namespace in `install/cluster_role_binding.yaml` by replacing `+{NAMESPACE}+` with `service-registry`.
+
+. Apply the files located in the `install/` folder:
++
+[source,bash]
+----
+oc apply -f install/
+----
+
+NOTE: You can find more information in the xref:assembly-installation.adoc[Installation] page.
