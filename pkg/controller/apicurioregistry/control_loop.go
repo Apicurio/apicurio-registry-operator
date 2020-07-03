@@ -2,6 +2,8 @@ package apicurioregistry
 
 import (
 	"context"
+	"strconv"
+
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -9,7 +11,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"strconv"
 )
 
 var _ reconcile.Reconciler = &ApicurioRegistryReconciler{}
@@ -118,7 +119,7 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 	}
 
 	// ======
-    // Create or patch resources in resource cache
+	// Create or patch resources in resource cache
 	ctx.GetPatchers().Execute()
 
 	// ======
@@ -141,6 +142,7 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 		log.Info("This operator is running on OpenShift")
 
 		// Keep alphabetical!
+		c.AddControlFunction(NewAffinityOcpCF(c))
 		c.AddControlFunction(NewDeploymentOcpCF(c))
 		c.AddControlFunction(NewEnvOcpCF(c))
 		c.AddControlFunction(NewHostCF(c))
@@ -161,12 +163,14 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 
 		c.AddControlFunction(NewStreamsSecurityScramOcpCF(c))
 		c.AddControlFunction(NewStreamsSecurityTLSOcpCF(c))
+		c.AddControlFunction(NewTolerationOcpCF(c))
 		c.AddControlFunction(NewUICF(c))
 
 	} else {
 		log.Info("This operator is running on Kubernetes")
 
 		// Keep alphabetical!
+		c.AddControlFunction(NewAffinityCF(c))
 		c.AddControlFunction(NewDeploymentCF(c))
 		c.AddControlFunction(NewEnvCF(c))
 		c.AddControlFunction(NewHostCF(c))
@@ -186,6 +190,7 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 		c.AddControlFunction(NewStreamsSecurityScramCF(c))
 
 		c.AddControlFunction(NewStreamsSecurityTLSCF(c))
+		c.AddControlFunction(NewTolerationCF(c))
 		c.AddControlFunction(NewUICF(c))
 	}
 
