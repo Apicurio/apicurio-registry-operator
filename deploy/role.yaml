@@ -39,6 +39,12 @@ rules:
     verbs:
       - '*'
   - apiGroups:
+      - policy
+    resources:
+      - poddisruptionbudgets
+    verbs:
+      - '*'
+  - apiGroups:
       - monitoring.coreos.com
     resources:
       - servicemonitors
@@ -71,3 +77,9 @@ rules:
       - '*'
     verbs:
       - '*'
+  - apiGroups:
+      - ''
+    resources:
+      - services/finalizers
+    verbs:
+      - update

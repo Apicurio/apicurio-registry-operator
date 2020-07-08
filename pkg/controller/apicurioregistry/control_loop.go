@@ -156,6 +156,7 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 		c.AddControlFunction(NewKafkaCF(c))
 
 		c.AddControlFunction(NewLogLevelCF(c))
+		c.AddControlFunction(NewPodDisruptionBudgetCF(c))
 		c.AddControlFunction(NewProfileCF(c))
 		c.AddControlFunction(NewReplicasOcpCF(c))
 		c.AddControlFunction(NewServiceCF(c))
@@ -183,6 +184,7 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 		c.AddControlFunction(NewKafkaCF(c))
 		c.AddControlFunction(NewLogLevelCF(c))
 
+		c.AddControlFunction(NewPodDisruptionBudgetCF(c))
 		c.AddControlFunction(NewProfileCF(c))
 		c.AddControlFunction(NewReplicasCF(c))
 		c.AddControlFunction(NewServiceCF(c))

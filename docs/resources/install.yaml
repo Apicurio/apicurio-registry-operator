@@ -47,6 +47,12 @@ rules:
     verbs:
       - '*'
   - apiGroups:
+      - policy
+    resources:
+      - poddisruptionbudgets
+    verbs:
+      - '*'
+  - apiGroups:
       - monitoring.coreos.com
     resources:
       - servicemonitors
@@ -924,8 +930,15 @@ spec:
       containers:
         - name: apicurio-registry-operator
           # Replace this with the built image name
-          image: quay.io/akieling/apicurio-registry-operator:0.0.3-dev # replaced quay.io/akieling/apicurio-registry-operator:0.0.3-dev # replaced quay.io/akieling/apicurio-registry-operator:0.0.3-dev # replaced {OPERATOR_IMAGE}
+          image: docker.io/apicurio/apicurio-registry-operator:0.0.3-dev # replaced {OPERATOR_IMAGE}
           imagePullPolicy: Always
+          resources:
+            limits:
+              memory: "64Mi"
+              cpu: "4m"
+            requests:
+              memory: "32Mi"
+              cpu: "2m"
           env:
             - name:  REGISTRY_IMAGE_MEM
               value: "docker.io/apicurio/apicurio-registry-mem:1.2.2.Final"

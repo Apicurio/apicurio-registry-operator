@@ -4,6 +4,7 @@ import (
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
+	policy "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -139,5 +140,44 @@ func (this *KubeClient) PatchIngress(namespace, name string, patchData []byte) (
 
 func (this *KubeClient) GetIngresses(namespace string, options *meta.ListOptions) (*extensions.IngressList, error) {
 	return this.client.ExtensionsV1beta1().Ingresses(namespace).
+		List(*options)
+}
+
+// ===
+// PodDisruptionBudget
+
+func (this *KubeClient) CreatePodDisruptionBudget(namespace string, value *policy.PodDisruptionBudget) (*policy.PodDisruptionBudget, error) {
+	res, err := this.client.PolicyV1beta1().PodDisruptionBudgets(namespace).
+		Create(value)
+	if err != nil {
+		return nil, err
+	}
+	if err := controllerutil.SetControllerReference(this.ctx.GetConfiguration().GetSpec(), res, this.ctx.GetScheme()); err != nil {
+		panic("Could not set controller reference.")
+	}
+	res, err = this.UpdatePodDisruptionBudget(namespace, res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (this *KubeClient) GetPodDisruptionBudget(namespace string, name string, options *meta.GetOptions) (*policy.PodDisruptionBudget, error) {
+	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace).
+		Get(name, meta.GetOptions{})
+}
+
+func (this *KubeClient) UpdatePodDisruptionBudget(namespace string, value *policy.PodDisruptionBudget) (*policy.PodDisruptionBudget, error) {
+	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace).
+		Update(value)
+}
+
+func (this *KubeClient) PatchPodDisruptionBudget(namespace, name string, patchData []byte) (*policy.PodDisruptionBudget, error) {
+	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace).
+		Patch(name, types.StrategicMergePatchType, patchData)
+}
+
+func (this *KubeClient) GetPodDisruptionBudgets(namespace string, options *meta.ListOptions) (*policy.PodDisruptionBudgetList, error) {
+	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace).
 		List(*options)
 }

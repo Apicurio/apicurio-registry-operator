@@ -5,6 +5,7 @@ import (
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
+	policy "k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -23,7 +24,7 @@ func NewKubeFactory(ctx *Context) *KubeFactory {
 func (this *KubeFactory) GetLabels() map[string]string {
 	return map[string]string{
 		"app": this.ctx.GetConfiguration().GetAppName(),
-	};
+	}
 }
 
 func (this *KubeFactory) createObjectMeta(typeTag string) meta.ObjectMeta {
@@ -179,4 +180,20 @@ func (this *KubeFactory) CreateStatus(spec *ar.ApicurioRegistry) *ar.ApicurioReg
 		Host:           this.ctx.GetConfiguration().GetConfig(CFG_STA_ROUTE),
 	}
 	return res
+}
+
+func (this *KubeFactory) CreatePodDisruptionBudget() *policy.PodDisruptionBudget {
+	labels := this.GetLabels()
+	podDisruptionBudget := &policy.PodDisruptionBudget{
+		ObjectMeta: this.createObjectMeta("pdb"),
+		Spec: policy.PodDisruptionBudgetSpec{
+			Selector: &meta.LabelSelector{
+				MatchLabels: labels,
+			},
+			MaxUnavailable: &intstr.IntOrString{
+				IntVal: 1,
+			},
+		},
+	}
+	return podDisruptionBudget
 }

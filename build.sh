@@ -77,7 +77,7 @@ minikube_deploy() {
   kubectl create -f ./deploy/role.yaml
   kubectl create -f ./deploy/role_binding.yaml
   kubectl create -f ./deploy/cluster_role.yaml
-  cat ./deploy/cluster_role_binding.yaml | sed "s/{NAMESPACE}/$NAMESPACE # replaced {NAMESPACE}/g" | kubectl apply -f -
+  cat ./deploy/cluster_role_binding.yaml | sed "s/{NAMESPACE}/$OPERATOR_NAMESPACE # replaced {NAMESPACE}/g" | kubectl apply -f -
   kubectl create -f ./deploy/crds/apicur.io_apicurioregistries_crd.yaml
   kubectl create -f ./deploy/operator.yaml
   minikube_deploy_cr
