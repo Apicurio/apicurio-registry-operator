@@ -115,7 +115,7 @@ spec:
                             fieldPath: metadata.name
                       - name: OPERATOR_NAME
                         value: apicurio-registry-operator
-                    image: docker.io/apicurio/apicurio-registry-operator:0.0.3-dev
+                    image: docker.io/apicurio/apicurio-registry-operator@sha256:7d5164d09818a9605fbf8d1f8695206cf929bf17b267fc32d0ee3ca9d6ab5d4b
                     imagePullPolicy: Always
                     name: apicurio-registry-operator
                     resources:
