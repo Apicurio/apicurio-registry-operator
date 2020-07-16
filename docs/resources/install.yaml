@@ -930,7 +930,7 @@ spec:
       containers:
         - name: apicurio-registry-operator
           # Replace this with the built image name
-          image: docker.io/apicurio/apicurio-registry-operator:0.0.3 # replaced {OPERATOR_IMAGE}
+          image: docker.io/apicurio/apicurio-registry-operator:0.0.4-dev # replaced {OPERATOR_IMAGE}
           imagePullPolicy: Always
           resources:
             limits:
