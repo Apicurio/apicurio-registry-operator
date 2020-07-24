@@ -18,12 +18,12 @@ type EnvCF struct {
 // Is responsible for managing environment variables from the env cache
 func NewEnvCF(ctx *Context) ControlFunction {
 	return &EnvCF{
-		ctx:              ctx,
-		deploymentExists: false,
-		deploymentEntry:  nil,
-		deploymentName:   RC_EMPTY_NAME,
-		lastDeploymentName:   RC_EMPTY_NAME,
-		envCacheUpdated:  false,
+		ctx:                ctx,
+		deploymentExists:   false,
+		deploymentEntry:    nil,
+		deploymentName:     RC_EMPTY_NAME,
+		lastDeploymentName: RC_EMPTY_NAME,
+		envCacheUpdated:    false,
 	}
 }
 

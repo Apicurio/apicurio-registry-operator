@@ -17,7 +17,7 @@ const ENV_REGISTRY_STREAMS_TOPOLOGY_SASL_JAAS_CONFIG = "REGISTRY_STREAMS_TOPOLOG
 const ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SASL_MECHANISM = "REGISTRY_STREAMS_STORAGE-PRODUCER_SASL_MECHANISM"
 const ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SASL_JAAS_CONFIG = "REGISTRY_STREAMS_STORAGE-PRODUCER_SASL_JAAS_CONFIG"
 
-const SCRAM_TRUSTSTORE_SECRET_VOLUME_NAME="registry-streams-scram-truststore"
+const SCRAM_TRUSTSTORE_SECRET_VOLUME_NAME = "registry-streams-scram-truststore"
 
 type StreamsSecurityScramCF struct {
 	ctx                          *Context
@@ -124,12 +124,11 @@ func (this *StreamsSecurityScramCF) Sense() {
 
 func (this *StreamsSecurityScramCF) Compare() bool {
 	// Condition #1
-	return this.valid && (
-		this.truststoreSecretName != this.foundTruststoreSecretName ||
-			this.scramUser != this.foundScramUser ||
-			this.scramPasswordSecretName != this.foundScramPasswordSecretName ||
-			this.scramMechanism != this.foundScramMechanism ||
-			!this.mechOk)
+	return this.valid && (this.truststoreSecretName != this.foundTruststoreSecretName ||
+		this.scramUser != this.foundScramUser ||
+		this.scramPasswordSecretName != this.foundScramPasswordSecretName ||
+		this.scramMechanism != this.foundScramMechanism ||
+		!this.mechOk)
 }
 
 func (this *StreamsSecurityScramCF) Respond() {

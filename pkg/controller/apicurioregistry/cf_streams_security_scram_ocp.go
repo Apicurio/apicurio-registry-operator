@@ -113,12 +113,11 @@ func (this *StreamsSecurityScramOcpCF) Sense() {
 
 func (this *StreamsSecurityScramOcpCF) Compare() bool {
 	// Condition #1
-	return this.valid && (
-		this.truststoreSecretName != this.foundTruststoreSecretName ||
-			this.scramUser != this.foundScramUser ||
-			this.scramPasswordSecretName != this.foundScramPasswordSecretName ||
-			this.scramMechanism != this.foundScramMechanism ||
-			!this.mechOk)
+	return this.valid && (this.truststoreSecretName != this.foundTruststoreSecretName ||
+		this.scramUser != this.foundScramUser ||
+		this.scramPasswordSecretName != this.foundScramPasswordSecretName ||
+		this.scramMechanism != this.foundScramMechanism ||
+		!this.mechOk)
 }
 
 func (this *StreamsSecurityScramOcpCF) Respond() {

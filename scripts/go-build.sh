@@ -2,9 +2,13 @@
 
 source ./scripts/go-mod-env.sh
 
-REGISTRY=quay.io/apicurio
+  echo  OPERATOR_IMAGE_REPOSITORY = $OPERATOR_IMAGE_REPOSITORY
+
+
+
 IMAGE=apicurio-registry-operator
 TAG=$(sed -n 's/^.*Version.*=.*"\(.*\)".*$/\1/p' ./version/version.go)
+
 
 CFLAGS="--redhat --build-tech-preview"
 
@@ -12,7 +16,7 @@ CFLAGS="--redhat --build-tech-preview"
 
 if [[ -z ${CI} ]]; then
     ./scripts/go-test.sh
-    operator-sdk build ${REGISTRY}/${IMAGE}:${TAG}
+    operator-sdk build ${OPERATOR_IMAGE_REPOSITORY}/${IMAGE}:${TAG}
    
 else
     CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o build/_output/bin/apicurio-registry-operator github.com/Apicurio/apicurio-registry-operator/cmd/manager

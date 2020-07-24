@@ -1,9 +1,9 @@
 package apicurioregistry
 
 import (
+	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	ocp_apps "github.com/openshift/api/apps/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 )
 
 type DeploymentOCPUF = func(spec *ocp_apps.DeploymentConfig)
@@ -79,8 +79,8 @@ func (this *OCPPatcher) reloadRoute() {
 		// Load route here, TODO move to separate CF?
 		rs, e := this.ctx.GetClients().OCP().
 			GetRoutes(this.ctx.GetConfiguration().GetAppNamespace(), &meta.ListOptions{
-			LabelSelector: "app=" + this.ctx.GetConfiguration().GetAppName(),
-		})
+				LabelSelector: "app=" + this.ctx.GetConfiguration().GetAppName(),
+			})
 		if e == nil {
 			existingHost := ""
 			if specEntry, exists := this.ctx.GetResourceCache().Get(RC_KEY_SPEC); exists {

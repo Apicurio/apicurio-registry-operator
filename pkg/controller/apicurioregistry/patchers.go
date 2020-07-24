@@ -65,7 +65,7 @@ func patchGeneric(
 	genericCreate func(string, interface{}) (interface{}, error),
 	genericPatch func(string, string, []byte) (interface{}, error),
 	genericGetName func(interface{}) string,
-    removeStatus func(interface{}) interface{}) {
+	removeStatus func(interface{}) interface{}) {
 
 	if entry, exists := ctx.GetResourceCache().Get(key); exists {
 
@@ -96,7 +96,7 @@ func patchGeneric(
 			patchData0, err := createPatch(removeStatus(actualValue), removeStatus(value), genericType)
 
 			patchData := patchData0
-			if(typeString != "ar.ApicurioRegistry") {
+			if typeString != "ar.ApicurioRegistry" {
 				patchData = append(make([]byte, 0), "{\"spec\":"...)
 				patchData = append(patchData, patchData0...)
 				patchData = append(patchData, "}"...)

@@ -42,8 +42,9 @@ Do not forget to use the same host in the registry CR.
 Choose a registry to store your build of the operator, e.g. [quay.io](quay.io) and build the operator:
 
 ```
-$ ./build.sh build -r "$REGISTRY"
-$ ./build.sh push -r "$REGISTRY"
+ make build OPERATOR_IMAGE_REPOSITORY=<OPERATOR_IMAGE_REPOSITORY>
+ 
+ docker push <registry+image+tag>
 ```
 
 See the project README doc for details.
@@ -55,7 +56,9 @@ To deploy AR with the in-memory storage, you don't need to deploy anything else,
 You can use one of the example CRs:
 
 ```
-$ ./build.sh mkdeploy -r "$REGISTRY" --cr ./docs/resources/example-cr/in-memory.yaml
+
+make deploy OPERATOR_IMAGE_REPOSITORY=quay.io OPERATOR_NAMESPACE=ahameed CR_PATH=docs/resources/example-cr/streams.yaml
+
 ```
 
 5\. Test Queries
@@ -116,7 +119,8 @@ Verify that the `bootstrapServers` configuration option in  the CR is correct.
 Run `minikube service -n kafka list`, the URL should be `<name>.<namespace>.svc:9092`.
 
 ```
-$ ./build.sh mkdeploy -r "$REGISTRY" --cr ./docs/resources/example-cr/streams.yaml
+
+make deploy OPERATOR_IMAGE_REPOSITORY=<OPERATOR_IMAGE_REPOSITORY> OPERATOR_NAMESPACE=<OPERATOR_NAMESPACE> CR_PATH=docs/resources/example-cr/streams.yaml
 ```
 
 7\. Kafka Deployment

@@ -7,23 +7,23 @@ import (
 var _ ControlFunction = &EnvOcpCF{}
 
 type EnvOcpCF struct {
-	ctx              *Context
-	deploymentExists bool
-	deploymentEntry  ResourceCacheEntry
-	deploymentName   string
+	ctx                *Context
+	deploymentExists   bool
+	deploymentEntry    ResourceCacheEntry
+	deploymentName     string
 	lastDeploymentName string
-	envCacheUpdated  bool
+	envCacheUpdated    bool
 }
 
 // Is responsible for managing environment variables from the env cache
 func NewEnvOcpCF(ctx *Context) ControlFunction {
 	return &EnvOcpCF{
-		ctx:              ctx,
-		deploymentExists: false,
-		deploymentEntry:  nil,
-		deploymentName:   RC_EMPTY_NAME,
-		lastDeploymentName:   RC_EMPTY_NAME,
-		envCacheUpdated:  false,
+		ctx:                ctx,
+		deploymentExists:   false,
+		deploymentEntry:    nil,
+		deploymentName:     RC_EMPTY_NAME,
+		lastDeploymentName: RC_EMPTY_NAME,
+		envCacheUpdated:    false,
 	}
 }
 

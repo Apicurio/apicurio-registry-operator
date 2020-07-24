@@ -38,14 +38,15 @@ Pick a registry, e.g. [quay.io](quay.io)/user and use `build.sh` script (or Oper
 to build the image:
 
 ```
-$ ./build.sh build -r "$REGISTRY"
+ make build OPERATOR_IMAGE_REPOSITORY=<OPERATOR_IMAGE_REPOSITORY>
 ```
 
 And push it to the registry:
 
 ```
-$ ./build.sh push -r "$REGISTRY"
+ docker push <registry+image+tag>
 ```
+ex:  quay.io/apicurio/apicurio-registry-operator:0.0.4
 
 Installation
 ---
@@ -54,11 +55,12 @@ If you are testing on Minikube, you can use the following commands
 to deploy and undeploy the operator, respectively, with an example CR:
 
 ```
-$ ./build.sh mkdeploy -r "$REGISTRY"
-$ ./build.sh mkundeploy -r "$REGISTRY"
+  make deploy OPERATOR_IMAGE_REPOSITORY=<OPERATOR_IMAGE_REPOSITORY> OPERATOR_NAMESPACE=<OPERATOR_NAMESPACE>"
+
+  make undeploy
 ```
 
-Or you can perform the steps manually (see the `build.sh`):
+Or you can perform the steps manually (see the `Makefile` targets):
 
 1. Create resources and resource definitions on your cluster (choose your $NAMESPACE):
    

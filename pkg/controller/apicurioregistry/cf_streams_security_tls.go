@@ -105,9 +105,8 @@ func (this *StreamsSecurityTLSCF) Sense() {
 
 func (this *StreamsSecurityTLSCF) Compare() bool {
 	// Condition #1
-	return this.valid && (
-		this.keystoreSecretName != this.foundKeystoreSecretName ||
-			this.truststoreSecretName != this.foundTruststoreSecretName)
+	return this.valid && (this.keystoreSecretName != this.foundKeystoreSecretName ||
+		this.truststoreSecretName != this.foundTruststoreSecretName)
 }
 
 func (this *StreamsSecurityTLSCF) Respond() {

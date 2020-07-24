@@ -83,3 +83,5 @@ tags
 *.ipr
 *.iws
 
+# Ignore vendored dependencies
+vendor/*
