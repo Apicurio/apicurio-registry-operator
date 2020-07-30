@@ -2,7 +2,10 @@
 
 
 
-#kubectl delete ApicurioRegistry "$CR_NAME"
+
+  kubectl config set-context --current --namespace=$OPERATOR_NAMESPACE
+
+  kubectl delete -f ./deploy/crds/
 
   kubectl delete deployment apicurio-registry-operator
   kubectl delete CustomResourceDefinition apicurioregistries.apicur.io

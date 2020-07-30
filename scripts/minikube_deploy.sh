@@ -13,6 +13,7 @@
   sed -i "s|{OPERATOR_IMAGE}|$OPERATOR_IMAGE # replaced {OPERATOR_IMAGE}|g" ./deploy/operator.yaml
 
 
+  kubectl config set-context --current --namespace=$OPERATOR_NAMESPACE
 
   kubectl apply -f ./deploy/service_account.yaml
   kubectl apply -f ./deploy/role.yaml
