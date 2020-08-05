@@ -17,7 +17,6 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller"
 	"github.com/Apicurio/apicurio-registry-operator/version"
 
-	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	ocp_apps "github.com/openshift/api/apps/v1"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
@@ -125,11 +124,6 @@ func main() {
 	}
 
 	if err := ocp_apps.AddToScheme(mgr.GetScheme()); err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
-
-	if err := monitoring.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}

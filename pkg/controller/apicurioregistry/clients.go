@@ -2,10 +2,6 @@
 package apicurioregistry
 
 import (
-	"net"
-	"os"
-  "os/user"
-	"path"
 	"github.com/Masterminds/semver"
 	ocp_config_client "github.com/openshift/client-go/config/clientset/versioned"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
@@ -13,19 +9,22 @@ import (
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"	
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+	"net"
+	"os"
+	"os/user"
+	"path"
 )
 
 // RecommendedConfigPathEnvVar is a environment variable for path configuration
 const RecommendedConfigPathEnvVar = "KUBECONFIG"
 
 type Clients struct {
-	ctx              *Context
-	config           *rest.Config
-	kubeClient       *KubeClient
-	ocpClient        *OCPClient
-	crdClient        *CRDClient
-	monitoringClient *MonitoringClient
+	ctx        *Context
+	config     *rest.Config
+	kubeClient *KubeClient
+	ocpClient  *OCPClient
+	crdClient  *CRDClient
 }
 
 func NewClients(ctx *Context) *Clients {
@@ -46,9 +45,6 @@ func NewClients(ctx *Context) *Clients {
 
 	config, err = inClusterConfig()
 	this.crdClient = NewCRDClient(ctx, config)
-
-	config, err = inClusterConfig()
-	this.monitoringClient = NewMonitoringClient(ctx, config)
 
 	return this
 }
@@ -123,10 +119,6 @@ func (this *Clients) Kube() *KubeClient {
 
 func (this *Clients) CRD() *CRDClient {
 	return this.crdClient
-}
-
-func (this *Clients) Monitoring() *MonitoringClient {
-	return this.monitoringClient
 }
 
 func (this *Clients) IsOCP() (bool, error) {
