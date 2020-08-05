@@ -160,7 +160,6 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 		c.AddControlFunction(NewProfileCF(c))
 		c.AddControlFunction(NewReplicasOcpCF(c))
 		c.AddControlFunction(NewServiceCF(c))
-		c.AddControlFunction(NewServiceMonitorCF(c))
 		c.AddControlFunction(NewStreamsCF(c))
 
 		c.AddControlFunction(NewStreamsSecurityScramOcpCF(c))
@@ -189,7 +188,6 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 		c.AddControlFunction(NewProfileCF(c))
 		c.AddControlFunction(NewReplicasCF(c))
 		c.AddControlFunction(NewServiceCF(c))
-		c.AddControlFunction(NewServiceMonitorCF(c))
 		c.AddControlFunction(NewStreamsCF(c))
 		c.AddControlFunction(NewStreamsSecurityScramCF(c))
 

@@ -4,7 +4,6 @@ go 1.13
 
 require (
 	github.com/Masterminds/semver v1.5.0
-	github.com/coreos/prometheus-operator v0.38.0
 	github.com/go-logr/logr v0.1.0
 	github.com/openshift/api v0.0.0-20200205133042-34f0ec8dab87
 	github.com/openshift/client-go v0.0.0-20200116152001-92a2713fa240
