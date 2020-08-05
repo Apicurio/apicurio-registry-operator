@@ -1,7 +1,6 @@
 package apicurioregistry
 
 import (
-	"fmt"
 	"reflect"
 
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
@@ -42,13 +41,11 @@ func (this *TolerationOcpCF) Sense() {
 		// Observation #2
 		// Get the existing tolerations
 		this.existingTolerations = this.deploymentConfigEntry.GetValue().(*ocp_apps.DeploymentConfig).Spec.Template.Spec.Tolerations
-		log.Info(fmt.Sprintf("existingTolerations: %v", this.existingTolerations))
 
 		// Observation #3
 		// Get the target tolerations
 		if specEntry, exists := this.ctx.GetResourceCache().Get(RC_KEY_SPEC); exists {
 			this.targetTolerations = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Tolerations
-			log.Info(fmt.Sprintf("targetTolerations: %v", this.targetTolerations))
 		}
 	}
 }
