@@ -1,0 +1,9 @@
+apiVersion: apicur.io/v1alpha1
+kind: ApicurioRegistry
+metadata:
+  name: example-apicurioregistry
+spec:
+  configuration:
+    persistence: "mem"
+  image:
+    name: "docker.io/apicurio/apicurio-registry-mem:1.2.3.Final"

@@ -4,14 +4,20 @@ package apicurioregistry
 import (
 	"net"
 	"os"
-
+  "os/user"
+	"path"
 	"github.com/Masterminds/semver"
 	ocp_config_client "github.com/openshift/client-go/config/clientset/versioned"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"	
 )
+
+// RecommendedConfigPathEnvVar is a environment variable for path configuration
+const RecommendedConfigPathEnvVar = "KUBECONFIG"
 
 type Clients struct {
 	ctx              *Context
@@ -48,17 +54,63 @@ func NewClients(ctx *Context) *Clients {
 }
 
 func inClusterConfig() (*rest.Config, error) {
-	if len(os.Getenv("KUBERNETES_SERVICE_HOST")) == 0 {
-		hosts, err := net.LookupHost("kubernetes.default.svc")
-		if err != nil {
-			panic(err)
+
+
+		if len(os.Getenv("KUBERNETES_SERVICE_HOST")) == 0 {
+			hosts, err := net.LookupHost("kubernetes.default.svc")
+			if err != nil {
+				return outOfClusterConfig()
+			}
+			if err := os.Setenv("KUBERNETES_SERVICE_HOST", hosts[0]); err != nil {
+				return nil, err
+			}
 		}
-		os.Setenv("KUBERNETES_SERVICE_HOST", hosts[0])
-	}
-	if len(os.Getenv("KUBERNETES_SERVICE_PORT")) == 0 {
-		os.Setenv("KUBERNETES_SERVICE_PORT", "443")
+		if len(os.Getenv("KUBERNETES_SERVICE_PORT")) == 0 {
+			if err := os.Setenv("KUBERNETES_SERVICE_PORT", "443"); err != nil {
+				panic(err)
+			}
+		}
+
+	return rest.InClusterConfig()
+}
+
+func outOfClusterConfig() (*rest.Config, error) {
+
+	configFile := getKubeConfigFile()
+
+	if len(configFile) > 0 {
+
+		log.Info("Reading config from file"+  configFile)
+		// use the current context in kubeconfig
+		// This is very useful for running locally.
+		clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+			&clientcmd.ClientConfigLoadingRules{ExplicitPath: configFile},
+			&clientcmd.ConfigOverrides{ClusterInfo: clientcmdapi.Cluster{Server: ""}})
+
+		config, err := clientConfig.ClientConfig()
+
+		return config, err
+
 	}
 	return rest.InClusterConfig()
+}
+
+//GetKubeConfigFile tries to find a kubeconfig file.
+func getKubeConfigFile() string {
+	configFile := ""
+
+	usr, err := user.Current()
+	if err != nil {
+		log.Info("Could not get current user; error %v", err)
+	} else {
+		configFile = path.Join(usr.HomeDir, ".kube", "config")
+	}
+
+	if len(os.Getenv(RecommendedConfigPathEnvVar)) > 0 {
+		configFile = os.Getenv(RecommendedConfigPathEnvVar)
+	}
+
+	return configFile
 }
 
 func (this *Clients) OCP() *OCPClient {
