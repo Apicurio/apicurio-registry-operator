@@ -85,6 +85,12 @@ rules:
       - '*'
     verbs:
       - '*'
+  - apiGroups:
+      - ''
+    resources:
+      - services/finalizers
+    verbs:
+      - update
 
 ---
 kind: RoleBinding
