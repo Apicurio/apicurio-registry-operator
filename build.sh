@@ -59,10 +59,43 @@ unreplace() {
   sed -i "s|$OPERATOR_IMAGE # replaced {OPERATOR_IMAGE}|{OPERATOR_IMAGE}|g" ./deploy/operator.yaml
 }
 
+gen_csv() {
+  # Generate dev CRDs, alpha channel
+  if [ -d "./deploy/olm-catalog/apicurio-registry/$VERSION" ]; then
+    operator-sdk generate csv \
+      --csv-channel alpha \
+      --update-crds \
+      --csv-version "$VERSION" \
+      --operator-name apicurio-registry \
+      --verbose \
+      --from-version 0.0.0-template \
+      --make-manifests=false
+
+    CSV_PATH="./deploy/olm-catalog/apicurio-registry/$VERSION/apicurio-registry.v$VERSION.clusterserviceversion.yaml"
+    PACKAGE_PATH="./deploy/olm-catalog/apicurio-registry/apicurio-registry-operator.package.yaml"
+
+    PREVIOUS_VERSION_ALPHA=$(sed -n 's/^ *currentCSV:.*# alpha; replaces \([^ ]*\)$/\1/p' "$PACKAGE_PATH")
+    require "$PREVIOUS_VERSION_ALPHA" "Could not determine previous CSV version."
+    sed -i "s/replaces: *apicurio-registry\.v0\.0\.0-template/replaces: apicurio-registry.v$PREVIOUS_VERSION_ALPHA/" "$CSV_PATH"
+
+    CREATED_AT=$(date -Idate)
+    sed -i "s/createdAt: .*/createdAt: \"$CREATED_AT\"/" "$CSV_PATH"
+
+    sed -i "s|containerImage: .*|containerImage: \"$OPERATOR_IMAGE\"|" "$CSV_PATH"
+
+    # sed -i "s/\(^ *currentCSV: *apicurio-registry\.v\)\([^ ]*\)\( *# *alpha.*$\)/\1$VERSION\3/" "$PACKAGE_PATH"
+
+    echo "Warning: Make sure generated CSV do not contain your private dev changes before commiting."
+    echo "Warning: If you want to create CSV for release, rename the generated 'dev' one, replace tags with SHA using 'skopeo' and add 'related images' section."
+  fi
+}
+
 build() {
   replace
   operator-sdk generate k8s
   operator-sdk generate crds
+
+  gen_csv
 
   # Operator
   operator-sdk build "$OPERATOR_IMAGE"
@@ -73,7 +106,7 @@ build() {
   docker tag "$METADATA_IMAGE" "$METADATA_IMAGE_LATEST" # Tag as latest
 
   compile_qs_yaml
-  unreplace
+  #unreplace
 }
 
 minikube_deploy_cr() {
@@ -103,7 +136,7 @@ minikube_deploy() {
 
 compile_qs_yaml() {
   FILE="./docs/resources/install.yaml"
-  echo "Warning: Make sure '$FILE' contains correct image references before committing."
+  echo "Warning: Make sure generated files like '$FILE' do not contain your private dev changes (e.g. image references) before commiting."
   if [ -f "$FILE" ]; then
     rm "$FILE"
   fi
