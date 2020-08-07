@@ -37,8 +37,17 @@ init_image() {
   VERSION=$(sed -n 's/^.*Version.*=.*"\(.*\)".*$/\1/p' ./version/version.go)
   DASH_VERSION_RELEASE=$(echo "$VERSION" | sed -n 's/^[0-9\.]*-\([^-+]*\).*$/-\1/p')
   require "$VERSION" "Could not read project version."
+
+  # Operator
   OPERATOR_IMAGE_NAME="$OPERATOR_IMAGE_REPOSITORY/apicurio-registry-operator"
   OPERATOR_IMAGE="$OPERATOR_IMAGE_NAME:$VERSION"
+  OPERATOR_IMAGE_LATEST="$OPERATOR_IMAGE_NAME:latest$DASH_VERSION_RELEASE"
+
+  # Metadata
+  METADATA_IMAGE_NAME="$OPERATOR_IMAGE_NAME-metadata"
+  METADATA_IMAGE="$METADATA_IMAGE_NAME:$VERSION"
+  METADATA_IMAGE_LATEST="$METADATA_IMAGE_NAME:latest$DASH_VERSION_RELEASE"
+
 }
 
 replace() {
@@ -54,8 +63,15 @@ build() {
   replace
   operator-sdk generate k8s
   operator-sdk generate crds
+
+  # Operator
   operator-sdk build "$OPERATOR_IMAGE"
-  docker tag "$OPERATOR_IMAGE" "$OPERATOR_IMAGE_NAME:latest$DASH_VERSION_RELEASE"
+  docker tag "$OPERATOR_IMAGE" "$OPERATOR_IMAGE_LATEST" # Tag as latest
+
+  # Metadata
+  docker build -t "$METADATA_IMAGE" "./deploy/olm-catalog/"
+  docker tag "$METADATA_IMAGE" "$METADATA_IMAGE_LATEST" # Tag as latest
+
   compile_qs_yaml
   unreplace
 }
@@ -116,7 +132,9 @@ push() {
   init_image
   docker push "$OPERATOR_IMAGE"
   if [[ -n "$PUSH_LATEST" ]]; then
-    docker push "$OPERATOR_IMAGE_NAME:latest$DASH_VERSION_RELEASE"
+    docker push "$OPERATOR_IMAGE_LATEST"
+    # Metadata
+    docker push "$METADATA_IMAGE_LATEST"
   fi
 }
 
