@@ -2,10 +2,17 @@ package apicurioregistry
 
 import (
 	"context"
+	"reflect"
 	"strconv"
 
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/RHsyseng/operator-utils/pkg/resource"
+	"github.com/RHsyseng/operator-utils/pkg/resource/compare"
+	"github.com/RHsyseng/operator-utils/pkg/resource/read"
+	"github.com/RHsyseng/operator-utils/pkg/resource/write"
+	oappsv1 "github.com/openshift/api/apps/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -37,12 +44,36 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 	reqLogger := log.WithValues("namespace", request.Namespace, "app", app)
 	reqLogger.Info("Reconciler executing.")
 
+
+	instance := &ar.ApicurioRegistry{}
+	err := this.client.Get(context.TODO(), request.NamespacedName, instance)
+
+	if err != nil {
+		if api_errors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+			// Return and don't requeue
+			reqLogger.Info("No Custom Resource found named %s. Checking for dependent objects to delete."+ request.Name)
+			instance.ObjectMeta = metav1.ObjectMeta{
+				Name:      request.Name,
+				Namespace: request.Namespace,
+			}
+			deployed, err := getDeployedResources(instance,this.client)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			_, err = this.cleanResources(instance, nil, deployed)
+			return reconcile.Result{}, err
+		}
+
+	}
+
 	// =====
 	// Get all apicurio registry CRs, in order to select or create the control loop context.
 
 	specList := &ar.ApicurioRegistryList{}
 	listOps := client.ListOptions{Namespace: request.Namespace}
-	err := this.client.List(context.TODO(), specList, &listOps)
+	err = this.client.List(context.TODO(), specList, &listOps)
 	if err != nil {
 		if api_errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -198,3 +229,47 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 
 	return c
 }
+
+func (reconciler *ApicurioRegistryReconciler) cleanResources(instance *ar.ApicurioRegistry, requestedResources []resource.KubernetesResource, deployed map[reflect.Type][]resource.KubernetesResource) (bool, error) {
+	reqLogger := log.WithValues("namespace", instance.Namespace, "app", instance.Name)
+
+	writer := write.New(reconciler.client).WithOwnerController(instance, reconciler.scheme)
+	//Compare what's deployed with what should be deployed
+	requested := compare.NewMapBuilder().Add(requestedResources...).ResourceMap()
+	comparator := compare.NewMapComparator()
+	deltas := comparator.Compare(deployed, requested)
+
+	var hasUpdates bool
+	for resourceType, delta := range deltas {
+		if !delta.HasChanges() {
+			continue
+		}
+		reqLogger.Info("", "instances of ", resourceType, "Will delete", len(delta.Removed))
+
+		removed, err := writer.RemoveResources(delta.Removed)
+		if err != nil {
+			return false, err
+		}
+		hasUpdates = hasUpdates || removed
+	}
+	return hasUpdates, nil
+}
+
+
+
+func getDeployedResources(instance *ar.ApicurioRegistry, client client.Client) (map[reflect.Type][]resource.KubernetesResource, error) {
+	reqLogger := log.WithValues("namespace", instance.Namespace, "app", instance.Name)
+
+	reader := read.New(client).WithNamespace(instance.Namespace)
+	resourceMap, err := reader.ListAll(
+		&oappsv1.DeploymentConfigList{},
+		//&routev1.RouteList{},
+
+	)
+	if err != nil {
+		reqLogger.Error(err, "Failed to list deployed objects. ", err)
+		return nil, err
+	}
+	return resourceMap, nil
+}
+
