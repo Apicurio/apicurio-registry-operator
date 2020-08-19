@@ -110,27 +110,28 @@ build() {
 }
 
 minikube_deploy_cr() {
+  require "$OPERATOR_NAMESPACE" "Argument -n or --namespace is required."
   if [[ -z "$CR_PATH" ]]; then
     if [[ -z "$NO_DEFAULT_CR" ]]; then
-      kubectl create -f ./deploy/crds/apicur.io_apicurioregistries_cr.yaml
+      kubectl create -f ./deploy/crds/apicur.io_apicurioregistries_cr.yaml -n "$OPERATOR_NAMESPACE"
     fi
   else
-    kubectl create -f "$CR_PATH"
+    kubectl create -f "$CR_PATH" -n "$OPERATOR_NAMESPACE"
   fi
 }
 
 minikube_deploy() {
   require "$OPERATOR_NAMESPACE" "Argument -n or --namespace is required."
   replace
-  kubectl create -f ./deploy/service_account.yaml
-  kubectl create -f ./deploy/role.yaml
-  kubectl create -f ./deploy/role_binding.yaml
+  kubectl create -f ./deploy/service_account.yaml -n "$OPERATOR_NAMESPACE"
+  kubectl create -f ./deploy/role.yaml  -n "$OPERATOR_NAMESPACE"
+  kubectl create -f ./deploy/role_binding.yaml  -n "$OPERATOR_NAMESPACE"
   kubectl create -f ./deploy/cluster_role.yaml
   cat ./deploy/cluster_role_binding.yaml | sed "s/{NAMESPACE}/$OPERATOR_NAMESPACE # replaced {NAMESPACE}/g" | kubectl apply -f -
   kubectl create -f ./deploy/crds/apicur.io_apicurioregistries_crd.yaml
-  kubectl create -f ./deploy/operator.yaml
+  kubectl create -f ./deploy/operator.yaml -n "$OPERATOR_NAMESPACE"
   minikube_deploy_cr
-  kubectl get deployments
+  kubectl get deployments -n "$OPERATOR_NAMESPACE"
   unreplace
 }
 
@@ -151,23 +152,25 @@ compile_qs_yaml() {
 }
 
 minikube_undeploy() {
+  require "$OPERATOR_NAMESPACE" "Argument -n or --namespace is required."
   #kubectl delete ApicurioRegistry "$CR_NAME"
-  kubectl delete deployment apicurio-registry-operator
+  kubectl delete deployment apicurio-registry-operator -n "$OPERATOR_NAMESPACE"
   kubectl delete CustomResourceDefinition apicurioregistries.apicur.io
-  kubectl delete RoleBinding apicurio-registry-operator
-  kubectl delete Role apicurio-registry-operator
+  kubectl delete RoleBinding apicurio-registry-operator -n "$OPERATOR_NAMESPACE"
+  kubectl delete Role apicurio-registry-operator -n "$OPERATOR_NAMESPACE"
   kubectl delete ClusterRoleBinding apicurio-registry-operator
   kubectl delete ClusterRole apicurio-registry-operator
-  kubectl delete ServiceAccount apicurio-registry-operator
+  kubectl delete ServiceAccount apicurio-registry-operator -n "$OPERATOR_NAMESPACE"
 }
 
 push() {
   init_image
   docker push "$OPERATOR_IMAGE"
+  docker push "$METADATA_IMAGE" # Metadata
+
   if [[ -n "$PUSH_LATEST" ]]; then
     docker push "$OPERATOR_IMAGE_LATEST"
-    # Metadata
-    docker push "$METADATA_IMAGE_LATEST"
+    docker push "$METADATA_IMAGE_LATEST" # Metadata
   fi
 }
 

@@ -20,15 +20,6 @@ type ServiceMonitorCF struct {
 
 func NewServiceMonitorCF(ctx *Context) ControlFunction {
 
-	err := ctx.GetController().Watch(&source.Kind{Type: &monitoring.ServiceMonitor{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &ar.ApicurioRegistry{},
-	})
-
-	if err != nil {
-		panic("Error creating ServiceMonitor watch. " + err.Error())
-	}
-
 	return &ServiceMonitorCF{
 		ctx:                        ctx,
 		isServiceMonitorRegistered: false,
@@ -42,6 +33,18 @@ func (this *ServiceMonitorCF) Describe() string {
 }
 
 func (this *ServiceMonitorCF) Sense() {
+
+	err := this.ctx.GetController().Watch(&source.Kind{Type: &monitoring.ServiceMonitor{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &ar.ApicurioRegistry{},
+	})
+
+	if err != nil {
+		this.ctx.GetLog().WithValues("type", "Warning", "reason", err.Error()).
+			Info("Could not create ServiceMonitor watch.")
+		return
+	}
+
 	monitoringClient := this.ctx.GetClients().Monitoring()
 
 	// Observation #1
