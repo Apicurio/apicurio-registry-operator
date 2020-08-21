@@ -13,8 +13,9 @@ Quickstart
 ---
 
 Choose your `$NAMESPACE` and you can deploy the latest published operator version using a single command:
-
-`curl -sSL https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/master/docs/resources/install.yaml | sed "s/{NAMESPACE}/$NAMESPACE/g" | kubectl apply -f -`
+```
+$ curl -sSL https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/master/docs/resources/install.yaml | sed "s/{NAMESPACE}/$NAMESPACE/g" | kubectl apply -f -
+```
 
 (If you are deploying to OpenShift, you can use `oc` with the same arguments.)
  
@@ -23,9 +24,9 @@ but you can deploy other versions as well.
 Use a different branch or tag, or edit the operator image reference in the file. 
 
 To create a new Apicurio Registry deployment, the fastest way is to use in-memory persistence option and one of the example CRs:
- 
-`kubectl create -f https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/master/docs/resources/example-cr/in-memory.yaml`
-
+```
+$ kubectl create -f https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/master/docs/resources/example-cr/in-memory.yaml
+```
 Note: The in-memory deployment is not suitable for production. We recommend using Kafka Streams persistence option for that.
 See the contents of `./docs` for more information.
 
@@ -65,15 +66,15 @@ Or you can perform the steps manually (see the `build.sh`):
     ```
     $ kubectl create -f ./deploy/service_account.yaml
     $ kubectl create -f ./deploy/role.yaml
+    $ kubectl create -f ./deploy/role_binding.yaml
     $ cat ./deploy/cluster_role_binding.yaml | sed "s/{NAMESPACE}/$NAMESPACE/g" | kubectl apply -f -
     $ kubectl create -f ./deploy/cluster_role.yaml
-    $ kubectl create -f ./deploy/cluster_role_binding.yaml
     ```
 
 1. Create operator CRD:
    
     ```
-    $ kubectl create -f ./deploy/crds/apicur_v1alpha1_apicurioregistry_crd.yaml
+    $ kubectl create -f ./deploy/crds/apicur.io_apicurioregistries_crd.yaml
     ```
 
 1. Deploy the operator:
@@ -85,7 +86,7 @@ Or you can perform the steps manually (see the `build.sh`):
 1. Create an example deployment of Apicurio Registry (in-memory) using the operator:
 
     ```
-    $ kubectl create -f ./deploy/crds/apicur_v1alpha1_apicurioregistry_cr.yaml
+    $ kubectl create -f ./deploy/crds/apicur.io_apicurioregistries_cr.yaml
     ```
 
 1. Verify that the deployment is active:
