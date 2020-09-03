@@ -19,3 +19,30 @@ jobs:
       - name: Build
         id: build
         run: ./build.sh build -r "${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}"
+  test:
+    name: Test PR build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Setup the environment
+        run: ./.github/scripts/setup.sh
+
+      - name: Build
+        id: build
+        run: ./build.sh build -r "${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}"
+
+      - name: Test
+        id: test
+        run: ./.github/scripts/test_operator.sh
+
+      - name: Collect logs
+        if: failure()
+        run: ./.github/scripts/collect_logs.sh
+
+      - name: Upload tests logs artifacts
+        if: failure()
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: tests-logs
+          path: artifacts
