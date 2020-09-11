@@ -41,3 +41,8 @@ func (this *ProfileCF) Respond() {
 	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_QUARKUS_PROFILE, "prod"))
 
 }
+
+func (this *ProfileCF) Cleanup() bool {
+	// No cleanup
+	return true
+}

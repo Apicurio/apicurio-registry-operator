@@ -64,10 +64,33 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 	}
 
 	if spec == nil {
-		_, ok := this.contexts[app]
+		ctx, ok := this.contexts[app]
 		if ok {
+			// Perform resource cleanup
+			reqLogger.WithValues("app", app).Info("ApicurioRegistry CR has been removed. Starting resource cleanup.")
+			maxAttempts := len(ctx.GetControlFunctions()) * 2
+			attempt := 0
+			for ; attempt < maxAttempts; attempt++ {
+				finished := true
+				for _, cf := range ctx.GetControlFunctions() {
+					success := cf.Cleanup()
+					if !success {
+						ctx.GetLog().WithValues("cf", cf.Describe()).Info("Control function requested cleanup retry.")
+					}
+					finished = finished && success
+				}
+				if finished {
+					ctx.GetLog().WithValues("app", app).Info("Cleanup finished successfully.")
+					break;
+				}
+			}
+			if attempt == maxAttempts {
+				ctx.GetLog().WithValues("app", app, "type", "Warning").
+					Info("WARNING: Cleanup did not finish successfully. You may need to delete some of the resources manually.")
+			}
+
 			delete(this.contexts, app)
-			reqLogger.Info("Context was deleted.")
+			ctx.GetLog().Info("Context was deleted.")
 		}
 		return reconcile.Result{}, nil
 	}

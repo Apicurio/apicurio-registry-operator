@@ -54,7 +54,7 @@ func (this *ImageOcpCF) Sense() {
 	persistence := ""
 	if specEntry, exists := this.ctx.GetResourceCache().Get(RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry).Spec
-		this.targetImage = spec.Image.Name
+		this.targetImage = spec.Image.Name // TODO remove this
 		persistence = spec.Configuration.Persistence
 	}
 
@@ -107,4 +107,9 @@ func (this *ImageOcpCF) Respond() {
 		} // TODO report a problem if not found?
 		return deployment
 	})
+}
+
+func (this *ImageOcpCF) Cleanup() bool {
+	// No cleanup
+	return true
 }

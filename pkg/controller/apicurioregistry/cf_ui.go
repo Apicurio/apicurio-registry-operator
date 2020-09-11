@@ -58,8 +58,13 @@ func (this *UICF) Respond() {
 	// Response #1
 	// Just set the value(s)!
 	val := "false"
-	if(this.UIReadOnly) {
+	if (this.UIReadOnly) {
 		val = "true"
 	}
 	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_UI_READ_ONLY, val))
+}
+
+func (this *UICF) Cleanup() bool {
+	// No cleanup
+	return true
 }

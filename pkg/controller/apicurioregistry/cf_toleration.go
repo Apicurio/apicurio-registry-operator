@@ -70,3 +70,8 @@ func (this *TolerationCF) Respond() {
 		return deployment
 	})
 }
+
+func (this *TolerationCF) Cleanup() bool {
+	// No cleanup
+	return true
+}

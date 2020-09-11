@@ -71,3 +71,8 @@ func (this *InfinispanCF) Respond() {
 	// Just set the value(s)!
 	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_INFINISPAN_CLUSTER_NAME, this.infinispanClusterName))
 }
+
+func (this *InfinispanCF) Cleanup() bool {
+	// No cleanup
+	return true
+}

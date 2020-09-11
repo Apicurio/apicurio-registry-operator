@@ -66,3 +66,8 @@ func (this *HostInitCF) Respond() {
 		return spec
 	})
 }
+
+func (this *HostInitCF) Cleanup() bool {
+	// No cleanup
+	return true
+}

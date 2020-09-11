@@ -93,6 +93,11 @@ func (this *HostCF) Respond() {
 	})
 }
 
+func (this *HostCF) Cleanup() bool {
+	// No cleanup
+	return true
+}
+
 func readHost(serviceName string, ingress *extensions.Ingress) string {
 	for _, rule := range ingress.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {

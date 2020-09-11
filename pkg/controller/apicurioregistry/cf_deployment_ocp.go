@@ -3,6 +3,7 @@ package apicurioregistry
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	ocp_apps "github.com/openshift/api/apps/v1"
+	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -108,4 +109,23 @@ func (this *DeploymentOcpCF) Respond() {
 		// leave the creation itself to patcher+creator so other CFs can update
 		this.ctx.GetResourceCache().Set(RC_KEY_DEPLOYMENT_OCP, NewResourceCacheEntry(RC_EMPTY_NAME, deployment))
 	}
+}
+
+func (this *DeploymentOcpCF) Cleanup() bool {
+	// Make sure the service is removed before we delete the deployment
+	if _, serviceExists := this.ctx.GetResourceCache().Get(RC_KEY_SERVICE); serviceExists {
+		// Delete the service first
+		return false
+	}
+	if deploymentEntry, deploymentExists := this.ctx.GetResourceCache().Get(RC_KEY_DEPLOYMENT_OCP); deploymentExists {
+		if err := this.ctx.GetClients().OCP().DeleteDeployment(deploymentEntry.GetValue().(*ocp_apps.DeploymentConfig), &meta.DeleteOptions{});
+			err != nil && !api_errors.IsNotFound(err) {
+			this.ctx.GetLog().Error(err, "Could not delete deployment during cleanup")
+			return false
+		} else {
+			this.ctx.GetResourceCache().Remove(RC_KEY_DEPLOYMENT_OCP)
+			this.ctx.GetLog().Info("Deployment has been deleted.")
+		}
+	}
+	return true
 }

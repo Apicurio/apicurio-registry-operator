@@ -114,3 +114,8 @@ func (this *StreamsCF) Respond() {
 	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_APPLICATION_ID, this.applicationId))
 
 }
+
+func (this *StreamsCF) Cleanup() bool {
+	// No cleanup
+	return true
+}

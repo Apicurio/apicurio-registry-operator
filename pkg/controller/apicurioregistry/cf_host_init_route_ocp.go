@@ -75,3 +75,8 @@ func (this *HostInitRouteOcpCF) Respond() {
 		})
 	}
 }
+
+func (this *HostInitRouteOcpCF) Cleanup() bool {
+	// No cleanup
+	return true
+}

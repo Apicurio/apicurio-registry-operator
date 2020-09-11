@@ -65,6 +65,10 @@ func (this *KubeClient) GetDeployments(namespace string, options *meta.ListOptio
 		List(*options)
 }
 
+func (this *KubeClient) DeleteDeployment(value *apps.Deployment, options *meta.DeleteOptions) error {
+	return this.client.AppsV1().Deployments(value.Namespace).Delete(value.Name, options)
+}
+
 // ===
 // Service
 
@@ -102,6 +106,10 @@ func (this *KubeClient) PatchService(namespace, name string, patchData []byte) (
 func (this *KubeClient) GetServices(namespace string, options *meta.ListOptions) (*core.ServiceList, error) {
 	return this.client.CoreV1().Services(namespace).
 		List(*options)
+}
+
+func (this *KubeClient) DeleteService(value *core.Service, options *meta.DeleteOptions) error {
+	return this.client.CoreV1().Services(value.Namespace).Delete(value.Name, options)
 }
 
 // ===
@@ -143,6 +151,10 @@ func (this *KubeClient) GetIngresses(namespace string, options *meta.ListOptions
 		List(*options)
 }
 
+func (this *KubeClient) DeleteIngress(value *extensions.Ingress, options *meta.DeleteOptions) error {
+	return this.client.ExtensionsV1beta1().Ingresses(value.Namespace).Delete(value.Name, options)
+}
+
 // ===
 // PodDisruptionBudget
 
@@ -180,4 +192,8 @@ func (this *KubeClient) PatchPodDisruptionBudget(namespace, name string, patchDa
 func (this *KubeClient) GetPodDisruptionBudgets(namespace string, options *meta.ListOptions) (*policy.PodDisruptionBudgetList, error) {
 	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace).
 		List(*options)
+}
+
+func (this *KubeClient) DeletePodDisruptionBudget(value *policy.PodDisruptionBudget, options *meta.DeleteOptions) error {
+	return this.client.PolicyV1beta1().PodDisruptionBudgets(value.Namespace).Delete(value.Name, options)
 }

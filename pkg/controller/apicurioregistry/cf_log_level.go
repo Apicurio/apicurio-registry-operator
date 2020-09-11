@@ -60,3 +60,8 @@ func (this *LogLevelCF) Respond() {
 	// Just set the value(s)!
 	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_LOG_LEVEL, this.logLevel))
 }
+
+func (this *LogLevelCF) Cleanup() bool {
+	// No cleanup
+	return true
+}
