@@ -16,4 +16,11 @@ type ControlFunction interface {
 
 	// Return the description of the CF
 	Describe() string
+
+	// Release & Cleanup the resources created by this CF.
+	// Return *true* if the cleanup was successful or is not needed.
+	// If a CF returns false, the cleanup will be reattempted several times,
+	// mostly in case other CFs have to do their cleanup first.
+	// Warning: This function may be executed multiple times even if it returned *true*.
+	Cleanup() bool
 }

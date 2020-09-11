@@ -3,6 +3,7 @@ package apicurioregistry
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	extensions "k8s.io/api/extensions/v1beta1"
+	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -134,4 +135,19 @@ func (this *IngressCF) Respond() {
 		// leave the creation itself to patcher+creator so other CFs can update
 		this.ctx.GetResourceCache().Set(RC_KEY_INGRESS, NewResourceCacheEntry(RC_EMPTY_NAME, ingress))
 	}
+}
+
+func (this *IngressCF) Cleanup() bool {
+	// Ingress should not have any deletion dependencies
+	if ingressEntry, ingressExists := this.ctx.GetResourceCache().Get(RC_KEY_INGRESS); ingressExists {
+		if err := this.ctx.GetClients().Kube().DeleteIngress(ingressEntry.GetValue().(*extensions.Ingress), &meta.DeleteOptions{});
+			err != nil && !api_errors.IsNotFound(err) {
+			this.ctx.GetLog().Error(err, "Could not delete ingress during cleanup.")
+			return false
+		} else {
+			this.ctx.GetResourceCache().Remove(RC_KEY_INGRESS)
+			this.ctx.GetLog().Info("Ingress has been deleted.")
+		}
+	}
+	return true
 }

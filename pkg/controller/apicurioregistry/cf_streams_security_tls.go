@@ -237,3 +237,8 @@ func (this *StreamsSecurityTLSCF) AddSecretMountPatch(deploymentEntry ResourceCa
 		return deployment
 	})
 }
+
+func (this *StreamsSecurityTLSCF) Cleanup() bool {
+	// No cleanup
+	return true
+}
