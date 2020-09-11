@@ -70,3 +70,8 @@ func (this *AffinityCF) Respond() {
 		return deployment
 	})
 }
+
+func (this *AffinityCF) Cleanup() bool {
+	// No cleanup
+	return true
+}

@@ -249,3 +249,8 @@ func (this *StreamsSecurityScramOcpCF) AddSecretMountPatch(deploymentEntry Resou
 		return deployment
 	})
 }
+
+func (this *StreamsSecurityScramOcpCF) Cleanup() bool {
+	// No cleanup
+	return true
+}

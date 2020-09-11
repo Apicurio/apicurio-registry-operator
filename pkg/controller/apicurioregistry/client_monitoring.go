@@ -55,3 +55,7 @@ func (this *MonitoringClient) UpdateServiceMonitor(namespace string, obj *monito
 func (this *MonitoringClient) isServiceMonitorRegistered() (bool, error) {
 	return k8sutil.ResourceExists(this.discoveryClient, "monitoring.coreos.com/v1", "ServiceMonitor")
 }
+
+func (this *MonitoringClient) DeleteServiceMonitor(value *monitoring.ServiceMonitor, options *v1.DeleteOptions) error {
+	return this.client.ServiceMonitors(value.Namespace).Delete(value.Name, options)
+}

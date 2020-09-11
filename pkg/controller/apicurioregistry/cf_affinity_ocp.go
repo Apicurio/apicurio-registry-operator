@@ -70,3 +70,8 @@ func (this *AffinityOcpCF) Respond() {
 		return deploymentConfig
 	})
 }
+
+func (this *AffinityOcpCF) Cleanup() bool {
+	// No cleanup
+	return true
+}

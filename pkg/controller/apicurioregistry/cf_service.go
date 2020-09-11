@@ -3,6 +3,7 @@ package apicurioregistry
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	core "k8s.io/api/core/v1"
+	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -128,4 +129,29 @@ func (this *ServiceCF) Respond() {
 		// leave the creation itself to patcher+creator so other CFs can update
 		this.ctx.GetResourceCache().Set(RC_KEY_SERVICE, NewResourceCacheEntry(RC_EMPTY_NAME, service))
 	}
+}
+
+func (this *ServiceCF) Cleanup() bool {
+	// Make sure the ingress AND service monitor are removed before we delete the service
+	// Ingress
+	_, ingressExists := this.ctx.GetResourceCache().Get(RC_KEY_INGRESS);
+	// Service Monitor
+	namespace := this.ctx.configuration.GetAppNamespace()
+	name := this.ctx.configuration.GetAppName()
+	_, serviceMonitorErr := this.ctx.GetClients().Monitoring().GetServiceMonitor(namespace, name);
+	if ingressExists || (serviceMonitorErr != nil && !api_errors.IsNotFound(serviceMonitorErr) /* In case SM is not registered. */) {
+		// Delete the ingress and SM first
+		return false
+	}
+	if serviceEntry, serviceExists := this.ctx.GetResourceCache().Get(RC_KEY_SERVICE); serviceExists {
+		if err := this.ctx.GetClients().Kube().DeleteService(serviceEntry.GetValue().(*core.Service), &meta.DeleteOptions{});
+			err != nil && !api_errors.IsNotFound(err) {
+			this.ctx.log.Error(err, "Could not delete service during cleanup")
+			return false
+		} else {
+			this.ctx.GetResourceCache().Remove(RC_KEY_SERVICE)
+			this.ctx.GetLog().Info("Service has been deleted.")
+		}
+	}
+	return true
 }

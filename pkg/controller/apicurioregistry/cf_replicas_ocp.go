@@ -78,3 +78,8 @@ func (this *ReplicasOcpCF) Respond() {
 		return deployment
 	})
 }
+
+func (this *ReplicasOcpCF) Cleanup() bool {
+	// No cleanup
+	return true
+}

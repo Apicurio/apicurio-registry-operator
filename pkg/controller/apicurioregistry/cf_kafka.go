@@ -69,3 +69,8 @@ func (this *KafkaCF) Respond() {
 	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_KAFKA_BOOTSTRAP_SERVERS, this.bootstrapServers))
 
 }
+
+func (this *KafkaCF) Cleanup() bool {
+	// No cleanup
+	return true
+}

@@ -60,9 +60,9 @@ func (this *OCPClient) PatchDeployment(namespace, name string, patchData []byte)
 		Patch(name, types.StrategicMergePatchType, patchData)
 }
 
-func (this *OCPClient) DeleteDeployment(namespace string, name string, options *meta.DeleteOptions) error {
-	return this.ocpAppsClient.DeploymentConfigs(namespace).
-		Delete(name, options)
+func (this *OCPClient) DeleteDeployment(value *ocp_apps.DeploymentConfig, options *meta.DeleteOptions) error {
+	return this.ocpAppsClient.DeploymentConfigs(value.Namespace).
+		Delete(value.Name, options)
 }
 
 func (this *OCPClient) GetDeployments(namespace string, options *meta.ListOptions) (*ocp_apps.DeploymentConfigList, error) {

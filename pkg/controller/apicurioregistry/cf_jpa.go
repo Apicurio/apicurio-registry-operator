@@ -90,3 +90,8 @@ func (this *JpaCF) Respond() {
 	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_QUARKUS_DATASOURCE_PASSWORD, this.password))
 
 }
+
+func (this *JpaCF) Cleanup() bool {
+	// No cleanup
+	return true
+}

@@ -5,6 +5,8 @@ import (
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	api_errors "k8s.io/apimachinery/pkg/api/errors"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
@@ -18,6 +20,7 @@ type ServiceMonitorCF struct {
 	service                    *core.Service
 }
 
+// TODO service monitor should be using resource cache
 func NewServiceMonitorCF(ctx *Context) ControlFunction {
 
 	return &ServiceMonitorCF{
@@ -102,4 +105,23 @@ func (this *ServiceMonitorCF) Respond() {
 	if err != nil {
 		log.Error(err, "Could not create ServiceMonitor object")
 	}
+}
+
+func (this *ServiceMonitorCF) Cleanup() bool {
+	// SM should not have any deletion dependencies
+	monitoringClient := this.ctx.GetClients().Monitoring()
+	if isServiceMonitorRegistered, _ := monitoringClient.isServiceMonitorRegistered(); isServiceMonitorRegistered {
+		namespace := this.ctx.configuration.GetAppNamespace()
+		name := this.ctx.configuration.GetAppName()
+		if serviceMonitor, err := monitoringClient.GetServiceMonitor(namespace, name); err == nil {
+			if err := monitoringClient.DeleteServiceMonitor(serviceMonitor, &meta.DeleteOptions{});
+				err != nil && !api_errors.IsNotFound(err) /* Should not normally happen */ {
+				this.ctx.GetLog().Error(err, "Could not delete ServiceMonitor during cleanup.")
+				return false
+			} else {
+				this.ctx.GetLog().Info("ServiceMonitor has been deleted.")
+			}
+		}
+	}
+	return true
 }

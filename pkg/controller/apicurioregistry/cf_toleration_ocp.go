@@ -70,3 +70,8 @@ func (this *TolerationOcpCF) Respond() {
 		return deploymentConfig
 	})
 }
+
+func (this *TolerationOcpCF) Cleanup() bool {
+	// No cleanup
+	return true
+}
