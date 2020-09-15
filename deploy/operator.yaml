@@ -27,15 +27,15 @@ spec:
               cpu: "2m"
           env:
             - name:  REGISTRY_IMAGE_MEM
-              value: "docker.io/apicurio/apicurio-registry-mem:1.2.3.Final"
+              value: {REGISTRY_IMAGE_MEM}
             - name:  REGISTRY_IMAGE_KAFKA
-              value: "docker.io/apicurio/apicurio-registry-kafka:1.2.3.Final"
+              value: {REGISTRY_IMAGE_KAFKA}
             - name:  REGISTRY_IMAGE_STREAMS
-              value: "docker.io/apicurio/apicurio-registry-streams:1.2.3.Final"
+              value: {REGISTRY_IMAGE_STREAMS}
             - name:  REGISTRY_IMAGE_JPA
-              value: "docker.io/apicurio/apicurio-registry-jpa:1.2.3.Final"
+              value: {REGISTRY_IMAGE_JPA}
             - name:  REGISTRY_IMAGE_INFINISPAN
-              value: "docker.io/apicurio/apicurio-registry-infinispan:1.2.3.Final"
+              value: {REGISTRY_IMAGE_INFINISPAN}
             - name: WATCH_NAMESPACE
               valueFrom:
                 fieldRef:

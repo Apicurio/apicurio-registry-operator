@@ -48,15 +48,33 @@ init_image() {
   METADATA_IMAGE="$METADATA_IMAGE_NAME:$VERSION"
   METADATA_IMAGE_LATEST="$METADATA_IMAGE_NAME:latest$DASH_VERSION_RELEASE"
 
+  # Registry
+  REGISTRY_IMAGE_MEM="docker.io/apicurio/apicurio-registry-mem:1.2.3.Final"
+  REGISTRY_IMAGE_KAFKA="docker.io/apicurio/apicurio-registry-kafka:1.2.3.Final"
+  REGISTRY_IMAGE_STREAMS="docker.io/apicurio/apicurio-registry-streams:1.2.3.Final"
+  REGISTRY_IMAGE_JPA="docker.io/apicurio/apicurio-registry-jpa:1.2.3.Final"
+  REGISTRY_IMAGE_INFINISPAN="docker.io/apicurio/apicurio-registry-infinispan:1.2.3.Final"
+
 }
 
 replace() {
   init_image
   sed -i "s|{OPERATOR_IMAGE}|$OPERATOR_IMAGE # replaced {OPERATOR_IMAGE}|g" ./deploy/operator.yaml
+  sed -i "s|{REGISTRY_IMAGE_MEM}|$REGISTRY_IMAGE_MEM # replaced {REGISTRY_IMAGE_MEM}|g" ./deploy/operator.yaml
+  sed -i "s|{REGISTRY_IMAGE_KAFKA}|$REGISTRY_IMAGE_KAFKA # replaced {REGISTRY_IMAGE_KAFKA}|g" ./deploy/operator.yaml
+  sed -i "s|{REGISTRY_IMAGE_STREAMS}|$REGISTRY_IMAGE_STREAMS # replaced {REGISTRY_IMAGE_STREAMS}|g" ./deploy/operator.yaml
+  sed -i "s|{REGISTRY_IMAGE_JPA}|$REGISTRY_IMAGE_JPA # replaced {REGISTRY_IMAGE_JPA}|g" ./deploy/operator.yaml
+  sed -i "s|{REGISTRY_IMAGE_INFINISPAN}|$REGISTRY_IMAGE_INFINISPAN # replaced {REGISTRY_IMAGE_INFINISPAN}|g" ./deploy/operator.yaml
+
 }
 
 unreplace() {
   sed -i "s|$OPERATOR_IMAGE # replaced {OPERATOR_IMAGE}|{OPERATOR_IMAGE}|g" ./deploy/operator.yaml
+  sed -i "s|$REGISTRY_IMAGE_MEM # replaced {REGISTRY_IMAGE_MEM}|{REGISTRY_IMAGE_MEM}|g" ./deploy/operator.yaml
+  sed -i "s|$REGISTRY_IMAGE_KAFKA # replaced {REGISTRY_IMAGE_KAFKA}|{REGISTRY_IMAGE_KAFKA}|g" ./deploy/operator.yaml
+  sed -i "s|$REGISTRY_IMAGE_STREAMS # replaced {REGISTRY_IMAGE_STREAMS}|{REGISTRY_IMAGE_STREAMS}|g" ./deploy/operator.yaml
+  sed -i "s|$REGISTRY_IMAGE_JPA # replaced {REGISTRY_IMAGE_JPA}|{REGISTRY_IMAGE_JPA}|g" ./deploy/operator.yaml
+  sed -i "s|$REGISTRY_IMAGE_INFINISPAN # replaced {REGISTRY_IMAGE_INFINISPAN}|{REGISTRY_IMAGE_INFINISPAN}|g" ./deploy/operator.yaml
 }
 
 gen_csv() {
