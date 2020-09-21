@@ -49,12 +49,19 @@ init_image() {
   METADATA_IMAGE_LATEST="$METADATA_IMAGE_NAME:latest$DASH_VERSION_RELEASE"
 
   # Registry
-  REGISTRY_IMAGE_MEM="docker.io/apicurio/apicurio-registry-mem:1.2.3.Final"
-  REGISTRY_IMAGE_KAFKA="docker.io/apicurio/apicurio-registry-kafka:1.2.3.Final"
-  REGISTRY_IMAGE_STREAMS="docker.io/apicurio/apicurio-registry-streams:1.2.3.Final"
-  REGISTRY_IMAGE_JPA="docker.io/apicurio/apicurio-registry-jpa:1.2.3.Final"
-  REGISTRY_IMAGE_INFINISPAN="docker.io/apicurio/apicurio-registry-infinispan:1.2.3.Final"
-
+  if [[ -n "$REPLACE_OPERANDS" ]]; then
+    REGISTRY_IMAGE_MEM="$OPERATOR_IMAGE_REPOSITORY/apicurio-registry-mem:latest$DASH_VERSION_RELEASE"
+    REGISTRY_IMAGE_KAFKA="$OPERATOR_IMAGE_REPOSITORY/apicurio-registry-kafka:latest$DASH_VERSION_RELEASE"
+    REGISTRY_IMAGE_STREAMS="$OPERATOR_IMAGE_REPOSITORY/apicurio-registry-streams:latest$DASH_VERSION_RELEASE"
+    REGISTRY_IMAGE_JPA="$OPERATOR_IMAGE_REPOSITORY/apicurio-registry-jpa:latest$DASH_VERSION_RELEASE"
+    REGISTRY_IMAGE_INFINISPAN="$OPERATOR_IMAGE_REPOSITORY/apicurio-registry-infinispan:latest$DASH_VERSION_RELEASE"
+  else
+    REGISTRY_IMAGE_MEM="docker.io/apicurio/apicurio-registry-mem:1.2.3.Final"
+    REGISTRY_IMAGE_KAFKA="docker.io/apicurio/apicurio-registry-kafka:1.2.3.Final"
+    REGISTRY_IMAGE_STREAMS="docker.io/apicurio/apicurio-registry-streams:1.2.3.Final"
+    REGISTRY_IMAGE_JPA="docker.io/apicurio/apicurio-registry-jpa:1.2.3.Final"
+    REGISTRY_IMAGE_INFINISPAN="docker.io/apicurio/apicurio-registry-infinispan:1.2.3.Final"
+  fi
 }
 
 replace() {
@@ -125,6 +132,11 @@ build() {
 
   compile_qs_yaml
   #unreplace
+}
+
+kubefiles() {
+  replace
+  compile_qs_yaml
 }
 
 minikube_deploy_cr() {
@@ -226,6 +238,10 @@ while [[ "$#" -gt 0 ]]; do
     PUSH_LATEST="true"
     shift
     ;;
+  --operands)
+    REPLACE_OPERANDS="true"
+    shift
+    ;;
   *)
     echo -e "Unknown parameter: '$1'.\n"
     help
@@ -240,6 +256,7 @@ fi
 
 case "$TARGET" in
 build) build ;;
+kubefiles) kubefiles ;;
 mkdeploy) minikube_deploy ;;
 mkundeploy) minikube_undeploy ;;
 push) push ;;
