@@ -150,8 +150,8 @@ func (this *StreamsSecurityScramOcpCF) AddEnv(truststoreSecretName string, trust
 
 	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SASL_MECHANISM, scramMechanism))
 
-	jaasConfig := "org.apache.kafka.common.security.scram.ScramLoginModule required username=$(" + ENV_REGISTRY_STREAMS_SCRAM_USER +
-		") password=$(" + ENV_REGISTRY_STREAMS_SCRAM_PASSWORD + ");"
+	jaasConfig := "org.apache.kafka.common.security.scram.ScramLoginModule required username='$(" + ENV_REGISTRY_STREAMS_SCRAM_USER +
+		")' password='$(" + ENV_REGISTRY_STREAMS_SCRAM_PASSWORD + ")';"
 
 	jaasconfigEntry := NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SASL_JAAS_CONFIG, jaasConfig)
 	jaasconfigEntry.SetInterpolationDependency(ENV_REGISTRY_STREAMS_SCRAM_USER)
