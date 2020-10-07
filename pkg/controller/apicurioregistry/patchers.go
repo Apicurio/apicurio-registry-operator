@@ -57,15 +57,15 @@ func createPatch(old, new, datastruct interface{}) ([]byte, error) {
 // Kind-of generic patching function to avoid repeating the code for each resource type
 func patchGeneric(
 	ctx *Context,
-	key string,
-	genericGet func(string, string) (interface{}, error),
-	genericToString func(interface{}) string,
-	genericType interface{},
-	typeString string,
-	genericCreate func(string, interface{}) (interface{}, error),
-	genericPatch func(string, string, []byte) (interface{}, error),
-	genericGetName func(interface{}) string,
-    removeStatus func(interface{}) interface{}) {
+	key string,                                                     // Resource cache key for the given resource
+	genericGet func(string, string) (interface{}, error),           // Function to get the resource from Kubernetes API
+	genericToString func(interface{}) string,                       // Function to convert the resource to string (logging)
+	genericType interface{},                                        // Empty instance of the resource struct
+	typeString string,                                              // A string representing the resource type (mostly, logging, see below)
+	genericCreate func(string, interface{}) (interface{}, error),   // Function to create the resource using Kubernetes API
+	genericPatch func(string, string, []byte) (interface{}, error), // Function to patch the resource using Kubernetes API
+	genericGetName func(interface{}) string,                        // Function to get the resource name within k8s
+	removeStatus func(interface{}) interface{}) { // Function to remove the Status part from the resource struct
 
 	if entry, exists := ctx.GetResourceCache().Get(key); exists {
 
@@ -96,7 +96,7 @@ func patchGeneric(
 			patchData0, err := createPatch(removeStatus(actualValue), removeStatus(value), genericType)
 
 			patchData := patchData0
-			if(typeString != "ar.ApicurioRegistry") {
+			if (typeString != "ar.ApicurioRegistry") {
 				patchData = append(make([]byte, 0), "{\"spec\":"...)
 				patchData = append(patchData, patchData0...)
 				patchData = append(patchData, "}"...)

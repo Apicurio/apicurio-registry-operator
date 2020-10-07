@@ -197,3 +197,11 @@ func (this *KubeClient) GetPodDisruptionBudgets(namespace string, options *meta.
 func (this *KubeClient) DeletePodDisruptionBudget(value *policy.PodDisruptionBudget, options *meta.DeleteOptions) error {
 	return this.client.PolicyV1beta1().PodDisruptionBudgets(value.Namespace).Delete(value.Name, options)
 }
+
+// ===
+// Pod
+
+func (this *KubeClient) GetPod(namespace string, name string, options *meta.GetOptions) (*core.Pod, error) {
+	return this.client.CoreV1().Pods(namespace).
+		Get(name, *options)
+}
