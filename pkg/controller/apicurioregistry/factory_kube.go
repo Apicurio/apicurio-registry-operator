@@ -9,6 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"os"
 )
 
 type KubeFactory struct {
@@ -21,10 +22,34 @@ func NewKubeFactory(ctx *Context) *KubeFactory {
 	}
 }
 
+const ENV_REGISTRY_VERSION = "REGISTRY_VERSION"
+const ENV_OPERATOR_NAME = "OPERATOR_NAME"
+
 // MUST NOT be used directly as selector labels, because some of them may change.
 func (this *KubeFactory) GetLabels() map[string]string {
+
+	registryVersion := os.Getenv(ENV_REGISTRY_VERSION)
+	if registryVersion == "" {
+		panic("Could not determine registry version. Environment variable '" + ENV_REGISTRY_VERSION + "' is empty.")
+	}
+	operatorName := os.Getenv(ENV_OPERATOR_NAME)
+	if operatorName == "" {
+		panic("Could not determine operator name. Environment variable '" + ENV_OPERATOR_NAME + "' is empty.")
+	}
+	app := this.ctx.GetConfiguration().GetAppName()
+
 	return map[string]string{
-		"app": this.ctx.GetConfiguration().GetAppName(),
+		"app": app,
+
+		"apicur.io/type":    "apicurio-registry",
+		"apicur.io/name":    app,
+		"apicur.io/version": registryVersion,
+
+		"app.kubernetes.io/name":     "apicurio-registry",
+		"app.kubernetes.io/instance": app,
+		"app.kubernetes.io/version":  registryVersion,
+
+		"app.kubernetes.io/managed-by": operatorName,
 	}
 }
 

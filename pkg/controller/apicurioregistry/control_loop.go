@@ -170,16 +170,19 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 		c.AddControlFunction(NewEnvOcpCF(c))
 		c.AddControlFunction(NewHostCF(c))
 		c.AddControlFunction(NewHostInitCF(c))
-		c.AddControlFunction(NewHostInitRouteOcpCF(c))
 
+		c.AddControlFunction(NewHostInitRouteOcpCF(c))
 		c.AddControlFunction(NewImageOcpCF(c))
 		c.AddControlFunction(NewInfinispanCF(c))
 		c.AddControlFunction(NewIngressCF(c))
 		c.AddControlFunction(NewJpaCF(c))
-		c.AddControlFunction(NewKafkaCF(c))
 
+		c.AddControlFunction(NewKafkaCF(c))
+		c.AddControlFunction(NewLabelsCF(c))
 		c.AddControlFunction(NewLogLevelCF(c))
+		c.AddControlFunction(NewOperatorPodCF(c))
 		c.AddControlFunction(NewPodDisruptionBudgetCF(c))
+
 		c.AddControlFunction(NewProfileCF(c))
 		c.AddControlFunction(NewReplicasOcpCF(c))
 		c.AddControlFunction(NewServiceCF(c))
@@ -200,16 +203,19 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 		c.AddControlFunction(NewEnvCF(c))
 		c.AddControlFunction(NewHostCF(c))
 		c.AddControlFunction(NewHostInitCF(c))
-		c.AddControlFunction(NewImageCF(c))
 
+		c.AddControlFunction(NewImageCF(c))
 		c.AddControlFunction(NewInfinispanCF(c))
 		c.AddControlFunction(NewIngressCF(c))
 		c.AddControlFunction(NewJpaCF(c))
 		c.AddControlFunction(NewKafkaCF(c))
-		c.AddControlFunction(NewLogLevelCF(c))
 
+		c.AddControlFunction(NewLabelsCF(c))
+		c.AddControlFunction(NewLogLevelCF(c))
+		c.AddControlFunction(NewOperatorPodCF(c))
 		c.AddControlFunction(NewPodDisruptionBudgetCF(c))
 		c.AddControlFunction(NewProfileCF(c))
+
 		c.AddControlFunction(NewReplicasCF(c))
 		c.AddControlFunction(NewServiceCF(c))
 		c.AddControlFunction(NewServiceMonitorCF(c))
