@@ -21,7 +21,16 @@ func NewKubeFactory(ctx *Context) *KubeFactory {
 	}
 }
 
+// MUST NOT be used directly as selector labels, because some of them may change.
 func (this *KubeFactory) GetLabels() map[string]string {
+	return map[string]string{
+		"app": this.ctx.GetConfiguration().GetAppName(),
+	}
+}
+
+// Selector labels MUST be static/constant in the life of the application.
+// Labels that can change during operator/SCV upgrade, such as "apicur.io/version" MUST NOT be used.
+func (this *KubeFactory) GetSelectorLabels() map[string]string {
 	return map[string]string{
 		"app": this.ctx.GetConfiguration().GetAppName(),
 	}
@@ -43,7 +52,7 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 		ObjectMeta: this.createObjectMeta("deployment"),
 		Spec: apps.DeploymentSpec{
 			Replicas: &replicas,
-			Selector: &meta.LabelSelector{MatchLabels: this.GetLabels()},
+			Selector: &meta.LabelSelector{MatchLabels: this.GetSelectorLabels()},
 			Template: core.PodTemplateSpec{
 				ObjectMeta: meta.ObjectMeta{
 					Labels: this.GetLabels(),
@@ -115,7 +124,6 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 }
 
 func (this *KubeFactory) CreateService() *core.Service {
-	labels := this.GetLabels()
 	service := &core.Service{
 		ObjectMeta: this.createObjectMeta("service"),
 		Spec: core.ServiceSpec{
@@ -126,7 +134,7 @@ func (this *KubeFactory) CreateService() *core.Service {
 					TargetPort: intstr.FromInt(8080),
 				},
 			},
-			Selector:        labels,
+			Selector:        this.GetSelectorLabels(),
 			Type:            core.ServiceTypeClusterIP,
 			SessionAffinity: core.ServiceAffinityNone,
 		},
@@ -183,12 +191,11 @@ func (this *KubeFactory) CreateStatus(spec *ar.ApicurioRegistry) *ar.ApicurioReg
 }
 
 func (this *KubeFactory) CreatePodDisruptionBudget() *policy.PodDisruptionBudget {
-	labels := this.GetLabels()
 	podDisruptionBudget := &policy.PodDisruptionBudget{
 		ObjectMeta: this.createObjectMeta("pdb"),
 		Spec: policy.PodDisruptionBudgetSpec{
 			Selector: &meta.LabelSelector{
-				MatchLabels: labels,
+				MatchLabels: this.GetSelectorLabels(),
 			},
 			MaxUnavailable: &intstr.IntOrString{
 				IntVal: 1,

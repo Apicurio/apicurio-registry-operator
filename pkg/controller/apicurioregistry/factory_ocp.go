@@ -22,6 +22,10 @@ func (this *OCPFactory) GetLabels() map[string]string {
 	return this.ctx.GetKubeFactory().GetLabels()
 }
 
+func (this *OCPFactory) GetSelectorLabels() map[string]string {
+	return this.ctx.GetKubeFactory().GetSelectorLabels()
+}
+
 func (this *OCPFactory) createObjectMeta(typeTag string) meta.ObjectMeta {
 	return this.ctx.GetKubeFactory().createObjectMeta(typeTag)
 }
@@ -33,7 +37,7 @@ func (this *OCPFactory) CreateDeployment() *ocp_apps.DeploymentConfig {
 		ObjectMeta: this.createObjectMeta("deployment"),
 		Spec: ocp_apps.DeploymentConfigSpec{
 			Replicas: 1,
-			Selector: this.GetLabels(),
+			Selector: this.GetSelectorLabels(),
 			Template: &core.PodTemplateSpec{
 				ObjectMeta: meta.ObjectMeta{
 					Labels: this.GetLabels(),
