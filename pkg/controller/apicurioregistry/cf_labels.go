@@ -3,6 +3,8 @@ package apicurioregistry
 import (
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
+	policy "k8s.io/api/policy/v1beta1"
 )
 
 var _ ControlFunction = &LabelsCF{}
@@ -22,6 +24,21 @@ type LabelsCF struct {
 	deploymentPodLabels map[string]string
 	updateDeployment    bool
 	updateDeploymentPod bool
+
+	serviceEntry    ResourceCacheEntry
+	serviceIsCached bool
+	serviceLabels   map[string]string
+	updateService   bool
+
+	ingressEntry    ResourceCacheEntry
+	ingressIsCached bool
+	ingressLabels   map[string]string
+	updateIngress   bool
+
+	pdbEntry    ResourceCacheEntry
+	pdbIsCached bool
+	pdbLabels   map[string]string
+	updatePdb   bool
 }
 
 // Update labels on some managed resources
@@ -50,14 +67,40 @@ func (this *LabelsCF) Sense() {
 		this.deploymentLabels = this.deploymentEntry.GetValue().(*apps.Deployment).Labels
 		this.deploymentPodLabels = this.deploymentEntry.GetValue().(*apps.Deployment).Spec.Template.Labels
 	}
+	// Observation #3
+	// Service
+	this.serviceEntry, this.serviceIsCached = this.ctx.GetResourceCache().Get(RC_KEY_SERVICE)
+	if this.serviceIsCached {
+		this.serviceLabels = this.serviceEntry.GetValue().(*core.Service).Labels
+	}
+	// Observation #4
+	// Ingress
+	this.ingressEntry, this.ingressIsCached = this.ctx.GetResourceCache().Get(RC_KEY_INGRESS)
+	if this.ingressIsCached {
+		this.ingressLabels = this.ingressEntry.GetValue().(*extensions.Ingress).Labels
+	}
+	// Observation #5
+	// PodDisruptionBudget
+	this.pdbEntry, this.pdbIsCached = this.ctx.GetResourceCache().Get(RC_KEY_POD_DISRUPTION_BUDGET)
+	if this.pdbIsCached {
+		this.pdbLabels = this.pdbEntry.GetValue().(*policy.PodDisruptionBudget).Labels
+	}
 }
 
 func (this *LabelsCF) Compare() bool {
 	this.caLabels = this.GetCommonApplicationLabels()
-	this.updateDeployment = this.deploymentIsCached && !labelsEqual(this.deploymentLabels, this.caLabels)
-	this.updateDeploymentPod = this.deploymentIsCached && !labelsEqual(this.deploymentPodLabels, this.caLabels)
+	this.updateDeployment = this.deploymentIsCached && !LabelsEqual(this.deploymentLabels, this.caLabels)
+	this.updateDeploymentPod = this.deploymentIsCached && !LabelsEqual(this.deploymentPodLabels, this.caLabels)
+	this.updateService = this.serviceIsCached && !LabelsEqual(this.serviceLabels, this.caLabels)
+	this.updateIngress = this.ingressIsCached && !LabelsEqual(this.ingressLabels, this.caLabels)
+	this.updatePdb = this.pdbIsCached && !LabelsEqual(this.pdbLabels, this.caLabels)
 
-	return this.podIsCached && (this.updateDeployment || this.updateDeploymentPod)
+	return this.podIsCached && (
+		this.updateDeployment ||
+			this.updateDeploymentPod ||
+			this.updateService ||
+			this.updateIngress ||
+			this.updatePdb)
 }
 
 func (this *LabelsCF) Respond() {
@@ -66,17 +109,44 @@ func (this *LabelsCF) Respond() {
 	if this.updateDeployment {
 		this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 			deployment := value.(*apps.Deployment).DeepCopy()
-			labelsUpdate(deployment.Labels, this.caLabels)
+			LabelsUpdate(deployment.Labels, this.caLabels)
 			return deployment
 		})
 	}
-	// Response #1
+	// Response #2
 	// Patch Deployment Pod Template
 	if this.updateDeploymentPod {
 		this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 			deployment := value.(*apps.Deployment).DeepCopy()
-			labelsUpdate(deployment.Spec.Template.Labels, this.caLabels)
+			LabelsUpdate(deployment.Spec.Template.Labels, this.caLabels)
 			return deployment
+		})
+	}
+	// Response #3
+	// Service
+	if this.updateService {
+		this.serviceEntry.ApplyPatch(func(value interface{}) interface{} {
+			service := value.(*core.Service).DeepCopy()
+			LabelsUpdate(service.Labels, this.caLabels)
+			return service
+		})
+	}
+	// Response #4
+	// Ingress
+	if this.updateIngress {
+		this.ingressEntry.ApplyPatch(func(value interface{}) interface{} {
+			ingress := value.(*extensions.Ingress).DeepCopy()
+			LabelsUpdate(ingress.Labels, this.caLabels)
+			return ingress
+		})
+	}
+	// Response #5
+	// PodDisruptionBudget
+	if this.updatePdb {
+		this.pdbEntry.ApplyPatch(func(value interface{}) interface{} {
+			pdb := value.(*policy.PodDisruptionBudget).DeepCopy()
+			LabelsUpdate(pdb.Labels, this.caLabels)
+			return pdb
 		})
 	}
 }
@@ -94,7 +164,7 @@ func (this *LabelsCF) GetCommonApplicationLabels() map[string]string {
 
 // Return *true* if, for given source labels,
 // the target label values exist and have the same value
-func labelsEqual(target map[string]string, source map[string]string) bool {
+func LabelsEqual(target map[string]string, source map[string]string) bool {
 	for sourceKey, sourceValue := range source {
 		targetValue, targetExists := target[sourceKey]
 		if !targetExists || sourceValue != targetValue {
@@ -104,7 +174,7 @@ func labelsEqual(target map[string]string, source map[string]string) bool {
 	return true
 }
 
-func labelsUpdate(target map[string]string, source map[string]string) {
+func LabelsUpdate(target map[string]string, source map[string]string) {
 	for sourceKey, sourceValue := range source {
 		targetValue, targetExists := target[sourceKey]
 		if !targetExists || sourceValue != targetValue {
