@@ -16,19 +16,23 @@ func NewMonitoringFactory(ctx *Context) *MonitoringFactory {
 	}
 }
 
+func (this *MonitoringFactory) GetLabels() map[string]string {
+	return this.ctx.GetKubeFactory().GetLabels()
+}
+
+func (this *MonitoringFactory) GetSelectorLabels() map[string]string {
+	return this.ctx.GetKubeFactory().GetSelectorLabels()
+}
+
 func (this *MonitoringFactory) NewServiceMonitor(service *core.Service) *monitoring.ServiceMonitor {
 	name := this.ctx.configuration.GetAppName()
 	namespace := this.ctx.configuration.GetAppNamespace()
-	labels := make(map[string]string)
-	for k, v := range service.ObjectMeta.Labels {
-		labels[k] = v
-	}
 
 	return &monitoring.ServiceMonitor{
 		ObjectMeta: meta.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
-			Labels:    labels,
+			Labels:    this.GetLabels(),
 		},
 		Spec: monitoring.ServiceMonitorSpec{
 			Endpoints: []monitoring.Endpoint{
@@ -41,7 +45,7 @@ func (this *MonitoringFactory) NewServiceMonitor(service *core.Service) *monitor
 				MatchNames: []string{namespace},
 			},
 			Selector: meta.LabelSelector{
-				MatchLabels: labels,
+				MatchLabels: this.GetSelectorLabels(),
 			},
 		},
 	}
