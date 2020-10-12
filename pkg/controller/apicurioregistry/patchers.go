@@ -58,14 +58,12 @@ func createPatch(old, new, datastruct interface{}) ([]byte, error) {
 func patchGeneric(
 	ctx *Context,
 	key string,                                                     // Resource cache key for the given resource
-	genericGet func(string, string) (interface{}, error),           // Function to get the resource from Kubernetes API
 	genericToString func(interface{}) string,                       // Function to convert the resource to string (logging)
 	genericType interface{},                                        // Empty instance of the resource struct
 	typeString string,                                              // A string representing the resource type (mostly, logging, see below)
 	genericCreate func(string, interface{}) (interface{}, error),   // Function to create the resource using Kubernetes API
 	genericPatch func(string, string, []byte) (interface{}, error), // Function to patch the resource using Kubernetes API
-	genericGetName func(interface{}) string,                        // Function to get the resource name within k8s
-	removeStatus func(interface{}) interface{}) { // Function to remove the Status part from the resource struct
+	genericGetName func(interface{}) string) { // Function to get the resource name within k8s
 
 	if entry, exists := ctx.GetResourceCache().Get(key); exists {
 
@@ -83,24 +81,8 @@ func patchGeneric(
 
 			ctx.GetLog().WithValues("resource", typeString, "name", name).Info("Patching.")
 
-			// get the resource
-			actualValue, err := genericGet(namespace, name)
-			if err != nil {
-				ctx.GetLog().
-					WithValues("type", "Warning", "resource", typeString, "name", name, "error", err).
-					Info("Could not get existing resource.")
-				ctx.GetResourceCache().Remove(key) // Re-create the resource
-				ctx.SetRequeue()
-				return
-			}
-			patchData0, err := createPatch(removeStatus(actualValue), removeStatus(value), genericType)
-
-			patchData := patchData0
-			if (typeString != "ar.ApicurioRegistry") {
-				patchData = append(make([]byte, 0), "{\"spec\":"...)
-				patchData = append(patchData, patchData0...)
-				patchData = append(patchData, "}"...)
-			}
+			actualValue := entry.GetOriginalValue()
+			patchData, err := createPatch(actualValue, value, genericType)
 
 			if err != nil {
 				ctx.GetLog().

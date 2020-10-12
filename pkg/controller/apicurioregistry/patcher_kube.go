@@ -25,9 +25,6 @@ func (this *KubePatcher) patchApicurioRegistry() { // TODO move to separate file
 	patchGeneric(
 		this.ctx,
 		RC_KEY_SPEC,
-		func(namespace string, name string) (interface{}, error) {
-			return this.ctx.GetClients().CRD().GetApicurioRegistry(namespace, name, &meta.GetOptions{})
-		},
 		func(value interface{}) string {
 			return value.(*ar.ApicurioRegistry).ObjectMeta.String()
 		},
@@ -42,9 +39,6 @@ func (this *KubePatcher) patchApicurioRegistry() { // TODO move to separate file
 		},
 		func(value interface{}) string {
 			return value.(*ar.ApicurioRegistry).GetName()
-		},
-		func(value interface{}) interface{} {
-			return value.(*ar.ApicurioRegistry)
 		},
 	)
 }
@@ -67,13 +61,10 @@ func (this *KubePatcher) patchDeployment() {
 	patchGeneric(
 		this.ctx,
 		RC_KEY_DEPLOYMENT,
-		func(namespace string, name string) (interface{}, error) {
-			return this.ctx.GetClients().Kube().GetDeployment(namespace, name, &meta.GetOptions{})
-		},
 		func(value interface{}) string {
 			return value.(*apps.Deployment).String()
 		},
-		&apps.DeploymentSpec{},
+		&apps.Deployment{},
 		"apps.Deployment",
 		func(namespace string, value interface{}) (interface{}, error) {
 			return this.ctx.GetClients().Kube().CreateDeployment(namespace, value.(*apps.Deployment))
@@ -83,9 +74,6 @@ func (this *KubePatcher) patchDeployment() {
 		},
 		func(value interface{}) string {
 			return value.(*apps.Deployment).GetName()
-		},
-		func(value interface{}) interface{} {
-			return value.(*apps.Deployment).Spec
 		},
 	)
 }
@@ -108,13 +96,10 @@ func (this *KubePatcher) patchService() {
 	patchGeneric(
 		this.ctx,
 		RC_KEY_SERVICE,
-		func(namespace string, name string) (interface{}, error) {
-			return this.ctx.GetClients().Kube().GetService(namespace, name, &meta.GetOptions{})
-		},
 		func(value interface{}) string {
 			return value.(*core.Service).String()
 		},
-		&core.ServiceSpec{},
+		&core.Service{},
 		"core.Service",
 		func(namespace string, value interface{}) (interface{}, error) {
 			return this.ctx.GetClients().Kube().CreateService(namespace, value.(*core.Service))
@@ -124,9 +109,6 @@ func (this *KubePatcher) patchService() {
 		},
 		func(value interface{}) string {
 			return value.(*core.Service).GetName()
-		},
-		func(value interface{}) interface{} {
-			return value.(*core.Service).Spec
 		},
 	)
 }
@@ -149,13 +131,10 @@ func (this *KubePatcher) patchIngress() {
 	patchGeneric(
 		this.ctx,
 		RC_KEY_INGRESS,
-		func(namespace string, name string) (interface{}, error) {
-			return this.ctx.GetClients().Kube().GetIngress(namespace, name, &meta.GetOptions{})
-		},
 		func(value interface{}) string {
 			return value.(*extensions.Ingress).String()
 		},
-		&extensions.IngressSpec{},
+		&extensions.Ingress{},
 		"extensions.Ingress",
 		func(namespace string, value interface{}) (interface{}, error) {
 			return this.ctx.GetClients().Kube().CreateIngress(namespace, value.(*extensions.Ingress))
@@ -165,9 +144,6 @@ func (this *KubePatcher) patchIngress() {
 		},
 		func(value interface{}) string {
 			return value.(*extensions.Ingress).GetName()
-		},
-		func(value interface{}) interface{} {
-			return value.(*extensions.Ingress).Spec
 		},
 	)
 }
@@ -190,13 +166,10 @@ func (this *KubePatcher) patchPodDisruptionBudget() {
 	patchGeneric(
 		this.ctx,
 		RC_KEY_POD_DISRUPTION_BUDGET,
-		func(namespace string, name string) (interface{}, error) {
-			return this.ctx.GetClients().Kube().GetPodDisruptionBudget(namespace, name, &meta.GetOptions{})
-		},
 		func(value interface{}) string {
 			return value.(*policy.PodDisruptionBudget).String()
 		},
-		&policy.PodDisruptionBudgetSpec{},
+		&policy.PodDisruptionBudget{},
 		"policy.PodDisruptionBudget",
 		func(namespace string, value interface{}) (interface{}, error) {
 			return this.ctx.GetClients().Kube().CreatePodDisruptionBudget(namespace, value.(*policy.PodDisruptionBudget))
@@ -206,9 +179,6 @@ func (this *KubePatcher) patchPodDisruptionBudget() {
 		},
 		func(value interface{}) string {
 			return value.(*policy.PodDisruptionBudget).GetName()
-		},
-		func(value interface{}) interface{} {
-			return value.(*policy.PodDisruptionBudget).Spec
 		},
 	)
 }
