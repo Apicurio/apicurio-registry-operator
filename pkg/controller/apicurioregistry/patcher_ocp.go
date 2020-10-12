@@ -39,13 +39,10 @@ func (this *OCPPatcher) patchDeployment() {
 	patchGeneric(
 		this.ctx,
 		RC_KEY_DEPLOYMENT_OCP,
-		func(namespace string, name string) (interface{}, error) {
-			return this.ctx.GetClients().OCP().GetDeployment(namespace, name, &meta.GetOptions{})
-		},
 		func(value interface{}) string {
 			return value.(*ocp_apps.DeploymentConfig).String()
 		},
-		&ocp_apps.DeploymentConfigSpec{},
+		&ocp_apps.DeploymentConfig{},
 		"ocp_apps.DeploymentConfig",
 		func(namespace string, value interface{}) (interface{}, error) {
 			return this.ctx.GetClients().OCP().CreateDeployment(namespace, value.(*ocp_apps.DeploymentConfig))
@@ -55,9 +52,6 @@ func (this *OCPPatcher) patchDeployment() {
 		},
 		func(value interface{}) string {
 			return value.(*ocp_apps.DeploymentConfig).GetName()
-		},
-		func(value interface{}) interface{} {
-			return value.(*ocp_apps.DeploymentConfig).Spec
 		},
 	)
 }
