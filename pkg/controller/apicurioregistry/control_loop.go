@@ -178,7 +178,7 @@ func (this *ApicurioRegistryReconciler) createNewContext(appName string) *Contex
 		c.AddControlFunction(NewJpaCF(c))
 
 		c.AddControlFunction(NewKafkaCF(c))
-		c.AddControlFunction(NewLabelsCF(c))
+		c.AddControlFunction(NewLabelsOcpCF(c))
 		c.AddControlFunction(NewLogLevelCF(c))
 		c.AddControlFunction(NewOperatorPodCF(c))
 		c.AddControlFunction(NewPodDisruptionBudgetCF(c))
