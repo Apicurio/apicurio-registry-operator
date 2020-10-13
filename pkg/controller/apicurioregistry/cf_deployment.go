@@ -2,6 +2,8 @@ package apicurioregistry
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	apps "k8s.io/api/apps/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -9,16 +11,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var _ ControlFunction = &DeploymentCF{}
+var _ loop.ControlFunction = &DeploymentCF{}
 
 type DeploymentCF struct {
-	ctx            *Context
+	ctx            loop.ControlLoopContext
 	isCached       bool
 	deployments    []apps.Deployment
 	deploymentName string
 }
 
-func NewDeploymentCF(ctx *Context) ControlFunction {
+func NewDeploymentCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 
 	err := ctx.GetController().Watch(&source.Kind{Type: &apps.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
@@ -45,7 +47,7 @@ func (this *DeploymentCF) Sense() {
 
 	// Observation #1
 	// Get cached Deployment
-	deploymentEntry, deploymentExists := this.ctx.GetResourceCache().Get(RC_KEY_DEPLOYMENT)
+	deploymentEntry, deploymentExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_DEPLOYMENT)
 	if deploymentExists {
 		this.deploymentName = deploymentEntry.GetName()
 	} else {
@@ -56,10 +58,10 @@ func (this *DeploymentCF) Sense() {
 	// Observation #2
 	// Get deployment(s) we *should* track
 	this.deployments = make([]apps.Deployment, 0)
-	deployments, err := this.ctx.GetClients().Kube().GetDeployments(
-		this.ctx.GetConfiguration().GetAppNamespace(),
+	deployments, err := this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().GetDeployments(
+		this.ctx.GetAppNamespace(),
 		&meta.ListOptions{
-			LabelSelector: "app=" + this.ctx.GetConfiguration().GetAppName(),
+			LabelSelector: "app=" + this.ctx.GetAppName(),
 		})
 	if err == nil {
 		for _, deployment := range deployments.Items {
@@ -70,7 +72,7 @@ func (this *DeploymentCF) Sense() {
 	}
 
 	// Update the status
-	this.ctx.GetConfiguration().SetConfig(CFG_STA_DEPLOYMENT_NAME, this.deploymentName)
+	this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).SetConfig(CFG_STA_DEPLOYMENT_NAME, this.deploymentName)
 }
 
 func (this *DeploymentCF) Compare() bool {
@@ -87,7 +89,7 @@ func (this *DeploymentCF) Respond() {
 		for _, val := range this.deployments {
 			if val.Name == this.deploymentName {
 				contains = true
-				this.ctx.GetResourceCache().Set(RC_KEY_DEPLOYMENT, NewResourceCacheEntry(val.Name, &val))
+				this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Set(RC_KEY_DEPLOYMENT, NewResourceCacheEntry(val.Name, &val))
 				break
 			}
 		}
@@ -100,30 +102,30 @@ func (this *DeploymentCF) Respond() {
 	if this.deploymentName == RC_EMPTY_NAME && len(this.deployments) == 1 {
 		deployment := this.deployments[0]
 		this.deploymentName = deployment.Name
-		this.ctx.GetResourceCache().Set(RC_KEY_DEPLOYMENT, NewResourceCacheEntry(deployment.Name, &deployment))
+		this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Set(RC_KEY_DEPLOYMENT, NewResourceCacheEntry(deployment.Name, &deployment))
 	}
 	// Response #3 (and #4)
 	// If there is no deployment available (or there are more than 1), just create a new one
 	if this.deploymentName == RC_EMPTY_NAME && len(this.deployments) != 1 {
-		deployment := this.ctx.GetKubeFactory().CreateDeployment()
+		deployment := this.ctx.RequireService(svc.SVC_KUBE_FACTORY).(KubeFactory).CreateDeployment()
 		// leave the creation itself to patcher+creator so other CFs can update
-		this.ctx.GetResourceCache().Set(RC_KEY_DEPLOYMENT, NewResourceCacheEntry(RC_EMPTY_NAME, deployment))
+		this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Set(RC_KEY_DEPLOYMENT, NewResourceCacheEntry(RC_EMPTY_NAME, deployment))
 	}
 }
 
 func (this *DeploymentCF) Cleanup() bool {
 	// Make sure the service is removed before we delete the deployment
-	if _, serviceExists := this.ctx.GetResourceCache().Get(RC_KEY_SERVICE); serviceExists {
+	if _, serviceExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_SERVICE); serviceExists {
 		// Delete the service first
 		return false
 	}
-	if deploymentEntry, deploymentExists := this.ctx.GetResourceCache().Get(RC_KEY_DEPLOYMENT); deploymentExists {
-		if err := this.ctx.GetClients().Kube().DeleteDeployment(deploymentEntry.GetValue().(*apps.Deployment), &meta.DeleteOptions{});
+	if deploymentEntry, deploymentExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_DEPLOYMENT); deploymentExists {
+		if err := this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().DeleteDeployment(deploymentEntry.GetValue().(*apps.Deployment), &meta.DeleteOptions{});
 			err != nil && !api_errors.IsNotFound(err) {
 			this.ctx.GetLog().Error(err, "Could not delete deployment during cleanup.")
 			return false
 		} else {
-			this.ctx.GetResourceCache().Remove(RC_KEY_DEPLOYMENT)
+			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Remove(RC_KEY_DEPLOYMENT)
 			this.ctx.GetLog().Info("Deployment has been deleted.")
 		}
 	}

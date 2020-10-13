@@ -2,14 +2,16 @@ package apicurioregistry
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	ocp_apps "github.com/openshift/api/apps/v1"
 	core "k8s.io/api/core/v1"
 )
 
-var _ ControlFunction = &StreamsSecurityScramOcpCF{}
+var _ loop.ControlFunction = &StreamsSecurityScramOcpCF{}
 
 type StreamsSecurityScramOcpCF struct {
-	ctx                          *Context
+	ctx                          loop.ControlLoopContext
 	persistence                  string
 	bootstrapServers             string
 	truststoreSecretName         string
@@ -26,7 +28,7 @@ type StreamsSecurityScramOcpCF struct {
 	mechOk                       bool
 }
 
-func NewStreamsSecurityScramOcpCF(ctx *Context) ControlFunction {
+func NewStreamsSecurityScramOcpCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &StreamsSecurityScramOcpCF{
 		ctx:                          ctx,
 		persistence:                  "",
@@ -51,7 +53,7 @@ func (this *StreamsSecurityScramOcpCF) Describe() string {
 func (this *StreamsSecurityScramOcpCF) Sense() {
 	// Observation #1
 	// Read the config values
-	if specEntry, exists := this.ctx.GetResourceCache().Get(RC_KEY_SPEC); exists {
+	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry)
 		this.persistence = spec.Spec.Configuration.Persistence
 		this.bootstrapServers = spec.Spec.Configuration.Streams.BootstrapServers
@@ -70,7 +72,7 @@ func (this *StreamsSecurityScramOcpCF) Sense() {
 	// Deployment exists
 	this.foundTruststoreSecretName = ""
 
-	deploymentEntry, deploymentExists := this.ctx.GetResourceCache().Get(RC_KEY_DEPLOYMENT_OCP)
+	deploymentEntry, deploymentExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_DEPLOYMENT_OCP)
 	if deploymentExists {
 		deployment := deploymentEntry.GetValue().(*ocp_apps.DeploymentConfig)
 		for i, v := range deployment.Spec.Template.Spec.Volumes {
@@ -82,19 +84,19 @@ func (this *StreamsSecurityScramOcpCF) Sense() {
 	this.deploymentExists = deploymentExists
 	this.deploymentEntry = deploymentEntry
 
-	if entry, exists := this.ctx.GetEnvCache().Get(ENV_REGISTRY_STREAMS_SCRAM_USER); exists {
+	if entry, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Get(ENV_REGISTRY_STREAMS_SCRAM_USER); exists {
 		this.foundScramUser = entry.GetValue().Value
 	}
-	if entry, exists := this.ctx.GetEnvCache().Get(ENV_REGISTRY_STREAMS_SCRAM_PASSWORD); exists {
+	if entry, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Get(ENV_REGISTRY_STREAMS_SCRAM_PASSWORD); exists {
 		this.foundScramPasswordSecretName = entry.GetValue().ValueFrom.SecretKeyRef.Name
 	}
 
 	mechTopology := ""
 	mechStorage := ""
-	if entry, exists := this.ctx.GetEnvCache().Get(ENV_REGISTRY_STREAMS_TOPOLOGY_SASL_MECHANISM); exists {
+	if entry, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Get(ENV_REGISTRY_STREAMS_TOPOLOGY_SASL_MECHANISM); exists {
 		mechTopology = entry.GetValue().Value
 	}
-	if entry, exists := this.ctx.GetEnvCache().Get(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SASL_MECHANISM); exists {
+	if entry, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Get(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SASL_MECHANISM); exists {
 		mechStorage = entry.GetValue().Value
 	}
 
@@ -133,10 +135,10 @@ func (this *StreamsSecurityScramOcpCF) Respond() {
 func (this *StreamsSecurityScramOcpCF) AddEnv(truststoreSecretName string, truststoreSecretVolumeName string,
 	scramUser string, scramPasswordSecretName string, scramMechanism string) {
 
-	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_PROPERTIES_PREFIX, "REGISTRY_"))
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_PROPERTIES_PREFIX, "REGISTRY_"))
 
-	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_SCRAM_USER, scramUser))
-	this.ctx.GetEnvCache().Set(NewEnvCacheEntry(&core.EnvVar{
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_SCRAM_USER, scramUser))
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewEnvCacheEntry(&core.EnvVar{
 		Name: ENV_REGISTRY_STREAMS_SCRAM_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
@@ -148,7 +150,7 @@ func (this *StreamsSecurityScramOcpCF) AddEnv(truststoreSecretName string, trust
 		},
 	}))
 
-	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SASL_MECHANISM, scramMechanism))
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SASL_MECHANISM, scramMechanism))
 
 	jaasConfig := "org.apache.kafka.common.security.scram.ScramLoginModule required username='$(" + ENV_REGISTRY_STREAMS_SCRAM_USER +
 		")' password='$(" + ENV_REGISTRY_STREAMS_SCRAM_PASSWORD + ")';"
@@ -156,13 +158,13 @@ func (this *StreamsSecurityScramOcpCF) AddEnv(truststoreSecretName string, trust
 	jaasconfigEntry := NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SASL_JAAS_CONFIG, jaasConfig)
 	jaasconfigEntry.SetInterpolationDependency(ENV_REGISTRY_STREAMS_SCRAM_USER)
 	jaasconfigEntry.SetInterpolationDependency(ENV_REGISTRY_STREAMS_SCRAM_PASSWORD)
-	this.ctx.GetEnvCache().Set(jaasconfigEntry)
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(jaasconfigEntry)
 
-	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SECURITY_PROTOCOL, "SASL_SSL"))
-	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_TRUSTSTORE_TYPE, "PKCS12"))
-	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_TRUSTSTORE_LOCATION,
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SECURITY_PROTOCOL, "SASL_SSL"))
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_TRUSTSTORE_TYPE, "PKCS12"))
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_TRUSTSTORE_LOCATION,
 		"/etc/"+truststoreSecretVolumeName+"/ca.p12"))
-	this.ctx.GetEnvCache().Set(NewEnvCacheEntry(&core.EnvVar{
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewEnvCacheEntry(&core.EnvVar{
 		Name: ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_TRUSTSTORE_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
@@ -174,18 +176,18 @@ func (this *StreamsSecurityScramOcpCF) AddEnv(truststoreSecretName string, trust
 		},
 	}))
 
-	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SASL_MECHANISM, scramMechanism))
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SASL_MECHANISM, scramMechanism))
 
 	jaasconfigEntry = NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SASL_JAAS_CONFIG, jaasConfig)
 	jaasconfigEntry.SetInterpolationDependency(ENV_REGISTRY_STREAMS_SCRAM_USER)
 	jaasconfigEntry.SetInterpolationDependency(ENV_REGISTRY_STREAMS_SCRAM_PASSWORD)
-	this.ctx.GetEnvCache().Set(jaasconfigEntry)
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(jaasconfigEntry)
 
-	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SECURITY_PROTOCOL, "SASL_SSL"))
-	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_TRUSTSTORE_TYPE, "PKCS12"))
-	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_TRUSTSTORE_LOCATION,
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SECURITY_PROTOCOL, "SASL_SSL"))
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_TRUSTSTORE_TYPE, "PKCS12"))
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_TRUSTSTORE_LOCATION,
 		"/etc/"+truststoreSecretVolumeName+"/ca.p12"))
-	this.ctx.GetEnvCache().Set(NewEnvCacheEntry(&core.EnvVar{
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewEnvCacheEntry(&core.EnvVar{
 		Name: ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_TRUSTSTORE_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
@@ -228,7 +230,7 @@ func (this *StreamsSecurityScramOcpCF) AddSecretMountPatch(deploymentEntry Resou
 	deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 		deployment := value.(*ocp_apps.DeploymentConfig).DeepCopy()
 		for ci, c := range deployment.Spec.Template.Spec.Containers {
-			if c.Name == this.ctx.GetConfiguration().GetAppName() {
+			if c.Name == this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetAppName() {
 				mount := core.VolumeMount{
 					Name:      volumeName,
 					ReadOnly:  true,

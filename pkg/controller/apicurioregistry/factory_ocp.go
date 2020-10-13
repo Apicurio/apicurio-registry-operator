@@ -1,6 +1,8 @@
 package apicurioregistry
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	ocp_apps "github.com/openshift/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -9,25 +11,25 @@ import (
 )
 
 type OCPFactory struct {
-	ctx *Context
+	ctx loop.ControlLoopContext
 }
 
-func NewOCPFactory(ctx *Context) *OCPFactory {
+func NewOCPFactory(ctx loop.ControlLoopContext) *OCPFactory {
 	return &OCPFactory{
 		ctx: ctx,
 	}
 }
 
 func (this *OCPFactory) GetLabels() map[string]string {
-	return this.ctx.GetKubeFactory().GetLabels()
+	return this.ctx.RequireService(svc.SVC_KUBE_FACTORY).(KubeFactory).GetLabels()
 }
 
 func (this *OCPFactory) GetSelectorLabels() map[string]string {
-	return this.ctx.GetKubeFactory().GetSelectorLabels()
+	return this.ctx.RequireService(svc.SVC_KUBE_FACTORY).(KubeFactory).GetSelectorLabels()
 }
 
 func (this *OCPFactory) createObjectMeta(typeTag string) meta.ObjectMeta {
-	return this.ctx.GetKubeFactory().createObjectMeta(typeTag)
+	return this.ctx.RequireService(svc.SVC_KUBE_FACTORY).(KubeFactory).createObjectMeta(typeTag)
 }
 
 func (this *OCPFactory) CreateDeployment() *ocp_apps.DeploymentConfig {
@@ -44,7 +46,7 @@ func (this *OCPFactory) CreateDeployment() *ocp_apps.DeploymentConfig {
 				},
 				Spec: core.PodSpec{
 					Containers: []core.Container{{
-						Name:  this.ctx.GetConfiguration().GetAppName(),
+						Name:  this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetAppName(),
 						Image: "",
 						Ports: []core.ContainerPort{
 							{

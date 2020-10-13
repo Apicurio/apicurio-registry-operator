@@ -2,6 +2,8 @@ package apicurioregistry
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -10,10 +12,10 @@ import (
 )
 
 type KubePatcher struct {
-	ctx *Context
+	ctx loop.ControlLoopContext
 }
 
-func NewKubePatcher(ctx *Context) *KubePatcher {
+func NewKubePatcher(ctx loop.ControlLoopContext) *KubePatcher {
 	return &KubePatcher{
 		ctx: ctx,
 	}
@@ -35,7 +37,7 @@ func (this *KubePatcher) patchApicurioRegistry() { // TODO move to separate file
 			panic("Unsupported operation.")
 		},
 		func(namespace string, name string, data []byte) (interface{}, error) {
-			return this.ctx.GetClients().CRD().PatchApicurioRegistry(namespace, name, data)
+			return this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).CRD().PatchApicurioRegistry(namespace, name, data)
 		},
 		func(value interface{}) string {
 			return value.(*ar.ApicurioRegistry).GetName()
@@ -44,15 +46,15 @@ func (this *KubePatcher) patchApicurioRegistry() { // TODO move to separate file
 }
 
 func (this *KubePatcher) reloadDeployment() {
-	if entry, exists := this.ctx.GetResourceCache().Get(RC_KEY_DEPLOYMENT); exists {
-		r, e := this.ctx.GetClients().Kube().
-			GetDeployment(this.ctx.GetConfiguration().GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
+	if entry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_DEPLOYMENT); exists {
+		r, e := this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().
+			GetDeployment(this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
 		if e != nil {
 			this.ctx.GetLog().WithValues("name", entry.GetName()).Info("Resource not found. (May have been deleted).")
-			this.ctx.GetResourceCache().Remove(RC_KEY_DEPLOYMENT)
+			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Remove(RC_KEY_DEPLOYMENT)
 			this.ctx.SetRequeue()
 		} else {
-			this.ctx.GetResourceCache().Set(RC_KEY_DEPLOYMENT, NewResourceCacheEntry(r.Name, r))
+			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Set(RC_KEY_DEPLOYMENT, NewResourceCacheEntry(r.Name, r))
 		}
 	}
 }
@@ -67,10 +69,10 @@ func (this *KubePatcher) patchDeployment() {
 		&apps.Deployment{},
 		"apps.Deployment",
 		func(namespace string, value interface{}) (interface{}, error) {
-			return this.ctx.GetClients().Kube().CreateDeployment(namespace, value.(*apps.Deployment))
+			return this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().CreateDeployment(namespace, value.(*apps.Deployment))
 		},
 		func(namespace string, name string, data []byte) (interface{}, error) {
-			return this.ctx.GetClients().Kube().PatchDeployment(namespace, name, data)
+			return this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().PatchDeployment(namespace, name, data)
 		},
 		func(value interface{}) string {
 			return value.(*apps.Deployment).GetName()
@@ -79,15 +81,15 @@ func (this *KubePatcher) patchDeployment() {
 }
 
 func (this *KubePatcher) reloadService() {
-	if entry, exists := this.ctx.GetResourceCache().Get(RC_KEY_SERVICE); exists {
-		r, e := this.ctx.GetClients().Kube().
-			GetService(this.ctx.GetConfiguration().GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
+	if entry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_SERVICE); exists {
+		r, e := this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().
+			GetService(this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
 		if e != nil {
 			this.ctx.GetLog().WithValues("name", entry.GetName()).Info("Resource not found. (May have been deleted).")
-			this.ctx.GetResourceCache().Remove(RC_KEY_SERVICE)
+			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Remove(RC_KEY_SERVICE)
 			this.ctx.SetRequeue()
 		} else {
-			this.ctx.GetResourceCache().Set(RC_KEY_SERVICE, NewResourceCacheEntry(r.Name, r))
+			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Set(RC_KEY_SERVICE, NewResourceCacheEntry(r.Name, r))
 		}
 	}
 }
@@ -102,10 +104,10 @@ func (this *KubePatcher) patchService() {
 		&core.Service{},
 		"core.Service",
 		func(namespace string, value interface{}) (interface{}, error) {
-			return this.ctx.GetClients().Kube().CreateService(namespace, value.(*core.Service))
+			return this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().CreateService(namespace, value.(*core.Service))
 		},
 		func(namespace string, name string, data []byte) (interface{}, error) {
-			return this.ctx.GetClients().Kube().PatchService(namespace, name, data)
+			return this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().PatchService(namespace, name, data)
 		},
 		func(value interface{}) string {
 			return value.(*core.Service).GetName()
@@ -114,15 +116,15 @@ func (this *KubePatcher) patchService() {
 }
 
 func (this *KubePatcher) reloadIngress() {
-	if entry, exists := this.ctx.GetResourceCache().Get(RC_KEY_INGRESS); exists {
-		r, e := this.ctx.GetClients().Kube().
-			GetIngress(this.ctx.GetConfiguration().GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
+	if entry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_INGRESS); exists {
+		r, e := this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().
+			GetIngress(this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
 		if e != nil {
 			this.ctx.GetLog().WithValues("name", entry.GetName()).Info("Resource not found. (May have been deleted).")
-			this.ctx.GetResourceCache().Remove(RC_KEY_INGRESS)
+			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Remove(RC_KEY_INGRESS)
 			this.ctx.SetRequeue()
 		} else {
-			this.ctx.GetResourceCache().Set(RC_KEY_INGRESS, NewResourceCacheEntry(r.Name, r))
+			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Set(RC_KEY_INGRESS, NewResourceCacheEntry(r.Name, r))
 		}
 	}
 }
@@ -137,10 +139,10 @@ func (this *KubePatcher) patchIngress() {
 		&extensions.Ingress{},
 		"extensions.Ingress",
 		func(namespace string, value interface{}) (interface{}, error) {
-			return this.ctx.GetClients().Kube().CreateIngress(namespace, value.(*extensions.Ingress))
+			return this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().CreateIngress(namespace, value.(*extensions.Ingress))
 		},
 		func(namespace string, name string, data []byte) (interface{}, error) {
-			return this.ctx.GetClients().Kube().PatchIngress(namespace, name, data)
+			return this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().PatchIngress(namespace, name, data)
 		},
 		func(value interface{}) string {
 			return value.(*extensions.Ingress).GetName()
@@ -149,15 +151,15 @@ func (this *KubePatcher) patchIngress() {
 }
 
 func (this *KubePatcher) reloadPodDisruptionBudget() {
-	if entry, exists := this.ctx.GetResourceCache().Get(RC_KEY_POD_DISRUPTION_BUDGET); exists {
-		r, e := this.ctx.GetClients().Kube().
-			GetPodDisruptionBudget(this.ctx.GetConfiguration().GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
+	if entry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_POD_DISRUPTION_BUDGET); exists {
+		r, e := this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().
+			GetPodDisruptionBudget(this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
 		if e != nil {
 			this.ctx.GetLog().WithValues("name", entry.GetName()).Info("Resource not found. (May have been deleted).")
-			this.ctx.GetResourceCache().Remove(RC_KEY_POD_DISRUPTION_BUDGET)
+			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Remove(RC_KEY_POD_DISRUPTION_BUDGET)
 			this.ctx.SetRequeue()
 		} else {
-			this.ctx.GetResourceCache().Set(RC_KEY_POD_DISRUPTION_BUDGET, NewResourceCacheEntry(r.Name, r))
+			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Set(RC_KEY_POD_DISRUPTION_BUDGET, NewResourceCacheEntry(r.Name, r))
 		}
 	}
 }
@@ -172,10 +174,10 @@ func (this *KubePatcher) patchPodDisruptionBudget() {
 		&policy.PodDisruptionBudget{},
 		"policy.PodDisruptionBudget",
 		func(namespace string, value interface{}) (interface{}, error) {
-			return this.ctx.GetClients().Kube().CreatePodDisruptionBudget(namespace, value.(*policy.PodDisruptionBudget))
+			return this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().CreatePodDisruptionBudget(namespace, value.(*policy.PodDisruptionBudget))
 		},
 		func(namespace string, name string, data []byte) (interface{}, error) {
-			return this.ctx.GetClients().Kube().PatchPodDisruptionBudget(namespace, name, data)
+			return this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().PatchPodDisruptionBudget(namespace, name, data)
 		},
 		func(value interface{}) string {
 			return value.(*policy.PodDisruptionBudget).GetName()

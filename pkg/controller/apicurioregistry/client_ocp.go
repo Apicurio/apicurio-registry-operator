@@ -1,6 +1,8 @@
 package apicurioregistry
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	ocp_apps "github.com/openshift/api/apps/v1"
 	ocp_route "github.com/openshift/api/route/v1"
 	ocp_apps_client "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
@@ -12,12 +14,12 @@ import (
 )
 
 type OCPClient struct {
-	ctx            *Context
+	ctx            loop.ControlLoopContext
 	ocpAppsClient  *ocp_apps_client.AppsV1Client
 	ocpRouteClient *ocp_route_client.RouteV1Client
 }
 
-func NewOCPClient(ctx *Context, clientConfig *rest.Config) *OCPClient {
+func NewOCPClient(ctx loop.ControlLoopContext, clientConfig *rest.Config) *OCPClient {
 	this := &OCPClient{
 		ctx:            ctx,
 		ocpAppsClient:  ocp_apps_client.NewForConfigOrDie(clientConfig),
@@ -35,7 +37,7 @@ func (this *OCPClient) CreateDeployment(namespace string, value *ocp_apps.Deploy
 	if err != nil {
 		return nil, err
 	}
-	if err := controllerutil.SetControllerReference(this.ctx.GetConfiguration().GetSpec(), res, this.ctx.GetScheme()); err != nil {
+	if err := controllerutil.SetControllerReference(this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetSpec(), res, this.ctx.GetScheme()); err != nil {
 		panic("Could not set controller reference.")
 	}
 	res, err = this.UpdateDeployment(namespace, res)

@@ -1,13 +1,15 @@
 package apicurioregistry
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	ocp_apps "github.com/openshift/api/apps/v1"
 )
 
-var _ ControlFunction = &EnvOcpCF{}
+var _ loop.ControlFunction = &EnvOcpCF{}
 
 type EnvOcpCF struct {
-	ctx                *Context
+	ctx                loop.ControlLoopContext
 	deploymentExists   bool
 	deploymentEntry    ResourceCacheEntry
 	deploymentName     string
@@ -16,7 +18,7 @@ type EnvOcpCF struct {
 }
 
 // Is responsible for managing environment variables from the env cache
-func NewEnvOcpCF(ctx *Context) ControlFunction {
+func NewEnvOcpCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &EnvOcpCF{
 		ctx:                ctx,
 		deploymentExists:   false,
@@ -34,14 +36,14 @@ func (this *EnvOcpCF) Describe() string {
 func (this *EnvOcpCF) Sense() {
 	// Observation #1
 	// Is deployment available and/or is it already created
-	deploymentEntry, deploymentExists := this.ctx.GetResourceCache().Get(RC_KEY_DEPLOYMENT_OCP)
+	deploymentEntry, deploymentExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_DEPLOYMENT_OCP)
 	this.deploymentExists = deploymentExists
 	this.deploymentEntry = deploymentEntry
 	this.deploymentName = deploymentEntry.GetName()
 
 	// Observation #2
 	// Was the env cache updated?
-	this.envCacheUpdated = this.ctx.GetEnvCache().IsChanged()
+	this.envCacheUpdated = this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).IsChanged()
 
 }
 
@@ -61,15 +63,15 @@ func (this *EnvOcpCF) Respond() {
 	// The operator overwrites user defined ones only when necessary
 	deployment := this.deploymentEntry.GetValue().(*ocp_apps.DeploymentConfig)
 	for i, c := range deployment.Spec.Template.Spec.Containers {
-		if c.Name == this.ctx.GetConfiguration().GetAppName() {
+		if c.Name == this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetAppName() {
 			for _, e := range deployment.Spec.Template.Spec.Containers[i].Env {
 				// Add to the cache
-				if v, exists := this.ctx.GetEnvCache().Get(e.Name); exists {
+				if v, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Get(e.Name); exists {
 					if !v.IsManaged() { // TODO this avoids overwriting of managed env variables
-						this.ctx.GetEnvCache().Set(NewEnvCacheEntryUnmanaged(e.DeepCopy()))
+						this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewEnvCacheEntryUnmanaged(e.DeepCopy()))
 					}
 				} else {
-					this.ctx.GetEnvCache().Set(NewEnvCacheEntryUnmanaged(e.DeepCopy()))
+					this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewEnvCacheEntryUnmanaged(e.DeepCopy()))
 				}
 			}
 		}
@@ -80,8 +82,8 @@ func (this *EnvOcpCF) Respond() {
 	this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 		deployment := value.(*ocp_apps.DeploymentConfig).DeepCopy()
 		for i, c := range deployment.Spec.Template.Spec.Containers {
-			if c.Name == this.ctx.GetConfiguration().GetAppName() {
-				deployment.Spec.Template.Spec.Containers[i].Env = this.ctx.GetEnvCache().GetSorted()
+			if c.Name == this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetAppName() {
+				deployment.Spec.Template.Spec.Containers[i].Env = this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).GetSorted()
 			}
 		} // TODO report a problem if not found?
 		return deployment
@@ -89,7 +91,7 @@ func (this *EnvOcpCF) Respond() {
 
 	// Response #3
 	// Do not clear the cache, but reset the change mark
-	this.ctx.GetEnvCache().ResetChanged()
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).ResetChanged()
 
 	this.lastDeploymentName = this.deploymentName
 }

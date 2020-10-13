@@ -2,6 +2,7 @@ package apicurioregistry
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/types"
@@ -12,13 +13,13 @@ import (
 // =====
 
 type CRDClient struct {
-	ctx    *Context
+	ctx    loop.ControlLoopContext
 	client *rest.RESTClient
 }
 
-func NewCRDClient(ctx *Context, config *rest.Config) *CRDClient {
+func NewCRDClient(ctx loop.ControlLoopContext, config *rest.Config) *CRDClient {
 
-	ctx.scheme.AddKnownTypes(ar.SchemeGroupVersion, &ar.ApicurioRegistry{}, &ar.ApicurioRegistryList{})
+	ctx.GetScheme().AddKnownTypes(ar.SchemeGroupVersion, &ar.ApicurioRegistry{}, &ar.ApicurioRegistryList{})
 
 	config.ContentConfig.GroupVersion = &ar.SchemeGroupVersion
 	config.APIPath = "/apis"

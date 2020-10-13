@@ -2,6 +2,7 @@
 package apicurioregistry
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"net"
 	"os"
   "os/user"
@@ -20,7 +21,7 @@ import (
 const RecommendedConfigPathEnvVar = "KUBECONFIG"
 
 type Clients struct {
-	ctx              *Context
+	ctx              loop.ControlLoopContext
 	config           *rest.Config
 	kubeClient       *KubeClient
 	ocpClient        *OCPClient
@@ -28,7 +29,7 @@ type Clients struct {
 	monitoringClient *MonitoringClient
 }
 
-func NewClients(ctx *Context) *Clients {
+func NewClients(ctx loop.ControlLoopContext) *Clients {
 	this := &Clients{
 		ctx: ctx,
 	}

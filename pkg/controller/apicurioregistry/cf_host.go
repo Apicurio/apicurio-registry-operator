@@ -2,13 +2,15 @@ package apicurioregistry
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	extensions "k8s.io/api/extensions/v1beta1"
 )
 
-var _ ControlFunction = &HostCF{}
+var _ loop.ControlFunction = &HostCF{}
 
 type HostCF struct {
-	ctx           *Context
+	ctx           loop.ControlLoopContext
 	ingressEntry  ResourceCacheEntry
 	ingressExists bool
 	serviceName   string
@@ -19,7 +21,7 @@ type HostCF struct {
 // This CF makes sure number of host is aligned
 // If there is some other way of determining the number of host needed outside of CR,
 // modify the Sense stage so this CF knows about it
-func NewHostCF(ctx *Context) ControlFunction {
+func NewHostCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &HostCF{
 		ctx:           ctx,
 		ingressEntry:  nil,
@@ -38,13 +40,13 @@ func (this *HostCF) Sense() {
 
 	// Observation #1
 	// Get the cached Ingress (if it exists and/or the value)
-	ingressEntry, ingressExists := this.ctx.GetResourceCache().Get(RC_KEY_INGRESS)
+	ingressEntry, ingressExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_INGRESS)
 	this.ingressEntry = ingressEntry
 	this.ingressExists = ingressExists
 
 	// Observation #2
 	// Is there a Service already? It must have been created (has a name)
-	serviceEntry, serviceExists := this.ctx.GetResourceCache().Get(RC_KEY_SERVICE)
+	serviceEntry, serviceExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_SERVICE)
 	if serviceExists {
 		this.serviceName = serviceEntry.GetName() // TODO this may still end up empty, refactor?
 	} else {
@@ -60,12 +62,12 @@ func (this *HostCF) Sense() {
 
 	// Observation #4
 	// Get target host
-	if specEntry, exists := this.ctx.GetResourceCache().Get(RC_KEY_SPEC); exists {
+	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_SPEC); exists {
 		this.targetHost = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Host
 	}
 
 	// Update state
-	this.ctx.GetConfiguration().SetConfig(CFG_STA_ROUTE, this.existingHost)
+	this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).SetConfig(CFG_STA_ROUTE, this.existingHost)
 }
 
 func (this *HostCF) Compare() bool {

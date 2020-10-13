@@ -1,16 +1,21 @@
 package apicurioregistry
 
-var _ ControlFunction = &ProfileCF{}
+import (
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+)
+
+var _ loop.ControlFunction = &ProfileCF{}
 
 const ENV_QUARKUS_PROFILE = "QUARKUS_PROFILE"
 
 type ProfileCF struct {
-	ctx        *Context
+	ctx        loop.ControlLoopContext
 	profileSet bool
 }
 
 // Is responsible for managing environment variables from the env cache
-func NewProfileCF(ctx *Context) ControlFunction {
+func NewProfileCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &ProfileCF{
 		ctx:        ctx,
 		profileSet: false,
@@ -24,7 +29,7 @@ func (this *ProfileCF) Describe() string {
 func (this *ProfileCF) Sense() {
 	// Observation #1
 	// Was the profile env var set?
-	_, profileSet := this.ctx.GetEnvCache().Get(ENV_QUARKUS_PROFILE)
+	_, profileSet := this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Get(ENV_QUARKUS_PROFILE)
 	this.profileSet = profileSet
 
 }
@@ -38,7 +43,7 @@ func (this *ProfileCF) Compare() bool {
 func (this *ProfileCF) Respond() {
 	// Response #1
 	// Just set the value(s)!
-	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_QUARKUS_PROFILE, "prod"))
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewSimpleEnvCacheEntry(ENV_QUARKUS_PROFILE, "prod"))
 
 }
 

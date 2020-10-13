@@ -2,6 +2,7 @@ package apicurioregistry
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -16,7 +17,7 @@ type Context struct {
 	nativeClient client.Client
 	c            controller.Controller
 
-	controlFunctions []ControlFunction
+	controlFunctions []loop.ControlFunction
 	// Components
 	configuration *Configuration
 	kubeFactory   *KubeFactory
@@ -41,7 +42,7 @@ func NewContext(c controller.Controller, scheme *runtime.Scheme, log logr.Logger
 		nativeClient: client,
 		requeue:      false,
 	}
-	self.controlFunctions = *new([]ControlFunction)
+	self.controlFunctions = *new([]loop.ControlFunction)
 	self.configuration = NewConfiguration(log)
 
 	self.clients = NewClients(self)
@@ -65,14 +66,14 @@ func (this *Context) Update(spec *ar.ApicurioRegistry) {
 	this.resourceCache.Set(RC_KEY_SPEC, specEntry)
 }
 
-func (this *Context) AddControlFunction(cf ControlFunction) {
+func (this *Context) AddControlFunction(cf loop.ControlFunction) {
 	this.controlFunctions = append(this.controlFunctions, cf)
 }
 
 // ===
 // Getters
 
-func (this *Context) GetControlFunctions() []ControlFunction {
+func (this *Context) GetControlFunctions() []loop.ControlFunction {
 	return this.controlFunctions
 }
 
