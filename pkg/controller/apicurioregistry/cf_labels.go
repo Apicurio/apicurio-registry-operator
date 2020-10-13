@@ -1,16 +1,18 @@
 package apicurioregistry
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	policy "k8s.io/api/policy/v1beta1"
 )
 
-var _ ControlFunction = &LabelsCF{}
+var _ loop.ControlFunction = &LabelsCF{}
 
 type LabelsCF struct {
-	ctx *Context
+	ctx loop.ControlLoopContext
 
 	podEntry    ResourceCacheEntry
 	podIsCached bool
@@ -42,7 +44,7 @@ type LabelsCF struct {
 }
 
 // Update labels on some managed resources
-func NewLabelsCF(ctx *Context) ControlFunction {
+func NewLabelsCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &LabelsCF{
 		ctx:       ctx,
 		podLabels: nil,
@@ -56,32 +58,32 @@ func (this *LabelsCF) Describe() string {
 func (this *LabelsCF) Sense() {
 	// Observation #1
 	// Operator Pod
-	this.podEntry, this.podIsCached = this.ctx.GetResourceCache().Get(RC_KEY_OPERATOR_POD)
+	this.podEntry, this.podIsCached = this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_OPERATOR_POD)
 	if this.podIsCached {
 		this.podLabels = this.podEntry.GetValue().(*core.Pod).Labels
 	}
 	// Observation #2
 	// Deployment & Deployment Pod Template
-	this.deploymentEntry, this.deploymentIsCached = this.ctx.GetResourceCache().Get(RC_KEY_DEPLOYMENT)
+	this.deploymentEntry, this.deploymentIsCached = this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_DEPLOYMENT)
 	if this.deploymentIsCached {
 		this.deploymentLabels = this.deploymentEntry.GetValue().(*apps.Deployment).Labels
 		this.deploymentPodLabels = this.deploymentEntry.GetValue().(*apps.Deployment).Spec.Template.Labels
 	}
 	// Observation #3
 	// Service
-	this.serviceEntry, this.serviceIsCached = this.ctx.GetResourceCache().Get(RC_KEY_SERVICE)
+	this.serviceEntry, this.serviceIsCached = this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_SERVICE)
 	if this.serviceIsCached {
 		this.serviceLabels = this.serviceEntry.GetValue().(*core.Service).Labels
 	}
 	// Observation #4
 	// Ingress
-	this.ingressEntry, this.ingressIsCached = this.ctx.GetResourceCache().Get(RC_KEY_INGRESS)
+	this.ingressEntry, this.ingressIsCached = this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_INGRESS)
 	if this.ingressIsCached {
 		this.ingressLabels = this.ingressEntry.GetValue().(*extensions.Ingress).Labels
 	}
 	// Observation #5
 	// PodDisruptionBudget
-	this.pdbEntry, this.pdbIsCached = this.ctx.GetResourceCache().Get(RC_KEY_POD_DISRUPTION_BUDGET)
+	this.pdbEntry, this.pdbIsCached = this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_POD_DISRUPTION_BUDGET)
 	if this.pdbIsCached {
 		this.pdbLabels = this.pdbEntry.GetValue().(*policy.PodDisruptionBudget).Labels
 	}
@@ -159,7 +161,7 @@ func (this *LabelsCF) Cleanup() bool {
 // ---
 
 func (this *LabelsCF) GetCommonApplicationLabels() map[string]string {
-	return this.ctx.GetKubeFactory().GetLabels()
+	return this.ctx.RequireService(svc.SVC_KUBE_FACTORY).(KubeFactory).GetLabels()
 }
 
 // Return *true* if, for given source labels,

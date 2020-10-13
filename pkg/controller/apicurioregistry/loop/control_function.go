@@ -1,4 +1,4 @@
-package apicurioregistry
+package loop
 
 // Defines an interface for a component responsible for some part of the
 // reconciliation

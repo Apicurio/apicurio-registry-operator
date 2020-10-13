@@ -2,21 +2,23 @@ package apicurioregistry
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 )
 
-var _ ControlFunction = &KafkaCF{}
+var _ loop.ControlFunction = &KafkaCF{}
 
 const ENV_KAFKA_BOOTSTRAP_SERVERS = "KAFKA_BOOTSTRAP_SERVERS"
 
 type KafkaCF struct {
-	ctx                 *Context
+	ctx                 loop.ControlLoopContext
 	persistence         string
 	bootstrapServers    string
 	valid               bool
 	envBootstrapServers string
 }
 
-func NewKafkaCF(ctx *Context) ControlFunction {
+func NewKafkaCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &KafkaCF{
 		ctx:                 ctx,
 		persistence:         "",
@@ -33,7 +35,7 @@ func (this *KafkaCF) Describe() string {
 func (this *KafkaCF) Sense() {
 	// Observation #1
 	// Read the config values
-	if specEntry, exists := this.ctx.GetResourceCache().Get(RC_KEY_SPEC); exists {
+	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry).Spec
 		this.persistence = spec.Configuration.Persistence
 		this.bootstrapServers = spec.Configuration.Kafka.BootstrapServers
@@ -47,7 +49,7 @@ func (this *KafkaCF) Sense() {
 
 	// Observation #4
 	// Read the env values
-	if val, exists := this.ctx.GetEnvCache().Get(ENV_KAFKA_BOOTSTRAP_SERVERS); exists {
+	if val, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Get(ENV_KAFKA_BOOTSTRAP_SERVERS); exists {
 		this.envBootstrapServers = val.GetValue().Value
 	}
 
@@ -66,7 +68,7 @@ func (this *KafkaCF) Compare() bool {
 func (this *KafkaCF) Respond() {
 	// Response #1
 	// Just set the value(s)!
-	this.ctx.GetEnvCache().Set(NewSimpleEnvCacheEntry(ENV_KAFKA_BOOTSTRAP_SERVERS, this.bootstrapServers))
+	this.ctx.RequireService(svc.SVC_ENV_CACHE).(EnvCache).Set(NewSimpleEnvCacheEntry(ENV_KAFKA_BOOTSTRAP_SERVERS, this.bootstrapServers))
 
 }
 

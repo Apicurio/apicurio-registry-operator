@@ -2,13 +2,15 @@ package apicurioregistry
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	ocp_apps "github.com/openshift/api/apps/v1"
 )
 
-var _ ControlFunction = &ReplicasOcpCF{}
+var _ loop.ControlFunction = &ReplicasOcpCF{}
 
 type ReplicasOcpCF struct {
-	ctx              *Context
+	ctx              loop.ControlLoopContext
 	deploymentEntry  ResourceCacheEntry
 	deploymentExists bool
 	existingReplicas int32
@@ -18,7 +20,7 @@ type ReplicasOcpCF struct {
 // This CF makes sure number of replicas is aligned
 // If there is some other way of determining the number of replicas needed outside of CR,
 // modify the Sense stage so this CF knows about it
-func NewReplicasOcpCF(ctx *Context) ControlFunction {
+func NewReplicasOcpCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &ReplicasOcpCF{
 		ctx:              ctx,
 		deploymentEntry:  nil,
@@ -36,7 +38,7 @@ func (this *ReplicasOcpCF) Sense() {
 
 	// Observation #1
 	// Get the cached Deployment (if it exists and/or the value)
-	deploymentEntry, deploymentExists := this.ctx.GetResourceCache().Get(RC_KEY_DEPLOYMENT_OCP)
+	deploymentEntry, deploymentExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_DEPLOYMENT_OCP)
 	this.deploymentEntry = deploymentEntry
 	this.deploymentExists = deploymentExists
 
@@ -49,7 +51,7 @@ func (this *ReplicasOcpCF) Sense() {
 
 	// Observation #3
 	// Get the target replicas name
-	if specEntry, exists := this.ctx.GetResourceCache().Get(RC_KEY_SPEC); exists {
+	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_SPEC); exists {
 		this.targetReplicas = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Replicas
 	}
 	if this.targetReplicas < 1 {
@@ -57,7 +59,7 @@ func (this *ReplicasOcpCF) Sense() {
 	}
 
 	// Update state
-	this.ctx.GetConfiguration().SetConfigInt32P(CFG_STA_REPLICA_COUNT, &this.existingReplicas)
+	this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).SetConfigInt32P(CFG_STA_REPLICA_COUNT, &this.existingReplicas)
 }
 
 func (this *ReplicasOcpCF) Compare() bool {

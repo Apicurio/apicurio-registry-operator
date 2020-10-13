@@ -2,6 +2,8 @@ package apicurioregistry
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
@@ -13,10 +15,10 @@ import (
 )
 
 type KubeFactory struct {
-	ctx *Context
+	ctx loop.ControlLoopContext
 }
 
-func NewKubeFactory(ctx *Context) *KubeFactory {
+func NewKubeFactory(ctx loop.ControlLoopContext) *KubeFactory {
 	return &KubeFactory{
 		ctx: ctx,
 	}
@@ -36,7 +38,7 @@ func (this *KubeFactory) GetLabels() map[string]string {
 	if operatorName == "" {
 		panic("Could not determine operator name. Environment variable '" + ENV_OPERATOR_NAME + "' is empty.")
 	}
-	app := this.ctx.GetConfiguration().GetAppName()
+	app := this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetAppName()
 
 	return map[string]string{
 		"app": app,
@@ -57,14 +59,14 @@ func (this *KubeFactory) GetLabels() map[string]string {
 // Labels that can change during operator/SCV upgrade, such as "apicur.io/version" MUST NOT be used.
 func (this *KubeFactory) GetSelectorLabels() map[string]string {
 	return map[string]string{
-		"app": this.ctx.GetConfiguration().GetAppName(),
+		"app": this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetAppName(),
 	}
 }
 
 func (this *KubeFactory) createObjectMeta(typeTag string) meta.ObjectMeta {
 	return meta.ObjectMeta{
-		GenerateName: this.ctx.GetConfiguration().GetAppName() + "-" + typeTag + "-",
-		Namespace:    this.ctx.GetConfiguration().GetAppNamespace(),
+		GenerateName: this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetAppName() + "-" + typeTag + "-",
+		Namespace:    this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetAppNamespace(),
 		Labels:       this.GetLabels(),
 	}
 }
@@ -84,7 +86,7 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 				},
 				Spec: core.PodSpec{
 					Containers: []core.Container{{
-						Name:  this.ctx.GetConfiguration().GetAppName(),
+						Name:  this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetAppName(),
 						Image: "",
 						Ports: []core.ContainerPort{
 							{
@@ -205,12 +207,12 @@ func (this *KubeFactory) CreateIngress(serviceName string) *v1beta1.Ingress {
 
 func (this *KubeFactory) CreateStatus(spec *ar.ApicurioRegistry) *ar.ApicurioRegistryStatus {
 	res := &ar.ApicurioRegistryStatus{
-		Image:          this.ctx.GetConfiguration().GetConfig(CFG_STA_IMAGE),
-		DeploymentName: this.ctx.GetConfiguration().GetConfig(CFG_STA_DEPLOYMENT_NAME),
-		ServiceName:    this.ctx.GetConfiguration().GetConfig(CFG_STA_SERVICE_NAME),
-		IngressName:    this.ctx.GetConfiguration().GetConfig(CFG_STA_INGRESS_NAME),
-		ReplicaCount:   *this.ctx.GetConfiguration().GetConfigInt32P(CFG_STA_REPLICA_COUNT),
-		Host:           this.ctx.GetConfiguration().GetConfig(CFG_STA_ROUTE),
+		Image:          this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetConfig(CFG_STA_IMAGE),
+		DeploymentName: this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetConfig(CFG_STA_DEPLOYMENT_NAME),
+		ServiceName:    this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetConfig(CFG_STA_SERVICE_NAME),
+		IngressName:    this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetConfig(CFG_STA_INGRESS_NAME),
+		ReplicaCount:   *this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetConfigInt32P(CFG_STA_REPLICA_COUNT),
+		Host:           this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetConfig(CFG_STA_ROUTE),
 	}
 	return res
 }

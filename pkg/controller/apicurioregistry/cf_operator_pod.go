@@ -1,19 +1,21 @@
 package apicurioregistry
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 )
 
-var _ ControlFunction = &OperatorPodCF{}
+var _ loop.ControlFunction = &OperatorPodCF{}
 
 type OperatorPodCF struct {
-	ctx       *Context
+	ctx       loop.ControlLoopContext
 	podExists bool
 }
 
 // Read the operator pod into the resource cache
-func NewOperatorPodCF(ctx *Context) ControlFunction {
+func NewOperatorPodCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &OperatorPodCF{
 		ctx:       ctx,
 		podExists: false,
@@ -26,7 +28,7 @@ func (this *OperatorPodCF) Describe() string {
 
 func (this *OperatorPodCF) Sense() {
 	// Observation #1
-	_, this.podExists = this.ctx.GetResourceCache().Get(RC_KEY_OPERATOR_POD)
+	_, this.podExists = this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_OPERATOR_POD)
 }
 
 func (this *OperatorPodCF) Compare() bool {
@@ -44,9 +46,9 @@ func (this *OperatorPodCF) Respond() {
 	}
 
 	// Response #1
-	pod, err := this.ctx.GetClients().Kube().GetPod(namespace, name, &meta.GetOptions{})
+	pod, err := this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().GetPod(namespace, name, &meta.GetOptions{})
 	if err == nil && pod.GetObjectMeta().GetDeletionTimestamp() == nil {
-		this.ctx.GetResourceCache().Set(RC_KEY_OPERATOR_POD, NewResourceCacheEntry(name, pod))
+		this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Set(RC_KEY_OPERATOR_POD, NewResourceCacheEntry(name, pod))
 	} else {
 		this.ctx.GetLog().WithValues("type", "Warning", "error", err).
 			Info("Could not read operator's Pod resource. Will retry.")

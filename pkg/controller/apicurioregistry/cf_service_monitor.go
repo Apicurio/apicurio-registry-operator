@@ -2,6 +2,8 @@ package apicurioregistry
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -11,17 +13,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var _ ControlFunction = &ServiceMonitorCF{}
+var _ loop.ControlFunction = &ServiceMonitorCF{}
 
 type ServiceMonitorCF struct {
-	ctx                        *Context
+	ctx                        loop.ControlLoopContext
 	isServiceMonitorRegistered bool
 	serviceMonitor             *monitoring.ServiceMonitor
 	service                    *core.Service
 }
 
 // TODO service monitor should be using resource cache
-func NewServiceMonitorCF(ctx *Context) ControlFunction {
+func NewServiceMonitorCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 
 	return &ServiceMonitorCF{
 		ctx:                        ctx,
@@ -48,7 +50,7 @@ func (this *ServiceMonitorCF) Sense() {
 		return
 	}
 
-	monitoringClient := this.ctx.GetClients().Monitoring()
+	monitoringClient := this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Monitoring()
 
 	// Observation #1
 	// Is ServiceMonitor registered?
@@ -64,7 +66,7 @@ func (this *ServiceMonitorCF) Sense() {
 
 	// Observation #2
 	// Get Service
-	serviceEntry, serviceExists := this.ctx.GetResourceCache().Get(RC_KEY_SERVICE)
+	serviceEntry, serviceExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_SERVICE)
 	if serviceExists {
 		this.service = serviceEntry.GetValue().(*core.Service)
 	}
@@ -72,8 +74,8 @@ func (this *ServiceMonitorCF) Sense() {
 	if isServiceMonitorRegistered && serviceExists {
 		// Observation #3
 		// Get ServiceMonitor
-		namespace := this.ctx.configuration.GetAppNamespace()
-		name := this.ctx.configuration.GetAppName()
+		namespace := this.ctx.GetAppNamespace()
+		name := this.ctx.GetAppName()
 		serviceMonitor, err := monitoringClient.GetServiceMonitor(namespace, name)
 		if err != nil {
 			if !errors.IsNotFound(err) {
@@ -96,9 +98,9 @@ func (this *ServiceMonitorCF) Compare() bool {
 }
 
 func (this *ServiceMonitorCF) Respond() {
-	monitoringClient := this.ctx.GetClients().Monitoring()
+	monitoringClient := this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Monitoring()
 	monitoringFactory := NewMonitoringFactory(this.ctx)
-	namespace := this.ctx.configuration.GetAppNamespace()
+	namespace := this.ctx.GetAppNamespace()
 	serviceMonitor := monitoringFactory.NewServiceMonitor(this.service)
 
 	_, err := monitoringClient.CreateServiceMonitor(namespace, serviceMonitor)
@@ -109,10 +111,10 @@ func (this *ServiceMonitorCF) Respond() {
 
 func (this *ServiceMonitorCF) Cleanup() bool {
 	// SM should not have any deletion dependencies
-	monitoringClient := this.ctx.GetClients().Monitoring()
+	monitoringClient := this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Monitoring()
 	if isServiceMonitorRegistered, _ := monitoringClient.isServiceMonitorRegistered(); isServiceMonitorRegistered {
-		namespace := this.ctx.configuration.GetAppNamespace()
-		name := this.ctx.configuration.GetAppName()
+		namespace := this.ctx.GetAppNamespace()
+		name := this.ctx.GetAppName()
 		if serviceMonitor, err := monitoringClient.GetServiceMonitor(namespace, name); err == nil {
 			if err := monitoringClient.DeleteServiceMonitor(serviceMonitor, &meta.DeleteOptions{});
 				err != nil && !api_errors.IsNotFound(err) /* Should not normally happen */ {

@@ -2,16 +2,18 @@ package apicurioregistry
 
 import (
 	"encoding/json"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 )
 
 type Patchers struct {
-	ctx         *Context
+	ctx         loop.ControlLoopContext
 	kubePatcher *KubePatcher
 	ocpPatcher  *OCPPatcher
 }
 
-func NewPatchers(ctx *Context) *Patchers {
+func NewPatchers(ctx loop.ControlLoopContext) *Patchers {
 	this := &Patchers{
 		ctx: ctx,
 	}
@@ -56,7 +58,7 @@ func createPatch(old, new, datastruct interface{}) ([]byte, error) {
 
 // Kind-of generic patching function to avoid repeating the code for each resource type
 func patchGeneric(
-	ctx *Context,
+	ctx loop.ControlLoopContext,
 	key string,                                                     // Resource cache key for the given resource
 	genericToString func(interface{}) string,                       // Function to convert the resource to string (logging)
 	genericType interface{},                                        // Empty instance of the resource struct
@@ -65,9 +67,9 @@ func patchGeneric(
 	genericPatch func(string, string, []byte) (interface{}, error), // Function to patch the resource using Kubernetes API
 	genericGetName func(interface{}) string) { // Function to get the resource name within k8s
 
-	if entry, exists := ctx.GetResourceCache().Get(key); exists {
+	if entry, exists := ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(key); exists {
 
-		namespace := ctx.GetConfiguration().GetAppNamespace()
+		namespace := ctx.GetAppNamespace()
 		name := entry.GetName()
 		value := entry.GetValue()
 		// original := entry.GetOriginalValue() TODO
@@ -91,7 +93,7 @@ func patchGeneric(
 					Info("Could not create patch data.")
 				// Remove patch changes...
 				// ctx.GetResourceCache().Set(key, NewResourceCacheEntry(genericGetName(original), original)) TODO
-				ctx.GetResourceCache().Remove(key)
+				ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Remove(key)
 				ctx.SetRequeue()
 				return
 			}
@@ -105,12 +107,12 @@ func patchGeneric(
 					Info("Could not submit patch.")
 				// Remove patch changes
 				// ctx.GetResourceCache().Set(key, NewResourceCacheEntry(genericGetName(original), original)) TODO
-				ctx.GetResourceCache().Remove(key)
+				ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Remove(key)
 				ctx.SetRequeue()
 				return
 			}
 			// Reset PF after patching
-			ctx.GetResourceCache().Set(key, NewResourceCacheEntry(genericGetName(patched), patched))
+			ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Set(key, NewResourceCacheEntry(genericGetName(patched), patched))
 		} else {
 			ctx.GetLog().WithValues("resource", typeString).Info("Creating.")
 			// Create it
@@ -122,11 +124,11 @@ func patchGeneric(
 					WithValues("type", "Warning", "resource", typeString, "error", err,
 						"target", genericToString(value)).
 					Info("Could not create new resource.")
-				ctx.GetResourceCache().Remove(key)
+				ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Remove(key)
 				return
 			}
 			// Reset PF
-			ctx.GetResourceCache().Set(key, NewResourceCacheEntry(genericGetName(created), created))
+			ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Set(key, NewResourceCacheEntry(genericGetName(created), created))
 		}
 	}
 }

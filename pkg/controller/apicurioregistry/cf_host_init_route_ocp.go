@@ -2,14 +2,16 @@ package apicurioregistry
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	ocp_route "github.com/openshift/api/route/v1"
 	"strings"
 )
 
-var _ ControlFunction = &HostInitRouteOcpCF{}
+var _ loop.ControlFunction = &HostInitRouteOcpCF{}
 
 type HostInitRouteOcpCF struct {
-	ctx                             *Context
+	ctx                             loop.ControlLoopContext
 	isFirstRespond                  bool
 	existingHost                    string
 	existingRouterCanonicalHostname string
@@ -17,7 +19,7 @@ type HostInitRouteOcpCF struct {
 	routeEntry                      ResourceCacheEntry
 }
 
-func NewHostInitRouteOcpCF(ctx *Context) ControlFunction {
+func NewHostInitRouteOcpCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &HostInitRouteOcpCF{
 		ctx:                             ctx,
 		isFirstRespond:                  true,
@@ -41,14 +43,14 @@ func (this *HostInitRouteOcpCF) Sense() {
 	// Observation #1
 	// Get spec for patching & the target host
 	this.existingHost = ""
-	if specEntry, exists := this.ctx.GetResourceCache().Get(RC_KEY_SPEC); exists {
+	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_SPEC); exists {
 		this.specEntry = specEntry
 		this.existingHost = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Host
 	}
 
 	// Observation #2
 	this.existingRouterCanonicalHostname = ""
-	if routeEntry, exists := this.ctx.GetResourceCache().Get(RC_KEY_ROUTE_OCP); exists {
+	if routeEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_ROUTE_OCP); exists {
 		this.routeEntry = routeEntry
 		for _, v := range routeEntry.GetValue().(*ocp_route.Route).Status.Ingress {
 			if v.Host == this.existingHost {
