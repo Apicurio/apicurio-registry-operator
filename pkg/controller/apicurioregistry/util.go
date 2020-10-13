@@ -26,3 +26,9 @@ func findStringKey(haystack map[string]bool, needle string) bool {
 	}
 	return false
 }
+
+func RemoveElement(slice []interface{}, index int) {
+	slice[index] = slice[len(slice)-1] // Copy last element to index i.
+	slice[len(slice)-1] = ""   // Erase last element (write zero value).
+	slice = slice[:len(slice)-1]
+}

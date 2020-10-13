@@ -2,12 +2,14 @@ package apicurioregistry
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 )
 
-var _ ControlFunction = &HostInitCF{}
+var _ loop.ControlFunction = &HostInitCF{}
 
 type HostInitCF struct {
-	ctx        *Context
+	ctx        loop.ControlLoopContext
 	isFirstRun bool
 	targetHost string
 	specEntry  ResourceCacheEntry
@@ -16,7 +18,7 @@ type HostInitCF struct {
 // This CF makes sure number of host is aligned
 // If there is some other way of determining the number of host needed outside of CR,
 // modify the Sense stage so this CF knows about it
-func NewHostInitCF(ctx *Context) ControlFunction {
+func NewHostInitCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &HostInitCF{
 		ctx:        ctx,
 		isFirstRun: true,
@@ -37,7 +39,7 @@ func (this *HostInitCF) Sense() {
 
 	// Observation #4
 	// Get spec for patching & the target host
-	if specEntry, exists := this.ctx.GetResourceCache().Get(RC_KEY_SPEC); exists {
+	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_SPEC); exists {
 		this.specEntry = specEntry
 		this.targetHost = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Host
 	}
@@ -58,11 +60,11 @@ func (this *HostInitCF) Respond() {
 	// Patch the resource
 	this.specEntry.ApplyPatch(func(value interface{}) interface{} {
 		spec := value.(*ar.ApicurioRegistry).DeepCopy()
-		dotNamespace := "." + this.ctx.configuration.GetAppNamespace()
+		dotNamespace := "." + this.ctx.GetAppNamespace()
 		if dotNamespace == ".default" {
 			dotNamespace = ""
 		}
-		spec.Spec.Deployment.Host = this.ctx.configuration.GetAppName() + dotNamespace
+		spec.Spec.Deployment.Host = this.ctx.GetAppName() + dotNamespace
 		return spec
 	})
 }

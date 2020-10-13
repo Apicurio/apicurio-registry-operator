@@ -1,6 +1,8 @@
 package apicurioregistry
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"reflect"
 
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
@@ -8,17 +10,17 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-var _ ControlFunction = &AffinityCF{}
+var _ loop.ControlFunction = &AffinityCF{}
 
 type AffinityCF struct {
-	ctx                   *Context
+	ctx                   loop.ControlLoopContext
 	deploymentEntry       ResourceCacheEntry
 	deploymentEntryExists bool
 	existingAffinity      *corev1.Affinity
 	targetAffinity        *corev1.Affinity
 }
 
-func NewAffinityCF(ctx *Context) ControlFunction {
+func NewAffinityCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &AffinityCF{
 		ctx:                   ctx,
 		deploymentEntry:       nil,
@@ -35,7 +37,7 @@ func (this *AffinityCF) Describe() string {
 func (this *AffinityCF) Sense() {
 	// Observation #1
 	// Get the cached deployment
-	this.deploymentEntry, this.deploymentEntryExists = this.ctx.GetResourceCache().Get(RC_KEY_DEPLOYMENT)
+	this.deploymentEntry, this.deploymentEntryExists = this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_DEPLOYMENT)
 
 	if this.deploymentEntryExists {
 		// Observation #2
@@ -44,7 +46,7 @@ func (this *AffinityCF) Sense() {
 
 		// Observation #3
 		// Get the target affinity
-		if specEntry, exists := this.ctx.GetResourceCache().Get(RC_KEY_SPEC); exists {
+		if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_SPEC); exists {
 			this.targetAffinity = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Affinity
 		}
 	}

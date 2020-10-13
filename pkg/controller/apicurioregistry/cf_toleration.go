@@ -1,6 +1,8 @@
 package apicurioregistry
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"reflect"
 
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
@@ -8,17 +10,17 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-var _ ControlFunction = &TolerationCF{}
+var _ loop.ControlFunction = &TolerationCF{}
 
 type TolerationCF struct {
-	ctx                   *Context
+	ctx                   loop.ControlLoopContext
 	deploymentEntry       ResourceCacheEntry
 	deploymentEntryExists bool
 	existingTolerations   []corev1.Toleration
 	targetTolerations     []corev1.Toleration
 }
 
-func NewTolerationCF(ctx *Context) ControlFunction {
+func NewTolerationCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &TolerationCF{
 		ctx:                   ctx,
 		deploymentEntry:       nil,
@@ -35,7 +37,7 @@ func (this *TolerationCF) Describe() string {
 func (this *TolerationCF) Sense() {
 	// Observation #1
 	// Get the cached deployment
-	this.deploymentEntry, this.deploymentEntryExists = this.ctx.GetResourceCache().Get(RC_KEY_DEPLOYMENT)
+	this.deploymentEntry, this.deploymentEntryExists = this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_DEPLOYMENT)
 
 	if this.deploymentEntryExists {
 		// Observation #2
@@ -44,7 +46,7 @@ func (this *TolerationCF) Sense() {
 
 		// Observation #3
 		// Get the target tolerations
-		if specEntry, exists := this.ctx.GetResourceCache().Get(RC_KEY_SPEC); exists {
+		if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_SPEC); exists {
 			this.targetTolerations = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Tolerations
 		}
 	}

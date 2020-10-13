@@ -2,6 +2,8 @@ package apicurioregistry
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	policy "k8s.io/api/policy/v1beta1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -9,16 +11,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var _ ControlFunction = &PodDisruptionBudgetCF{}
+var _ loop.ControlFunction = &PodDisruptionBudgetCF{}
 
 type PodDisruptionBudgetCF struct {
-	ctx                     *Context
+	ctx                     loop.ControlLoopContext
 	isCached                bool
 	podDisruptionBudgets    []policy.PodDisruptionBudget
 	podDisruptionBudgetName string
 }
 
-func NewPodDisruptionBudgetCF(ctx *Context) ControlFunction {
+func NewPodDisruptionBudgetCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 
 	err := ctx.GetController().Watch(&source.Kind{Type: &policy.PodDisruptionBudget{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
@@ -45,7 +47,7 @@ func (this *PodDisruptionBudgetCF) Sense() {
 
 	// Observation #1
 	// Get cached PodDisruptionBudget
-	pdbEntry, pdbExists := this.ctx.GetResourceCache().Get(RC_KEY_POD_DISRUPTION_BUDGET)
+	pdbEntry, pdbExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_POD_DISRUPTION_BUDGET)
 	if pdbExists {
 		this.podDisruptionBudgetName = pdbEntry.GetName()
 	} else {
@@ -56,10 +58,10 @@ func (this *PodDisruptionBudgetCF) Sense() {
 	// Observation #2
 	// Get PodDisruptionBudget(s) we *should* track
 	this.podDisruptionBudgets = make([]policy.PodDisruptionBudget, 0)
-	podDisruptionBudgets, err := this.ctx.GetClients().Kube().GetPodDisruptionBudgets(
-		this.ctx.GetConfiguration().GetAppNamespace(),
+	podDisruptionBudgets, err := this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().GetPodDisruptionBudgets(
+		this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetAppNamespace(),
 		&meta.ListOptions{
-			LabelSelector: "app=" + this.ctx.GetConfiguration().GetAppName(),
+			LabelSelector: "app=" + this.ctx.RequireService(svc.SVC_CONFIGURATION).(Configuration).GetAppName(),
 		})
 	if err == nil {
 		for _, podDisruptionBudget := range podDisruptionBudgets.Items {
@@ -84,7 +86,7 @@ func (this *PodDisruptionBudgetCF) Respond() {
 		for _, val := range this.podDisruptionBudgets {
 			if val.Name == this.podDisruptionBudgetName {
 				contains = true
-				this.ctx.GetResourceCache().Set(RC_KEY_POD_DISRUPTION_BUDGET, NewResourceCacheEntry(val.Name, &val))
+				this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Set(RC_KEY_POD_DISRUPTION_BUDGET, NewResourceCacheEntry(val.Name, &val))
 				break
 			}
 		}
@@ -97,26 +99,26 @@ func (this *PodDisruptionBudgetCF) Respond() {
 	if this.podDisruptionBudgetName == RC_EMPTY_NAME && len(this.podDisruptionBudgets) == 1 {
 		podDisruptionBudget := this.podDisruptionBudgets[0]
 		this.podDisruptionBudgetName = podDisruptionBudget.Name
-		this.ctx.GetResourceCache().Set(RC_KEY_POD_DISRUPTION_BUDGET, NewResourceCacheEntry(podDisruptionBudget.Name, &podDisruptionBudget))
+		this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Set(RC_KEY_POD_DISRUPTION_BUDGET, NewResourceCacheEntry(podDisruptionBudget.Name, &podDisruptionBudget))
 	}
 	// Response #3 (and #4)
 	// If there is no service PodDisruptionBudget (or there are more than 1), just create a new one
 	if this.podDisruptionBudgetName == RC_EMPTY_NAME && len(this.podDisruptionBudgets) != 1 {
-		podDisruptionBudget := this.ctx.GetKubeFactory().CreatePodDisruptionBudget()
+		podDisruptionBudget := this.ctx.RequireService(svc.SVC_KUBE_FACTORY).(KubeFactory).CreatePodDisruptionBudget()
 		// leave the creation itself to patcher+creator so other CFs can update
-		this.ctx.GetResourceCache().Set(RC_KEY_POD_DISRUPTION_BUDGET, NewResourceCacheEntry(RC_EMPTY_NAME, podDisruptionBudget))
+		this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Set(RC_KEY_POD_DISRUPTION_BUDGET, NewResourceCacheEntry(RC_EMPTY_NAME, podDisruptionBudget))
 	}
 }
 
 func (this *PodDisruptionBudgetCF) Cleanup() bool {
 	// PDB should not have any deletion dependencies
-	if pdbEntry, pdbExists := this.ctx.GetResourceCache().Get(RC_KEY_POD_DISRUPTION_BUDGET); pdbExists {
-		if err := this.ctx.GetClients().Kube().DeletePodDisruptionBudget(pdbEntry.GetValue().(*policy.PodDisruptionBudget), &meta.DeleteOptions{});
+	if pdbEntry, pdbExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Get(RC_KEY_POD_DISRUPTION_BUDGET); pdbExists {
+		if err := this.ctx.RequireService(svc.SVC_CLIENTS).(Clients).Kube().DeletePodDisruptionBudget(pdbEntry.GetValue().(*policy.PodDisruptionBudget), &meta.DeleteOptions{});
 			err != nil && !api_errors.IsNotFound(err) {
 			this.ctx.GetLog().Error(err, "Could not delete PodDisruptionBudget during cleanup")
 			return false
 		} else {
-			this.ctx.GetResourceCache().Remove(RC_KEY_POD_DISRUPTION_BUDGET)
+			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(ResourceCache).Remove(RC_KEY_POD_DISRUPTION_BUDGET)
 			this.ctx.GetLog().Info("PodDisruptionBudget has been deleted.")
 		}
 	}
