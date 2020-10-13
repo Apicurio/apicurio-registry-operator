@@ -930,6 +930,10 @@ spec:
     metadata:
       labels:
         name: apicurio-registry-operator
+
+        apicur.io/type: operator
+        apicur.io/name: apicurio-registry-operator
+        apicur.io/version: 0.0.4-dev
     spec:
       serviceAccountName: apicurio-registry-operator
       containers:
@@ -945,6 +949,8 @@ spec:
               memory: "32Mi"
               cpu: "2m"
           env:
+            - name:  REGISTRY_VERSION
+              value: "1.2.3.Final"
             - name:  REGISTRY_IMAGE_MEM
               value: "docker.io/apicurio/apicurio-registry-mem:1.2.3.Final"
             - name:  REGISTRY_IMAGE_KAFKA
@@ -963,6 +969,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: OPERATOR_NAME
               value: "apicurio-registry-operator"
 
