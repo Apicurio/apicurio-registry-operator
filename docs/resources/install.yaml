@@ -945,6 +945,7 @@ spec:
               memory: "32Mi"
               cpu: "2m"
           env:
+            #THIS IS MISSING SOME ENV VARS
             - name:  REGISTRY_IMAGE_MEM
               value: "docker.io/apicurio/apicurio-registry-mem:1.2.3.Final"
             - name:  REGISTRY_IMAGE_KAFKA
