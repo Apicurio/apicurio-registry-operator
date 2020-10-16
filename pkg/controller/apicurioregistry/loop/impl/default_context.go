@@ -1,12 +1,17 @@
 package impl
 
 import (
-	base "github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/configuration"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/env"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/factory"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/patcher"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	sigs_client "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 )
 
@@ -22,7 +27,7 @@ type defaultContext struct {
 }
 
 // Create a new context when the operator is deployed, provide mostly static data
-func NewDefaultContext(appName string, appNamespace string, c controller.Controller, scheme *runtime.Scheme, log logr.Logger, client client.Client) *defaultContext {
+func NewDefaultContext(appName string, appNamespace string, c controller.Controller, scheme *runtime.Scheme, log logr.Logger, nativeClient sigs_client.Client) *defaultContext {
 	this := &defaultContext{
 		appName:      appName,
 		appNamespace: appNamespace,
@@ -32,18 +37,18 @@ func NewDefaultContext(appName string, appNamespace string, c controller.Control
 	}
 	this.services[svc.SVC_CONTROLLER] = c
 	this.services[svc.SVC_SCHEME] = scheme
-	this.services[svc.SVC_NATIVE_CLIENT] = client
+	this.services[svc.SVC_NATIVE_CLIENT] = nativeClient
 
-	this.services[svc.SVC_CONFIGURATION] = base.NewConfiguration(log)
+	this.services[svc.SVC_CONFIGURATION] = configuration.NewConfiguration(log)
 
-	this.services[svc.SVC_CLIENTS] = base.NewClients(this)
-	this.services[svc.SVC_PATCHERS] = base.NewPatchers(this)
+	this.services[svc.SVC_CLIENTS] = client.NewClients(this)
+	this.services[svc.SVC_PATCHERS] = patcher.NewPatchers(this)
 
-	this.services[svc.SVC_KUBE_FACTORY] = base.NewKubeFactory(this)
-	this.services[svc.SVC_OCP_FACTORY] = base.NewOCPFactory(this)
+	this.services[svc.SVC_KUBE_FACTORY] = factory.NewKubeFactory(this)
+	this.services[svc.SVC_OCP_FACTORY] = factory.NewOCPFactory(this)
 
-	this.services[svc.SVC_RESOURCE_CACHE] = base.NewResourceCache()
-	this.services[svc.SVC_ENV_CACHE] = base.NewEnvCache()
+	this.services[svc.SVC_RESOURCE_CACHE] = resources.NewResourceCache()
+	this.services[svc.SVC_ENV_CACHE] = env.NewEnvCache()
 
 	return this
 }
