@@ -30,127 +30,127 @@ spec:
         kind: ApicurioRegistry
         name: apicurioregistries.apicur.io
         version: v1alpha1
-      specDescriptors:
-        - description: The DataSource user name
-          displayName: User Name
-          path: configuration.dataSource.userName
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:dataSource'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: The DataSource Password
-          displayName: Password
-          path: configuration.dataSource.password
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:dataSource'
-            - 'urn:alm:descriptor:com.tectonic.ui:password'
-        - description: The DataSource URL
-          displayName: URL
-          path: configuration.dataSource.url
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:dataSource'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: The Infinispan Cluster Name
-          displayName: Cluster Name
-          path: configuration.infinispan.clusterName
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:infinispan'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: The kafka  Bootstrap Servers
-          displayName: Bootstrap Servers
-          path: configuration.kafka.bootstrapServers
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:kafka'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: Log Level
-          displayName: Log Level
-          path: configuration.logLevel
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:logLevel'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: Select the Persistence Type
-          displayName: Persistence Type
-          path: configuration.persistence
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:persistence'
-            - 'urn:alm:descriptor:com.tectonic.ui:select'
-        - description: Application Id
-          displayName: Application Id
-          path: configuration.streams.applicationId
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:streams'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: Application Server Port
-          displayName: Application Server Port
-          path: configuration.streams.applicationServerPort
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:streams'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: Bootstrap Servers
-          displayName: Bootstrap Servers
-          path: configuration.streams.bootstrapServers
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:streams'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: Mechanism
-          displayName: Mechanism
-          path: configuration.streams.security.scram.mechanism
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:scram'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: Password Secret Name
-          displayName: Password Secret Name
-          path: configuration.streams.security.scram.passwordSecretName
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:scram'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: Truststore Secret Name
-          displayName: Truststore Secret Name
-          path: configuration.streams.security.scram.truststoreSecretName
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:scram'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: User
-          displayName: User
-          path: configuration.streams.security.scram.user
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:scram'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: Keystore Secret Name
-          displayName: Keystore Secret Name
-          path: configuration.streams.security.tls.keystoreSecretName
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:tls'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: Truststore Secret Name
-          displayName: Truststore Secret Name
-          path: configuration.streams.security.tls.truststoreSecretName
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:tls'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: Read Only
-          displayName: Read Only
-          path: configuration.ui.readOnly
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:ui'
-            - 'urn:alm:descriptor:com.tectonic.ui:booleanSwitch'
-        - description: >-
-            Override the image name according to selected Persistence Type for example,
-            MEM="docker.io/apicurio/apicurio-registry-mem:1.2.3.Final"
-            KAFKA="docker.io/apicurio/apicurio-registry-kafka:1.2.3.Final"
-            STREAMS="docker.io/apicurio/apicurio-registry-streams:1.2.3.Final"
-            JPA="docker.io/apicurio/apicurio-registry-jpa:1.2.3.Final"
-            INFINISPAN="docker.io/apicurio/apicurio-registry-infinispan:1.2.3.Final"
-          displayName: Image Name
-          path: image.name
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:image'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: The number of replicas
-          displayName: Replicas
-          path: deployment.replicas
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:deployment'
-            - 'urn:alm:descriptor:com.tectonic.ui:podCount'
+        specDescriptors:
+          - description: The DataSource user name
+            displayName: User Name
+            path: configuration.dataSource.userName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:dataSource'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: The DataSource Password
+            displayName: Password
+            path: configuration.dataSource.password
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:dataSource'
+              - 'urn:alm:descriptor:com.tectonic.ui:password'
+          - description: The DataSource URL
+            displayName: URL
+            path: configuration.dataSource.url
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:dataSource'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: The Infinispan Cluster Name
+            displayName: Cluster Name
+            path: configuration.infinispan.clusterName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:infinispan'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: The kafka  Bootstrap Servers
+            displayName: Bootstrap Servers
+            path: configuration.kafka.bootstrapServers
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:kafka'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Log Level
+            displayName: Log Level
+            path: configuration.logLevel
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:logLevel'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Select the Persistence Type
+            displayName: Persistence Type
+            path: configuration.persistence
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:persistence'
+              - 'urn:alm:descriptor:com.tectonic.ui:select'
+          - description: Application Id
+            displayName: Application Id
+            path: configuration.streams.applicationId
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:streams'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Application Server Port
+            displayName: Application Server Port
+            path: configuration.streams.applicationServerPort
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:streams'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Bootstrap Servers
+            displayName: Bootstrap Servers
+            path: configuration.streams.bootstrapServers
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:streams'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Mechanism
+            displayName: Mechanism
+            path: configuration.streams.security.scram.mechanism
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:scram'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Password Secret Name
+            displayName: Password Secret Name
+            path: configuration.streams.security.scram.passwordSecretName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:scram'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Truststore Secret Name
+            displayName: Truststore Secret Name
+            path: configuration.streams.security.scram.truststoreSecretName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:scram'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: User
+            displayName: User
+            path: configuration.streams.security.scram.user
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:scram'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Keystore Secret Name
+            displayName: Keystore Secret Name
+            path: configuration.streams.security.tls.keystoreSecretName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:tls'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Truststore Secret Name
+            displayName: Truststore Secret Name
+            path: configuration.streams.security.tls.truststoreSecretName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:tls'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: Read Only
+            displayName: Read Only
+            path: configuration.ui.readOnly
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:ui'
+              - 'urn:alm:descriptor:com.tectonic.ui:booleanSwitch'
+          - description: >-
+              Override the image name according to selected Persistence Type for example,
+              MEM="docker.io/apicurio/apicurio-registry-mem:1.2.3.Final"
+              KAFKA="docker.io/apicurio/apicurio-registry-kafka:1.2.3.Final"
+              STREAMS="docker.io/apicurio/apicurio-registry-streams:1.2.3.Final"
+              JPA="docker.io/apicurio/apicurio-registry-jpa:1.2.3.Final"
+              INFINISPAN="docker.io/apicurio/apicurio-registry-infinispan:1.2.3.Final"
+            displayName: Image Name
+            path: image.name
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:image'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: The number of replicas
+            displayName: Replicas
+            path: deployment.replicas
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:deployment'
+              - 'urn:alm:descriptor:com.tectonic.ui:podCount'
   description: |
     ## Apicurio Registry
 
