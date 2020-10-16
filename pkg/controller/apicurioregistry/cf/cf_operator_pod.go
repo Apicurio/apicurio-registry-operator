@@ -1,0 +1,63 @@
+package cf
+
+import (
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"os"
+)
+
+var _ loop.ControlFunction = &OperatorPodCF{}
+
+type OperatorPodCF struct {
+	ctx       loop.ControlLoopContext
+	podExists bool
+}
+
+// Read the operator pod into the resource cache
+func NewOperatorPodCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+	return &OperatorPodCF{
+		ctx:       ctx,
+		podExists: false,
+	}
+}
+
+func (this *OperatorPodCF) Describe() string {
+	return "OperatorPodCF"
+}
+
+func (this *OperatorPodCF) Sense() {
+	// Observation #1
+	_, this.podExists = this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_OPERATOR_POD)
+}
+
+func (this *OperatorPodCF) Compare() bool {
+	// Condition #1
+	return !this.podExists
+}
+
+func (this *OperatorPodCF) Respond() {
+	namespace := os.Getenv("POD_NAMESPACE")
+	name := os.Getenv("POD_NAME")
+
+	if namespace == "" || name == "" {
+		panic("Operator could not determine name and namespace of its own pod. " +
+			"Make sure that both environment variables POD_NAMESPACE and POD_NAME are present in the operators Deployment.")
+	}
+
+	// Response #1
+	pod, err := this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).Kube().GetPod(namespace, name, &meta.GetOptions{})
+	if err == nil && pod.GetObjectMeta().GetDeletionTimestamp() == nil {
+		this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_OPERATOR_POD, resources.NewResourceCacheEntry(name, pod))
+	} else {
+		this.ctx.GetLog().WithValues("type", "Warning", "error", err).
+			Info("Could not read operator's Pod resource. Will retry.")
+	}
+}
+
+func (this *OperatorPodCF) Cleanup() bool {
+	// No cleanup
+	return true
+}
