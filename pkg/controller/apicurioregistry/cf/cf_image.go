@@ -4,7 +4,7 @@ import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/configuration"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	apps "k8s.io/api/apps/v1"
 	"os"
@@ -93,7 +93,7 @@ func (this *ImageCF) Sense() {
 	}
 
 	// Update state
-	this.ctx.RequireService(svc.SVC_CONFIGURATION).(*configuration.Configuration).SetConfig(configuration.CFG_STA_IMAGE, this.existingImage)
+	this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).SetConfig(status.CFG_STA_IMAGE, this.existingImage)
 }
 
 func (this *ImageCF) Compare() bool {

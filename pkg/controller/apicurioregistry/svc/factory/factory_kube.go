@@ -4,7 +4,7 @@ import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/configuration"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
@@ -208,12 +208,12 @@ func (this *KubeFactory) CreateIngress(serviceName string) *v1beta1.Ingress {
 
 func (this *KubeFactory) CreateStatus(spec *ar.ApicurioRegistry) *ar.ApicurioRegistryStatus {
 	res := &ar.ApicurioRegistryStatus{
-		Image:          this.ctx.RequireService(svc.SVC_CONFIGURATION).(*configuration.Configuration).GetConfig(configuration.CFG_STA_IMAGE),
-		DeploymentName: this.ctx.RequireService(svc.SVC_CONFIGURATION).(*configuration.Configuration).GetConfig(configuration.CFG_STA_DEPLOYMENT_NAME),
-		ServiceName:    this.ctx.RequireService(svc.SVC_CONFIGURATION).(*configuration.Configuration).GetConfig(configuration.CFG_STA_SERVICE_NAME),
-		IngressName:    this.ctx.RequireService(svc.SVC_CONFIGURATION).(*configuration.Configuration).GetConfig(configuration.CFG_STA_INGRESS_NAME),
-		ReplicaCount:   *this.ctx.RequireService(svc.SVC_CONFIGURATION).(*configuration.Configuration).GetConfigInt32P(configuration.CFG_STA_REPLICA_COUNT),
-		Host:           this.ctx.RequireService(svc.SVC_CONFIGURATION).(*configuration.Configuration).GetConfig(configuration.CFG_STA_ROUTE),
+		Image:          this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).GetConfig(status.CFG_STA_IMAGE),
+		DeploymentName: this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).GetConfig(status.CFG_STA_DEPLOYMENT_NAME),
+		ServiceName:    this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).GetConfig(status.CFG_STA_SERVICE_NAME),
+		IngressName:    this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).GetConfig(status.CFG_STA_INGRESS_NAME),
+		ReplicaCount:   *this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).GetConfigInt32P(status.CFG_STA_REPLICA_COUNT),
+		Host:           this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).GetConfig(status.CFG_STA_ROUTE),
 	}
 	return res
 }

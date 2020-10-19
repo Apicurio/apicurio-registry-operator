@@ -2,9 +2,6 @@ package client
 
 import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/configuration"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monclientv1 "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
@@ -28,14 +25,6 @@ func NewMonitoringClient(ctx loop.ControlLoopContext, config *rest.Config) *Moni
 		client:          monclientv1.NewForConfigOrDie(config),
 		discoveryClient: discovery.NewDiscoveryClientForConfigOrDie(config),
 	}
-}
-
-func (this *MonitoringClient) getSpec() *ar.ApicurioRegistry {
-	entry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC)
-	if !exists {
-		panic("Could not get ApicurioRegistry from resource cache.")
-	}
-	return entry.GetValue().(*ar.ApicurioRegistry)
 }
 
 // ===
