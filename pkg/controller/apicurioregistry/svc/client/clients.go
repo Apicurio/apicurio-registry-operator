@@ -2,12 +2,11 @@
 package client
 
 import (
+	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"net"
-	"os"
-  "os/user"
-	"path"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	"github.com/Masterminds/semver"
 	ocp_config_client "github.com/openshift/client-go/config/clientset/versioned"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
@@ -15,7 +14,11 @@ import (
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"	
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+	"net"
+	"os"
+	"os/user"
+	"path"
 )
 
 // RecommendedConfigPathEnvVar is a environment variable for path configuration
@@ -57,21 +60,20 @@ func NewClients(ctx loop.ControlLoopContext) *Clients {
 
 func inClusterConfig() (*rest.Config, error) {
 
-
-		if len(os.Getenv("KUBERNETES_SERVICE_HOST")) == 0 {
-			hosts, err := net.LookupHost("kubernetes.default.svc")
-			if err != nil {
-				return outOfClusterConfig()
-			}
-			if err := os.Setenv("KUBERNETES_SERVICE_HOST", hosts[0]); err != nil {
-				return nil, err
-			}
+	if len(os.Getenv("KUBERNETES_SERVICE_HOST")) == 0 {
+		hosts, err := net.LookupHost("kubernetes.default.svc")
+		if err != nil {
+			return outOfClusterConfig()
 		}
-		if len(os.Getenv("KUBERNETES_SERVICE_PORT")) == 0 {
-			if err := os.Setenv("KUBERNETES_SERVICE_PORT", "443"); err != nil {
-				panic(err)
-			}
+		if err := os.Setenv("KUBERNETES_SERVICE_HOST", hosts[0]); err != nil {
+			return nil, err
 		}
+	}
+	if len(os.Getenv("KUBERNETES_SERVICE_PORT")) == 0 {
+		if err := os.Setenv("KUBERNETES_SERVICE_PORT", "443"); err != nil {
+			panic(err)
+		}
+	}
 
 	return rest.InClusterConfig()
 }
@@ -187,4 +189,12 @@ func (this *Clients) IsOCP43Plus() bool {
 		return constraint43.Check(ocpSemVer)
 	}
 	return false
+}
+
+func getSpec(ctx loop.ControlLoopContext) *ar.ApicurioRegistry {
+	entry, exists := ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC)
+	if !exists {
+		panic("Could not get ApicurioRegistry from resource cache.")
+	}
+	return entry.GetValue().(*ar.ApicurioRegistry)
 }
