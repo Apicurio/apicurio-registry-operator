@@ -1,7 +1,6 @@
 package configuration
 
 import (
-	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/go-logr/logr"
 	"strconv"
 )
@@ -15,7 +14,6 @@ const CFG_STA_REPLICA_COUNT = "CFG_STA_REPLICA_COUNT"
 const CFG_STA_ROUTE = "CFG_STA_ROUTE"
 
 type Configuration struct {
-	spec   *ar.ApicurioRegistry
 	config map[string]string
 	log    logr.Logger
 }
@@ -41,13 +39,6 @@ func (this *Configuration) init() {
 	this.set(this.config, CFG_STA_INGRESS_NAME, "")
 	this.set(this.config, CFG_STA_REPLICA_COUNT, "")
 	this.set(this.config, CFG_STA_ROUTE, "")
-}
-
-func (this *Configuration) Update(spec *ar.ApicurioRegistry) {
-	if spec == nil {
-		panic("Fatal: Run 'Update' after constructing a new instance.")
-	}
-	this.spec = spec
 }
 
 // =====
@@ -87,20 +78,4 @@ func (this *Configuration) GetConfigInt32P(key string) *int32 {
 	i, _ := strconv.ParseInt(this.GetConfig(key), 10, 32)
 	i2 := int32(i)
 	return &i2
-}
-
-// ===
-
-func (this *Configuration) GetAppName() string {
-	return this.spec.Name
-}
-
-func (this *Configuration) GetAppNamespace() string {
-	return this.spec.Namespace
-}
-
-// ===
-
-func (this *Configuration) GetSpec() *ar.ApicurioRegistry {
-	return this.spec
 }
