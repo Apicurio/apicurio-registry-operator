@@ -1,4 +1,4 @@
-package configuration
+package status
 
 import (
 	"github.com/go-logr/logr"
@@ -13,16 +13,16 @@ const CFG_STA_INGRESS_NAME = "CFG_STA_INGRESS_NAME"
 const CFG_STA_REPLICA_COUNT = "CFG_STA_REPLICA_COUNT"
 const CFG_STA_ROUTE = "CFG_STA_ROUTE"
 
-type Configuration struct {
+type Status struct {
 	config map[string]string
 	log    logr.Logger
 }
 
 // This is at the moment only used for status vars.
 // TODO Refactor
-func NewConfiguration(log logr.Logger) *Configuration {
+func NewStatus(log logr.Logger) *Status {
 
-	res := &Configuration{
+	res := &Status{
 		config: make(map[string]string),
 		log:    log,
 	}
@@ -30,7 +30,7 @@ func NewConfiguration(log logr.Logger) *Configuration {
 	return res
 }
 
-func (this *Configuration) init() {
+func (this *Status) init() {
 	// DO NOT USE `spec` ! It's nil at this point
 	// status
 	this.set(this.config, CFG_STA_IMAGE, "")
@@ -43,7 +43,7 @@ func (this *Configuration) init() {
 
 // =====
 
-func (this *Configuration) set(mapp map[string]string, key string, value string) {
+func (this *Status) set(mapp map[string]string, key string, value string) {
 	ptr := &value
 	if key == "" {
 		panic("Fatal: Empty key for " + *ptr)
@@ -51,30 +51,30 @@ func (this *Configuration) set(mapp map[string]string, key string, value string)
 	mapp[key] = *ptr
 }
 
-func (this *Configuration) setDefault(mapp map[string]string, key string, value string, defaultValue string) {
+func (this *Status) setDefault(mapp map[string]string, key string, value string, defaultValue string) {
 	if value == "" {
 		value = defaultValue
 	}
 	this.set(mapp, key, value)
 }
 
-func (this *Configuration) SetConfig(key string, value string) {
+func (this *Status) SetConfig(key string, value string) {
 	this.set(this.config, key, value)
 }
 
-func (this *Configuration) SetConfigInt32P(key string, value *int32) {
+func (this *Status) SetConfigInt32P(key string, value *int32) {
 	this.set(this.config, key, strconv.FormatInt(int64(*value), 10))
 }
 
-func (this *Configuration) GetConfig(key string) string {
+func (this *Status) GetConfig(key string) string {
 	v, ok := this.config[key]
 	if !ok {
-		panic("Fatal: Configuration key '" + key + "' not found.")
+		panic("Fatal: Status key '" + key + "' not found.")
 	}
 	return v
 }
 
-func (this *Configuration) GetConfigInt32P(key string) *int32 {
+func (this *Status) GetConfigInt32P(key string) *int32 {
 	i, _ := strconv.ParseInt(this.GetConfig(key), 10, 32)
 	i2 := int32(i)
 	return &i2

@@ -4,7 +4,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/configuration"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/patcher"
@@ -39,7 +39,7 @@ func NewDefaultContext(appName string, appNamespace string, c controller.Control
 	this.services[svc.SVC_SCHEME] = scheme
 	this.services[svc.SVC_NATIVE_CLIENT] = nativeClient
 
-	this.services[svc.SVC_CONFIGURATION] = configuration.NewConfiguration(log)
+	this.services[svc.SVC_STATUS] = status.NewStatus(log)
 
 	this.services[svc.SVC_CLIENTS] = client.NewClients(this)
 	this.services[svc.SVC_PATCHERS] = patcher.NewPatchers(this)

@@ -5,7 +5,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/configuration"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	core "k8s.io/api/core/v1"
@@ -94,7 +94,7 @@ func (this *ServiceCF) Sense() {
 	}
 
 	// Update the status
-	this.ctx.RequireService(svc.SVC_CONFIGURATION).(*configuration.Configuration).SetConfig(configuration.CFG_STA_SERVICE_NAME, this.serviceName)
+	this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).SetConfig(status.CFG_STA_SERVICE_NAME, this.serviceName)
 }
 
 func (this *ServiceCF) Compare() bool {

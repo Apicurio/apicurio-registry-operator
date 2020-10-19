@@ -5,7 +5,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/configuration"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	ocp_apps "github.com/openshift/api/apps/v1"
@@ -76,7 +76,7 @@ func (this *DeploymentOcpCF) Sense() {
 	}
 
 	// Update the status
-	this.ctx.RequireService(svc.SVC_CONFIGURATION).(*configuration.Configuration).SetConfig(configuration.CFG_STA_DEPLOYMENT_NAME, this.deploymentName)
+	this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).SetConfig(status.CFG_STA_DEPLOYMENT_NAME, this.deploymentName)
 }
 
 func (this *DeploymentOcpCF) Compare() bool {

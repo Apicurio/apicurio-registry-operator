@@ -4,7 +4,7 @@ import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/configuration"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	ocp_apps "github.com/openshift/api/apps/v1"
 )
@@ -61,7 +61,7 @@ func (this *ReplicasOcpCF) Sense() {
 	}
 
 	// Update state
-	this.ctx.RequireService(svc.SVC_CONFIGURATION).(*configuration.Configuration).SetConfigInt32P(configuration.CFG_STA_REPLICA_COUNT, &this.existingReplicas)
+	this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).SetConfigInt32P(status.CFG_STA_REPLICA_COUNT, &this.existingReplicas)
 }
 
 func (this *ReplicasOcpCF) Compare() bool {
