@@ -2,8 +2,6 @@ package client
 
 import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/configuration"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -38,7 +36,7 @@ func (this *KubeClient) CreateDeployment(namespace string, value *apps.Deploymen
 	if err != nil {
 		return nil, err
 	}
-	if err := controllerutil.SetControllerReference(this.ctx.RequireService(svc.SVC_CONFIGURATION).(*configuration.Configuration).GetSpec(), res, this.ctx.GetScheme()); err != nil {
+	if err := controllerutil.SetControllerReference(getSpec(this.ctx), res, this.ctx.GetScheme()); err != nil {
 		panic("Could not set controller reference.")
 	}
 	res, err = this.UpdateDeployment(namespace, res)
@@ -81,7 +79,7 @@ func (this *KubeClient) CreateService(namespace string, value *core.Service) (*c
 	if err != nil {
 		return nil, err
 	}
-	if err := controllerutil.SetControllerReference(this.ctx.RequireService(svc.SVC_CONFIGURATION).(*configuration.Configuration).GetSpec(), res, this.ctx.GetScheme()); err != nil {
+	if err := controllerutil.SetControllerReference(getSpec(this.ctx), res, this.ctx.GetScheme()); err != nil {
 		panic("Could not set controller reference.")
 	}
 	res, err = this.UpdateService(namespace, res)
@@ -124,7 +122,7 @@ func (this *KubeClient) CreateIngress(namespace string, value *extensions.Ingres
 	if err != nil {
 		return nil, err
 	}
-	if err := controllerutil.SetControllerReference(this.ctx.RequireService(svc.SVC_CONFIGURATION).(*configuration.Configuration).GetSpec(), res, this.ctx.GetScheme()); err != nil {
+	if err := controllerutil.SetControllerReference(getSpec(this.ctx), res, this.ctx.GetScheme()); err != nil {
 		panic("Could not set controller reference.")
 	}
 	res, err = this.UpdateIngress(namespace, res)
@@ -167,7 +165,7 @@ func (this *KubeClient) CreatePodDisruptionBudget(namespace string, value *polic
 	if err != nil {
 		return nil, err
 	}
-	if err := controllerutil.SetControllerReference(this.ctx.RequireService(svc.SVC_CONFIGURATION).(*configuration.Configuration).GetSpec(), res, this.ctx.GetScheme()); err != nil {
+	if err := controllerutil.SetControllerReference(getSpec(this.ctx), res, this.ctx.GetScheme()); err != nil {
 		panic("Could not set controller reference.")
 	}
 	res, err = this.UpdatePodDisruptionBudget(namespace, res)

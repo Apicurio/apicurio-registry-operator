@@ -38,7 +38,7 @@ func (this *OCPClient) CreateDeployment(namespace string, value *ocp_apps.Deploy
 	if err != nil {
 		return nil, err
 	}
-	if err := controllerutil.SetControllerReference(this.ctx.RequireService(svc.SVC_CONFIGURATION).(*configuration.Configuration).GetSpec(), res, this.ctx.GetScheme()); err != nil {
+	if err := controllerutil.SetControllerReference(getSpec(this.ctx), res, this.ctx.GetScheme()); err != nil {
 		panic("Could not set controller reference.")
 	}
 	res, err = this.UpdateDeployment(namespace, res)

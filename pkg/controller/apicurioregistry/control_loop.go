@@ -7,7 +7,6 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/impl"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/configuration"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/patcher"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
@@ -35,8 +34,8 @@ type ApicurioRegistryReconciler struct {
 func NewApicurioRegistryReconciler(mgr manager.Manager) *ApicurioRegistryReconciler {
 
 	return &ApicurioRegistryReconciler{
-		client:   mgr.GetClient(),
-		scheme:   mgr.GetScheme(),
+		client: mgr.GetClient(),
+		scheme: mgr.GetScheme(),
 		//contexts: make(map[string]*Context),
 
 		loops: make(map[loop.ControlLoop]int),
@@ -70,59 +69,56 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 		}
 	}
 
-	// Get the relevant loop
-	var loop loop.ControlLoop = nil
+	// Get the existing control loop
+	var controlLoop loop.ControlLoop = nil
 	for c := range this.loops {
 		if c.GetContext().GetAppName() == appName {
-			loop = c
+			controlLoop = c
 			break
 		}
 	}
 
-	if loop == nil && spec == nil {
-		// error
+	// If control loop exists, but spec is not found, do a cleanup
+	if controlLoop != nil && spec == nil {
+		controlLoop.Cleanup()
+		delete(this.loops, controlLoop)
+		controlLoop.GetContext().GetLog().Info("Context was deleted.")
 		return reconcile.Result{}, nil
 	}
 
-	// If loop exists but spec not found, perform a cleanup
-	if loop != nil && spec == nil {
-		loop.Cleanup()
-		delete(this.loops, loop)
-		loop.GetContext().GetLog().Info("Context was deleted.")
-		return reconcile.Result{}, nil
+	// If control loop was not found and spec exists, create a new one
+	if controlLoop == nil && spec != nil {
+		controlLoop = this.createNewLoop(appName, appNamespace)
 	}
 
-	// If empty create it
-	if loop == nil && spec != nil {
-		loop = this.createNewLoop(appName, appNamespace)
+	if controlLoop == nil || spec == nil {
+		return reconcile.Result{}, nil
 	}
 
 	// =======
 	// Context is established
 
-	// Context update
-	loop.GetContext().RequireService(svc.SVC_CONFIGURATION).(*configuration.Configuration).Update(spec)
-	specEntry0 := resources.NewResourceCacheEntry(spec.Name, spec)
-	loop.GetContext().RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_SPEC, specEntry0)
-	loop.GetContext().RequireService(svc.SVC_PATCHERS).(*patcher.Patchers).Reload()
-    // =====
-	
-	loop.Run()
+	// Update the spec before the loop runs, TODO do this indirectly
+	entry := resources.NewResourceCacheEntry(spec.Name, spec)
+	controlLoop.GetContext().RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_SPEC, entry)
+	controlLoop.GetContext().RequireService(svc.SVC_PATCHERS).(*patcher.Patchers).Reload()
 
-	// This has to be done explicitly ATM, TODO Add status CF, use the current `configuration` as status cache (+error handling)
-	specEntry, _ := loop.GetContext().RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC)
+	controlLoop.Run()
+
+	// Operations after the loop runs, TODO do this indirectly
+	specEntry, _ := controlLoop.GetContext().RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC)
 	specEntry.ApplyPatch(func(value interface{}) interface{} {
 		spec := value.(*ar.ApicurioRegistry).DeepCopy()
-		spec.Status = *loop.GetContext().RequireService(svc.SVC_KUBE_FACTORY).(*factory.KubeFactory).CreateStatus(spec)
+		spec.Status = *controlLoop.GetContext().RequireService(svc.SVC_KUBE_FACTORY).(*factory.KubeFactory).CreateStatus(spec)
 		return spec
 	})
 
 	// ======
 	// Create or patch resources in resource cache
-	loop.GetContext().RequireService(svc.SVC_PATCHERS).(*patcher.Patchers).Execute()
+	controlLoop.GetContext().RequireService(svc.SVC_PATCHERS).(*patcher.Patchers).Execute()
 
 	// ======
-	return reconcile.Result{Requeue: loop.GetContext().GetAndResetRequeue()}, nil
+	return reconcile.Result{Requeue: controlLoop.GetContext().GetAndResetRequeue()}, nil
 }
 
 func (this *ApicurioRegistryReconciler) setController(c controller.Controller) {
@@ -137,7 +133,7 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName string, appNamespa
 
 	log.Info("Creating new context")
 	ctx := impl.NewDefaultContext(appName, appNamespace, this.controller, this.scheme, log.WithValues("app", appName), this.client)
-    c := impl.NewControlLoopImpl(ctx)
+	c := impl.NewControlLoopImpl(ctx)
 
 	isOCP, _ := ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).IsOCP()
 	if isOCP {
