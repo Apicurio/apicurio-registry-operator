@@ -82,9 +82,7 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 	// =======
 	// Context is established
 
-	// Update the spec before the loop runs, TODO do this indirectly
-	entry := resources.NewResourceCacheEntry(common.Name(spec.Name), spec)
-	controlLoop.GetContext().RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_SPEC, entry)
+	// Before loop
 	controlLoop.GetContext().RequireService(svc.SVC_PATCHERS).(*patcher.Patchers).Reload()
 
 	controlLoop.Run()
