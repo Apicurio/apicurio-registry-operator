@@ -72,7 +72,6 @@ func (this *CRDClient) PatchApicurioRegistry(namespace common.Namespace, name co
 	err := this.client.
 		Patch(types.MergePatchType).
 		Resource(ar.GroupResource).
-		SubResource("status").
 		Body(patchData).
 		Namespace(namespace.Str()).
 		Name(name.Str()).
