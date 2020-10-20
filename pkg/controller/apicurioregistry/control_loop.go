@@ -26,9 +26,7 @@ type ApicurioRegistryReconciler struct {
 	client     sigs_client.Client
 	scheme     *runtime.Scheme
 	controller controller.Controller
-	//contexts   map[string]*Context
-
-	loops map[loop.ControlLoop]int
+	loops      map[loop.ControlLoop]int
 }
 
 func NewApicurioRegistryReconciler(mgr manager.Manager) *ApicurioRegistryReconciler {
@@ -36,9 +34,7 @@ func NewApicurioRegistryReconciler(mgr manager.Manager) *ApicurioRegistryReconci
 	return &ApicurioRegistryReconciler{
 		client: mgr.GetClient(),
 		scheme: mgr.GetScheme(),
-		//contexts: make(map[string]*Context),
-
-		loops: make(map[loop.ControlLoop]int),
+		loops:  make(map[loop.ControlLoop]int),
 	}
 }
 
@@ -51,22 +47,9 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 	// =====
 
 	// Find the spec
-	specList := &ar.ApicurioRegistryList{}
-	listOps := sigs_client.ListOptions{Namespace: appNamespace}
-	err := this.client.List(context.TODO(), specList, &listOps)
+	spec, err := this.getApicurioRegistryResource(appNamespace, appName)
 	if err != nil {
-		if api_errors.IsNotFound(err) {
-			return reconcile.Result{}, nil
-		}
 		return reconcile.Result{}, err
-	}
-
-	var spec *ar.ApicurioRegistry = nil
-
-	for i, specItem := range specList.Items {
-		if appName == specItem.Name {
-			spec = &specList.Items[i] // Note: Do not use spec = &specItem
-		}
 	}
 
 	// Get the existing control loop
@@ -125,8 +108,27 @@ func (this *ApicurioRegistryReconciler) setController(c controller.Controller) {
 	this.controller = c
 }
 
-func (this *ApicurioRegistryReconciler) getApicurioRegistryList(appName string) *loop.ControlLoop {
-	return nil
+// Returns nil if the resource is not found, but request was OK
+func (this *ApicurioRegistryReconciler) getApicurioRegistryResource(appNamespace string, appName string) (*ar.ApicurioRegistry, error) {
+	specList := &ar.ApicurioRegistryList{}
+	listOps := sigs_client.ListOptions{Namespace: appNamespace}
+	err := this.client.List(context.TODO(), specList, &listOps)
+	if err != nil {
+		if api_errors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	var spec *ar.ApicurioRegistry = nil
+
+	for i, specItem := range specList.Items {
+		if specItem.Name == appName && specItem.Namespace == appNamespace {
+			spec = &specList.Items[i]
+		}
+	}
+
+	return spec, nil
 }
 
 func (this *ApicurioRegistryReconciler) createNewLoop(appName string, appNamespace string) loop.ControlLoop {
