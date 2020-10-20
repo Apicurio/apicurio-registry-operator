@@ -20,6 +20,8 @@ var _ loop.ControlFunction = &ServiceMonitorCF{}
 
 type ServiceMonitorCF struct {
 	ctx                        loop.ControlLoopContext
+	svcResourceCache           resources.ResourceCache
+	svcClients                 *client.Clients
 	isServiceMonitorRegistered bool
 	serviceMonitor             *monitoring.ServiceMonitor
 	service                    *core.Service
@@ -30,6 +32,8 @@ func NewServiceMonitorCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 
 	return &ServiceMonitorCF{
 		ctx:                        ctx,
+		svcResourceCache:           ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcClients:                 ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients),
 		isServiceMonitorRegistered: false,
 		serviceMonitor:             nil,
 		service:                    nil,
@@ -53,7 +57,7 @@ func (this *ServiceMonitorCF) Sense() {
 		return
 	}
 
-	monitoringClient := this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).Monitoring()
+	monitoringClient := this.svcClients.Monitoring()
 
 	// Observation #1
 	// Is ServiceMonitor registered?
@@ -69,7 +73,7 @@ func (this *ServiceMonitorCF) Sense() {
 
 	// Observation #2
 	// Get Service
-	serviceEntry, serviceExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SERVICE)
+	serviceEntry, serviceExists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE)
 	if serviceExists {
 		this.service = serviceEntry.GetValue().(*core.Service)
 	}
@@ -101,7 +105,7 @@ func (this *ServiceMonitorCF) Compare() bool {
 }
 
 func (this *ServiceMonitorCF) Respond() {
-	monitoringClient := this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).Monitoring()
+	monitoringClient := this.svcClients.Monitoring()
 	monitoringFactory := factory.NewMonitoringFactory(this.ctx)
 	namespace := this.ctx.GetAppNamespace()
 	serviceMonitor := monitoringFactory.NewServiceMonitor(this.service)
@@ -114,7 +118,7 @@ func (this *ServiceMonitorCF) Respond() {
 
 func (this *ServiceMonitorCF) Cleanup() bool {
 	// SM should not have any deletion dependencies
-	monitoringClient := this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).Monitoring()
+	monitoringClient := this.svcClients.Monitoring()
 	if isServiceMonitorRegistered, _ := monitoringClient.IsServiceMonitorRegistered(); isServiceMonitorRegistered {
 		namespace := this.ctx.GetAppNamespace()
 		name := this.ctx.GetAppName()

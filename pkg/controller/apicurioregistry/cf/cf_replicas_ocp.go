@@ -4,8 +4,8 @@ import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	ocp_apps "github.com/openshift/api/apps/v1"
 )
 
@@ -13,6 +13,8 @@ var _ loop.ControlFunction = &ReplicasOcpCF{}
 
 type ReplicasOcpCF struct {
 	ctx              loop.ControlLoopContext
+	svcResourceCache resources.ResourceCache
+	svcStatus        *status.Status
 	deploymentEntry  resources.ResourceCacheEntry
 	deploymentExists bool
 	existingReplicas int32
@@ -25,6 +27,8 @@ type ReplicasOcpCF struct {
 func NewReplicasOcpCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &ReplicasOcpCF{
 		ctx:              ctx,
+		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcStatus:        ctx.RequireService(svc.SVC_STATUS).(*status.Status),
 		deploymentEntry:  nil,
 		deploymentExists: false,
 		existingReplicas: 0,
@@ -40,7 +44,7 @@ func (this *ReplicasOcpCF) Sense() {
 
 	// Observation #1
 	// Get the cached Deployment (if it exists and/or the value)
-	deploymentEntry, deploymentExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_DEPLOYMENT_OCP)
+	deploymentEntry, deploymentExists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT_OCP)
 	this.deploymentEntry = deploymentEntry
 	this.deploymentExists = deploymentExists
 
@@ -53,7 +57,7 @@ func (this *ReplicasOcpCF) Sense() {
 
 	// Observation #3
 	// Get the target replicas name
-	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC); exists {
+	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		this.targetReplicas = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Replicas
 	}
 	if this.targetReplicas < 1 {
@@ -61,7 +65,7 @@ func (this *ReplicasOcpCF) Sense() {
 	}
 
 	// Update state
-	this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).SetConfigInt32P(status.CFG_STA_REPLICA_COUNT, &this.existingReplicas)
+	this.svcStatus.SetConfigInt32P(status.CFG_STA_REPLICA_COUNT, &this.existingReplicas)
 }
 
 func (this *ReplicasOcpCF) Compare() bool {

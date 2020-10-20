@@ -4,8 +4,8 @@ import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	apps "k8s.io/api/apps/v1"
 	"os"
 )
@@ -21,6 +21,8 @@ const ENV_OPERATOR_REGISTRY_IMAGE_INFINISPAN = "REGISTRY_IMAGE_INFINISPAN"
 // This CF takes care of keeping the "image" section of the CRD applied.
 type ImageCF struct {
 	ctx              loop.ControlLoopContext
+	svcResourceCache resources.ResourceCache
+	svcStatus        *status.Status
 	deploymentEntry  resources.ResourceCacheEntry
 	deploymentExists bool
 	existingImage    string
@@ -30,6 +32,8 @@ type ImageCF struct {
 func NewImageCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &ImageCF{
 		ctx:              ctx,
+		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcStatus:        ctx.RequireService(svc.SVC_STATUS).(*status.Status),
 		deploymentEntry:  nil,
 		deploymentExists: false,
 		existingImage:    resources.RC_EMPTY_NAME,
@@ -44,7 +48,7 @@ func (this *ImageCF) Describe() string {
 func (this *ImageCF) Sense() {
 	// Observation #1
 	// Get the cached Deployment (if it exists and/or the value)
-	deploymentEntry, deploymentExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_DEPLOYMENT)
+	deploymentEntry, deploymentExists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT)
 	this.deploymentEntry = deploymentEntry
 	this.deploymentExists = deploymentExists
 
@@ -62,7 +66,7 @@ func (this *ImageCF) Sense() {
 	// Observation #3
 	// Get the target image name
 	persistence := ""
-	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC); exists {
+	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry).Spec
 		this.targetImage = spec.Image.Name // TODO remove this
 		persistence = spec.Configuration.Persistence
@@ -93,7 +97,7 @@ func (this *ImageCF) Sense() {
 	}
 
 	// Update state
-	this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).SetConfig(status.CFG_STA_IMAGE, this.existingImage)
+	this.svcStatus.SetConfig(status.CFG_STA_IMAGE, this.existingImage)
 }
 
 func (this *ImageCF) Compare() bool {

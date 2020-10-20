@@ -5,9 +5,9 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	core "k8s.io/api/core/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,11 +18,15 @@ import (
 var _ loop.ControlFunction = &ServiceCF{}
 
 type ServiceCF struct {
-	ctx            loop.ControlLoopContext
-	isCached       bool
-	services       []core.Service
-	serviceName    string
-	deploymentName string
+	ctx              loop.ControlLoopContext
+	svcResourceCache resources.ResourceCache
+	svcClients       *client.Clients
+	svcStatus        *status.Status
+	svcKubeFactory   *factory.KubeFactory
+	isCached         bool
+	services         []core.Service
+	serviceName      string
+	deploymentName   string
 }
 
 func NewServiceCF(ctx loop.ControlLoopContext) loop.ControlFunction {
@@ -37,11 +41,15 @@ func NewServiceCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	}
 
 	return &ServiceCF{
-		ctx:            ctx,
-		isCached:       false,
-		services:       make([]core.Service, 0),
-		serviceName:    resources.RC_EMPTY_NAME,
-		deploymentName: resources.RC_EMPTY_NAME,
+		ctx:              ctx,
+		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcClients:       ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients),
+		svcStatus:        ctx.RequireService(svc.SVC_STATUS).(*status.Status),
+		svcKubeFactory:   ctx.RequireService(svc.SVC_KUBE_FACTORY).(*factory.KubeFactory),
+		isCached:         false,
+		services:         make([]core.Service, 0),
+		serviceName:      resources.RC_EMPTY_NAME,
+		deploymentName:   resources.RC_EMPTY_NAME,
 	}
 }
 
@@ -53,7 +61,7 @@ func (this *ServiceCF) Sense() {
 
 	// Observation #1
 	// Get cached Service
-	serviceEntry, serviceExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SERVICE)
+	serviceEntry, serviceExists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE)
 	if serviceExists {
 		this.serviceName = serviceEntry.GetName()
 	} else {
@@ -64,7 +72,7 @@ func (this *ServiceCF) Sense() {
 	// Observation #2
 	// Get service(s) we *should* track
 	this.services = make([]core.Service, 0)
-	services, err := this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).Kube().GetServices(
+	services, err := this.svcClients.Kube().GetServices(
 		this.ctx.GetAppNamespace(),
 		&meta.ListOptions{
 			LabelSelector: "app=" + this.ctx.GetAppName(),
@@ -81,20 +89,20 @@ func (this *ServiceCF) Sense() {
 
 	// Observation #3
 	// Is there a Deployment already? It must have been created (has a name)
-	deploymentEntry, deploymentExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_DEPLOYMENT)
+	deploymentEntry, deploymentExists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT)
 	if deploymentExists {
 		this.deploymentName = deploymentEntry.GetName()
 	}
 
 	// Observation #4
 	// Same for OCP !!!
-	deploymentEntry, deploymentExists = this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_DEPLOYMENT_OCP)
+	deploymentEntry, deploymentExists = this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT_OCP)
 	if deploymentExists {
 		this.deploymentName = deploymentEntry.GetName()
 	}
 
 	// Update the status
-	this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).SetConfig(status.CFG_STA_SERVICE_NAME, this.serviceName)
+	this.svcStatus.SetConfig(status.CFG_STA_SERVICE_NAME, this.serviceName)
 }
 
 func (this *ServiceCF) Compare() bool {
@@ -113,7 +121,7 @@ func (this *ServiceCF) Respond() {
 		for _, val := range this.services {
 			if val.Name == this.serviceName {
 				contains = true
-				this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_SERVICE, resources.NewResourceCacheEntry(val.Name, &val))
+				this.svcResourceCache.Set(resources.RC_KEY_SERVICE, resources.NewResourceCacheEntry(val.Name, &val))
 				break
 			}
 		}
@@ -126,36 +134,36 @@ func (this *ServiceCF) Respond() {
 	if this.serviceName == resources.RC_EMPTY_NAME && len(this.services) == 1 {
 		service := this.services[0]
 		this.serviceName = service.Name
-		this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_SERVICE, resources.NewResourceCacheEntry(service.Name, &service))
+		this.svcResourceCache.Set(resources.RC_KEY_SERVICE, resources.NewResourceCacheEntry(service.Name, &service))
 	}
 	// Response #3 (and #4)
 	// If there is no service available (or there are more than 1), just create a new one
 	if this.serviceName == resources.RC_EMPTY_NAME && len(this.services) != 1 {
-		service := this.ctx.RequireService(svc.SVC_KUBE_FACTORY).(*factory.KubeFactory).CreateService()
+		service := this.svcKubeFactory.CreateService()
 		// leave the creation itself to patcher+creator so other CFs can update
-		this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_SERVICE, resources.NewResourceCacheEntry(resources.RC_EMPTY_NAME, service))
+		this.svcResourceCache.Set(resources.RC_KEY_SERVICE, resources.NewResourceCacheEntry(resources.RC_EMPTY_NAME, service))
 	}
 }
 
 func (this *ServiceCF) Cleanup() bool {
 	// Make sure the ingress AND service monitor are removed before we delete the service
 	// Ingress
-	_, ingressExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_INGRESS);
+	_, ingressExists := this.svcResourceCache.Get(resources.RC_KEY_INGRESS);
 	// Service Monitor
 	namespace := this.ctx.GetAppNamespace()
 	name := this.ctx.GetAppName()
-	_, serviceMonitorErr := this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).Monitoring().GetServiceMonitor(namespace, name);
+	_, serviceMonitorErr := this.svcClients.Monitoring().GetServiceMonitor(namespace, name);
 	if ingressExists || (serviceMonitorErr != nil && !api_errors.IsNotFound(serviceMonitorErr) /* In case SM is not registered. */) {
 		// Delete the ingress and SM first
 		return false
 	}
-	if serviceEntry, serviceExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SERVICE); serviceExists {
-		if err := this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).Kube().DeleteService(serviceEntry.GetValue().(*core.Service), &meta.DeleteOptions{});
+	if serviceEntry, serviceExists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE); serviceExists {
+		if err := this.svcClients.Kube().DeleteService(serviceEntry.GetValue().(*core.Service), &meta.DeleteOptions{});
 			err != nil && !api_errors.IsNotFound(err) {
 			this.ctx.GetLog().Error(err, "Could not delete service during cleanup")
 			return false
 		} else {
-			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Remove(resources.RC_KEY_SERVICE)
+			this.svcResourceCache.Remove(resources.RC_KEY_SERVICE)
 			this.ctx.GetLog().Info("Service has been deleted.")
 		}
 	}

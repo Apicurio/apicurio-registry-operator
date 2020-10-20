@@ -14,6 +14,8 @@ const ENV_INFINISPAN_CLUSTER_NAME = "INFINISPAN_CLUSTER_NAME"
 
 type InfinispanCF struct {
 	ctx                      loop.ControlLoopContext
+	svcResourceCache         resources.ResourceCache
+	svcEnvCache              env.EnvCache
 	persistence              string
 	infinispanClusterName    string
 	valid                    bool
@@ -23,6 +25,8 @@ type InfinispanCF struct {
 func NewInfinispanCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &InfinispanCF{
 		ctx:                      ctx,
+		svcResourceCache:         ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcEnvCache:              ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
 		persistence:              "",
 		infinispanClusterName:    "",
 		valid:                    true,
@@ -37,7 +41,7 @@ func (this *InfinispanCF) Describe() string {
 func (this *InfinispanCF) Sense() {
 	// Observation #1
 	// Read the config values
-	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC); exists {
+	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry)
 		this.persistence = spec.Spec.Configuration.Persistence
 		this.infinispanClusterName = spec.Spec.Configuration.Infinispan.ClusterName
@@ -54,7 +58,7 @@ func (this *InfinispanCF) Sense() {
 
 	// Observation #4
 	// Read the env values
-	if val, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Get(ENV_INFINISPAN_CLUSTER_NAME); exists {
+	if val, exists := this.svcEnvCache.Get(ENV_INFINISPAN_CLUSTER_NAME); exists {
 		this.envInfinispanClusterName = val.GetValue().Value
 	}
 
@@ -73,7 +77,7 @@ func (this *InfinispanCF) Compare() bool {
 func (this *InfinispanCF) Respond() {
 	// Response #1
 	// Just set the value(s)!
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_INFINISPAN_CLUSTER_NAME, this.infinispanClusterName))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_INFINISPAN_CLUSTER_NAME, this.infinispanClusterName))
 }
 
 func (this *InfinispanCF) Cleanup() bool {

@@ -13,6 +13,7 @@ var _ loop.ControlFunction = &HostInitRouteOcpCF{}
 
 type HostInitRouteOcpCF struct {
 	ctx                             loop.ControlLoopContext
+	svcResourceCache                resources.ResourceCache
 	isFirstRespond                  bool
 	existingHost                    string
 	existingRouterCanonicalHostname string
@@ -23,6 +24,7 @@ type HostInitRouteOcpCF struct {
 func NewHostInitRouteOcpCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &HostInitRouteOcpCF{
 		ctx:                             ctx,
+		svcResourceCache:                ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
 		isFirstRespond:                  true,
 		existingHost:                    "",
 		existingRouterCanonicalHostname: "",
@@ -44,14 +46,14 @@ func (this *HostInitRouteOcpCF) Sense() {
 	// Observation #1
 	// Get spec for patching & the target host
 	this.existingHost = ""
-	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC); exists {
+	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		this.specEntry = specEntry
 		this.existingHost = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Host
 	}
 
 	// Observation #2
 	this.existingRouterCanonicalHostname = ""
-	if routeEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_ROUTE_OCP); exists {
+	if routeEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_ROUTE_OCP); exists {
 		this.routeEntry = routeEntry
 		for _, v := range routeEntry.GetValue().(*ocp_route.Route).Status.Ingress {
 			if v.Host == this.existingHost {

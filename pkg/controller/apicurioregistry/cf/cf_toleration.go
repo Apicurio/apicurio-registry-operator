@@ -15,6 +15,7 @@ var _ loop.ControlFunction = &TolerationCF{}
 
 type TolerationCF struct {
 	ctx                   loop.ControlLoopContext
+	svcResourceCache      resources.ResourceCache
 	deploymentEntry       resources.ResourceCacheEntry
 	deploymentEntryExists bool
 	existingTolerations   []corev1.Toleration
@@ -24,6 +25,7 @@ type TolerationCF struct {
 func NewTolerationCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &TolerationCF{
 		ctx:                   ctx,
+		svcResourceCache:      ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
 		deploymentEntry:       nil,
 		deploymentEntryExists: false,
 		existingTolerations:   nil,
@@ -38,7 +40,7 @@ func (this *TolerationCF) Describe() string {
 func (this *TolerationCF) Sense() {
 	// Observation #1
 	// Get the cached deployment
-	this.deploymentEntry, this.deploymentEntryExists = this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_DEPLOYMENT)
+	this.deploymentEntry, this.deploymentEntryExists = this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT)
 
 	if this.deploymentEntryExists {
 		// Observation #2
@@ -47,7 +49,7 @@ func (this *TolerationCF) Sense() {
 
 		// Observation #3
 		// Get the target tolerations
-		if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC); exists {
+		if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 			this.targetTolerations = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Tolerations
 		}
 	}
