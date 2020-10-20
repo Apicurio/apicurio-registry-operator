@@ -63,11 +63,11 @@ func (this *HostInitCF) Respond() {
 	// Patch the resource
 	this.specEntry.ApplyPatch(func(value interface{}) interface{} {
 		spec := value.(*ar.ApicurioRegistry).DeepCopy()
-		dotNamespace := "." + this.ctx.GetAppNamespace()
+		dotNamespace := "." + this.ctx.GetAppNamespace().Str()
 		if dotNamespace == ".default" {
 			dotNamespace = ""
 		}
-		spec.Spec.Deployment.Host = this.ctx.GetAppName() + dotNamespace
+		spec.Spec.Deployment.Host = this.ctx.GetAppName().Str() + dotNamespace
 		return spec
 	})
 }

@@ -3,6 +3,7 @@ package apicurioregistry
 import (
 	"context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/cf"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/impl"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
@@ -39,8 +40,8 @@ func NewApicurioRegistryReconciler(mgr manager.Manager) *ApicurioRegistryReconci
 }
 
 func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	appName := request.Name
-	appNamespace := request.Namespace
+	appName := common.Name(request.Name)
+	appNamespace := common.Namespace(request.Namespace)
 
 	log.Info("Reconciler executing.")
 
@@ -82,7 +83,7 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 	// Context is established
 
 	// Update the spec before the loop runs, TODO do this indirectly
-	entry := resources.NewResourceCacheEntry(spec.Name, spec)
+	entry := resources.NewResourceCacheEntry(common.Name(spec.Name), spec)
 	controlLoop.GetContext().RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_SPEC, entry)
 	controlLoop.GetContext().RequireService(svc.SVC_PATCHERS).(*patcher.Patchers).Reload()
 
@@ -109,9 +110,9 @@ func (this *ApicurioRegistryReconciler) setController(c controller.Controller) {
 }
 
 // Returns nil if the resource is not found, but request was OK
-func (this *ApicurioRegistryReconciler) getApicurioRegistryResource(appNamespace string, appName string) (*ar.ApicurioRegistry, error) {
+func (this *ApicurioRegistryReconciler) getApicurioRegistryResource(appNamespace common.Namespace, appName common.Name) (*ar.ApicurioRegistry, error) {
 	specList := &ar.ApicurioRegistryList{}
-	listOps := sigs_client.ListOptions{Namespace: appNamespace}
+	listOps := sigs_client.ListOptions{Namespace: appNamespace.Str()}
 	err := this.client.List(context.TODO(), specList, &listOps)
 	if err != nil {
 		if api_errors.IsNotFound(err) {
@@ -123,7 +124,7 @@ func (this *ApicurioRegistryReconciler) getApicurioRegistryResource(appNamespace
 	var spec *ar.ApicurioRegistry = nil
 
 	for i, specItem := range specList.Items {
-		if specItem.Name == appName && specItem.Namespace == appNamespace {
+		if common.Name(specItem.Name) == appName && common.Namespace(specItem.Namespace) == appNamespace {
 			spec = &specList.Items[i]
 		}
 	}
@@ -131,7 +132,7 @@ func (this *ApicurioRegistryReconciler) getApicurioRegistryResource(appNamespace
 	return spec, nil
 }
 
-func (this *ApicurioRegistryReconciler) createNewLoop(appName string, appNamespace string) loop.ControlLoop {
+func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNamespace common.Namespace) loop.ControlLoop {
 
 	log.Info("Creating new context")
 	ctx := impl.NewDefaultContext(appName, appNamespace, this.controller, this.scheme, log.WithValues("app", appName), this.client)

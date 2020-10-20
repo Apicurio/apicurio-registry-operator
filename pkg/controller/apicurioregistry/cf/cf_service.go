@@ -2,6 +2,7 @@ package cf
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
@@ -63,7 +64,7 @@ func (this *ServiceCF) Sense() {
 	// Get cached Service
 	serviceEntry, serviceExists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE)
 	if serviceExists {
-		this.serviceName = serviceEntry.GetName()
+		this.serviceName = serviceEntry.GetName().Str()
 	} else {
 		this.serviceName = resources.RC_EMPTY_NAME
 	}
@@ -75,7 +76,7 @@ func (this *ServiceCF) Sense() {
 	services, err := this.svcClients.Kube().GetServices(
 		this.ctx.GetAppNamespace(),
 		&meta.ListOptions{
-			LabelSelector: "app=" + this.ctx.GetAppName(),
+			LabelSelector: "app=" + this.ctx.GetAppName().Str(),
 		})
 	if err == nil {
 		for _, service := range services.Items {
@@ -91,14 +92,14 @@ func (this *ServiceCF) Sense() {
 	// Is there a Deployment already? It must have been created (has a name)
 	deploymentEntry, deploymentExists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT)
 	if deploymentExists {
-		this.deploymentName = deploymentEntry.GetName()
+		this.deploymentName = deploymentEntry.GetName().Str()
 	}
 
 	// Observation #4
 	// Same for OCP !!!
 	deploymentEntry, deploymentExists = this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT_OCP)
 	if deploymentExists {
-		this.deploymentName = deploymentEntry.GetName()
+		this.deploymentName = deploymentEntry.GetName().Str()
 	}
 
 	// Update the status
@@ -121,7 +122,7 @@ func (this *ServiceCF) Respond() {
 		for _, val := range this.services {
 			if val.Name == this.serviceName {
 				contains = true
-				this.svcResourceCache.Set(resources.RC_KEY_SERVICE, resources.NewResourceCacheEntry(val.Name, &val))
+				this.svcResourceCache.Set(resources.RC_KEY_SERVICE, resources.NewResourceCacheEntry(common.Name(val.Name), &val))
 				break
 			}
 		}
@@ -134,7 +135,7 @@ func (this *ServiceCF) Respond() {
 	if this.serviceName == resources.RC_EMPTY_NAME && len(this.services) == 1 {
 		service := this.services[0]
 		this.serviceName = service.Name
-		this.svcResourceCache.Set(resources.RC_KEY_SERVICE, resources.NewResourceCacheEntry(service.Name, &service))
+		this.svcResourceCache.Set(resources.RC_KEY_SERVICE, resources.NewResourceCacheEntry(common.Name(service.Name), &service))
 	}
 	// Response #3 (and #4)
 	// If there is no service available (or there are more than 1), just create a new one

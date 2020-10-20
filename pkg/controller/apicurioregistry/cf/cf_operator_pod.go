@@ -1,6 +1,7 @@
 package cf
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
@@ -52,9 +53,9 @@ func (this *OperatorPodCF) Respond() {
 	}
 
 	// Response #1
-	pod, err := this.svcClients.Kube().GetPod(namespace, name, &meta.GetOptions{})
+	pod, err := this.svcClients.Kube().GetPod(common.Namespace(namespace), common.Name(name), &meta.GetOptions{})
 	if err == nil && pod.GetObjectMeta().GetDeletionTimestamp() == nil {
-		this.svcResourceCache.Set(resources.RC_KEY_OPERATOR_POD, resources.NewResourceCacheEntry(name, pod))
+		this.svcResourceCache.Set(resources.RC_KEY_OPERATOR_POD, resources.NewResourceCacheEntry(common.Name(name), pod))
 	} else {
 		this.ctx.GetLog().WithValues("type", "Warning", "error", err).
 			Info("Could not read operator's Pod resource. Will retry.")

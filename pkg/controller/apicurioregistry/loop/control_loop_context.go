@@ -1,6 +1,7 @@
 package loop
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -9,9 +10,9 @@ import (
 type ControlLoopContext interface {
 	GetLog() logr.Logger
 
-	GetAppName() string
+	GetAppName() common.Name
 
-	GetAppNamespace() string
+	GetAppNamespace() common.Namespace
 
 	GetService(name string) (interface{}, bool)
 

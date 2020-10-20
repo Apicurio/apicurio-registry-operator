@@ -224,7 +224,7 @@ func (this *StreamsSecurityTLSCF) AddSecretMountPatch(deploymentEntry resources.
 	deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 		deployment := value.(*apps.Deployment).DeepCopy()
 		for ci, c := range deployment.Spec.Template.Spec.Containers {
-			if c.Name == this.ctx.GetAppName() {
+			if c.Name == this.ctx.GetAppName().Str() {
 				mount := core.VolumeMount{
 					Name:      volumeName,
 					ReadOnly:  true,

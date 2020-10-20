@@ -57,7 +57,7 @@ func (this *ImageCF) Sense() {
 	this.existingImage = resources.RC_EMPTY_NAME
 	if this.deploymentExists {
 		for i, c := range deploymentEntry.GetValue().(*apps.Deployment).Spec.Template.Spec.Containers {
-			if c.Name == this.ctx.GetAppName() {
+			if c.Name == this.ctx.GetAppName().Str() {
 				this.existingImage = deploymentEntry.GetValue().(*apps.Deployment).Spec.Template.Spec.Containers[i].Image
 			}
 		} // TODO report a problem if not found?
@@ -115,7 +115,7 @@ func (this *ImageCF) Respond() {
 	this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 		deployment := value.(*apps.Deployment).DeepCopy()
 		for i, c := range deployment.Spec.Template.Spec.Containers {
-			if c.Name == this.ctx.GetAppName() {
+			if c.Name == this.ctx.GetAppName().Str() {
 				deployment.Spec.Template.Spec.Containers[i].Image = this.targetImage
 			}
 		} // TODO report a problem if not found?
