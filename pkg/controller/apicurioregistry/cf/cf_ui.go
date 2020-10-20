@@ -13,18 +13,22 @@ var _ loop.ControlFunction = &UICF{}
 const ENV_UI_READ_ONLY = "REGISTRY_UI_FEATURES_READONLY"
 
 type UICF struct {
-	ctx           loop.ControlLoopContext
-	UIReadOnly    bool
-	valid         bool
-	envUIReadOnly string
+	ctx              loop.ControlLoopContext
+	svcResourceCache resources.ResourceCache
+	svcEnvCache      env.EnvCache
+	UIReadOnly       bool
+	valid            bool
+	envUIReadOnly    string
 }
 
 func NewUICF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &UICF{
-		ctx:           ctx,
-		UIReadOnly:    false,
-		valid:         true,
-		envUIReadOnly: "",
+		ctx:              ctx,
+		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcEnvCache:      ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
+		UIReadOnly:       false,
+		valid:            true,
+		envUIReadOnly:    "",
 	}
 }
 
@@ -35,7 +39,7 @@ func (this *UICF) Describe() string {
 func (this *UICF) Sense() {
 	// Observation #1
 	// Read the config values
-	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC); exists {
+	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry)
 		this.UIReadOnly = spec.Spec.Configuration.UI.ReadOnly
 		// Default value is false
@@ -44,7 +48,7 @@ func (this *UICF) Sense() {
 	// Observation #2
 	// Read the env values
 	this.envUIReadOnly = ""
-	if val, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Get(ENV_UI_READ_ONLY); exists {
+	if val, exists := this.svcEnvCache.Get(ENV_UI_READ_ONLY); exists {
 		this.envUIReadOnly = val.GetValue().Value
 	}
 
@@ -65,7 +69,7 @@ func (this *UICF) Respond() {
 	if (this.UIReadOnly) {
 		val = "true"
 	}
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_UI_READ_ONLY, val))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_UI_READ_ONLY, val))
 }
 
 func (this *UICF) Cleanup() bool {

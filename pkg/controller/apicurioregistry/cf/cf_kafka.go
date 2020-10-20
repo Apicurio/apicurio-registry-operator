@@ -14,6 +14,8 @@ const ENV_KAFKA_BOOTSTRAP_SERVERS = "KAFKA_BOOTSTRAP_SERVERS"
 
 type KafkaCF struct {
 	ctx                 loop.ControlLoopContext
+	svcResourceCache    resources.ResourceCache
+	svcEnvCache         env.EnvCache
 	persistence         string
 	bootstrapServers    string
 	valid               bool
@@ -23,6 +25,8 @@ type KafkaCF struct {
 func NewKafkaCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &KafkaCF{
 		ctx:                 ctx,
+		svcResourceCache:    ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcEnvCache:         ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
 		persistence:         "",
 		bootstrapServers:    "",
 		valid:               true,
@@ -37,7 +41,7 @@ func (this *KafkaCF) Describe() string {
 func (this *KafkaCF) Sense() {
 	// Observation #1
 	// Read the config values
-	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC); exists {
+	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry).Spec
 		this.persistence = spec.Configuration.Persistence
 		this.bootstrapServers = spec.Configuration.Kafka.BootstrapServers
@@ -51,7 +55,7 @@ func (this *KafkaCF) Sense() {
 
 	// Observation #4
 	// Read the env values
-	if val, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Get(ENV_KAFKA_BOOTSTRAP_SERVERS); exists {
+	if val, exists := this.svcEnvCache.Get(ENV_KAFKA_BOOTSTRAP_SERVERS); exists {
 		this.envBootstrapServers = val.GetValue().Value
 	}
 
@@ -70,7 +74,7 @@ func (this *KafkaCF) Compare() bool {
 func (this *KafkaCF) Respond() {
 	// Response #1
 	// Just set the value(s)!
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_KAFKA_BOOTSTRAP_SERVERS, this.bootstrapServers))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_KAFKA_BOOTSTRAP_SERVERS, this.bootstrapServers))
 
 }
 

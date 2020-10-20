@@ -18,6 +18,8 @@ const ENV_APPLICATION_ID = "APPLICATION_ID"
 
 type StreamsCF struct {
 	ctx                            loop.ControlLoopContext
+	svcResourceCache               resources.ResourceCache
+	svcEnvCache                    env.EnvCache
 	persistence                    string
 	bootstrapServers               string
 	applicationServerPort          string
@@ -32,6 +34,8 @@ type StreamsCF struct {
 func NewStreamsCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &StreamsCF{
 		ctx:                            ctx,
+		svcResourceCache:               ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcEnvCache:                    ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
 		persistence:                    "",
 		bootstrapServers:               "",
 		applicationServerPort:          "",
@@ -51,7 +55,7 @@ func (this *StreamsCF) Describe() string {
 func (this *StreamsCF) Sense() {
 	// Observation #1
 	// Read the config values
-	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC); exists {
+	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry)
 		this.persistence = spec.Spec.Configuration.Persistence
 		this.bootstrapServers = spec.Spec.Configuration.Streams.BootstrapServers
@@ -74,15 +78,15 @@ func (this *StreamsCF) Sense() {
 
 	// Observation #4
 	// Read the env values
-	if val, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Get(ENV_KAFKA_BOOTSTRAP_SERVERS); exists {
+	if val, exists := this.svcEnvCache.Get(ENV_KAFKA_BOOTSTRAP_SERVERS); exists {
 		this.envBootstrapServers = val.GetValue().Value
 	}
-	_, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Get(ENV_APPLICATION_SERVER_HOST)
+	_, exists := this.svcEnvCache.Get(ENV_APPLICATION_SERVER_HOST)
 	this.envApplicationServerHostExists = exists
-	if val, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Get(ENV_APPLICATION_SERVER_PORT); exists {
+	if val, exists := this.svcEnvCache.Get(ENV_APPLICATION_SERVER_PORT); exists {
 		this.envApplicationServerPort = val.GetValue().Value
 	}
-	if val, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Get(ENV_APPLICATION_ID); exists {
+	if val, exists := this.svcEnvCache.Get(ENV_APPLICATION_ID); exists {
 		this.envApplicationId = val.GetValue().Value
 	}
 
@@ -103,9 +107,9 @@ func (this *StreamsCF) Compare() bool {
 func (this *StreamsCF) Respond() {
 	// Response #1
 	// Just set the value(s)!
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_KAFKA_BOOTSTRAP_SERVERS, this.bootstrapServers))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_KAFKA_BOOTSTRAP_SERVERS, this.bootstrapServers))
 	if !this.envApplicationServerHostExists {
-		this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewEnvCacheEntry(&core.EnvVar{
+		this.svcEnvCache.Set(env.NewEnvCacheEntry(&core.EnvVar{
 			Name: ENV_APPLICATION_SERVER_HOST,
 			ValueFrom: &core.EnvVarSource{
 				FieldRef: &core.ObjectFieldSelector{
@@ -114,8 +118,8 @@ func (this *StreamsCF) Respond() {
 			},
 		}))
 	}
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_APPLICATION_SERVER_PORT, this.applicationServerPort))
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_APPLICATION_ID, this.applicationId))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_APPLICATION_SERVER_PORT, this.applicationServerPort))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_APPLICATION_ID, this.applicationId))
 
 }
 

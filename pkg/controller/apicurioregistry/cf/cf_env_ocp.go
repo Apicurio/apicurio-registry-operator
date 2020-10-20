@@ -12,6 +12,8 @@ var _ loop.ControlFunction = &EnvOcpCF{}
 
 type EnvOcpCF struct {
 	ctx                loop.ControlLoopContext
+	svcResourceCache   resources.ResourceCache
+	svcEnvCache        env.EnvCache
 	deploymentExists   bool
 	deploymentEntry    resources.ResourceCacheEntry
 	deploymentName     string
@@ -23,6 +25,8 @@ type EnvOcpCF struct {
 func NewEnvOcpCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &EnvOcpCF{
 		ctx:                ctx,
+		svcResourceCache:   ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcEnvCache:        ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
 		deploymentExists:   false,
 		deploymentEntry:    nil,
 		deploymentName:     resources.RC_EMPTY_NAME,
@@ -38,14 +42,14 @@ func (this *EnvOcpCF) Describe() string {
 func (this *EnvOcpCF) Sense() {
 	// Observation #1
 	// Is deployment available and/or is it already created
-	deploymentEntry, deploymentExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_DEPLOYMENT_OCP)
+	deploymentEntry, deploymentExists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT_OCP)
 	this.deploymentExists = deploymentExists
 	this.deploymentEntry = deploymentEntry
 	this.deploymentName = deploymentEntry.GetName()
 
 	// Observation #2
 	// Was the env cache updated?
-	this.envCacheUpdated = this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).IsChanged()
+	this.envCacheUpdated = this.svcEnvCache.IsChanged()
 
 }
 
@@ -68,12 +72,12 @@ func (this *EnvOcpCF) Respond() {
 		if c.Name == this.ctx.GetAppName() {
 			for _, e := range deployment.Spec.Template.Spec.Containers[i].Env {
 				// Add to the cache
-				if v, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Get(e.Name); exists {
+				if v, exists := this.svcEnvCache.Get(e.Name); exists {
 					if !v.IsManaged() { // TODO this avoids overwriting of managed env variables
-						this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewEnvCacheEntryUnmanaged(e.DeepCopy()))
+						this.svcEnvCache.Set(env.NewEnvCacheEntryUnmanaged(e.DeepCopy()))
 					}
 				} else {
-					this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewEnvCacheEntryUnmanaged(e.DeepCopy()))
+					this.svcEnvCache.Set(env.NewEnvCacheEntryUnmanaged(e.DeepCopy()))
 				}
 			}
 		}
@@ -85,7 +89,7 @@ func (this *EnvOcpCF) Respond() {
 		deployment := value.(*ocp_apps.DeploymentConfig).DeepCopy()
 		for i, c := range deployment.Spec.Template.Spec.Containers {
 			if c.Name == this.ctx.GetAppName() {
-				deployment.Spec.Template.Spec.Containers[i].Env = this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).GetSorted()
+				deployment.Spec.Template.Spec.Containers[i].Env = this.svcEnvCache.GetSorted()
 			}
 		} // TODO report a problem if not found?
 		return deployment
@@ -93,7 +97,7 @@ func (this *EnvOcpCF) Respond() {
 
 	// Response #3
 	// Do not clear the cache, but reset the change mark
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).ResetChanged()
+	this.svcEnvCache.ResetChanged()
 
 	this.lastDeploymentName = this.deploymentName
 }

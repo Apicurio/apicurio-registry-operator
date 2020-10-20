@@ -12,15 +12,19 @@ import (
 var _ loop.ControlFunction = &OperatorPodCF{}
 
 type OperatorPodCF struct {
-	ctx       loop.ControlLoopContext
-	podExists bool
+	ctx              loop.ControlLoopContext
+	svcResourceCache resources.ResourceCache
+	svcClients       *client.Clients
+	podExists        bool
 }
 
 // Read the operator pod into the resource cache
 func NewOperatorPodCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &OperatorPodCF{
-		ctx:       ctx,
-		podExists: false,
+		ctx:              ctx,
+		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcClients:       ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients),
+		podExists:        false,
 	}
 }
 
@@ -30,7 +34,7 @@ func (this *OperatorPodCF) Describe() string {
 
 func (this *OperatorPodCF) Sense() {
 	// Observation #1
-	_, this.podExists = this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_OPERATOR_POD)
+	_, this.podExists = this.svcResourceCache.Get(resources.RC_KEY_OPERATOR_POD)
 }
 
 func (this *OperatorPodCF) Compare() bool {
@@ -48,9 +52,9 @@ func (this *OperatorPodCF) Respond() {
 	}
 
 	// Response #1
-	pod, err := this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).Kube().GetPod(namespace, name, &meta.GetOptions{})
+	pod, err := this.svcClients.Kube().GetPod(namespace, name, &meta.GetOptions{})
 	if err == nil && pod.GetObjectMeta().GetDeletionTimestamp() == nil {
-		this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_OPERATOR_POD, resources.NewResourceCacheEntry(name, pod))
+		this.svcResourceCache.Set(resources.RC_KEY_OPERATOR_POD, resources.NewResourceCacheEntry(name, pod))
 	} else {
 		this.ctx.GetLog().WithValues("type", "Warning", "error", err).
 			Info("Could not read operator's Pod resource. Will retry.")

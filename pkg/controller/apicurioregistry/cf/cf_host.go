@@ -12,12 +12,14 @@ import (
 var _ loop.ControlFunction = &HostCF{}
 
 type HostCF struct {
-	ctx           loop.ControlLoopContext
-	ingressEntry  resources.ResourceCacheEntry
-	ingressExists bool
-	serviceName   string
-	existingHost  string
-	targetHost    string
+	ctx              loop.ControlLoopContext
+	svcResourceCache resources.ResourceCache
+	svcStatus        *status.Status
+	ingressEntry     resources.ResourceCacheEntry
+	ingressExists    bool
+	serviceName      string
+	existingHost     string
+	targetHost       string
 }
 
 // This CF makes sure number of host is aligned
@@ -25,12 +27,14 @@ type HostCF struct {
 // modify the Sense stage so this CF knows about it
 func NewHostCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &HostCF{
-		ctx:           ctx,
-		ingressEntry:  nil,
-		ingressExists: false,
-		serviceName:   resources.RC_EMPTY_NAME,
-		existingHost:  resources.RC_EMPTY_NAME,
-		targetHost:    resources.RC_EMPTY_NAME,
+		ctx:              ctx,
+		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcStatus:        ctx.RequireService(svc.SVC_STATUS).(*status.Status),
+		ingressEntry:     nil,
+		ingressExists:    false,
+		serviceName:      resources.RC_EMPTY_NAME,
+		existingHost:     resources.RC_EMPTY_NAME,
+		targetHost:       resources.RC_EMPTY_NAME,
 	}
 }
 
@@ -42,13 +46,13 @@ func (this *HostCF) Sense() {
 
 	// Observation #1
 	// Get the cached Ingress (if it exists and/or the value)
-	ingressEntry, ingressExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_INGRESS)
+	ingressEntry, ingressExists := this.svcResourceCache.Get(resources.RC_KEY_INGRESS)
 	this.ingressEntry = ingressEntry
 	this.ingressExists = ingressExists
 
 	// Observation #2
 	// Is there a Service already? It must have been created (has a name)
-	serviceEntry, serviceExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SERVICE)
+	serviceEntry, serviceExists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE)
 	if serviceExists {
 		this.serviceName = serviceEntry.GetName() // TODO this may still end up empty, refactor?
 	} else {
@@ -64,12 +68,12 @@ func (this *HostCF) Sense() {
 
 	// Observation #4
 	// Get target host
-	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC); exists {
+	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		this.targetHost = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Host
 	}
 
 	// Update state
-	this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).SetConfig(status.CFG_STA_ROUTE, this.existingHost)
+	this.svcStatus.SetConfig(status.CFG_STA_ROUTE, this.existingHost)
 }
 
 func (this *HostCF) Compare() bool {
