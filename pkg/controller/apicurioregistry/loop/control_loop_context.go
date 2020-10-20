@@ -25,4 +25,8 @@ type ControlLoopContext interface {
 	SetRequeue()
 
 	GetAndResetRequeue() bool
+
+	BeforeRun()
+
+	AfterRun()
 }
