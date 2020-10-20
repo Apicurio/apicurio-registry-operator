@@ -19,10 +19,13 @@ import (
 	"os"
 	"os/user"
 	"path"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 // RecommendedConfigPathEnvVar is a environment variable for path configuration
 const RecommendedConfigPathEnvVar = "KUBECONFIG"
+
+var log = logf.Log.WithName("controller_apicurioregistry-Clients")
 
 type Clients struct {
 	ctx              loop.ControlLoopContext
@@ -84,7 +87,7 @@ func outOfClusterConfig() (*rest.Config, error) {
 
 	if len(configFile) > 0 {
 
-		//log.Info("Reading config from file"+  configFile)
+		log.Info("Reading config from file" + configFile)
 		// use the current context in kubeconfig
 		// This is very useful for running locally.
 		clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -105,7 +108,7 @@ func getKubeConfigFile() string {
 
 	usr, err := user.Current()
 	if err != nil {
-		//log.Info("Could not get current user; error %v", err)
+		log.Info("Could not get current user; error %v", err)
 	} else {
 		configFile = path.Join(usr.HomeDir, ".kube", "config")
 	}
@@ -152,7 +155,7 @@ func (this *Clients) IsOCP() (bool, error) {
 func (this *Clients) GetOCPVersion() *semver.Version {
 	configClient, err := ocp_config_client.NewForConfig(this.config)
 	if err != nil {
-		//log.Error(err, "Failed to create config client")
+		log.Error(err, "Failed to create config client")
 		return nil
 	}
 
@@ -167,7 +170,7 @@ func (this *Clients) GetOCPVersion() *semver.Version {
 			// default to OpenShift 3 as ClusterVersion API was introduced in OpenShift 4
 			ocpSemVer, _ = semver.NewVersion("3")
 		} else {
-			//log.Error(err, "Failed to get OCP cluster version")
+			log.Error(err, "Failed to get OCP cluster version")
 			return nil
 		}
 	} else {
@@ -175,7 +178,7 @@ func (this *Clients) GetOCPVersion() *semver.Version {
 
 		ocpSemVer, err = semver.NewVersion(v)
 		if err != nil {
-			//log.Error(err, "Failed to get OCP cluster version")
+			log.Error(err, "Failed to get OCP cluster version")
 			return nil
 		}
 	}

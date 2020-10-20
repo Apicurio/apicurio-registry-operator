@@ -135,7 +135,7 @@ func (this *ApicurioRegistryReconciler) getApicurioRegistryResource(appNamespace
 func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNamespace common.Namespace) loop.ControlLoop {
 
 	log.Info("Creating new context")
-	ctx := impl.NewDefaultContext(appName, appNamespace, this.controller, this.scheme, log.WithValues("app", appName), this.client)
+	ctx := impl.NewDefaultContext(appName, appNamespace, this.controller, this.scheme, log, this.client)
 	c := impl.NewControlLoopImpl(ctx)
 
 	isOCP, _ := ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).IsOCP()
