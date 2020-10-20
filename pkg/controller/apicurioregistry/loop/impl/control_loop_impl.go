@@ -30,6 +30,7 @@ func (this *controlLoopImpl) GetControlFunctions() []loop.ControlFunction {
 }
 
 func (this *controlLoopImpl) Run() {
+	this.ctx.BeforeRun()
 
 	// CONTROL LOOP
 	maxAttempts := len(this.GetControlFunctions()) * 2
@@ -59,6 +60,8 @@ func (this *controlLoopImpl) Run() {
 	if attempt == maxAttempts {
 		panic("Control loop stabilization limit exceeded.")
 	}
+
+	this.ctx.AfterRun()
 }
 
 func (this *controlLoopImpl) Cleanup() {

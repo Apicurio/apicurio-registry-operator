@@ -55,6 +55,14 @@ func NewDefaultContext(appName common.Name, appNamespace common.Namespace, c con
 	return this
 }
 
+func (this *defaultContext) BeforeRun() {
+	this.services[svc.SVC_PATCHERS].(*patcher.Patchers).Reload()
+}
+
+func (this *defaultContext) AfterRun() {
+	this.services[svc.SVC_PATCHERS].(*patcher.Patchers).Execute()
+}
+
 func (this *defaultContext) GetLog() logr.Logger {
 	return this.log
 }

@@ -9,7 +9,6 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/impl"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/patcher"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	sigs_client "sigs.k8s.io/controller-runtime/pkg/client"
@@ -79,13 +78,7 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 	// =======
 	// Context is established
 
-	// Before loop
-	controlLoop.GetContext().RequireService(svc.SVC_PATCHERS).(*patcher.Patchers).Reload()
-
 	controlLoop.Run()
-
-	// After loop
-	controlLoop.GetContext().RequireService(svc.SVC_PATCHERS).(*patcher.Patchers).Execute()
 
 	// ======
 	return reconcile.Result{Requeue: controlLoop.GetContext().GetAndResetRequeue()}, nil
