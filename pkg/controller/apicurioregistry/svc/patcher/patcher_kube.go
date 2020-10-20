@@ -2,6 +2,7 @@ package patcher
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
@@ -34,15 +35,15 @@ func (this *KubePatcher) patchApicurioRegistry() { // TODO move to separate file
 		},
 		&ar.ApicurioRegistry{},
 		"ar.ApicurioRegistry",
-		func(namespace string, value interface{}) (interface{}, error) {
+		func(namespace common.Namespace, value interface{}) (interface{}, error) {
 			// This should be not used (at the moment)
 			panic("Unsupported operation.")
 		},
-		func(namespace string, name string, data []byte) (interface{}, error) {
+		func(namespace common.Namespace, name common.Name, data []byte) (interface{}, error) {
 			return this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).CRD().PatchApicurioRegistry(namespace, name, data)
 		},
-		func(value interface{}) string {
-			return value.(*ar.ApicurioRegistry).GetName()
+		func(value interface{}) common.Name {
+			return common.Name(value.(*ar.ApicurioRegistry).GetName())
 		},
 	)
 }
@@ -56,7 +57,7 @@ func (this *KubePatcher) reloadDeployment() {
 			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Remove(resources.RC_KEY_DEPLOYMENT)
 			this.ctx.SetRequeue()
 		} else {
-			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_DEPLOYMENT, resources.NewResourceCacheEntry(r.Name, r))
+			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_DEPLOYMENT, resources.NewResourceCacheEntry(common.Name(r.Name), r))
 		}
 	}
 }
@@ -70,14 +71,14 @@ func (this *KubePatcher) patchDeployment() {
 		},
 		&apps.Deployment{},
 		"apps.Deployment",
-		func(namespace string, value interface{}) (interface{}, error) {
+		func(namespace common.Namespace, value interface{}) (interface{}, error) {
 			return this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).Kube().CreateDeployment(namespace, value.(*apps.Deployment))
 		},
-		func(namespace string, name string, data []byte) (interface{}, error) {
+		func(namespace common.Namespace, name common.Name, data []byte) (interface{}, error) {
 			return this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).Kube().PatchDeployment(namespace, name, data)
 		},
-		func(value interface{}) string {
-			return value.(*apps.Deployment).GetName()
+		func(value interface{}) common.Name {
+			return common.Name(value.(*apps.Deployment).GetName())
 		},
 	)
 }
@@ -91,7 +92,7 @@ func (this *KubePatcher) reloadService() {
 			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Remove(resources.RC_KEY_SERVICE)
 			this.ctx.SetRequeue()
 		} else {
-			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_SERVICE, resources.NewResourceCacheEntry(r.Name, r))
+			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_SERVICE, resources.NewResourceCacheEntry(common.Name(r.Name), r))
 		}
 	}
 }
@@ -105,14 +106,14 @@ func (this *KubePatcher) patchService() {
 		},
 		&core.Service{},
 		"core.Service",
-		func(namespace string, value interface{}) (interface{}, error) {
+		func(namespace common.Namespace, value interface{}) (interface{}, error) {
 			return this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).Kube().CreateService(namespace, value.(*core.Service))
 		},
-		func(namespace string, name string, data []byte) (interface{}, error) {
+		func(namespace common.Namespace, name common.Name, data []byte) (interface{}, error) {
 			return this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).Kube().PatchService(namespace, name, data)
 		},
-		func(value interface{}) string {
-			return value.(*core.Service).GetName()
+		func(value interface{}) common.Name {
+			return common.Name(value.(*core.Service).GetName())
 		},
 	)
 }
@@ -126,7 +127,7 @@ func (this *KubePatcher) reloadIngress() {
 			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Remove(resources.RC_KEY_INGRESS)
 			this.ctx.SetRequeue()
 		} else {
-			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_INGRESS, resources.NewResourceCacheEntry(r.Name, r))
+			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_INGRESS, resources.NewResourceCacheEntry(common.Name(r.Name), r))
 		}
 	}
 }
@@ -140,14 +141,14 @@ func (this *KubePatcher) patchIngress() {
 		},
 		&extensions.Ingress{},
 		"extensions.Ingress",
-		func(namespace string, value interface{}) (interface{}, error) {
+		func(namespace common.Namespace, value interface{}) (interface{}, error) {
 			return this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).Kube().CreateIngress(namespace, value.(*extensions.Ingress))
 		},
-		func(namespace string, name string, data []byte) (interface{}, error) {
+		func(namespace common.Namespace, name common.Name, data []byte) (interface{}, error) {
 			return this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).Kube().PatchIngress(namespace, name, data)
 		},
-		func(value interface{}) string {
-			return value.(*extensions.Ingress).GetName()
+		func(value interface{}) common.Name {
+			return common.Name(value.(*extensions.Ingress).GetName())
 		},
 	)
 }
@@ -161,7 +162,7 @@ func (this *KubePatcher) reloadPodDisruptionBudget() {
 			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Remove(resources.RC_KEY_POD_DISRUPTION_BUDGET)
 			this.ctx.SetRequeue()
 		} else {
-			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_POD_DISRUPTION_BUDGET, resources.NewResourceCacheEntry(r.Name, r))
+			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_POD_DISRUPTION_BUDGET, resources.NewResourceCacheEntry(common.Name(r.Name), r))
 		}
 	}
 }
@@ -175,14 +176,14 @@ func (this *KubePatcher) patchPodDisruptionBudget() {
 		},
 		&policy.PodDisruptionBudget{},
 		"policy.PodDisruptionBudget",
-		func(namespace string, value interface{}) (interface{}, error) {
+		func(namespace common.Namespace, value interface{}) (interface{}, error) {
 			return this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).Kube().CreatePodDisruptionBudget(namespace, value.(*policy.PodDisruptionBudget))
 		},
-		func(namespace string, name string, data []byte) (interface{}, error) {
+		func(namespace common.Namespace, name common.Name, data []byte) (interface{}, error) {
 			return this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).Kube().PatchPodDisruptionBudget(namespace, name, data)
 		},
-		func(value interface{}) string {
-			return value.(*policy.PodDisruptionBudget).GetName()
+		func(value interface{}) common.Name {
+			return common.Name(value.(*policy.PodDisruptionBudget).GetName())
 		},
 	)
 }

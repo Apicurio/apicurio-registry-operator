@@ -2,6 +2,7 @@ package cf
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
@@ -65,7 +66,7 @@ func (this *IngressCF) Sense() {
 	// Get cached Ingress
 	ingressEntry, ingressExists := this.svcResourceCache.Get(resources.RC_KEY_INGRESS)
 	if ingressExists {
-		this.ingressName = ingressEntry.GetName()
+		this.ingressName = ingressEntry.GetName().Str()
 	} else {
 		this.ingressName = resources.RC_EMPTY_NAME
 	}
@@ -77,7 +78,7 @@ func (this *IngressCF) Sense() {
 	ingresses, err := this.svcClients.Kube().GetIngresses(
 		this.ctx.GetAppNamespace(),
 		&meta.ListOptions{
-			LabelSelector: "app=" + this.ctx.GetAppName(),
+			LabelSelector: "app=" + this.ctx.GetAppName().Str(),
 		})
 	if err == nil {
 		for _, ingress := range ingresses.Items {
@@ -91,7 +92,7 @@ func (this *IngressCF) Sense() {
 	// Is there a Service already? It must have been created (has a name)
 	serviceEntry, serviceExists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE)
 	if serviceExists {
-		this.serviceName = serviceEntry.GetName()
+		this.serviceName = serviceEntry.GetName().Str()
 	} else {
 		this.serviceName = resources.RC_EMPTY_NAME
 	}
@@ -127,7 +128,7 @@ func (this *IngressCF) Respond() {
 		for _, val := range this.ingresses {
 			if val.Name == this.ingressName {
 				contains = true
-				this.svcResourceCache.Set(resources.RC_KEY_INGRESS, resources.NewResourceCacheEntry(val.Name, &val))
+				this.svcResourceCache.Set(resources.RC_KEY_INGRESS, resources.NewResourceCacheEntry(common.Name(val.Name), &val))
 				break
 			}
 		}
@@ -140,7 +141,7 @@ func (this *IngressCF) Respond() {
 	if this.ingressName == resources.RC_EMPTY_NAME && len(this.ingresses) == 1 {
 		ingress := this.ingresses[0]
 		this.ingressName = ingress.Name
-		this.svcResourceCache.Set(resources.RC_KEY_INGRESS, resources.NewResourceCacheEntry(ingress.Name, &ingress))
+		this.svcResourceCache.Set(resources.RC_KEY_INGRESS, resources.NewResourceCacheEntry(common.Name(ingress.Name), &ingress))
 	}
 	// Response #3 (and #4)
 	// If there is no ingress available (or there are more than 1), just create a new one

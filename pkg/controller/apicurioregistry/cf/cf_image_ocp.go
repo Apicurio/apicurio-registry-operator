@@ -51,7 +51,7 @@ func (this *ImageOcpCF) Sense() {
 	this.existingImage = resources.RC_EMPTY_NAME
 	if this.deploymentExists {
 		for i, c := range deploymentEntry.GetValue().(*ocp_apps.DeploymentConfig).Spec.Template.Spec.Containers {
-			if c.Name == this.ctx.GetAppName() {
+			if c.Name == this.ctx.GetAppName().Str() {
 				this.existingImage = deploymentEntry.GetValue().(*ocp_apps.DeploymentConfig).Spec.Template.Spec.Containers[i].Image
 			}
 		} // TODO report a problem if not found?
@@ -109,7 +109,7 @@ func (this *ImageOcpCF) Respond() {
 	this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 		deployment := value.(*ocp_apps.DeploymentConfig).DeepCopy()
 		for i, c := range deployment.Spec.Template.Spec.Containers {
-			if c.Name == this.ctx.GetAppName() {
+			if c.Name == this.ctx.GetAppName().Str() {
 				deployment.Spec.Template.Spec.Containers[i].Image = this.targetImage
 			}
 		} // TODO report a problem if not found?

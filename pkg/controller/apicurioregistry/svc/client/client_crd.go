@@ -2,6 +2,7 @@ package client
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -39,13 +40,13 @@ func NewCRDClient(ctx loop.ControlLoopContext, config *rest.Config) *CRDClient {
 // ===
 // ApicurioRegistry
 
-func (this *CRDClient) GetApicurioRegistry(namespace string, name string, options *meta.GetOptions) (*ar.ApicurioRegistry, error) {
+func (this *CRDClient) GetApicurioRegistry(namespace common.Namespace, name common.Name, options *meta.GetOptions) (*ar.ApicurioRegistry, error) {
 	result := ar.ApicurioRegistry{}
 	err := this.client.
 		Get().
-		Namespace(namespace).
+		Namespace(namespace.Str()).
 		Resource(ar.GroupResource).
-		Name(name).
+		Name(name.Str()).
 		VersionedParams(&meta.GetOptions{}, scheme.ParameterCodec).
 		Do().
 		Into(&result)
@@ -53,11 +54,11 @@ func (this *CRDClient) GetApicurioRegistry(namespace string, name string, option
 	return &result, err
 }
 
-func (this *CRDClient) UpdateApicurioRegistry(namespace string, value *ar.ApicurioRegistry) (*ar.ApicurioRegistry, error) {
+func (this *CRDClient) UpdateApicurioRegistry(namespace common.Namespace, value *ar.ApicurioRegistry) (*ar.ApicurioRegistry, error) {
 	result := ar.ApicurioRegistry{}
 	err := this.client.
 		Put().
-		Namespace(namespace).
+		Namespace(namespace.Str()).
 		Resource(ar.GroupResource).
 		Name(value.Name).
 		Body(value).
@@ -67,14 +68,14 @@ func (this *CRDClient) UpdateApicurioRegistry(namespace string, value *ar.Apicur
 	return &result, err
 }
 
-func (this *CRDClient) PatchApicurioRegistry(namespace, name string, patchData []byte) (*ar.ApicurioRegistry, error) {
+func (this *CRDClient) PatchApicurioRegistry(namespace common.Namespace, name common.Name, patchData []byte) (*ar.ApicurioRegistry, error) {
 	err := this.client.
 		Patch(types.MergePatchType).
 		Resource(ar.GroupResource).
 		SubResource("status").
 		Body(patchData).
-		Namespace(namespace).
-		Name(name).
+		Namespace(namespace.Str()).
+		Name(name.Str()).
 		Do().
 		Error()
 	if err != nil {
@@ -86,8 +87,8 @@ func (this *CRDClient) PatchApicurioRegistry(namespace, name string, patchData [
 		Patch(types.MergePatchType).
 		Resource(ar.GroupResource).
 		Body(patchData).
-		Namespace(namespace).
-		Name(name).
+		Namespace(namespace.Str()).
+		Name(name.Str()).
 		Do().
 		Into(result)
 

@@ -2,6 +2,7 @@ package cf
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
@@ -58,7 +59,7 @@ func (this *PodDisruptionBudgetCF) Sense() {
 	// Get cached PodDisruptionBudget
 	pdbEntry, pdbExists := this.svcResourceCache.Get(resources.RC_KEY_POD_DISRUPTION_BUDGET)
 	if pdbExists {
-		this.podDisruptionBudgetName = pdbEntry.GetName()
+		this.podDisruptionBudgetName = pdbEntry.GetName().Str()
 	} else {
 		this.podDisruptionBudgetName = resources.RC_EMPTY_NAME
 	}
@@ -70,7 +71,7 @@ func (this *PodDisruptionBudgetCF) Sense() {
 	podDisruptionBudgets, err := this.svcClients.Kube().GetPodDisruptionBudgets(
 		this.ctx.GetAppNamespace(),
 		&meta.ListOptions{
-			LabelSelector: "app=" + this.ctx.GetAppName(),
+			LabelSelector: "app=" + this.ctx.GetAppName().Str(),
 		})
 	if err == nil {
 		for _, podDisruptionBudget := range podDisruptionBudgets.Items {
@@ -95,7 +96,7 @@ func (this *PodDisruptionBudgetCF) Respond() {
 		for _, val := range this.podDisruptionBudgets {
 			if val.Name == this.podDisruptionBudgetName {
 				contains = true
-				this.svcResourceCache.Set(resources.RC_KEY_POD_DISRUPTION_BUDGET, resources.NewResourceCacheEntry(val.Name, &val))
+				this.svcResourceCache.Set(resources.RC_KEY_POD_DISRUPTION_BUDGET, resources.NewResourceCacheEntry(common.Name(val.Name), &val))
 				break
 			}
 		}
@@ -108,7 +109,7 @@ func (this *PodDisruptionBudgetCF) Respond() {
 	if this.podDisruptionBudgetName == resources.RC_EMPTY_NAME && len(this.podDisruptionBudgets) == 1 {
 		podDisruptionBudget := this.podDisruptionBudgets[0]
 		this.podDisruptionBudgetName = podDisruptionBudget.Name
-		this.svcResourceCache.Set(resources.RC_KEY_POD_DISRUPTION_BUDGET, resources.NewResourceCacheEntry(podDisruptionBudget.Name, &podDisruptionBudget))
+		this.svcResourceCache.Set(resources.RC_KEY_POD_DISRUPTION_BUDGET, resources.NewResourceCacheEntry(common.Name(podDisruptionBudget.Name), &podDisruptionBudget))
 	}
 	// Response #3 (and #4)
 	// If there is no service PodDisruptionBudget (or there are more than 1), just create a new one

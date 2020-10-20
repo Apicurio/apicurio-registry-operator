@@ -1,5 +1,7 @@
 package resources
 
+import "github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
+
 const RC_KEY_SPEC = "SPEC"
 const RC_KEY_DEPLOYMENT = "DEPLOYMENT"
 const RC_KEY_DEPLOYMENT_OCP = "DEPLOYMENT_OCP"
@@ -21,7 +23,7 @@ type PatchFunction = func(value interface{}) interface{}
 type ResourceCacheEntry interface {
 	// Get the k8s name of the resource, we are not supporting multiple namespaces yet
 	// May return null if the resource was just created
-	GetName() string
+	GetName() common.Name
 
 	// get the stored value, it has to be cast using type assertion
 	GetValue() interface{}
@@ -38,7 +40,7 @@ type ResourceCacheEntry interface {
 }
 
 type resourceCacheEntry struct {
-	name          string
+	name          common.Name
 	value         interface{}
 	originalValue interface{}
 	isPatched     bool
@@ -46,7 +48,7 @@ type resourceCacheEntry struct {
 
 var _ ResourceCacheEntry = &resourceCacheEntry{}
 
-func NewResourceCacheEntry(name string, value interface{}) ResourceCacheEntry {
+func NewResourceCacheEntry(name common.Name, value interface{}) ResourceCacheEntry {
 	this := &resourceCacheEntry{}
 	this.name = name
 	this.value = value
@@ -55,7 +57,7 @@ func NewResourceCacheEntry(name string, value interface{}) ResourceCacheEntry {
 	return this
 }
 
-func (this *resourceCacheEntry) GetName() string {
+func (this *resourceCacheEntry) GetName() common.Name {
 	return this.name
 }
 

@@ -46,7 +46,7 @@ func (this *OCPFactory) CreateDeployment() *ocp_apps.DeploymentConfig {
 				},
 				Spec: core.PodSpec{
 					Containers: []core.Container{{
-						Name:  this.ctx.GetAppName(),
+						Name:  this.ctx.GetAppName().Str(),
 						Image: "",
 						Ports: []core.ContainerPort{
 							{
