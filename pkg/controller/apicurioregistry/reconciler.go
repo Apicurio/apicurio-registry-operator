@@ -2,17 +2,14 @@ package apicurioregistry
 
 import (
 	"context"
+	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/cf"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/impl"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/patcher"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
-
-	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	sigs_client "sigs.k8s.io/controller-runtime/pkg/client"
@@ -87,16 +84,7 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 
 	controlLoop.Run()
 
-	// Operations after the loop runs, TODO do this indirectly
-	specEntry, _ := controlLoop.GetContext().RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC)
-	specEntry.ApplyPatch(func(value interface{}) interface{} {
-		spec := value.(*ar.ApicurioRegistry).DeepCopy()
-		spec.Status = *controlLoop.GetContext().RequireService(svc.SVC_KUBE_FACTORY).(*factory.KubeFactory).CreateStatus(spec)
-		return spec
-	})
-
-	// ======
-	// Create or patch resources in resource cache
+	// After loop
 	controlLoop.GetContext().RequireService(svc.SVC_PATCHERS).(*patcher.Patchers).Execute()
 
 	// ======
@@ -163,8 +151,9 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 		c.AddControlFunction(cf.NewReplicasOcpCF(ctx))
 		c.AddControlFunction(cf.NewServiceCF(ctx))
 		c.AddControlFunction(cf.NewServiceMonitorCF(ctx))
-		c.AddControlFunction(cf.NewStreamsCF(ctx))
+		c.AddControlFunction(cf.NewStatusCF(ctx))
 
+		c.AddControlFunction(cf.NewStreamsCF(ctx))
 		c.AddControlFunction(cf.NewStreamsSecurityScramOcpCF(ctx))
 		c.AddControlFunction(cf.NewStreamsSecurityTLSOcpCF(ctx))
 		c.AddControlFunction(cf.NewTolerationOcpCF(ctx))
@@ -195,9 +184,10 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 		c.AddControlFunction(cf.NewReplicasCF(ctx))
 		c.AddControlFunction(cf.NewServiceCF(ctx))
 		c.AddControlFunction(cf.NewServiceMonitorCF(ctx))
+		c.AddControlFunction(cf.NewStatusCF(ctx))
 		c.AddControlFunction(cf.NewStreamsCF(ctx))
-		c.AddControlFunction(cf.NewStreamsSecurityScramCF(ctx))
 
+		c.AddControlFunction(cf.NewStreamsSecurityScramCF(ctx))
 		c.AddControlFunction(cf.NewStreamsSecurityTLSCF(ctx))
 		c.AddControlFunction(cf.NewTolerationCF(ctx))
 		c.AddControlFunction(cf.NewUICF(ctx))
