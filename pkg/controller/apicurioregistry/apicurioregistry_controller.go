@@ -7,7 +7,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-
 )
 
 var log = logf.Log.WithName("controller_apicurioregistry")
