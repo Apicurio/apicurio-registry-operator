@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
@@ -30,8 +31,8 @@ func NewKubeClient(ctx loop.ControlLoopContext, config *rest.Config) *KubeClient
 // ===
 // Deployment
 
-func (this *KubeClient) CreateDeployment(namespace string, value *apps.Deployment) (*apps.Deployment, error) {
-	res, err := this.client.AppsV1().Deployments(namespace).
+func (this *KubeClient) CreateDeployment(namespace common.Namespace, value *apps.Deployment) (*apps.Deployment, error) {
+	res, err := this.client.AppsV1().Deployments(namespace.Str()).
 		Create(value)
 	if err != nil {
 		return nil, err
@@ -46,23 +47,23 @@ func (this *KubeClient) CreateDeployment(namespace string, value *apps.Deploymen
 	return res, nil
 }
 
-func (this *KubeClient) GetDeployment(namespace string, name string, options *meta.GetOptions) (*apps.Deployment, error) {
-	return this.client.AppsV1().Deployments(namespace).
-		Get(name, *options)
+func (this *KubeClient) GetDeployment(namespace common.Namespace, name common.Name, options *meta.GetOptions) (*apps.Deployment, error) {
+	return this.client.AppsV1().Deployments(namespace.Str()).
+		Get(name.Str(), *options)
 }
 
-func (this *KubeClient) UpdateDeployment(namespace string, value *apps.Deployment) (*apps.Deployment, error) {
-	return this.client.AppsV1().Deployments(namespace).
+func (this *KubeClient) UpdateDeployment(namespace common.Namespace, value *apps.Deployment) (*apps.Deployment, error) {
+	return this.client.AppsV1().Deployments(namespace.Str()).
 		Update(value)
 }
 
-func (this *KubeClient) PatchDeployment(namespace, name string, patchData []byte) (*apps.Deployment, error) {
-	return this.client.AppsV1().Deployments(namespace).
-		Patch(name, types.StrategicMergePatchType, patchData)
+func (this *KubeClient) PatchDeployment(namespace common.Namespace, name common.Name, patchData []byte) (*apps.Deployment, error) {
+	return this.client.AppsV1().Deployments(namespace.Str()).
+		Patch(name.Str(), types.StrategicMergePatchType, patchData)
 }
 
-func (this *KubeClient) GetDeployments(namespace string, options *meta.ListOptions) (*apps.DeploymentList, error) {
-	return this.client.AppsV1().Deployments(namespace).
+func (this *KubeClient) GetDeployments(namespace common.Namespace, options *meta.ListOptions) (*apps.DeploymentList, error) {
+	return this.client.AppsV1().Deployments(namespace.Str()).
 		List(*options)
 }
 
@@ -73,8 +74,8 @@ func (this *KubeClient) DeleteDeployment(value *apps.Deployment, options *meta.D
 // ===
 // Service
 
-func (this *KubeClient) CreateService(namespace string, value *core.Service) (*core.Service, error) {
-	res, err := this.client.CoreV1().Services(namespace).
+func (this *KubeClient) CreateService(namespace common.Namespace, value *core.Service) (*core.Service, error) {
+	res, err := this.client.CoreV1().Services(namespace.Str()).
 		Create(value)
 	if err != nil {
 		return nil, err
@@ -89,23 +90,23 @@ func (this *KubeClient) CreateService(namespace string, value *core.Service) (*c
 	return res, nil
 }
 
-func (this *KubeClient) GetService(namespace string, name string, options *meta.GetOptions) (*core.Service, error) {
-	return this.client.CoreV1().Services(namespace).
-		Get(name, meta.GetOptions{})
+func (this *KubeClient) GetService(namespace common.Namespace, name common.Name, options *meta.GetOptions) (*core.Service, error) {
+	return this.client.CoreV1().Services(namespace.Str()).
+		Get(name.Str(), meta.GetOptions{})
 }
 
-func (this *KubeClient) UpdateService(namespace string, value *core.Service) (*core.Service, error) {
-	return this.client.CoreV1().Services(namespace).
+func (this *KubeClient) UpdateService(namespace common.Namespace, value *core.Service) (*core.Service, error) {
+	return this.client.CoreV1().Services(namespace.Str()).
 		Update(value)
 }
 
-func (this *KubeClient) PatchService(namespace, name string, patchData []byte) (*core.Service, error) {
-	return this.client.CoreV1().Services(namespace).
-		Patch(name, types.StrategicMergePatchType, patchData)
+func (this *KubeClient) PatchService(namespace common.Namespace, name common.Name, patchData []byte) (*core.Service, error) {
+	return this.client.CoreV1().Services(namespace.Str()).
+		Patch(name.Str(), types.StrategicMergePatchType, patchData)
 }
 
-func (this *KubeClient) GetServices(namespace string, options *meta.ListOptions) (*core.ServiceList, error) {
-	return this.client.CoreV1().Services(namespace).
+func (this *KubeClient) GetServices(namespace common.Namespace, options *meta.ListOptions) (*core.ServiceList, error) {
+	return this.client.CoreV1().Services(namespace.Str()).
 		List(*options)
 }
 
@@ -116,8 +117,8 @@ func (this *KubeClient) DeleteService(value *core.Service, options *meta.DeleteO
 // ===
 // Ingress
 
-func (this *KubeClient) CreateIngress(namespace string, value *extensions.Ingress) (*extensions.Ingress, error) {
-	res, err := this.client.ExtensionsV1beta1().Ingresses(namespace).
+func (this *KubeClient) CreateIngress(namespace common.Namespace, value *extensions.Ingress) (*extensions.Ingress, error) {
+	res, err := this.client.ExtensionsV1beta1().Ingresses(namespace.Str()).
 		Create(value)
 	if err != nil {
 		return nil, err
@@ -132,23 +133,23 @@ func (this *KubeClient) CreateIngress(namespace string, value *extensions.Ingres
 	return res, nil
 }
 
-func (this *KubeClient) GetIngress(namespace string, name string, options *meta.GetOptions) (*extensions.Ingress, error) {
-	return this.client.ExtensionsV1beta1().Ingresses(namespace).
-		Get(name, meta.GetOptions{})
+func (this *KubeClient) GetIngress(namespace common.Namespace, name common.Name, options *meta.GetOptions) (*extensions.Ingress, error) {
+	return this.client.ExtensionsV1beta1().Ingresses(namespace.Str()).
+		Get(name.Str(), meta.GetOptions{})
 }
 
-func (this *KubeClient) UpdateIngress(namespace string, value *extensions.Ingress) (*extensions.Ingress, error) {
-	return this.client.ExtensionsV1beta1().Ingresses(namespace).
+func (this *KubeClient) UpdateIngress(namespace common.Namespace, value *extensions.Ingress) (*extensions.Ingress, error) {
+	return this.client.ExtensionsV1beta1().Ingresses(namespace.Str()).
 		Update(value)
 }
 
-func (this *KubeClient) PatchIngress(namespace, name string, patchData []byte) (*extensions.Ingress, error) {
-	return this.client.ExtensionsV1beta1().Ingresses(namespace).
-		Patch(name, types.StrategicMergePatchType, patchData)
+func (this *KubeClient) PatchIngress(namespace common.Namespace, name common.Name, patchData []byte) (*extensions.Ingress, error) {
+	return this.client.ExtensionsV1beta1().Ingresses(namespace.Str()).
+		Patch(name.Str(), types.StrategicMergePatchType, patchData)
 }
 
-func (this *KubeClient) GetIngresses(namespace string, options *meta.ListOptions) (*extensions.IngressList, error) {
-	return this.client.ExtensionsV1beta1().Ingresses(namespace).
+func (this *KubeClient) GetIngresses(namespace common.Namespace, options *meta.ListOptions) (*extensions.IngressList, error) {
+	return this.client.ExtensionsV1beta1().Ingresses(namespace.Str()).
 		List(*options)
 }
 
@@ -159,8 +160,8 @@ func (this *KubeClient) DeleteIngress(value *extensions.Ingress, options *meta.D
 // ===
 // PodDisruptionBudget
 
-func (this *KubeClient) CreatePodDisruptionBudget(namespace string, value *policy.PodDisruptionBudget) (*policy.PodDisruptionBudget, error) {
-	res, err := this.client.PolicyV1beta1().PodDisruptionBudgets(namespace).
+func (this *KubeClient) CreatePodDisruptionBudget(namespace common.Namespace, value *policy.PodDisruptionBudget) (*policy.PodDisruptionBudget, error) {
+	res, err := this.client.PolicyV1beta1().PodDisruptionBudgets(namespace.Str()).
 		Create(value)
 	if err != nil {
 		return nil, err
@@ -175,23 +176,23 @@ func (this *KubeClient) CreatePodDisruptionBudget(namespace string, value *polic
 	return res, nil
 }
 
-func (this *KubeClient) GetPodDisruptionBudget(namespace string, name string, options *meta.GetOptions) (*policy.PodDisruptionBudget, error) {
-	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace).
-		Get(name, meta.GetOptions{})
+func (this *KubeClient) GetPodDisruptionBudget(namespace common.Namespace, name common.Name, options *meta.GetOptions) (*policy.PodDisruptionBudget, error) {
+	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace.Str()).
+		Get(name.Str(), meta.GetOptions{})
 }
 
-func (this *KubeClient) UpdatePodDisruptionBudget(namespace string, value *policy.PodDisruptionBudget) (*policy.PodDisruptionBudget, error) {
-	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace).
+func (this *KubeClient) UpdatePodDisruptionBudget(namespace common.Namespace, value *policy.PodDisruptionBudget) (*policy.PodDisruptionBudget, error) {
+	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace.Str()).
 		Update(value)
 }
 
-func (this *KubeClient) PatchPodDisruptionBudget(namespace, name string, patchData []byte) (*policy.PodDisruptionBudget, error) {
-	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace).
-		Patch(name, types.StrategicMergePatchType, patchData)
+func (this *KubeClient) PatchPodDisruptionBudget(namespace common.Namespace, name common.Name, patchData []byte) (*policy.PodDisruptionBudget, error) {
+	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace.Str()).
+		Patch(name.Str(), types.StrategicMergePatchType, patchData)
 }
 
-func (this *KubeClient) GetPodDisruptionBudgets(namespace string, options *meta.ListOptions) (*policy.PodDisruptionBudgetList, error) {
-	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace).
+func (this *KubeClient) GetPodDisruptionBudgets(namespace common.Namespace, options *meta.ListOptions) (*policy.PodDisruptionBudgetList, error) {
+	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace.Str()).
 		List(*options)
 }
 
@@ -202,7 +203,7 @@ func (this *KubeClient) DeletePodDisruptionBudget(value *policy.PodDisruptionBud
 // ===
 // Pod
 
-func (this *KubeClient) GetPod(namespace string, name string, options *meta.GetOptions) (*core.Pod, error) {
-	return this.client.CoreV1().Pods(namespace).
-		Get(name, *options)
+func (this *KubeClient) GetPod(namespace common.Namespace, name common.Name, options *meta.GetOptions) (*core.Pod, error) {
+	return this.client.CoreV1().Pods(namespace.Str()).
+		Get(name.Str(), *options)
 }

@@ -2,6 +2,7 @@ package patcher
 
 import (
 	"encoding/json"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
@@ -64,9 +65,9 @@ func patchGeneric(
 	genericToString func(interface{}) string,                       // Function to convert the resource to string (logging)
 	genericType interface{},                                        // Empty instance of the resource struct
 	typeString string,                                              // A string representing the resource type (mostly, logging, see below)
-	genericCreate func(string, interface{}) (interface{}, error),   // Function to create the resource using Kubernetes API
-	genericPatch func(string, string, []byte) (interface{}, error), // Function to patch the resource using Kubernetes API
-	genericGetName func(interface{}) string) { // Function to get the resource name within k8s
+	genericCreate func(common.Namespace, interface{}) (interface{}, error),   // Function to create the resource using Kubernetes API
+	genericPatch func(common.Namespace, common.Name, []byte) (interface{}, error), // Function to patch the resource using Kubernetes API
+	genericGetName func(interface{}) common.Name) { // Function to get the resource name within k8s
 
 	if entry, exists := ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(key); exists {
 

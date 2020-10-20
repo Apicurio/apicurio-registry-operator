@@ -1,14 +1,15 @@
 package impl
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/patcher"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	sigs_client "sigs.k8s.io/controller-runtime/pkg/client"
@@ -19,15 +20,15 @@ var _ loop.ControlLoopContext = &defaultContext{}
 
 // A long-lived singleton container for shared components
 type defaultContext struct {
-	appName      string
-	appNamespace string
+	appName      common.Name
+	appNamespace common.Namespace
 	log          logr.Logger
 	requeue      bool
 	services     map[string]interface{}
 }
 
 // Create a new context when the operator is deployed, provide mostly static data
-func NewDefaultContext(appName string, appNamespace string, c controller.Controller, scheme *runtime.Scheme, log logr.Logger, nativeClient sigs_client.Client) *defaultContext {
+func NewDefaultContext(appName common.Name, appNamespace common.Namespace, c controller.Controller, scheme *runtime.Scheme, log logr.Logger, nativeClient sigs_client.Client) *defaultContext {
 	this := &defaultContext{
 		appName:      appName,
 		appNamespace: appNamespace,
@@ -57,11 +58,11 @@ func (this *defaultContext) GetLog() logr.Logger {
 	return this.log
 }
 
-func (this *defaultContext) GetAppName() string {
+func (this *defaultContext) GetAppName() common.Name {
 	return this.appName
 }
 
-func (this *defaultContext) GetAppNamespace() string {
+func (this *defaultContext) GetAppNamespace() common.Namespace {
 	return this.appNamespace
 }
 

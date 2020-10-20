@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monclientv1 "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
@@ -30,8 +31,8 @@ func NewMonitoringClient(ctx loop.ControlLoopContext, config *rest.Config) *Moni
 // ===
 // ServiceMonitor
 
-func (this *MonitoringClient) CreateServiceMonitor(namespace string, obj *monitoring.ServiceMonitor) (*monitoring.ServiceMonitor, error) {
-	res, err := this.client.ServiceMonitors(namespace).Create(obj)
+func (this *MonitoringClient) CreateServiceMonitor(namespace common.Namespace, obj *monitoring.ServiceMonitor) (*monitoring.ServiceMonitor, error) {
+	res, err := this.client.ServiceMonitors(namespace.Str()).Create(obj)
 	if err != nil {
 		return nil, err
 	}
@@ -45,12 +46,12 @@ func (this *MonitoringClient) CreateServiceMonitor(namespace string, obj *monito
 	return res, nil
 }
 
-func (this *MonitoringClient) GetServiceMonitor(namespace string, name string) (*monitoring.ServiceMonitor, error) {
-	return this.client.ServiceMonitors(namespace).Get(name, v1.GetOptions{})
+func (this *MonitoringClient) GetServiceMonitor(namespace common.Namespace, name common.Name) (*monitoring.ServiceMonitor, error) {
+	return this.client.ServiceMonitors(namespace.Str()).Get(name.Str(), v1.GetOptions{})
 }
 
-func (this *MonitoringClient) UpdateServiceMonitor(namespace string, obj *monitoring.ServiceMonitor) (*monitoring.ServiceMonitor, error) {
-	return this.client.ServiceMonitors(namespace).Update(obj)
+func (this *MonitoringClient) UpdateServiceMonitor(namespace common.Namespace, obj *monitoring.ServiceMonitor) (*monitoring.ServiceMonitor, error) {
+	return this.client.ServiceMonitors(namespace.Str()).Update(obj)
 }
 
 func (this *MonitoringClient) IsServiceMonitorRegistered() (bool, error) {

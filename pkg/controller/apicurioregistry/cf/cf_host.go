@@ -54,7 +54,7 @@ func (this *HostCF) Sense() {
 	// Is there a Service already? It must have been created (has a name)
 	serviceEntry, serviceExists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE)
 	if serviceExists {
-		this.serviceName = serviceEntry.GetName() // TODO this may still end up empty, refactor?
+		this.serviceName = serviceEntry.GetName().Str() // TODO this may still end up empty, refactor?
 	} else {
 		this.serviceName = resources.RC_EMPTY_NAME
 	}

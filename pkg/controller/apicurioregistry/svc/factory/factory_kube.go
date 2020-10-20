@@ -39,7 +39,7 @@ func (this *KubeFactory) GetLabels() map[string]string {
 	if operatorName == "" {
 		panic("Could not determine operator name. Environment variable '" + ENV_OPERATOR_NAME + "' is empty.")
 	}
-	app := this.ctx.GetAppName()
+	app := this.ctx.GetAppName().Str()
 
 	return map[string]string{
 		"app": app,
@@ -60,14 +60,14 @@ func (this *KubeFactory) GetLabels() map[string]string {
 // Labels that can change during operator/SCV upgrade, such as "apicur.io/version" MUST NOT be used.
 func (this *KubeFactory) GetSelectorLabels() map[string]string {
 	return map[string]string{
-		"app": this.ctx.GetAppName(),
+		"app": this.ctx.GetAppName().Str(),
 	}
 }
 
 func (this *KubeFactory) createObjectMeta(typeTag string) meta.ObjectMeta {
 	return meta.ObjectMeta{
-		GenerateName: this.ctx.GetAppName() + "-" + typeTag + "-",
-		Namespace:    this.ctx.GetAppNamespace(),
+		GenerateName: this.ctx.GetAppName().Str() + "-" + typeTag + "-",
+		Namespace:    this.ctx.GetAppNamespace().Str(),
 		Labels:       this.GetLabels(),
 	}
 }
@@ -87,7 +87,7 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 				},
 				Spec: core.PodSpec{
 					Containers: []core.Container{{
-						Name:  this.ctx.GetAppName(),
+						Name:  this.ctx.GetAppName().Str(),
 						Image: "",
 						Ports: []core.ContainerPort{
 							{

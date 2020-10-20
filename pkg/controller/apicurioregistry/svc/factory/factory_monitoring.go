@@ -27,8 +27,8 @@ func (this *MonitoringFactory) GetSelectorLabels() map[string]string {
 }
 
 func (this *MonitoringFactory) NewServiceMonitor(service *core.Service) *monitoring.ServiceMonitor {
-	name := this.ctx.GetAppName()
-	namespace := this.ctx.GetAppNamespace()
+	name := this.ctx.GetAppName().Str()
+	namespace := this.ctx.GetAppNamespace().Str()
 
 	return &monitoring.ServiceMonitor{
 		ObjectMeta: meta.ObjectMeta{

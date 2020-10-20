@@ -45,7 +45,7 @@ func (this *EnvOcpCF) Sense() {
 	deploymentEntry, deploymentExists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT_OCP)
 	this.deploymentExists = deploymentExists
 	this.deploymentEntry = deploymentEntry
-	this.deploymentName = deploymentEntry.GetName()
+	this.deploymentName = deploymentEntry.GetName().Str()
 
 	// Observation #2
 	// Was the env cache updated?
@@ -69,7 +69,7 @@ func (this *EnvOcpCF) Respond() {
 	// The operator overwrites user defined ones only when necessary
 	deployment := this.deploymentEntry.GetValue().(*ocp_apps.DeploymentConfig)
 	for i, c := range deployment.Spec.Template.Spec.Containers {
-		if c.Name == this.ctx.GetAppName() {
+		if c.Name == this.ctx.GetAppName().Str() {
 			for _, e := range deployment.Spec.Template.Spec.Containers[i].Env {
 				// Add to the cache
 				if v, exists := this.svcEnvCache.Get(e.Name); exists {
@@ -88,7 +88,7 @@ func (this *EnvOcpCF) Respond() {
 	this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 		deployment := value.(*ocp_apps.DeploymentConfig).DeepCopy()
 		for i, c := range deployment.Spec.Template.Spec.Containers {
-			if c.Name == this.ctx.GetAppName() {
+			if c.Name == this.ctx.GetAppName().Str() {
 				deployment.Spec.Template.Spec.Containers[i].Env = this.svcEnvCache.GetSorted()
 			}
 		} // TODO report a problem if not found?
