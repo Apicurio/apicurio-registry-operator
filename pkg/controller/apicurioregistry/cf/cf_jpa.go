@@ -15,28 +15,32 @@ const ENV_QUARKUS_DATASOURCE_USERNAME = "QUARKUS_DATASOURCE_USERNAME"
 const ENV_QUARKUS_DATASOURCE_PASSWORD = "QUARKUS_DATASOURCE_PASSWORD"
 
 type JpaCF struct {
-	ctx         loop.ControlLoopContext
-	persistence string
-	url         string
-	user        string
-	password    string
-	valid       bool
-	envUrl      string
-	envUser     string
-	envPassword string
+	ctx              loop.ControlLoopContext
+	svcResourceCache resources.ResourceCache
+	svcEnvCache      env.EnvCache
+	persistence      string
+	url              string
+	user             string
+	password         string
+	valid            bool
+	envUrl           string
+	envUser          string
+	envPassword      string
 }
 
 func NewJpaCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &JpaCF{
-		ctx:         ctx,
-		persistence: "",
-		url:         "",
-		user:        "",
-		password:    "",
-		valid:       true,
-		envUrl:      "",
-		envUser:     "",
-		envPassword: "",
+		ctx:              ctx,
+		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcEnvCache:      ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
+		persistence:      "",
+		url:              "",
+		user:             "",
+		password:         "",
+		valid:            true,
+		envUrl:           "",
+		envUser:          "",
+		envPassword:      "",
 	}
 }
 
@@ -47,7 +51,7 @@ func (this *JpaCF) Describe() string {
 func (this *JpaCF) Sense() {
 	// Observation #1
 	// Read the config values
-	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC); exists {
+	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry).Spec
 		this.persistence = spec.Configuration.Persistence
 		this.url = spec.Configuration.DataSource.Url
@@ -63,13 +67,13 @@ func (this *JpaCF) Sense() {
 
 	// Observation #4
 	// Read the env values
-	if val, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Get(ENV_QUARKUS_DATASOURCE_URL); exists {
+	if val, exists := this.svcEnvCache.Get(ENV_QUARKUS_DATASOURCE_URL); exists {
 		this.envUrl = val.GetValue().Value
 	}
-	if val, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Get(ENV_QUARKUS_DATASOURCE_USERNAME); exists {
+	if val, exists := this.svcEnvCache.Get(ENV_QUARKUS_DATASOURCE_USERNAME); exists {
 		this.envUser = val.GetValue().Value
 	}
-	if val, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Get(ENV_QUARKUS_DATASOURCE_PASSWORD); exists {
+	if val, exists := this.svcEnvCache.Get(ENV_QUARKUS_DATASOURCE_PASSWORD); exists {
 		this.envPassword = val.GetValue().Value
 	}
 
@@ -89,9 +93,9 @@ func (this *JpaCF) Compare() bool {
 func (this *JpaCF) Respond() {
 	// Response #1
 	// Just set the value(s)!
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_QUARKUS_DATASOURCE_URL, this.url))
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_QUARKUS_DATASOURCE_USERNAME, this.user))
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_QUARKUS_DATASOURCE_PASSWORD, this.password))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_QUARKUS_DATASOURCE_URL, this.url))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_QUARKUS_DATASOURCE_USERNAME, this.user))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_QUARKUS_DATASOURCE_PASSWORD, this.password))
 
 }
 

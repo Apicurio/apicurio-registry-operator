@@ -15,6 +15,7 @@ var _ loop.ControlFunction = &AffinityOcpCF{}
 
 type AffinityOcpCF struct {
 	ctx                         loop.ControlLoopContext
+	svcResourceCache            resources.ResourceCache
 	deploymentConfigEntry       resources.ResourceCacheEntry
 	deploymentConfigEntryExists bool
 	existingAffinity            *corev1.Affinity
@@ -24,6 +25,7 @@ type AffinityOcpCF struct {
 func NewAffinityOcpCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &AffinityOcpCF{
 		ctx:                         ctx,
+		svcResourceCache:            ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
 		deploymentConfigEntry:       nil,
 		deploymentConfigEntryExists: false,
 		existingAffinity:            nil,
@@ -38,7 +40,7 @@ func (this *AffinityOcpCF) Describe() string {
 func (this *AffinityOcpCF) Sense() {
 	// Observation #1
 	// Get the cached deploymentConfig
-	this.deploymentConfigEntry, this.deploymentConfigEntryExists = this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_DEPLOYMENT_OCP)
+	this.deploymentConfigEntry, this.deploymentConfigEntryExists = this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT_OCP)
 
 	if this.deploymentConfigEntryExists {
 		// Observation #2
@@ -47,7 +49,7 @@ func (this *AffinityOcpCF) Sense() {
 
 		// Observation #3
 		// Get the target affinity
-		if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC); exists {
+		if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 			this.targetAffinity = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Affinity
 		}
 	}

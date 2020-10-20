@@ -39,6 +39,8 @@ const TRUSTSTORE_SECRET_VOLUME_NAME = "registry-streams-tls-truststore"
 
 type StreamsSecurityTLSCF struct {
 	ctx                       loop.ControlLoopContext
+	svcResourceCache          resources.ResourceCache
+	svcEnvCache               env.EnvCache
 	persistence               string
 	bootstrapServers          string
 	keystoreSecretName        string
@@ -53,6 +55,8 @@ type StreamsSecurityTLSCF struct {
 func NewStreamsSecurityTLSCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &StreamsSecurityTLSCF{
 		ctx:                       ctx,
+		svcResourceCache:          ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcEnvCache:               ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
 		persistence:               "",
 		bootstrapServers:          "",
 		keystoreSecretName:        "",
@@ -70,7 +74,7 @@ func (this *StreamsSecurityTLSCF) Describe() string {
 func (this *StreamsSecurityTLSCF) Sense() {
 	// Observation #1
 	// Read the config values
-	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC); exists {
+	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry)
 		this.persistence = spec.Spec.Configuration.Persistence
 		this.bootstrapServers = spec.Spec.Configuration.Streams.BootstrapServers
@@ -84,7 +88,7 @@ func (this *StreamsSecurityTLSCF) Sense() {
 	this.foundKeystoreSecretName = ""
 	this.foundTruststoreSecretName = ""
 
-	deploymentEntry, deploymentExists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_DEPLOYMENT)
+	deploymentEntry, deploymentExists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT)
 	if deploymentExists {
 		deployment := deploymentEntry.GetValue().(*apps.Deployment)
 		for i, v := range deployment.Spec.Template.Spec.Volumes {
@@ -128,13 +132,13 @@ func (this *StreamsSecurityTLSCF) Respond() {
 func (this *StreamsSecurityTLSCF) AddEnv(keystoreSecretName string, keystoreSecretVolumeName string,
 	truststoreSecretName string, truststoreSecretVolumeName string) {
 
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_PROPERTIES_PREFIX, "REGISTRY_"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_PROPERTIES_PREFIX, "REGISTRY_"))
 
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SECURITY_PROTOCOL, "SSL"))
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_KEYSTORE_TYPE, "PKCS12"))
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_KEYSTORE_LOCATION,
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SECURITY_PROTOCOL, "SSL"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_KEYSTORE_TYPE, "PKCS12"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_KEYSTORE_LOCATION,
 		"/etc/"+keystoreSecretVolumeName+"/user.p12"))
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewEnvCacheEntry(&core.EnvVar{
+	this.svcEnvCache.Set(env.NewEnvCacheEntry(&core.EnvVar{
 		Name: ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_KEYSTORE_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
@@ -145,10 +149,10 @@ func (this *StreamsSecurityTLSCF) AddEnv(keystoreSecretName string, keystoreSecr
 			},
 		},
 	}))
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_TRUSTSTORE_TYPE, "PKCS12"))
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_TRUSTSTORE_LOCATION,
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_TRUSTSTORE_TYPE, "PKCS12"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_TRUSTSTORE_LOCATION,
 		"/etc/"+truststoreSecretVolumeName+"/ca.p12"))
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewEnvCacheEntry(&core.EnvVar{
+	this.svcEnvCache.Set(env.NewEnvCacheEntry(&core.EnvVar{
 		Name: ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_TRUSTSTORE_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
@@ -160,11 +164,11 @@ func (this *StreamsSecurityTLSCF) AddEnv(keystoreSecretName string, keystoreSecr
 		},
 	}))
 
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SECURITY_PROTOCOL, "SSL"))
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_KEYSTORE_TYPE, "PKCS12"))
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_KEYSTORE_LOCATION,
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SECURITY_PROTOCOL, "SSL"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_KEYSTORE_TYPE, "PKCS12"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_KEYSTORE_LOCATION,
 		"/etc/"+keystoreSecretVolumeName+"/user.p12"))
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewEnvCacheEntry(&core.EnvVar{
+	this.svcEnvCache.Set(env.NewEnvCacheEntry(&core.EnvVar{
 		Name: ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_KEYSTORE_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
@@ -175,10 +179,10 @@ func (this *StreamsSecurityTLSCF) AddEnv(keystoreSecretName string, keystoreSecr
 			},
 		},
 	}))
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_TRUSTSTORE_TYPE, "PKCS12"))
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_TRUSTSTORE_LOCATION,
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_TRUSTSTORE_TYPE, "PKCS12"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_TRUSTSTORE_LOCATION,
 		"/etc/"+truststoreSecretVolumeName+"/ca.p12"))
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewEnvCacheEntry(&core.EnvVar{
+	this.svcEnvCache.Set(env.NewEnvCacheEntry(&core.EnvVar{
 		Name: ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_TRUSTSTORE_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{

@@ -10,10 +10,11 @@ import (
 var _ loop.ControlFunction = &HostInitCF{}
 
 type HostInitCF struct {
-	ctx        loop.ControlLoopContext
-	isFirstRun bool
-	targetHost string
-	specEntry  resources.ResourceCacheEntry
+	ctx              loop.ControlLoopContext
+	svcResourceCache resources.ResourceCache
+	isFirstRun       bool
+	targetHost       string
+	specEntry        resources.ResourceCacheEntry
 }
 
 // This CF makes sure number of host is aligned
@@ -21,10 +22,11 @@ type HostInitCF struct {
 // modify the Sense stage so this CF knows about it
 func NewHostInitCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &HostInitCF{
-		ctx:        ctx,
-		isFirstRun: true,
-		targetHost: "",
-		specEntry:  nil,
+		ctx:              ctx,
+		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		isFirstRun:       true,
+		targetHost:       "",
+		specEntry:        nil,
 	}
 }
 
@@ -40,7 +42,7 @@ func (this *HostInitCF) Sense() {
 
 	// Observation #4
 	// Get spec for patching & the target host
-	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC); exists {
+	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		this.specEntry = specEntry
 		this.targetHost = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Host
 	}

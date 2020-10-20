@@ -13,18 +13,22 @@ var _ loop.ControlFunction = &LogLevelCF{}
 const ENV_REGISTRY_LOG_LEVEL = "LOG_LEVEL"
 
 type LogLevelCF struct {
-	ctx         loop.ControlLoopContext
-	logLevel    string
-	valid       bool
-	envLogLevel string
+	ctx              loop.ControlLoopContext
+	svcResourceCache resources.ResourceCache
+	svcEnvCache      env.EnvCache
+	logLevel         string
+	valid            bool
+	envLogLevel      string
 }
 
 func NewLogLevelCF(ctx loop.ControlLoopContext) loop.ControlFunction {
 	return &LogLevelCF{
-		ctx:         ctx,
-		logLevel:    "",
-		valid:       true,
-		envLogLevel: "",
+		ctx:              ctx,
+		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcEnvCache:      ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
+		logLevel:         "",
+		valid:            true,
+		envLogLevel:      "",
 	}
 }
 
@@ -35,7 +39,7 @@ func (this *LogLevelCF) Describe() string {
 func (this *LogLevelCF) Sense() {
 	// Observation #1
 	// Read the config values
-	if specEntry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC); exists {
+	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry)
 		this.logLevel = spec.Spec.Configuration.LogLevel
 		// Default value is false
@@ -44,7 +48,7 @@ func (this *LogLevelCF) Sense() {
 	// Observation #2
 	// Read the env values
 	this.envLogLevel = ""
-	if val, exists := this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Get(ENV_REGISTRY_LOG_LEVEL); exists {
+	if val, exists := this.svcEnvCache.Get(ENV_REGISTRY_LOG_LEVEL); exists {
 		this.envLogLevel = val.GetValue().Value
 	}
 
@@ -62,7 +66,7 @@ func (this *LogLevelCF) Compare() bool {
 func (this *LogLevelCF) Respond() {
 	// Response #1
 	// Just set the value(s)!
-	this.ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache).Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_LOG_LEVEL, this.logLevel))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_LOG_LEVEL, this.logLevel))
 }
 
 func (this *LogLevelCF) Cleanup() bool {
