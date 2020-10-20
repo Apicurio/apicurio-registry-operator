@@ -32,10 +32,11 @@ func NewDefaultContext(appName common.Name, appNamespace common.Namespace, c con
 	this := &defaultContext{
 		appName:      appName,
 		appNamespace: appNamespace,
-		log:          log,
 		requeue:      false,
 		services:     make(map[string]interface{}, 16),
 	}
+	this.log = log.WithValues("app", appName.Str(), "namespace", appNamespace.Str())
+
 	this.services[svc.SVC_CONTROLLER] = c
 	this.services[svc.SVC_SCHEME] = scheme
 	this.services[svc.SVC_NATIVE_CLIENT] = nativeClient
