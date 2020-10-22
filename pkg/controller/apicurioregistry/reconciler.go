@@ -23,7 +23,7 @@ type ApicurioRegistryReconciler struct {
 	client     sigs_client.Client
 	scheme     *runtime.Scheme
 	controller controller.Controller
-	loops      map[loop.ControlLoop]int
+	loops      map[string]loop.ControlLoop
 }
 
 func NewApicurioRegistryReconciler(mgr manager.Manager) *ApicurioRegistryReconciler {
@@ -31,7 +31,7 @@ func NewApicurioRegistryReconciler(mgr manager.Manager) *ApicurioRegistryReconci
 	return &ApicurioRegistryReconciler{
 		client: mgr.GetClient(),
 		scheme: mgr.GetScheme(),
-		loops:  make(map[loop.ControlLoop]int),
+		loops:  make(map[string]loop.ControlLoop),
 	}
 }
 
@@ -41,46 +41,38 @@ func (this *ApicurioRegistryReconciler) Reconcile(request reconcile.Request) (re
 
 	log.Info("Reconciler executing.")
 
-	// =====
-
 	// Find the spec
 	spec, err := this.getApicurioRegistryResource(appNamespace, appName)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Get the existing control loop
-	var controlLoop loop.ControlLoop = nil
-	for c := range this.loops {
-		if c.GetContext().GetAppName() == appName {
-			controlLoop = c
-			break
+	// Get the target control loop
+	key := appNamespace.Str() + "/" + appName.Str()
+	controlLoop, exists := this.loops[key]
+	if exists {
+		// If control loop exists, but spec is not found, do a cleanup
+		if spec == nil {
+			controlLoop.Cleanup()
+			delete(this.loops, key)
+			controlLoop.GetContext().GetLog().Info("Context was deleted.")
+			return reconcile.Result{}, nil
+		} // else OK, run
+	} else {
+		if spec == nil {
+			// Error
+			return reconcile.Result{}, nil
+		} else {
+			// Create new loop, and run
+			controlLoop = this.createNewLoop(appName, appNamespace)
+			this.loops[key] = controlLoop
 		}
 	}
 
-	// If control loop exists, but spec is not found, do a cleanup
-	if controlLoop != nil && spec == nil {
-		controlLoop.Cleanup()
-		delete(this.loops, controlLoop)
-		controlLoop.GetContext().GetLog().Info("Context was deleted.")
-		return reconcile.Result{}, nil
-	}
-
-	// If control loop was not found and spec exists, create a new one
-	if controlLoop == nil && spec != nil {
-		controlLoop = this.createNewLoop(appName, appNamespace)
-	}
-
-	if controlLoop == nil || spec == nil {
-		return reconcile.Result{}, nil
-	}
-
-	// =======
-	// Context is established
-
+	// Loop is established, run it
 	controlLoop.Run()
 
-	// ======
+	// Reschedule if requested
 	return reconcile.Result{Requeue: controlLoop.GetContext().GetAndResetRequeue()}, nil
 }
 

@@ -52,9 +52,11 @@ func (this *HostInitCF) Sense() {
 func (this *HostInitCF) Compare() bool {
 	// Condition #1
 	// First run & no host set
-	condition := this.isFirstRun && this.targetHost == ""
+	condition := this.specEntry != nil && this.isFirstRun && this.targetHost == ""
 	// We are going to try this only once
-	this.isFirstRun = false
+	if condition {
+		this.isFirstRun = false
+	}
 	return condition
 }
 
