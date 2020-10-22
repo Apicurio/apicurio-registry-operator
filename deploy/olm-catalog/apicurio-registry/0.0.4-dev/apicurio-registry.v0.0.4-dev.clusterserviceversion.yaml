@@ -16,7 +16,7 @@ metadata:
     categories: Streaming & Messaging
     certified: "false"
     containerImage: docker.io/apicurio/apicurio-registry-operator:0.0.4-dev
-    createdAt: "2020-08-19"
+    createdAt: 2020-10-22
     description: Deploy and manage Apicurio Registry on Kubernetes.
     repository: https://github.com/Apicurio/apicurio-registry-operator
     support: Apicurio
@@ -206,10 +206,15 @@ spec:
             template:
               metadata:
                 labels:
+                  apicur.io/name: apicurio-registry-operator
+                  apicur.io/type: operator
+                  apicur.io/version: 0.0.4-dev
                   name: apicurio-registry-operator
               spec:
                 containers:
                   - env:
+                      - name: REGISTRY_VERSION
+                        value: 1.2.3.Final
                       - name: REGISTRY_IMAGE_MEM
                         value: docker.io/apicurio/apicurio-registry-mem:1.2.3.Final
                       - name: REGISTRY_IMAGE_KAFKA
@@ -228,6 +233,10 @@ spec:
                         valueFrom:
                           fieldRef:
                             fieldPath: metadata.name
+                      - name: POD_NAMESPACE
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.namespace
                       - name: OPERATOR_NAME
                         value: apicurio-registry-operator
                     image: docker.io/apicurio/apicurio-registry-operator:0.0.4-dev
@@ -359,3 +368,14 @@ spec:
   replaces: apicurio-registry.v0.0.3-v1.2.3.final
   selector: {}
   version: 0.0.4-dev
+  relatedImages:
+    - name: apicurio-registry-mem
+      image: docker.io/apicurio/apicurio-registry-mem:0.0.4-dev
+    - name: apicurio-registry-kafka
+      image: docker.io/apicurio/apicurio-registry-kafka:0.0.4-dev
+    - name: apicurio-registry-streams
+      image: docker.io/apicurio/apicurio-registry-streams:0.0.4-dev
+    - name: apicurio-registry-jpa
+      image: docker.io/apicurio/apicurio-registry-jpa:0.0.4-dev
+    - name: apicurio-registry-infinispan
+      image: docker.io/apicurio/apicurio-registry-infinispan:0.0.4-dev
