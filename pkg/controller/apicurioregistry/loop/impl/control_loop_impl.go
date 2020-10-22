@@ -17,7 +17,7 @@ func NewControlLoopImpl(ctx loop.ControlLoopContext) loop.ControlLoop {
 	this := &controlLoopImpl{
 		ctx: ctx,
 	}
-	this.controlFunctions = make([]loop.ControlFunction, 32)
+	this.controlFunctions = make([]loop.ControlFunction, 0, 32)
 	return this
 }
 
