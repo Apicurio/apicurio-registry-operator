@@ -27,16 +27,15 @@ func NewKubePatcher(ctx loop.ControlLoopContext) *KubePatcher {
 // ===
 
 func (this *KubePatcher) reloadApicurioRegistry() {
-	if entry, exists := this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC); exists {
-		r, e := this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).CRD().
-			GetApicurioRegistry(this.ctx.GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
-		if e != nil {
-			this.ctx.GetLog().WithValues("name", entry.GetName()).Info("Resource not found. (May have been deleted).")
-			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Remove(resources.RC_KEY_SPEC)
-			this.ctx.SetRequeue()
-		} else {
-			this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_SPEC, resources.NewResourceCacheEntry(common.Name(r.Name), r))
-		}
+	// No need to check if the entry exists
+	r, e := this.ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).CRD().
+		GetApicurioRegistry(this.ctx.GetAppNamespace(), this.ctx.GetAppName(), &meta.GetOptions{})
+	if e != nil {
+		this.ctx.GetLog().WithValues("name", this.ctx.GetAppName()).Info("Resource not found. (May have been deleted).")
+		this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Remove(resources.RC_KEY_SPEC)
+		this.ctx.SetRequeue()
+	} else {
+		this.ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Set(resources.RC_KEY_SPEC, resources.NewResourceCacheEntry(common.Name(r.Name), r))
 	}
 }
 
