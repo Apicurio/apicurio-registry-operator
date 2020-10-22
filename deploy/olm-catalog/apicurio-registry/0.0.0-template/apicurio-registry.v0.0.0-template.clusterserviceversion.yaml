@@ -211,7 +211,7 @@ spec:
   maturity: alpha
   provider:
     name: Apicurio
-  relatedImages: # 'operator-sdk generate csv' does not keep this section, add it before release
+  relatedImages:
     - name: apicurio-registry-mem
       image: docker.io/apicurio/apicurio-registry-mem:invalid
     - name: apicurio-registry-kafka
