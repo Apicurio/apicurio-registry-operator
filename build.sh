@@ -32,6 +32,12 @@ require() {
   fi
 }
 
+require_command() {
+  if ! command -v "$1" &>/dev/null; then
+    error "Required command '$1' is not available. $2"
+  fi
+}
+
 init_image() {
   require "$OPERATOR_IMAGE_REPOSITORY" "Parameter '-r' is required."
   VERSION=$(sed -n 's/^.*Version.*=.*"\(.*\)".*$/\1/p' ./version/version.go)
@@ -62,6 +68,9 @@ unreplace() {
 gen_csv() {
   # Generate dev CRDs, alpha channel
   if [ -d "./deploy/olm-catalog/apicurio-registry/$VERSION" ]; then
+
+    require_command yq "You can find the installation instructions at https://mikefarah.gitbook.io/yq/ or see './.github/scripts/setup.sh'"
+
     operator-sdk generate csv \
       --csv-channel alpha \
       --update-crds \
@@ -71,22 +80,39 @@ gen_csv() {
       --from-version 0.0.0-template \
       --make-manifests=false
 
+    if [ ! $? ]; then
+      error "Could not re-generate CSV."
+    fi
+
+    CSV_TEMPLATE_PATH="./deploy/olm-catalog/apicurio-registry/0.0.0-template/apicurio-registry.v0.0.0-template.clusterserviceversion.yaml"
     CSV_PATH="./deploy/olm-catalog/apicurio-registry/$VERSION/apicurio-registry.v$VERSION.clusterserviceversion.yaml"
     PACKAGE_PATH="./deploy/olm-catalog/apicurio-registry/apicurio-registry-operator.package.yaml"
-
     PREVIOUS_VERSION_ALPHA=$(sed -n 's/^ *currentCSV:.*# alpha; replaces \([^ ]*\)$/\1/p' "$PACKAGE_PATH")
     require "$PREVIOUS_VERSION_ALPHA" "Could not determine previous CSV version."
-    sed -i "s/replaces: *apicurio-registry\.v0\.0\.0-template/replaces: apicurio-registry.v$PREVIOUS_VERSION_ALPHA/" "$CSV_PATH"
 
+    # Copy specDescriptors from template, this has to be done explicitly
+    yq r "$CSV_TEMPLATE_PATH" "spec.customresourcedefinitions.owned[0].specDescriptors" |
+      yq p - "spec.customresourcedefinitions.owned[0].specDescriptors" |
+      yq m -i -P "$CSV_PATH" -
+
+    # Copy the relatedImages section
+    yq r "$CSV_TEMPLATE_PATH" "spec.relatedImages" |
+      yq p - "spec.relatedImages" |
+      sed "s/invalid/$VERSION/" |
+      yq m -i -P "$CSV_PATH" -
+
+    # Update the 'replaces' field
+    yq w -i -P "$CSV_PATH" "spec.replaces" "apicurio-registry.v$PREVIOUS_VERSION_ALPHA"
+
+    # Update the 'createdAt' field
     CREATED_AT=$(date -Idate)
-    sed -i "s/createdAt: .*/createdAt: \"$CREATED_AT\"/" "$CSV_PATH"
+    yq w -i -P "$CSV_PATH" "metadata.annotations.createdAt" "$CREATED_AT"
 
-    sed -i "s|containerImage: .*|containerImage: \"$OPERATOR_IMAGE\"|" "$CSV_PATH"
-
-    # sed -i "s/\(^ *currentCSV: *apicurio-registry\.v\)\([^ ]*\)\( *# *alpha.*$\)/\1$VERSION\3/" "$PACKAGE_PATH"
+    # Update the 'containerImage' field
+    yq w -i -P "$CSV_PATH" "metadata.annotations.containerImage" "$OPERATOR_IMAGE"
 
     echo "Warning: Make sure generated CSV do not contain your private dev changes before commiting."
-    echo "Warning: If you want to create CSV for release, rename the generated 'dev' one, replace tags with SHA using 'skopeo' and add 'related images' section."
+    echo "Warning: If you want to create CSV for release, rename the generated 'dev' one and replace tags with SHA using 'skopeo' (also in the 'relatedImages' section)."
   fi
 }
 
@@ -124,8 +150,8 @@ minikube_deploy() {
   require "$OPERATOR_NAMESPACE" "Argument -n or --namespace is required."
   replace
   kubectl create -f ./deploy/service_account.yaml -n "$OPERATOR_NAMESPACE"
-  kubectl create -f ./deploy/role.yaml  -n "$OPERATOR_NAMESPACE"
-  kubectl create -f ./deploy/role_binding.yaml  -n "$OPERATOR_NAMESPACE"
+  kubectl create -f ./deploy/role.yaml -n "$OPERATOR_NAMESPACE"
+  kubectl create -f ./deploy/role_binding.yaml -n "$OPERATOR_NAMESPACE"
   kubectl create -f ./deploy/cluster_role.yaml
   cat ./deploy/cluster_role_binding.yaml | sed "s/{NAMESPACE}/$OPERATOR_NAMESPACE # replaced {NAMESPACE}/g" | kubectl apply -f -
   kubectl create -f ./deploy/crds/apicur.io_apicurioregistries_crd.yaml
@@ -141,14 +167,14 @@ compile_qs_yaml() {
   if [ -f "$FILE" ]; then
     rm "$FILE"
   fi
-  echo -e "\n---"  >> "$FILE" && cat ./deploy/service_account.yaml >> "$FILE"
-  echo -e "\n---"  >> "$FILE" && cat ./deploy/role.yaml >> "$FILE"
-  echo -e "\n---"  >> "$FILE" && cat ./deploy/role_binding.yaml >> "$FILE"
-  echo -e "\n---"  >> "$FILE" && cat ./deploy/cluster_role.yaml >> "$FILE"
-  echo -e "\n---"  >> "$FILE" && cat ./deploy/cluster_role_binding.yaml >> "$FILE"
-  echo -e "\n---"  >> "$FILE" && cat ./deploy/crds/apicur.io_apicurioregistries_crd.yaml >> "$FILE"
-  echo -e "\n---"  >> "$FILE" && cat ./deploy/operator.yaml >> "$FILE"
-  echo ""  >> "$FILE"
+  echo -e "\n---" >>"$FILE" && cat ./deploy/service_account.yaml >>"$FILE"
+  echo -e "\n---" >>"$FILE" && cat ./deploy/role.yaml >>"$FILE"
+  echo -e "\n---" >>"$FILE" && cat ./deploy/role_binding.yaml >>"$FILE"
+  echo -e "\n---" >>"$FILE" && cat ./deploy/cluster_role.yaml >>"$FILE"
+  echo -e "\n---" >>"$FILE" && cat ./deploy/cluster_role_binding.yaml >>"$FILE"
+  echo -e "\n---" >>"$FILE" && cat ./deploy/crds/apicur.io_apicurioregistries_crd.yaml >>"$FILE"
+  echo -e "\n---" >>"$FILE" && cat ./deploy/operator.yaml >>"$FILE"
+  echo "" >>"$FILE"
 }
 
 minikube_undeploy() {
@@ -175,8 +201,8 @@ push() {
 }
 
 if [ ! -f "./version/version.go" ]; then
-    echo "Please run this script from the repository root."
-    exit 1
+  echo "Please run this script from the repository root."
+  exit 1
 fi
 
 TARGET="$1"

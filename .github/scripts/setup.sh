@@ -10,6 +10,11 @@ curl -fsSL "https://github.com/operator-framework/operator-sdk/releases/download
 chmod +x operator-sdk
 sudo mv operator-sdk /usr/local/bin/operator-sdk
 
+echo "Install 'yq'"
+export YQ_VERSION="3.4.1"
+curl -fsSL "https://github.com/mikefarah/yq/releases/download/$YQ_VERSION/yq_linux_amd64" > yq
+chmod +x yq
+sudo mv yq /usr/local/bin/yq
+
 echo "Clean cache"
 sudo apt-get clean
-
