@@ -34,7 +34,7 @@ require() {
 
 require_command() {
   if ! command -v "$1" &>/dev/null; then
-    error "Required command '$1' is not available."
+    error "Required command '$1' is not available. $2"
   fi
 }
 
@@ -69,7 +69,7 @@ gen_csv() {
   # Generate dev CRDs, alpha channel
   if [ -d "./deploy/olm-catalog/apicurio-registry/$VERSION" ]; then
 
-    require_command yq
+    require_command yq "You can find the installation instructions at https://mikefarah.gitbook.io/yq/ or see './.github/scripts/setup.sh'"
 
     operator-sdk generate csv \
       --csv-channel alpha \
