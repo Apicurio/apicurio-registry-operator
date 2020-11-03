@@ -5,9 +5,9 @@ site:
   start_page: apicurio-registry-operator::index.adoc
 content:
   sources:
-  - url: ../
-    branches: HEAD
-    start_path: antora # TODO change
+    - url: ../
+      branches: HEAD
+      start_path: docs
 
 ui:
   bundle:
@@ -25,11 +25,3 @@ asciidoc:
     plantuml-server-url: 'http://www.plantuml.com/plantuml'
     plantuml-fetch-diagram: true
     mod-loc: partial$
-#    registry-overview: link:assembly-intro-to-the-registry.html[Introduction to Apicurio Registry]
-#    registry-rules: link:assembly-intro-to-registry-rules.html[Introduction to Apicurio Registry rules]
-#    registry-artifact-types: link:assembly-registry-reference.html[Apicurio Registry reference]
-#    registry-rule-types: link:assembly-registry-reference.html[Apicurio Registry reference]
-#    registry-rule-maturity-matrix: link:assembly-registry-reference.html[Apicurio Registry reference]
-#    managing-registry-artifacts-ui: link:assembly-managing-registry-artifacts-ui.html[Managing Apicurio Registry content using the web console]
-#    installing-the-registry-docker: link:assembly-installing-the-registry-docker.html[Installing Apicurio Registry using Docker]
-#    installing-the-registry-openshift: link:assembly-installing-the-registry-openshift.html[Installing Apicurio Registry on OpenShift]
