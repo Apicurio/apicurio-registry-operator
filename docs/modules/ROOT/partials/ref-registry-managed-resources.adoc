@@ -11,9 +11,9 @@ ifdef::service-registry[]
 endif::[]
 * Service
 ifdef::apicurio-registry[]
-* Ingress and a Route (OpenShift)
+* Ingress and Route (OpenShift)
 endif::[]
 ifdef::service-registry[]
-* Ingress and a Route
+* Ingress and Route
 endif::[]
 * PodDisruptionBudget

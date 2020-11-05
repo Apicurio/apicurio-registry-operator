@@ -1,7 +1,7 @@
 [#status]
-= Service Registry custom resource - Status
+= {registry} custom resource - Status
 
-This is the section of the CR, managed by the {operator}, that contains description of the current deployment and application state.
+This is the section of the CR, managed by the {operator}, that contains a description of the current deployment and application state.
 
 [source,yaml]
 ----
