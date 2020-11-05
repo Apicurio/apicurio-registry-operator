@@ -5,7 +5,7 @@ The recommended installation option for production environments is to use the xr
 
 However, in order to quickly deploy the {operator} without using link:{LinkOLMDocs}[{NameOLMDocs}], you can download a set of installation files and examples from link:{LinkRedHatIntegrationDownloads}[{NameRedHatIntegrationDownloads}].
 
-. Select the product version and download Service Registry CRDs zip file.
+. Select the product version and download {registry} CRDs zip file.
 
 . Create a project for the installation, e.g., `service-registry`:
 +

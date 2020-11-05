@@ -25,7 +25,7 @@ _Note: Since OpenShift restarts the pod that fails the liveness check, this valu
 
 | LIVENESS_ERRORS_IGNORED
 | comma-separated list of fully qualified exception class names
-| List of errors that are ignored for the liveness checking purposes.
+| List of errors that are ignored for liveness checking purposes.
 
 |===
 
@@ -50,7 +50,7 @@ _Note: _In practice, this means how long the pod remains in a not ready state un
 
 | READINESS_TIMEOUT
 | positive integer, seconds
-| The readiness system tracks timeout of two operations: How long it takes for a storage request to complete, and how long it takes for an HTTP REST API request to return a response.
+| The readiness system tracks the timeout of two operations: How long it takes for a storage request to complete, and how long it takes for an HTTP REST API request to return a response.
 If the operation takes more time, it is counted as a readiness error. This value controls those timeouts.
 
 |===

@@ -11,7 +11,7 @@ endif::[]
 supported:
 
 |===
-| Platform | Required Version
+| *Platform* | *Required Version*
 ifdef::apicurio-registry[]
 | Kubernetes
 | 1.12+
@@ -20,5 +20,5 @@ endif::[]
 | 3.11.200+, 4+
 |===
 
-NOTE: {operator} does not deploy and manage storage for the Registry yet.
+NOTE: {operator} does not yet deploy and manage storage for the Registry.
 Therefore, some persistence options require that the storage service is already set up.

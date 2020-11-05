@@ -4,9 +4,9 @@
 .Prerequisites
 * You must have an OpenShift cluster with cluster administrator access.
 * You must have already installed {operator}.
-* You must have a PostgreaSQL database reachable from your OpenShift cluster.
+* You must have a PostgreSQL database reachable from your OpenShift cluster.
 
-NOTE: See the xref:assembly-installation.adoc[] page for details about setting up {operator} and PostgreSQL database.
+NOTE: See the xref:assembly-installation.adoc[] page for details about setting up {operator} and a PostgreSQL database.
 
 .Procedure
 . In the OpenShift Container Platform web console, log in using an account with cluster administrator privileges.
@@ -21,7 +21,7 @@ ifdef::rh-service-registry[]
 . Click *Installed Operators* > *Red Hat Integration - {registry}* > *ApicurioRegistry* > *Create ApicurioRegistry*.
 endif::[]
 
-. Paste in the following `ApicurioRegsitry` CR, and edit the values for the database `url` and credentials to match your environment:
+. Paste in the following `ApicurioRegistry` CR, and edit the values for the database `url` and credentials to match your environment:
 +
 [source,yaml]
 ----

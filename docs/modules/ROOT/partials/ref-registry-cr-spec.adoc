@@ -55,7 +55,7 @@ The following table contains summary information for each defined configuration 
 | string
 | mem
 | Persistence backend to use;
-one of: mem, jpa, kafka, streams, infinispan
+one of: `mem`, `jpa`, `kafka`, `streams`, `infinispan`
 
 | configuration/*dataSource*
 | -
@@ -184,5 +184,5 @@ one of: INFO, DEBUG
 | Host/URL where the {registry} UI and API is available
 |===
 
-NOTE: If an option is marked as *required*, it may be conditional on other configuration options enabled.
-Empty value may be accepted, but the operator will not perform given action.
+NOTE: If an option is marked as *required*, it may be conditional on other configuration options being enabled.
+Empty value may be accepted, but the operator will not perform the given action.
