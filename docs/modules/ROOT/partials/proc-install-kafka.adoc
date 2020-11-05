@@ -1,7 +1,7 @@
 [#install-kafka]
 = Installation of {kafka-streams} from the OpenShift OperatorHub
 
-The recommended persistence option requires that you provide a connection information to a Kafka cluster. Although any Kafka cluster with Kafka Streams support
+The recommended persistence option requires that you provide connection information to a Kafka cluster. Although any Kafka cluster with Kafka Streams support
 can be used, it is recommended to use {kafka-streams} Operator to provide and maintain a Kafka cluster for you.
 
 If you do not already have Kafka installed, you can install the {kafka-streams} Operator on your OpenShift cluster from the link:{LinkOperatorHub}[{NameOperatorHub}].

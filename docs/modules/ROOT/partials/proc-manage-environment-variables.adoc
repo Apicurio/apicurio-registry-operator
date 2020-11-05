@@ -1,7 +1,7 @@
 [#manage-environment-variables]
 = Managing Environment Variables
 
-{operator} manages the most common configuration of {registry}, but there are some options that the user has to
+{operator} manages the most common configuration of {registry}, but there are some options that the user can
 adjust manually. These are usually updated by setting an environment variable on the {registry} *DeploymentConfig* resource.
 If the given configuration option is not available in the `ApicurioRegistry` CR, it is safe to use an environment variable to adjust it.
 
@@ -11,7 +11,7 @@ Web UI
 
 . Visit the *Installed Operators* tab, and select the *Red Hat Integration - {operator}*.
 . In the *ApicurioRegistry* tab, click on the `ApicurioRegistry` CR for your {registry} deployment.
-. In the main overview page, you'll see the *Deployment Name* section, which contains name of the DeploymentConfig managed by the operator to deploy your {registry} instance.
+. In the main overview page, you'll see the *Deployment Name* section, which contains the name of the DeploymentConfig managed by the operator to deploy your {registry} instance.
 . Find that *DeploymentConfig* by going to the *Workloads* > *Deployment Configs* in the left menu.
 . Select the *DeploymentConfig* with the correct name, and switch to the *Environment* tab.
 . You can add or modify your environment variable to the *Single values (env)* section.
