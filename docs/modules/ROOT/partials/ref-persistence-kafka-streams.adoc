@@ -8,7 +8,7 @@
 . Install the {kafka-streams} Operator or have Kafka accessible from your OpenShift cluster.
 
 NOTE: This guide assumes that {kafka-streams} Operator is available, however you can use any Kafka deployment.
-In that case, Openshift secrets that the {operator} expects have to be created manually.
+In that case, Openshift secrets that the {operator} expects must be created manually.
 
 [#plain-no-auth]
 == Plain (no security configuration)
@@ -55,7 +55,7 @@ spec:
 NOTE: Your namespace may be different.
 
 After the cluster is ready, you can open the *Kafka* resource and examine the *status* block.
-There should be a `bootstrapServers` property, which we will later use to deploy {registry}.
+There should be a `bootstrapServers` property, which we will later use when deploying {registry}.
 
 Example:
 
@@ -76,8 +76,7 @@ status:
 [#kafka-topics]
 === Kafka Topics
 
-Before we can do a basic deployment, two topics have to be created: `global-id-topic` and `storage-topic`.
-These names are not configurable at the moment.
+Before we can do a basic deployment, two topics must be created: `global-id-topic` and `storage-topic`.
 
 As before, navigate to *Kafka Topic* tab, and click on *Create Kafka Topic*:
 
@@ -174,7 +173,7 @@ See the `authorization` and `tls` sections.
 === Auth setup
 
 Configuration of the topics works as before, but in addition, a *Kafka User* resource needs to be created.
-It is used to configure authentication and authorization for {registry} user.
+It is used to configure authentication and authorization for the {registry} user.
 
 This is an example `spec` block:
 
@@ -253,7 +252,7 @@ spec:
 ----
 
 IMPORTANT: You have to use a different `bootstrapServers` address than in the plain use-case.
-The address has to supports TLS connections and it can be found in the given *Kafka* resource under `type: tls` field.
+The address has to support TLS connections and it can be found in the given *Kafka* resource under the `type: tls` field.
 
 [#tlsscram-security]
 == TLS+SCRAM Security
@@ -303,7 +302,7 @@ See the `authorization` and `tls` sections.
 === Auth setup
 
 Configuration of the topics works as before, but in addition, a *Kafka User* resource needs to be created.
-It is used to configure authentication and authorization for {registry} user.
+It is used to configure authentication and authorization for the {registry} user.
 
 This is an example `spec` block:
 
@@ -380,4 +379,4 @@ spec:
 ----
 
 IMPORTANT: You have to use a different `bootstrapServers` address than in the plain use-case.
-The address has to supports TLS connections and it can be found in the given *Kafka* resource under `type: tls` field.
+The address has to support TLS connections and it can be found in the given *Kafka* resource under the `type: tls` field.

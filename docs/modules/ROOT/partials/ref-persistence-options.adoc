@@ -11,10 +11,10 @@ ifdef::apicurio-registry[]
 *This is the easiest deployment to setup, but it is not recommended for production environment.*
 * *Apache Kafka* - data are stored using plain Apache Kafka.
 endif::[]
-* *Apache Kafka Steams* - data is stored using Apache Kafka Streams.
+* *Apache Kafka Steams* - data are stored using Apache Kafka Streams.
 This option is suggested for most production deployments.
-* *Java Persistence API* (PostgreSQL) - data is stored in a relational database (PostgreSQL 12+).
-* *Infinispan* - data is stored in an embedded Infinispan cache.
+* *Java Persistence API* (PostgreSQL) - data are stored in a relational database (PostgreSQL 12+).
+* *Infinispan* - data are stored in an embedded Infinispan cache.
 
 The following options require that the storage is set up as a prerequisite:
 

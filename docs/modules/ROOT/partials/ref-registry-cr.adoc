@@ -43,5 +43,5 @@ IMPORTANT: Currently, {operator} is only watching its own namespace (project).
 Therefore, `ApicurioRegistry` CR must be created in the same namespace.
 
 ifdef::apicurio-registry[]
-NOTE: These configuration options may change or be renamed until the operators leaves the alpha development stage.
+NOTE: These configuration options may change or be renamed until {operator} leaves the alpha development stage.
 endif::[]
