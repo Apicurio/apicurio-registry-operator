@@ -32,15 +32,10 @@ func NewKubeClient(ctx *context.LoopContext, config *rest.Config) *KubeClient {
 // Deployment
 
 func (this *KubeClient) CreateDeployment(namespace common.Namespace, value *apps.Deployment) (*apps.Deployment, error) {
-	res, err := this.client.AppsV1().Deployments(namespace.Str()).
-		Create(value)
-	if err != nil {
+	if err := controllerutil.SetControllerReference(getSpec(this.ctx), value, this.ctx.GetScheme()); err != nil {
 		return nil, err
 	}
-	if err := controllerutil.SetControllerReference(getSpec(this.ctx), res, this.ctx.GetScheme()); err != nil {
-		panic("Could not set controller reference.")
-	}
-	res, err = this.UpdateDeployment(namespace, res)
+	res, err := this.client.AppsV1().Deployments(namespace.Str()).Create(value)
 	if err != nil {
 		return nil, err
 	}
@@ -75,15 +70,10 @@ func (this *KubeClient) DeleteDeployment(value *apps.Deployment, options *meta.D
 // Service
 
 func (this *KubeClient) CreateService(namespace common.Namespace, value *core.Service) (*core.Service, error) {
-	res, err := this.client.CoreV1().Services(namespace.Str()).
-		Create(value)
-	if err != nil {
+	if err := controllerutil.SetControllerReference(getSpec(this.ctx), value, this.ctx.GetScheme()); err != nil {
 		return nil, err
 	}
-	if err := controllerutil.SetControllerReference(getSpec(this.ctx), res, this.ctx.GetScheme()); err != nil {
-		panic("Could not set controller reference.")
-	}
-	res, err = this.UpdateService(namespace, res)
+	res, err := this.client.CoreV1().Services(namespace.Str()).Create(value)
 	if err != nil {
 		return nil, err
 	}
@@ -118,15 +108,11 @@ func (this *KubeClient) DeleteService(value *core.Service, options *meta.DeleteO
 // Ingress
 
 func (this *KubeClient) CreateIngress(namespace common.Namespace, value *extensions.Ingress) (*extensions.Ingress, error) {
-	res, err := this.client.ExtensionsV1beta1().Ingresses(namespace.Str()).
-		Create(value)
-	if err != nil {
+	if err := controllerutil.SetControllerReference(getSpec(this.ctx), value, this.ctx.GetScheme()); err != nil {
 		return nil, err
 	}
-	if err := controllerutil.SetControllerReference(getSpec(this.ctx), res, this.ctx.GetScheme()); err != nil {
-		panic("Could not set controller reference.")
-	}
-	res, err = this.UpdateIngress(namespace, res)
+	res, err := this.client.ExtensionsV1beta1().Ingresses(namespace.Str()).
+		Create(value)
 	if err != nil {
 		return nil, err
 	}
@@ -161,15 +147,10 @@ func (this *KubeClient) DeleteIngress(value *extensions.Ingress, options *meta.D
 // PodDisruptionBudget
 
 func (this *KubeClient) CreatePodDisruptionBudget(namespace common.Namespace, value *policy.PodDisruptionBudget) (*policy.PodDisruptionBudget, error) {
-	res, err := this.client.PolicyV1beta1().PodDisruptionBudgets(namespace.Str()).
-		Create(value)
-	if err != nil {
+	if err := controllerutil.SetControllerReference(getSpec(this.ctx), value, this.ctx.GetScheme()); err != nil {
 		return nil, err
 	}
-	if err := controllerutil.SetControllerReference(getSpec(this.ctx), res, this.ctx.GetScheme()); err != nil {
-		panic("Could not set controller reference.")
-	}
-	res, err = this.UpdatePodDisruptionBudget(namespace, res)
+	res, err := this.client.PolicyV1beta1().PodDisruptionBudgets(namespace.Str()).Create(value)
 	if err != nil {
 		return nil, err
 	}

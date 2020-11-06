@@ -55,10 +55,11 @@ func (this *ServiceMonitorCF) Sense() {
 		this.ctx.GetLog().Error(err, "Could not check ServiceMonitor is registered")
 		return
 	}
-	if !isServiceMonitorRegistered {
-		this.ctx.GetLog().Info("Install prometheus-operator in your cluster to create ServiceMonitor objects")
-	}
 	this.isServiceMonitorRegistered = isServiceMonitorRegistered
+
+	if !isServiceMonitorRegistered {
+		return
+	}
 
 	// Observation #2
 	// Get Service

@@ -108,6 +108,8 @@ func Add(mgr manager.Manager) error {
 		if err != nil {
 			return err
 		}
+	} else {
+		log.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects, restart apicurio-registry operator after installing prometheus-operator")
 	}
 
 	return nil
