@@ -3,7 +3,7 @@ package cf
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	core "k8s.io/api/core/v1"
@@ -17,7 +17,7 @@ const ENV_APPLICATION_SERVER_PORT = "APPLICATION_SERVER_PORT"
 const ENV_APPLICATION_ID = "APPLICATION_ID"
 
 type StreamsCF struct {
-	ctx                            loop.ControlLoopContext
+	ctx                            *context.LoopContext
 	svcResourceCache               resources.ResourceCache
 	svcEnvCache                    env.EnvCache
 	persistence                    string
@@ -31,11 +31,11 @@ type StreamsCF struct {
 	envApplicationId               string
 }
 
-func NewStreamsCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewStreamsCF(ctx *context.LoopContext) loop.ControlFunction {
 	return &StreamsCF{
 		ctx:                            ctx,
-		svcResourceCache:               ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcEnvCache:                    ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
+		svcResourceCache:               ctx.GetResourceCache(),
+		svcEnvCache:                    ctx.GetEnvCache(),
 		persistence:                    "",
 		bootstrapServers:               "",
 		applicationServerPort:          "",

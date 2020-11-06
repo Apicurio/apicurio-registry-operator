@@ -2,7 +2,7 @@ package cf
 
 import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/env"
 )
 
@@ -11,16 +11,16 @@ var _ loop.ControlFunction = &ProfileCF{}
 const ENV_QUARKUS_PROFILE = "QUARKUS_PROFILE"
 
 type ProfileCF struct {
-	ctx         loop.ControlLoopContext
+	ctx         *context.LoopContext
 	svcEnvCache env.EnvCache
 	profileSet  bool
 }
 
 // Is responsible for managing environment variables from the env cache
-func NewProfileCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewProfileCF(ctx *context.LoopContext) loop.ControlFunction {
 	return &ProfileCF{
 		ctx:         ctx,
-		svcEnvCache: ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
+		svcEnvCache: ctx.GetEnvCache(),
 		profileSet:  false,
 	}
 }

@@ -3,7 +3,7 @@ package cf
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	ocp_apps "github.com/openshift/api/apps/v1"
@@ -12,7 +12,7 @@ import (
 var _ loop.ControlFunction = &ReplicasOcpCF{}
 
 type ReplicasOcpCF struct {
-	ctx              loop.ControlLoopContext
+	ctx              *context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcStatus        *status.Status
 	deploymentEntry  resources.ResourceCacheEntry
@@ -24,11 +24,11 @@ type ReplicasOcpCF struct {
 // This CF makes sure number of replicas is aligned
 // If there is some other way of determining the number of replicas needed outside of CR,
 // modify the Sense stage so this CF knows about it
-func NewReplicasOcpCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewReplicasOcpCF(ctx *context.LoopContext) loop.ControlFunction {
 	return &ReplicasOcpCF{
 		ctx:              ctx,
-		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcStatus:        ctx.RequireService(svc.SVC_STATUS).(*status.Status),
+		svcResourceCache: ctx.GetResourceCache(),
+		svcStatus:        ctx.GetStatus(),
 		deploymentEntry:  nil,
 		deploymentExists: false,
 		existingReplicas: 0,

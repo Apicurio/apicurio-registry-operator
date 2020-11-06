@@ -1,10 +1,10 @@
 package cf
 
 import (
-	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
@@ -12,14 +12,12 @@ import (
 	ocp_apps "github.com/openshift/api/apps/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 var _ loop.ControlFunction = &DeploymentOcpCF{}
 
 type DeploymentOcpCF struct {
-	ctx              loop.ControlLoopContext
+	ctx              *context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcClients       *client.Clients
 	svcStatus        *status.Status
@@ -29,23 +27,14 @@ type DeploymentOcpCF struct {
 	deploymentName   string
 }
 
-func NewDeploymentOcpCF(ctx loop.ControlLoopContext) loop.ControlFunction {
-
-	err := ctx.GetController().Watch(&source.Kind{Type: &ocp_apps.DeploymentConfig{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &ar.ApicurioRegistry{},
-	})
-
-	if err != nil {
-		panic("Error creating watch.")
-	}
+func NewDeploymentOcpCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
 
 	return &DeploymentOcpCF{
 		ctx:              ctx,
-		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcClients:       ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients),
-		svcStatus:        ctx.RequireService(svc.SVC_STATUS).(*status.Status),
-		svcOCPFactory:    ctx.RequireService(svc.SVC_OCP_FACTORY).(*factory.OCPFactory),
+		svcResourceCache: ctx.GetResourceCache(),
+		svcClients:       services.Clients,
+		svcStatus:        ctx.GetStatus(),
+		svcOCPFactory:    services.OcpFactory,
 		isCached:         false,
 		deployments:      make([]ocp_apps.DeploymentConfig, 0),
 		deploymentName:   resources.RC_EMPTY_NAME,
@@ -133,8 +122,7 @@ func (this *DeploymentOcpCF) Cleanup() bool {
 		return false
 	}
 	if deploymentEntry, deploymentExists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT_OCP); deploymentExists {
-		if err := this.svcClients.OCP().DeleteDeployment(deploymentEntry.GetValue().(*ocp_apps.DeploymentConfig), &meta.DeleteOptions{});
-			err != nil && !api_errors.IsNotFound(err) {
+		if err := this.svcClients.OCP().DeleteDeployment(deploymentEntry.GetValue().(*ocp_apps.DeploymentConfig), &meta.DeleteOptions{}); err != nil && !api_errors.IsNotFound(err) {
 			this.ctx.GetLog().Error(err, "Could not delete deployment during cleanup")
 			return false
 		} else {

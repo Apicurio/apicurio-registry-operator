@@ -2,7 +2,8 @@ package cf
 
 import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	apps "k8s.io/api/apps/v1"
@@ -14,7 +15,7 @@ import (
 var _ loop.ControlFunction = &LabelsCF{}
 
 type LabelsCF struct {
-	ctx              loop.ControlLoopContext
+	ctx              *context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcKubeFactory   *factory.KubeFactory
 
@@ -48,11 +49,11 @@ type LabelsCF struct {
 }
 
 // Update labels on some managed resources
-func NewLabelsCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewLabelsCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
 	return &LabelsCF{
 		ctx:              ctx,
-		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcKubeFactory:   ctx.RequireService(svc.SVC_KUBE_FACTORY).(*factory.KubeFactory),
+		svcResourceCache: ctx.GetResourceCache(),
+		svcKubeFactory:   services.KubeFactory,
 		podLabels:        nil,
 	}
 }
@@ -103,12 +104,11 @@ func (this *LabelsCF) Compare() bool {
 	this.updateIngress = this.ingressIsCached && !LabelsEqual(this.ingressLabels, this.caLabels)
 	this.updatePdb = this.pdbIsCached && !LabelsEqual(this.pdbLabels, this.caLabels)
 
-	return this.podIsCached && (
-		this.updateDeployment ||
-			this.updateDeploymentPod ||
-			this.updateService ||
-			this.updateIngress ||
-			this.updatePdb)
+	return this.podIsCached && (this.updateDeployment ||
+		this.updateDeploymentPod ||
+		this.updateService ||
+		this.updateIngress ||
+		this.updatePdb)
 }
 
 func (this *LabelsCF) Respond() {

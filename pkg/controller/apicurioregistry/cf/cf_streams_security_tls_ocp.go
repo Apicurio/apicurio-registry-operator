@@ -3,7 +3,7 @@ package cf
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	ocp_apps "github.com/openshift/api/apps/v1"
@@ -13,7 +13,7 @@ import (
 var _ loop.ControlFunction = &StreamsSecurityTLSOcpCF{}
 
 type StreamsSecurityTLSOcpCF struct {
-	ctx                       loop.ControlLoopContext
+	ctx                       *context.LoopContext
 	svcResourceCache          resources.ResourceCache
 	svcEnvCache               env.EnvCache
 	persistence               string
@@ -27,11 +27,11 @@ type StreamsSecurityTLSOcpCF struct {
 	deploymentEntry           resources.ResourceCacheEntry
 }
 
-func NewStreamsSecurityTLSOcpCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewStreamsSecurityTLSOcpCF(ctx *context.LoopContext) loop.ControlFunction {
 	return &StreamsSecurityTLSOcpCF{
 		ctx:                       ctx,
-		svcResourceCache:          ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcEnvCache:               ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
+		svcResourceCache:          ctx.GetResourceCache(),
+		svcEnvCache:               ctx.GetEnvCache(),
 		persistence:               "",
 		bootstrapServers:          "",
 		keystoreSecretName:        "",
@@ -88,9 +88,8 @@ func (this *StreamsSecurityTLSOcpCF) Sense() {
 
 func (this *StreamsSecurityTLSOcpCF) Compare() bool {
 	// Condition #1
-	return this.valid && (
-		this.keystoreSecretName != this.foundKeystoreSecretName ||
-			this.truststoreSecretName != this.foundTruststoreSecretName)
+	return this.valid && (this.keystoreSecretName != this.foundKeystoreSecretName ||
+		this.truststoreSecretName != this.foundTruststoreSecretName)
 }
 
 func (this *StreamsSecurityTLSOcpCF) Respond() {

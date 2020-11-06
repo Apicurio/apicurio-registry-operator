@@ -1,24 +1,27 @@
 package impl
 
 import (
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
 	"strconv"
+
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/services"
 )
 
-var _ loop.ControlLoop = &controlLoopImpl{}
+// var _ loop.ControlLoop = &controlLoopImpl{}
 
 type controlLoopImpl struct {
-	ctx              loop.ControlLoopContext
+	ctx              *context.LoopContext
+	services         *services.LoopServices
 	controlFunctions []loop.ControlFunction
 }
 
-func NewControlLoopImpl(ctx loop.ControlLoopContext) loop.ControlLoop {
-
-	this := &controlLoopImpl{
-		ctx: ctx,
+func NewControlLoopImpl(ctx *context.LoopContext, services *services.LoopServices) loop.ControlLoop {
+	return &controlLoopImpl{
+		ctx:              ctx,
+		services:         services,
+		controlFunctions: make([]loop.ControlFunction, 0, 32),
 	}
-	this.controlFunctions = make([]loop.ControlFunction, 0, 32)
-	return this
 }
 
 func (this *controlLoopImpl) AddControlFunction(cf loop.ControlFunction) {
@@ -30,7 +33,8 @@ func (this *controlLoopImpl) GetControlFunctions() []loop.ControlFunction {
 }
 
 func (this *controlLoopImpl) Run() {
-	this.ctx.BeforeRun()
+	// this.ctx.BeforeRun()
+	this.services.Patchers.Reload()
 
 	// CONTROL LOOP
 	maxAttempts := len(this.GetControlFunctions()) * 2
@@ -61,7 +65,8 @@ func (this *controlLoopImpl) Run() {
 		panic("Control loop stabilization limit exceeded.")
 	}
 
-	this.ctx.AfterRun()
+	// this.ctx.AfterRun()
+	this.services.Patchers.Execute()
 }
 
 func (this *controlLoopImpl) Cleanup() {
@@ -81,7 +86,7 @@ func (this *controlLoopImpl) Cleanup() {
 		}
 		if finished {
 			this.ctx.GetLog().WithValues("app", this.ctx.GetAppName()).Info("Cleanup finished successfully.")
-			break;
+			break
 		}
 	}
 	if attempt == maxAttempts {
@@ -90,6 +95,6 @@ func (this *controlLoopImpl) Cleanup() {
 	}
 }
 
-func (this *controlLoopImpl) GetContext() loop.ControlLoopContext {
+func (this *controlLoopImpl) GetContext() *context.LoopContext {
 	return this.ctx
 }

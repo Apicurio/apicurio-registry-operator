@@ -3,7 +3,7 @@ package client
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/types"
@@ -14,11 +14,11 @@ import (
 // =====
 
 type CRDClient struct {
-	ctx    loop.ControlLoopContext
+	ctx    *context.LoopContext
 	client *rest.RESTClient
 }
 
-func NewCRDClient(ctx loop.ControlLoopContext, config *rest.Config) *CRDClient {
+func NewCRDClient(ctx *context.LoopContext, config *rest.Config) *CRDClient {
 
 	ctx.GetScheme().AddKnownTypes(ar.SchemeGroupVersion, &ar.ApicurioRegistry{}, &ar.ApicurioRegistryList{})
 

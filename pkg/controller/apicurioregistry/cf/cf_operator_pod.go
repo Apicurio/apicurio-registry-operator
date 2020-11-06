@@ -1,30 +1,32 @@
 package cf
 
 import (
+	"os"
+
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"os"
 )
 
 var _ loop.ControlFunction = &OperatorPodCF{}
 
 type OperatorPodCF struct {
-	ctx              loop.ControlLoopContext
+	ctx              *context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcClients       *client.Clients
 	podExists        bool
 }
 
 // Read the operator pod into the resource cache
-func NewOperatorPodCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewOperatorPodCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
 	return &OperatorPodCF{
 		ctx:              ctx,
-		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcClients:       ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients),
+		svcResourceCache: ctx.GetResourceCache(),
+		svcClients:       services.Clients,
 		podExists:        false,
 	}
 }

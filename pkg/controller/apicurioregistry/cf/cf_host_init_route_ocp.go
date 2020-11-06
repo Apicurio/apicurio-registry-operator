@@ -1,18 +1,19 @@
 package cf
 
 import (
+	"strings"
+
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	ocp_route "github.com/openshift/api/route/v1"
-	"strings"
 )
 
 var _ loop.ControlFunction = &HostInitRouteOcpCF{}
 
 type HostInitRouteOcpCF struct {
-	ctx                             loop.ControlLoopContext
+	ctx                             *context.LoopContext
 	svcResourceCache                resources.ResourceCache
 	isFirstRespond                  bool
 	existingHost                    string
@@ -21,10 +22,10 @@ type HostInitRouteOcpCF struct {
 	routeEntry                      resources.ResourceCacheEntry
 }
 
-func NewHostInitRouteOcpCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewHostInitRouteOcpCF(ctx *context.LoopContext) loop.ControlFunction {
 	return &HostInitRouteOcpCF{
 		ctx:                             ctx,
-		svcResourceCache:                ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcResourceCache:                ctx.GetResourceCache(),
 		isFirstRespond:                  true,
 		existingHost:                    "",
 		existingRouterCanonicalHostname: "",

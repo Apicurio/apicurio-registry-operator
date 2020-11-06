@@ -1,10 +1,11 @@
 package cf
 
 import (
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	"reflect"
+
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	apps "k8s.io/api/apps/v1"
@@ -14,7 +15,7 @@ import (
 var _ loop.ControlFunction = &TolerationCF{}
 
 type TolerationCF struct {
-	ctx                   loop.ControlLoopContext
+	ctx                   *context.LoopContext
 	svcResourceCache      resources.ResourceCache
 	deploymentEntry       resources.ResourceCacheEntry
 	deploymentEntryExists bool
@@ -22,10 +23,10 @@ type TolerationCF struct {
 	targetTolerations     []corev1.Toleration
 }
 
-func NewTolerationCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewTolerationCF(ctx *context.LoopContext) loop.ControlFunction {
 	return &TolerationCF{
 		ctx:                   ctx,
-		svcResourceCache:      ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcResourceCache:      ctx.GetResourceCache(),
 		deploymentEntry:       nil,
 		deploymentEntryExists: false,
 		existingTolerations:   nil,

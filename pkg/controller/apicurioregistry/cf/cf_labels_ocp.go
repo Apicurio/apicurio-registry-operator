@@ -2,7 +2,8 @@ package cf
 
 import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	ocp_apps "github.com/openshift/api/apps/v1"
@@ -14,7 +15,7 @@ import (
 var _ loop.ControlFunction = &LabelsOcpCF{}
 
 type LabelsOcpCF struct {
-	ctx              loop.ControlLoopContext
+	ctx              *context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcOCPFactory    *factory.OCPFactory
 
@@ -48,11 +49,11 @@ type LabelsOcpCF struct {
 }
 
 // Update labels on some managed resources
-func NewLabelsOcpCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewLabelsOcpCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
 	return &LabelsOcpCF{
 		ctx:              ctx,
-		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcOCPFactory:    ctx.RequireService(svc.SVC_OCP_FACTORY).(*factory.OCPFactory),
+		svcResourceCache: ctx.GetResourceCache(),
+		svcOCPFactory:    services.OcpFactory,
 		podLabels:        nil,
 	}
 }
@@ -103,12 +104,11 @@ func (this *LabelsOcpCF) Compare() bool {
 	this.updateIngress = this.ingressIsCached && !LabelsEqual(this.ingressLabels, this.caLabels)
 	this.updatePdb = this.pdbIsCached && !LabelsEqual(this.pdbLabels, this.caLabels)
 
-	return this.podIsCached && (
-		this.updateDeployment ||
-			this.updateDeploymentPod ||
-			this.updateService ||
-			this.updateIngress ||
-			this.updatePdb)
+	return this.podIsCached && (this.updateDeployment ||
+		this.updateDeploymentPod ||
+		this.updateService ||
+		this.updateIngress ||
+		this.updatePdb)
 }
 
 func (this *LabelsOcpCF) Respond() {

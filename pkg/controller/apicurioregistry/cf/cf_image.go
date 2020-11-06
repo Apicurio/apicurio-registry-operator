@@ -1,13 +1,14 @@
 package cf
 
 import (
+	"os"
+
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	apps "k8s.io/api/apps/v1"
-	"os"
 )
 
 var _ loop.ControlFunction = &ImageCF{}
@@ -20,7 +21,7 @@ const ENV_OPERATOR_REGISTRY_IMAGE_INFINISPAN = "REGISTRY_IMAGE_INFINISPAN"
 
 // This CF takes care of keeping the "image" section of the CRD applied.
 type ImageCF struct {
-	ctx              loop.ControlLoopContext
+	ctx              *context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcStatus        *status.Status
 	deploymentEntry  resources.ResourceCacheEntry
@@ -29,11 +30,11 @@ type ImageCF struct {
 	targetImage      string
 }
 
-func NewImageCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewImageCF(ctx *context.LoopContext) loop.ControlFunction {
 	return &ImageCF{
 		ctx:              ctx,
-		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcStatus:        ctx.RequireService(svc.SVC_STATUS).(*status.Status),
+		svcResourceCache: ctx.GetResourceCache(),
+		svcStatus:        ctx.GetStatus(),
 		deploymentEntry:  nil,
 		deploymentExists: false,
 		existingImage:    resources.RC_EMPTY_NAME,

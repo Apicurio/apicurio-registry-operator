@@ -3,7 +3,7 @@ package cf
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	ocp_apps "github.com/openshift/api/apps/v1"
@@ -13,7 +13,7 @@ import (
 var _ loop.ControlFunction = &StreamsSecurityScramOcpCF{}
 
 type StreamsSecurityScramOcpCF struct {
-	ctx                          loop.ControlLoopContext
+	ctx                          *context.LoopContext
 	svcResourceCache             resources.ResourceCache
 	svcEnvCache                  env.EnvCache
 	persistence                  string
@@ -32,11 +32,11 @@ type StreamsSecurityScramOcpCF struct {
 	mechOk                       bool
 }
 
-func NewStreamsSecurityScramOcpCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewStreamsSecurityScramOcpCF(ctx *context.LoopContext) loop.ControlFunction {
 	return &StreamsSecurityScramOcpCF{
 		ctx:                          ctx,
-		svcResourceCache:             ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcEnvCache:                  ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
+		svcResourceCache:             ctx.GetResourceCache(),
+		svcEnvCache:                  ctx.GetEnvCache(),
 		persistence:                  "",
 		bootstrapServers:             "",
 		truststoreSecretName:         "",
@@ -121,12 +121,11 @@ func (this *StreamsSecurityScramOcpCF) Sense() {
 
 func (this *StreamsSecurityScramOcpCF) Compare() bool {
 	// Condition #1
-	return this.valid && (
-		this.truststoreSecretName != this.foundTruststoreSecretName ||
-			this.scramUser != this.foundScramUser ||
-			this.scramPasswordSecretName != this.foundScramPasswordSecretName ||
-			this.scramMechanism != this.foundScramMechanism ||
-			!this.mechOk)
+	return this.valid && (this.truststoreSecretName != this.foundTruststoreSecretName ||
+		this.scramUser != this.foundScramUser ||
+		this.scramPasswordSecretName != this.foundScramPasswordSecretName ||
+		this.scramMechanism != this.foundScramMechanism ||
+		!this.mechOk)
 }
 
 func (this *StreamsSecurityScramOcpCF) Respond() {

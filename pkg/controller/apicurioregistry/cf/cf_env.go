@@ -2,7 +2,7 @@ package cf
 
 import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	apps "k8s.io/api/apps/v1"
@@ -11,7 +11,7 @@ import (
 var _ loop.ControlFunction = &EnvCF{}
 
 type EnvCF struct {
-	ctx                loop.ControlLoopContext
+	ctx                *context.LoopContext
 	svcResourceCache   resources.ResourceCache
 	svcEnvCache        env.EnvCache
 	deploymentExists   bool
@@ -22,11 +22,11 @@ type EnvCF struct {
 }
 
 // Is responsible for managing environment variables from the env cache
-func NewEnvCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewEnvCF(ctx *context.LoopContext) loop.ControlFunction {
 	return &EnvCF{
 		ctx:                ctx,
-		svcResourceCache:   ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcEnvCache:        ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
+		svcResourceCache:   ctx.GetResourceCache(),
+		svcEnvCache:        ctx.GetEnvCache(),
 		deploymentExists:   false,
 		deploymentEntry:    nil,
 		deploymentName:     resources.RC_EMPTY_NAME,
