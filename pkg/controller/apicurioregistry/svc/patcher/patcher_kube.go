@@ -1,27 +1,34 @@
 package patcher
 
 import (
+	goctx "context"
+	"reflect"
+
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	policy "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type KubePatcher struct {
-	ctx     *context.LoopContext
-	clients *client.Clients
+	ctx         *context.LoopContext
+	clients     *client.Clients
+	factoryKube *factory.KubeFactory
 }
 
-func NewKubePatcher(ctx *context.LoopContext, clients *client.Clients) *KubePatcher {
+func NewKubePatcher(ctx *context.LoopContext, clients *client.Clients, factoryKube *factory.KubeFactory) *KubePatcher {
 	return &KubePatcher{
-		ctx:     ctx,
-		clients: clients,
+		ctx:         ctx,
+		clients:     clients,
+		factoryKube: factoryKube,
 	}
 }
 
@@ -59,6 +66,27 @@ func (this *KubePatcher) patchApicurioRegistry() { // TODO move to separate file
 			return common.Name(value.(*ar.ApicurioRegistry).GetName())
 		},
 	)
+}
+
+func (this *KubePatcher) patchApicurioRegistryStatus() {
+
+	specEntry, specExists := this.ctx.GetResourceCache().Get(resources.RC_KEY_SPEC)
+	if specExists {
+		spec := specEntry.GetValue().(*ar.ApicurioRegistry)
+
+		targetStatus := *this.factoryKube.CreateStatus(spec)
+
+		if !reflect.DeepEqual(spec.Status, targetStatus) {
+			cr := spec.DeepCopy()
+			cr.Status = targetStatus
+			err := this.ctx.GetClient().Status().Patch(goctx.TODO(), cr, k8sclient.Merge)
+			if err != nil {
+				this.ctx.GetLog().WithValues("name", specEntry.GetName()).Info("Resource not found. (May have been deleted).")
+				this.ctx.GetResourceCache().Remove(resources.RC_KEY_SPEC)
+				this.ctx.SetRequeue()
+			}
+		}
+	}
 }
 
 func (this *KubePatcher) reloadDeployment() {
@@ -216,4 +244,6 @@ func (this *KubePatcher) Execute() {
 	this.patchService()
 	this.patchIngress()
 	this.patchPodDisruptionBudget()
+	//write status, status patching works different to spec patching
+	this.patchApicurioRegistryStatus()
 }

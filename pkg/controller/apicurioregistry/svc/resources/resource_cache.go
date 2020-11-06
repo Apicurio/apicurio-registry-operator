@@ -46,8 +46,6 @@ type resourceCacheEntry struct {
 	isPatched     bool
 }
 
-var _ ResourceCacheEntry = &resourceCacheEntry{}
-
 func NewResourceCacheEntry(name common.Name, value interface{}) ResourceCacheEntry {
 	this := &resourceCacheEntry{}
 	this.name = name
@@ -98,8 +96,6 @@ type ResourceCache interface {
 type resourceCache struct {
 	cache map[string]ResourceCacheEntry
 }
-
-var _ ResourceCache = &resourceCache{}
 
 // Resource cache is a way for CF to avoid getting & recreating the resources unnecessarily,
 // and do a pseudo-atomic patching

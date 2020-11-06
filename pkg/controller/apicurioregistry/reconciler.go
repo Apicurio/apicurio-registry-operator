@@ -108,7 +108,7 @@ func (this *ApicurioRegistryReconciler) getApicurioRegistryResource(appNamespace
 func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNamespace common.Namespace) loop.ControlLoop {
 
 	log.Info("Creating new context")
-	ctx := loop_context.NewLoopContext(appName, appNamespace, log, this.scheme)
+	ctx := loop_context.NewLoopContext(appName, appNamespace, log, this.scheme, this.client)
 	services := services.NewLoopServices(ctx)
 	c := impl.NewControlLoopImpl(ctx, services)
 
@@ -139,7 +139,6 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 		c.AddControlFunction(cf.NewReplicasOcpCF(ctx))
 		c.AddControlFunction(cf.NewServiceCF(ctx, services))
 		c.AddControlFunction(cf.NewServiceMonitorCF(ctx, services))
-		c.AddControlFunction(cf.NewStatusCF(ctx, services))
 
 		c.AddControlFunction(cf.NewStreamsCF(ctx))
 		c.AddControlFunction(cf.NewStreamsSecurityScramOcpCF(ctx))
@@ -172,7 +171,6 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 		c.AddControlFunction(cf.NewReplicasCF(ctx))
 		c.AddControlFunction(cf.NewServiceCF(ctx, services))
 		c.AddControlFunction(cf.NewServiceMonitorCF(ctx, services))
-		c.AddControlFunction(cf.NewStatusCF(ctx, services))
 		c.AddControlFunction(cf.NewStreamsCF(ctx))
 
 		c.AddControlFunction(cf.NewStreamsSecurityScramCF(ctx))
