@@ -57,7 +57,7 @@ func (this *StatusCF) Compare() bool {
 func (this *StatusCF) Respond() {
 	this.specEntry.ApplyPatch(func(value interface{}) interface{} {
 		spec := value.(*ar.ApicurioRegistry).DeepCopy()
-		spec.Status = *this.targetStatus
+		spec.Status = this.targetStatus
 		return spec
 	})
 }
