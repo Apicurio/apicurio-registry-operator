@@ -1,19 +1,21 @@
 package cf
 
 import (
+	"reflect"
+
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
-	"reflect"
 )
 
 var _ loop.ControlFunction = &StatusCF{}
 
 type StatusCF struct {
-	ctx              loop.ControlLoopContext
+	ctx              *context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcStatus        *status.Status
 	svcKubeFactory   *factory.KubeFactory
@@ -25,12 +27,12 @@ type StatusCF struct {
 }
 
 // This CF updates the status part of ApicurioRegistry resource
-func NewStatusCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewStatusCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
 	return &StatusCF{
 		ctx:              ctx,
-		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcStatus:        ctx.RequireService(svc.SVC_STATUS).(*status.Status),
-		svcKubeFactory:   ctx.RequireService(svc.SVC_KUBE_FACTORY).(*factory.KubeFactory),
+		svcResourceCache: ctx.GetResourceCache(),
+		svcStatus:        ctx.GetStatus(),
+		svcKubeFactory:   services.KubeFactory,
 	}
 }
 
@@ -55,7 +57,7 @@ func (this *StatusCF) Compare() bool {
 func (this *StatusCF) Respond() {
 	this.specEntry.ApplyPatch(func(value interface{}) interface{} {
 		spec := value.(*ar.ApicurioRegistry).DeepCopy()
-		spec.Status = this.targetStatus
+		spec.Status = *this.targetStatus
 		return spec
 	})
 }

@@ -1,20 +1,21 @@
 package cf
 
 import (
+	"os"
+
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	ocp_apps "github.com/openshift/api/apps/v1"
-	"os"
 )
 
 var _ loop.ControlFunction = &ImageOcpCF{}
 
 // This CF takes care of keeping the "image" section of the CRD applied.
 type ImageOcpCF struct {
-	ctx              loop.ControlLoopContext
+	ctx              *context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcStatus        *status.Status
 	deploymentEntry  resources.ResourceCacheEntry
@@ -23,11 +24,11 @@ type ImageOcpCF struct {
 	targetImage      string
 }
 
-func NewImageOcpCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewImageOcpCF(ctx *context.LoopContext) loop.ControlFunction {
 	return &ImageOcpCF{
 		ctx:              ctx,
-		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcStatus:        ctx.RequireService(svc.SVC_STATUS).(*status.Status),
+		svcResourceCache: ctx.GetResourceCache(),
+		svcStatus:        ctx.GetStatus(),
 		deploymentEntry:  nil,
 		deploymentExists: false,
 		existingImage:    resources.RC_EMPTY_NAME,

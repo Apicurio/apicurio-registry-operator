@@ -2,7 +2,7 @@ package client
 
 import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	ocp_apps "github.com/openshift/api/apps/v1"
 	ocp_route "github.com/openshift/api/route/v1"
 	ocp_apps_client "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
@@ -14,12 +14,12 @@ import (
 )
 
 type OCPClient struct {
-	ctx            loop.ControlLoopContext
+	ctx            *context.LoopContext
 	ocpAppsClient  *ocp_apps_client.AppsV1Client
 	ocpRouteClient *ocp_route_client.RouteV1Client
 }
 
-func NewOCPClient(ctx loop.ControlLoopContext, clientConfig *rest.Config) *OCPClient {
+func NewOCPClient(ctx *context.LoopContext, clientConfig *rest.Config) *OCPClient {
 	this := &OCPClient{
 		ctx:            ctx,
 		ocpAppsClient:  ocp_apps_client.NewForConfigOrDie(clientConfig),

@@ -4,7 +4,8 @@ import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
@@ -12,14 +13,12 @@ import (
 	extensions "k8s.io/api/extensions/v1beta1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 var _ loop.ControlFunction = &IngressCF{}
 
 type IngressCF struct {
-	ctx               loop.ControlLoopContext
+	ctx               *context.LoopContext
 	svcResourceCache  resources.ResourceCache
 	svcClients        *client.Clients
 	svcStatus         *status.Status
@@ -31,23 +30,14 @@ type IngressCF struct {
 	targetHostIsEmpty bool
 }
 
-func NewIngressCF(ctx loop.ControlLoopContext) loop.ControlFunction {
-
-	err := ctx.GetController().Watch(&source.Kind{Type: &extensions.Ingress{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &ar.ApicurioRegistry{},
-	})
-
-	if err != nil {
-		panic("Error creating Ingress watch.")
-	}
+func NewIngressCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
 
 	return &IngressCF{
 		ctx:               ctx,
-		svcResourceCache:  ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcClients:        ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients),
-		svcStatus:         ctx.RequireService(svc.SVC_STATUS).(*status.Status),
-		svcKubeFactory:    ctx.RequireService(svc.SVC_KUBE_FACTORY).(*factory.KubeFactory),
+		svcResourceCache:  ctx.GetResourceCache(),
+		svcClients:        services.Clients,
+		svcStatus:         ctx.GetStatus(),
+		svcKubeFactory:    services.KubeFactory,
 		isCached:          false,
 		ingresses:         make([]extensions.Ingress, 0),
 		ingressName:       resources.RC_EMPTY_NAME,
@@ -155,8 +145,7 @@ func (this *IngressCF) Respond() {
 func (this *IngressCF) Cleanup() bool {
 	// Ingress should not have any deletion dependencies
 	if ingressEntry, ingressExists := this.svcResourceCache.Get(resources.RC_KEY_INGRESS); ingressExists {
-		if err := this.svcClients.Kube().DeleteIngress(ingressEntry.GetValue().(*extensions.Ingress), &meta.DeleteOptions{});
-			err != nil && !api_errors.IsNotFound(err) {
+		if err := this.svcClients.Kube().DeleteIngress(ingressEntry.GetValue().(*extensions.Ingress), &meta.DeleteOptions{}); err != nil && !api_errors.IsNotFound(err) {
 			this.ctx.GetLog().Error(err, "Could not delete ingress during cleanup.")
 			return false
 		} else {

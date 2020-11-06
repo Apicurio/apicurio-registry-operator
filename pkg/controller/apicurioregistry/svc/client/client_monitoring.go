@@ -2,7 +2,7 @@ package client
 
 import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monclientv1 "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
@@ -15,12 +15,12 @@ import (
 // =====
 
 type MonitoringClient struct {
-	ctx             loop.ControlLoopContext
+	ctx             *context.LoopContext
 	client          *monclientv1.MonitoringV1Client
 	discoveryClient *discovery.DiscoveryClient
 }
 
-func NewMonitoringClient(ctx loop.ControlLoopContext, config *rest.Config) *MonitoringClient {
+func NewMonitoringClient(ctx *context.LoopContext, config *rest.Config) *MonitoringClient {
 	return &MonitoringClient{
 		ctx:             ctx,
 		client:          monclientv1.NewForConfigOrDie(config),

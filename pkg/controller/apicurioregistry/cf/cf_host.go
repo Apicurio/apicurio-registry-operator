@@ -3,7 +3,7 @@ package cf
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -12,7 +12,7 @@ import (
 var _ loop.ControlFunction = &HostCF{}
 
 type HostCF struct {
-	ctx              loop.ControlLoopContext
+	ctx              *context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcStatus        *status.Status
 	ingressEntry     resources.ResourceCacheEntry
@@ -25,11 +25,11 @@ type HostCF struct {
 // This CF makes sure number of host is aligned
 // If there is some other way of determining the number of host needed outside of CR,
 // modify the Sense stage so this CF knows about it
-func NewHostCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewHostCF(ctx *context.LoopContext) loop.ControlFunction {
 	return &HostCF{
 		ctx:              ctx,
-		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcStatus:        ctx.RequireService(svc.SVC_STATUS).(*status.Status),
+		svcResourceCache: ctx.GetResourceCache(),
+		svcStatus:        ctx.GetStatus(),
 		ingressEntry:     nil,
 		ingressExists:    false,
 		serviceName:      resources.RC_EMPTY_NAME,

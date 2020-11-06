@@ -1,8 +1,7 @@
 package factory
 
 import (
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	ocp_apps "github.com/openshift/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -11,25 +10,27 @@ import (
 )
 
 type OCPFactory struct {
-	ctx loop.ControlLoopContext
+	ctx         *context.LoopContext
+	kubeFactory *KubeFactory
 }
 
-func NewOCPFactory(ctx loop.ControlLoopContext) *OCPFactory {
+func NewOCPFactory(ctx *context.LoopContext, kubeFactory *KubeFactory) *OCPFactory {
 	return &OCPFactory{
-		ctx: ctx,
+		ctx:         ctx,
+		kubeFactory: kubeFactory,
 	}
 }
 
 func (this *OCPFactory) GetLabels() map[string]string {
-	return this.ctx.RequireService(svc.SVC_KUBE_FACTORY).(*KubeFactory).GetLabels()
+	return this.kubeFactory.GetLabels()
 }
 
 func (this *OCPFactory) GetSelectorLabels() map[string]string {
-	return this.ctx.RequireService(svc.SVC_KUBE_FACTORY).(*KubeFactory).GetSelectorLabels()
+	return this.kubeFactory.GetSelectorLabels()
 }
 
 func (this *OCPFactory) createObjectMeta(typeTag string) meta.ObjectMeta {
-	return this.ctx.RequireService(svc.SVC_KUBE_FACTORY).(*KubeFactory).createObjectMeta(typeTag)
+	return this.kubeFactory.createObjectMeta(typeTag)
 }
 
 func (this *OCPFactory) CreateDeployment() *ocp_apps.DeploymentConfig {

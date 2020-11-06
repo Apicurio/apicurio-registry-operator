@@ -3,14 +3,14 @@ package cf
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 )
 
 var _ loop.ControlFunction = &HostInitCF{}
 
 type HostInitCF struct {
-	ctx              loop.ControlLoopContext
+	ctx              *context.LoopContext
 	svcResourceCache resources.ResourceCache
 	isFirstRun       bool
 	targetHost       string
@@ -20,10 +20,10 @@ type HostInitCF struct {
 // This CF makes sure number of host is aligned
 // If there is some other way of determining the number of host needed outside of CR,
 // modify the Sense stage so this CF knows about it
-func NewHostInitCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewHostInitCF(ctx *context.LoopContext) loop.ControlFunction {
 	return &HostInitCF{
 		ctx:              ctx,
-		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcResourceCache: ctx.GetResourceCache(),
 		isFirstRun:       true,
 		targetHost:       "",
 		specEntry:        nil,

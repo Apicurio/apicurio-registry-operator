@@ -2,7 +2,7 @@ package client
 
 import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -17,11 +17,11 @@ import (
 // =====
 
 type KubeClient struct {
-	ctx    loop.ControlLoopContext
+	ctx    *context.LoopContext
 	client kubernetes.Interface
 }
 
-func NewKubeClient(ctx loop.ControlLoopContext, config *rest.Config) *KubeClient {
+func NewKubeClient(ctx *context.LoopContext, config *rest.Config) *KubeClient {
 	return &KubeClient{
 		client: kubernetes.NewForConfigOrDie(config),
 		ctx:    ctx,

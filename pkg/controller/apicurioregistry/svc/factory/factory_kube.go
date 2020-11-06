@@ -1,9 +1,10 @@
 package factory
 
 import (
+	"os"
+
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
@@ -12,14 +13,13 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"os"
 )
 
 type KubeFactory struct {
-	ctx loop.ControlLoopContext
+	ctx *context.LoopContext
 }
 
-func NewKubeFactory(ctx loop.ControlLoopContext) *KubeFactory {
+func NewKubeFactory(ctx *context.LoopContext) *KubeFactory {
 	return &KubeFactory{
 		ctx: ctx,
 	}
@@ -208,12 +208,12 @@ func (this *KubeFactory) CreateIngress(serviceName string) *v1beta1.Ingress {
 
 func (this *KubeFactory) CreateStatus(spec *ar.ApicurioRegistry) *ar.ApicurioRegistryStatus {
 	res := &ar.ApicurioRegistryStatus{
-		Image:          this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).GetConfig(status.CFG_STA_IMAGE),
-		DeploymentName: this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).GetConfig(status.CFG_STA_DEPLOYMENT_NAME),
-		ServiceName:    this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).GetConfig(status.CFG_STA_SERVICE_NAME),
-		IngressName:    this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).GetConfig(status.CFG_STA_INGRESS_NAME),
-		ReplicaCount:   *this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).GetConfigInt32P(status.CFG_STA_REPLICA_COUNT),
-		Host:           this.ctx.RequireService(svc.SVC_STATUS).(*status.Status).GetConfig(status.CFG_STA_ROUTE),
+		Image:          this.ctx.GetStatus().GetConfig(status.CFG_STA_IMAGE),
+		DeploymentName: this.ctx.GetStatus().GetConfig(status.CFG_STA_DEPLOYMENT_NAME),
+		ServiceName:    this.ctx.GetStatus().GetConfig(status.CFG_STA_SERVICE_NAME),
+		IngressName:    this.ctx.GetStatus().GetConfig(status.CFG_STA_INGRESS_NAME),
+		ReplicaCount:   *this.ctx.GetStatus().GetConfigInt32P(status.CFG_STA_REPLICA_COUNT),
+		Host:           this.ctx.GetStatus().GetConfig(status.CFG_STA_ROUTE),
 	}
 	return res
 }

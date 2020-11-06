@@ -2,12 +2,14 @@ package apicurioregistry
 
 import (
 	"context"
+
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/cf"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	loop_context "github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/impl"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -106,16 +108,17 @@ func (this *ApicurioRegistryReconciler) getApicurioRegistryResource(appNamespace
 func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNamespace common.Namespace) loop.ControlLoop {
 
 	log.Info("Creating new context")
-	ctx := impl.NewDefaultContext(appName, appNamespace, this.controller, this.scheme, log, this.client)
-	c := impl.NewControlLoopImpl(ctx)
+	ctx := loop_context.NewLoopContext(appName, appNamespace, log, this.scheme)
+	services := services.NewLoopServices(ctx)
+	c := impl.NewControlLoopImpl(ctx, services)
 
-	isOCP, _ := ctx.RequireService(svc.SVC_CLIENTS).(*client.Clients).IsOCP()
+	isOCP, _ := client.IsOCP()
 	if isOCP {
 		log.Info("This operator is running on OpenShift")
 
 		// Keep alphabetical!
 		c.AddControlFunction(cf.NewAffinityOcpCF(ctx))
-		c.AddControlFunction(cf.NewDeploymentOcpCF(ctx))
+		c.AddControlFunction(cf.NewDeploymentOcpCF(ctx, services))
 		c.AddControlFunction(cf.NewEnvOcpCF(ctx))
 		c.AddControlFunction(cf.NewHostCF(ctx))
 		c.AddControlFunction(cf.NewHostInitCF(ctx))
@@ -123,20 +126,20 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 		c.AddControlFunction(cf.NewHostInitRouteOcpCF(ctx))
 		c.AddControlFunction(cf.NewImageOcpCF(ctx))
 		c.AddControlFunction(cf.NewInfinispanCF(ctx))
-		c.AddControlFunction(cf.NewIngressCF(ctx))
+		c.AddControlFunction(cf.NewIngressCF(ctx, services))
 		c.AddControlFunction(cf.NewJpaCF(ctx))
 
 		c.AddControlFunction(cf.NewKafkaCF(ctx))
-		c.AddControlFunction(cf.NewLabelsOcpCF(ctx))
+		c.AddControlFunction(cf.NewLabelsOcpCF(ctx, services))
 		c.AddControlFunction(cf.NewLogLevelCF(ctx))
-		c.AddControlFunction(cf.NewOperatorPodCF(ctx))
-		c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx))
+		c.AddControlFunction(cf.NewOperatorPodCF(ctx, services))
+		c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, services))
 
 		c.AddControlFunction(cf.NewProfileCF(ctx))
 		c.AddControlFunction(cf.NewReplicasOcpCF(ctx))
-		c.AddControlFunction(cf.NewServiceCF(ctx))
-		c.AddControlFunction(cf.NewServiceMonitorCF(ctx))
-		c.AddControlFunction(cf.NewStatusCF(ctx))
+		c.AddControlFunction(cf.NewServiceCF(ctx, services))
+		c.AddControlFunction(cf.NewServiceMonitorCF(ctx, services))
+		c.AddControlFunction(cf.NewStatusCF(ctx, services))
 
 		c.AddControlFunction(cf.NewStreamsCF(ctx))
 		c.AddControlFunction(cf.NewStreamsSecurityScramOcpCF(ctx))
@@ -149,27 +152,27 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 
 		// Keep alphabetical!
 		c.AddControlFunction(cf.NewAffinityCF(ctx))
-		c.AddControlFunction(cf.NewDeploymentCF(ctx))
+		c.AddControlFunction(cf.NewDeploymentCF(ctx, services))
 		c.AddControlFunction(cf.NewEnvCF(ctx))
 		c.AddControlFunction(cf.NewHostCF(ctx))
 		c.AddControlFunction(cf.NewHostInitCF(ctx))
 
 		c.AddControlFunction(cf.NewImageCF(ctx))
 		c.AddControlFunction(cf.NewInfinispanCF(ctx))
-		c.AddControlFunction(cf.NewIngressCF(ctx))
+		c.AddControlFunction(cf.NewIngressCF(ctx, services))
 		c.AddControlFunction(cf.NewJpaCF(ctx))
 		c.AddControlFunction(cf.NewKafkaCF(ctx))
 
-		c.AddControlFunction(cf.NewLabelsCF(ctx))
+		c.AddControlFunction(cf.NewLabelsCF(ctx, services))
 		c.AddControlFunction(cf.NewLogLevelCF(ctx))
-		c.AddControlFunction(cf.NewOperatorPodCF(ctx))
-		c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx))
+		c.AddControlFunction(cf.NewOperatorPodCF(ctx, services))
+		c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, services))
 		c.AddControlFunction(cf.NewProfileCF(ctx))
 
 		c.AddControlFunction(cf.NewReplicasCF(ctx))
-		c.AddControlFunction(cf.NewServiceCF(ctx))
-		c.AddControlFunction(cf.NewServiceMonitorCF(ctx))
-		c.AddControlFunction(cf.NewStatusCF(ctx))
+		c.AddControlFunction(cf.NewServiceCF(ctx, services))
+		c.AddControlFunction(cf.NewServiceMonitorCF(ctx, services))
+		c.AddControlFunction(cf.NewStatusCF(ctx, services))
 		c.AddControlFunction(cf.NewStreamsCF(ctx))
 
 		c.AddControlFunction(cf.NewStreamsSecurityScramCF(ctx))

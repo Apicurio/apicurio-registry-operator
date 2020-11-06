@@ -1,29 +1,30 @@
 package factory
 
 import (
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type MonitoringFactory struct {
-	ctx loop.ControlLoopContext
+	ctx         *context.LoopContext
+	kubeFactory *KubeFactory
 }
 
-func NewMonitoringFactory(ctx loop.ControlLoopContext) *MonitoringFactory {
+func NewMonitoringFactory(ctx *context.LoopContext, kubeFactory *KubeFactory) *MonitoringFactory {
 	return &MonitoringFactory{
-		ctx: ctx,
+		ctx:         ctx,
+		kubeFactory: kubeFactory,
 	}
 }
 
 func (this *MonitoringFactory) GetLabels() map[string]string {
-	return this.ctx.RequireService(svc.SVC_KUBE_FACTORY).(*KubeFactory).GetLabels()
+	return this.kubeFactory.GetLabels()
 }
 
 func (this *MonitoringFactory) GetSelectorLabels() map[string]string {
-	return this.ctx.RequireService(svc.SVC_KUBE_FACTORY).(*KubeFactory).GetSelectorLabels()
+	return this.kubeFactory.GetSelectorLabels()
 }
 
 func (this *MonitoringFactory) NewServiceMonitor(service *core.Service) *monitoring.ServiceMonitor {
