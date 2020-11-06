@@ -32,14 +32,10 @@ func NewMonitoringClient(ctx *context.LoopContext, config *rest.Config) *Monitor
 // ServiceMonitor
 
 func (this *MonitoringClient) CreateServiceMonitor(namespace common.Namespace, obj *monitoring.ServiceMonitor) (*monitoring.ServiceMonitor, error) {
-	res, err := this.client.ServiceMonitors(namespace.Str()).Create(obj)
-	if err != nil {
+	if err := controllerutil.SetControllerReference(getSpec(this.ctx), obj, this.ctx.GetScheme()); err != nil {
 		return nil, err
 	}
-	if err := controllerutil.SetControllerReference(getSpec(this.ctx), res, this.ctx.GetScheme()); err != nil {
-		panic("Could not set controller reference.")
-	}
-	res, err = this.UpdateServiceMonitor(namespace, res)
+	res, err := this.client.ServiceMonitors(namespace.Str()).Create(obj)
 	if err != nil {
 		return nil, err
 	}

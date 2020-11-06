@@ -32,15 +32,10 @@ func NewOCPClient(ctx *context.LoopContext, clientConfig *rest.Config) *OCPClien
 // Deployment
 
 func (this *OCPClient) CreateDeployment(namespace common.Namespace, value *ocp_apps.DeploymentConfig) (*ocp_apps.DeploymentConfig, error) {
-	res, err := this.ocpAppsClient.DeploymentConfigs(namespace.Str()).
-		Create(value)
-	if err != nil {
+	if err := controllerutil.SetControllerReference(getSpec(this.ctx), value, this.ctx.GetScheme()); err != nil {
 		return nil, err
 	}
-	if err := controllerutil.SetControllerReference(getSpec(this.ctx), res, this.ctx.GetScheme()); err != nil {
-		panic("Could not set controller reference.")
-	}
-	res, err = this.UpdateDeployment(namespace, res)
+	res, err := this.ocpAppsClient.DeploymentConfigs(namespace.Str()).Create(value)
 	if err != nil {
 		return nil, err
 	}
