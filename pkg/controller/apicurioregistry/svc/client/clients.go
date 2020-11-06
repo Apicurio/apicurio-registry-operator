@@ -2,33 +2,32 @@
 package client
 
 import (
-	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
-	"github.com/Masterminds/semver"
-	ocp_config_client "github.com/openshift/client-go/config/clientset/versioned"
-	api_errors "k8s.io/apimachinery/pkg/api/errors"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/discovery"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"net"
 	"os"
 	"os/user"
 	"path"
+
+	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
+	api_errors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 // RecommendedConfigPathEnvVar is a environment variable for path configuration
 const RecommendedConfigPathEnvVar = "KUBECONFIG"
 
+var isOpenshift *bool
+
 var log = logf.Log.WithName("controller_apicurioregistry-Clients")
 
 type Clients struct {
-	ctx              loop.ControlLoopContext
+	ctx              *context.LoopContext
 	config           *rest.Config
 	kubeClient       *KubeClient
 	ocpClient        *OCPClient
@@ -36,7 +35,7 @@ type Clients struct {
 	monitoringClient *MonitoringClient
 }
 
-func NewClients(ctx loop.ControlLoopContext) *Clients {
+func NewClients(ctx *context.LoopContext) *Clients {
 	this := &Clients{
 		ctx: ctx,
 	}
@@ -136,8 +135,24 @@ func (this *Clients) Monitoring() *MonitoringClient {
 	return this.monitoringClient
 }
 
-func (this *Clients) IsOCP() (bool, error) {
-	client, err := discovery.NewDiscoveryClientForConfig(this.config)
+func IsOCP() (bool, error) {
+	if isOpenshift == nil {
+		o, err := detectOpenshift()
+		if err != nil {
+			return o, err
+		}
+		isOpenshift = &o
+	}
+	return *isOpenshift, nil
+}
+
+func detectOpenshift() (bool, error) {
+	config, err := inClusterConfig()
+	if err != nil {
+		return false, err
+	}
+
+	client, err := discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
 		return false, err
 	}
@@ -152,50 +167,8 @@ func (this *Clients) IsOCP() (bool, error) {
 	return true, nil
 }
 
-func (this *Clients) GetOCPVersion() *semver.Version {
-	configClient, err := ocp_config_client.NewForConfig(this.config)
-	if err != nil {
-		log.Error(err, "Failed to create config client")
-		return nil
-	}
-
-	var ocpSemVer *semver.Version
-	clusterVersion, err := configClient.
-		ConfigV1().
-		ClusterVersions().
-		Get("version", meta.GetOptions{})
-
-	if err != nil {
-		if api_errors.IsNotFound(err) {
-			// default to OpenShift 3 as ClusterVersion API was introduced in OpenShift 4
-			ocpSemVer, _ = semver.NewVersion("3")
-		} else {
-			log.Error(err, "Failed to get OCP cluster version")
-			return nil
-		}
-	} else {
-		v := clusterVersion.Status.History[0].Version
-
-		ocpSemVer, err = semver.NewVersion(v)
-		if err != nil {
-			log.Error(err, "Failed to get OCP cluster version")
-			return nil
-		}
-	}
-	return ocpSemVer
-}
-
-func (this *Clients) IsOCP43Plus() bool {
-	ocpSemVer := this.GetOCPVersion()
-	if ocpSemVer != nil {
-		constraint43, _ := semver.NewConstraint(">= 4.3")
-		return constraint43.Check(ocpSemVer)
-	}
-	return false
-}
-
-func getSpec(ctx loop.ControlLoopContext) *ar.ApicurioRegistry {
-	entry, exists := ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache).Get(resources.RC_KEY_SPEC)
+func getSpec(ctx *context.LoopContext) *ar.ApicurioRegistry {
+	entry, exists := ctx.GetResourceCache().Get(resources.RC_KEY_SPEC)
 	if !exists {
 		panic("Could not get ApicurioRegistry from resource cache.")
 	}

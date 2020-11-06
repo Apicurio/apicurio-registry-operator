@@ -3,7 +3,7 @@ package cf
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	apps "k8s.io/api/apps/v1"
@@ -24,7 +24,7 @@ const ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SASL_JAAS_CONFIG = "REGISTRY_STREAMS
 const SCRAM_TRUSTSTORE_SECRET_VOLUME_NAME = "registry-streams-scram-truststore"
 
 type StreamsSecurityScramCF struct {
-	ctx                          loop.ControlLoopContext
+	ctx                          *context.LoopContext
 	svcResourceCache             resources.ResourceCache
 	svcEnvCache                  env.EnvCache
 	persistence                  string
@@ -43,11 +43,11 @@ type StreamsSecurityScramCF struct {
 	mechOk                       bool
 }
 
-func NewStreamsSecurityScramCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewStreamsSecurityScramCF(ctx *context.LoopContext) loop.ControlFunction {
 	return &StreamsSecurityScramCF{
 		ctx:                          ctx,
-		svcResourceCache:             ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcEnvCache:                  ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
+		svcResourceCache:             ctx.GetResourceCache(),
+		svcEnvCache:                  ctx.GetEnvCache(),
 		persistence:                  "",
 		bootstrapServers:             "",
 		truststoreSecretName:         "",
@@ -132,12 +132,11 @@ func (this *StreamsSecurityScramCF) Sense() {
 
 func (this *StreamsSecurityScramCF) Compare() bool {
 	// Condition #1
-	return this.valid && (
-		this.truststoreSecretName != this.foundTruststoreSecretName ||
-			this.scramUser != this.foundScramUser ||
-			this.scramPasswordSecretName != this.foundScramPasswordSecretName ||
-			this.scramMechanism != this.foundScramMechanism ||
-			!this.mechOk)
+	return this.valid && (this.truststoreSecretName != this.foundTruststoreSecretName ||
+		this.scramUser != this.foundScramUser ||
+		this.scramPasswordSecretName != this.foundScramPasswordSecretName ||
+		this.scramMechanism != this.foundScramMechanism ||
+		!this.mechOk)
 }
 
 func (this *StreamsSecurityScramCF) Respond() {

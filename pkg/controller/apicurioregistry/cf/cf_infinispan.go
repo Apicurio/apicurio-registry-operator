@@ -3,7 +3,7 @@ package cf
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 )
@@ -13,7 +13,7 @@ var _ loop.ControlFunction = &InfinispanCF{}
 const ENV_INFINISPAN_CLUSTER_NAME = "INFINISPAN_CLUSTER_NAME"
 
 type InfinispanCF struct {
-	ctx                      loop.ControlLoopContext
+	ctx                      *context.LoopContext
 	svcResourceCache         resources.ResourceCache
 	svcEnvCache              env.EnvCache
 	persistence              string
@@ -22,11 +22,11 @@ type InfinispanCF struct {
 	envInfinispanClusterName string
 }
 
-func NewInfinispanCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewInfinispanCF(ctx *context.LoopContext) loop.ControlFunction {
 	return &InfinispanCF{
 		ctx:                      ctx,
-		svcResourceCache:         ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcEnvCache:              ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
+		svcResourceCache:         ctx.GetResourceCache(),
+		svcEnvCache:              ctx.GetEnvCache(),
 		persistence:              "",
 		infinispanClusterName:    "",
 		valid:                    true,

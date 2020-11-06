@@ -2,7 +2,7 @@ package cf
 
 import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	ocp_apps "github.com/openshift/api/apps/v1"
@@ -11,7 +11,7 @@ import (
 var _ loop.ControlFunction = &EnvOcpCF{}
 
 type EnvOcpCF struct {
-	ctx                loop.ControlLoopContext
+	ctx                *context.LoopContext
 	svcResourceCache   resources.ResourceCache
 	svcEnvCache        env.EnvCache
 	deploymentExists   bool
@@ -22,11 +22,11 @@ type EnvOcpCF struct {
 }
 
 // Is responsible for managing environment variables from the env cache
-func NewEnvOcpCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewEnvOcpCF(ctx *context.LoopContext) loop.ControlFunction {
 	return &EnvOcpCF{
 		ctx:                ctx,
-		svcResourceCache:   ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcEnvCache:        ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
+		svcResourceCache:   ctx.GetResourceCache(),
+		svcEnvCache:        ctx.GetEnvCache(),
 		deploymentExists:   false,
 		deploymentEntry:    nil,
 		deploymentName:     resources.RC_EMPTY_NAME,

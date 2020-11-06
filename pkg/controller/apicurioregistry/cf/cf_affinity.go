@@ -1,10 +1,11 @@
 package cf
 
 import (
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	"reflect"
+
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	apps "k8s.io/api/apps/v1"
@@ -14,7 +15,7 @@ import (
 var _ loop.ControlFunction = &AffinityCF{}
 
 type AffinityCF struct {
-	ctx                   loop.ControlLoopContext
+	ctx                   *context.LoopContext
 	svcResourceCache      resources.ResourceCache
 	deploymentEntry       resources.ResourceCacheEntry
 	deploymentEntryExists bool
@@ -22,10 +23,10 @@ type AffinityCF struct {
 	targetAffinity        *corev1.Affinity
 }
 
-func NewAffinityCF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewAffinityCF(ctx *context.LoopContext) loop.ControlFunction {
 	return &AffinityCF{
 		ctx:                   ctx,
-		svcResourceCache:      ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
+		svcResourceCache:      ctx.GetResourceCache(),
 		deploymentEntry:       nil,
 		deploymentEntryExists: false,
 		existingAffinity:      nil,

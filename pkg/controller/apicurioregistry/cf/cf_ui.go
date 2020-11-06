@@ -3,7 +3,7 @@ package cf
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 )
@@ -13,7 +13,7 @@ var _ loop.ControlFunction = &UICF{}
 const ENV_UI_READ_ONLY = "REGISTRY_UI_FEATURES_READONLY"
 
 type UICF struct {
-	ctx              loop.ControlLoopContext
+	ctx              *context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcEnvCache      env.EnvCache
 	UIReadOnly       bool
@@ -21,11 +21,11 @@ type UICF struct {
 	envUIReadOnly    string
 }
 
-func NewUICF(ctx loop.ControlLoopContext) loop.ControlFunction {
+func NewUICF(ctx *context.LoopContext) loop.ControlFunction {
 	return &UICF{
 		ctx:              ctx,
-		svcResourceCache: ctx.RequireService(svc.SVC_RESOURCE_CACHE).(resources.ResourceCache),
-		svcEnvCache:      ctx.RequireService(svc.SVC_ENV_CACHE).(env.EnvCache),
+		svcResourceCache: ctx.GetResourceCache(),
+		svcEnvCache:      ctx.GetEnvCache(),
 		UIReadOnly:       false,
 		valid:            true,
 		envUIReadOnly:    "",
@@ -66,7 +66,7 @@ func (this *UICF) Respond() {
 	// Response #1
 	// Just set the value(s)!
 	val := "false"
-	if (this.UIReadOnly) {
+	if this.UIReadOnly {
 		val = "true"
 	}
 	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_UI_READ_ONLY, val))
