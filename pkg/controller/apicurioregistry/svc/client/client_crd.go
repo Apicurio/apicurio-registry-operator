@@ -14,7 +14,8 @@ import (
 // =====
 
 type CRDClient struct {
-	ctx    *context.LoopContext
+	ctx *context.LoopContext
+	//ctx.client should be used instead of this rest client
 	client *rest.RESTClient
 }
 

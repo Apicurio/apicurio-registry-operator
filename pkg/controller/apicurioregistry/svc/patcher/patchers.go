@@ -6,6 +6,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 )
@@ -15,9 +16,9 @@ type Patchers struct {
 	ocpPatcher  *OCPPatcher
 }
 
-func NewPatchers(ctx *context.LoopContext, clients *client.Clients) *Patchers {
+func NewPatchers(ctx *context.LoopContext, clients *client.Clients, factoryKube *factory.KubeFactory) *Patchers {
 	this := &Patchers{}
-	this.kubePatcher = NewKubePatcher(ctx, clients)
+	this.kubePatcher = NewKubePatcher(ctx, clients, factoryKube)
 	this.ocpPatcher = NewOCPPatcher(ctx, clients)
 	return this
 }
@@ -57,6 +58,7 @@ func createPatch(old, new, datastruct interface{}) ([]byte, error) {
 }
 
 // Kind-of generic patching function to avoid repeating the code for each resource type
+// TODO improve, there are better ways to patch objects, sigs_client.Client is preferrable to the rest client being used
 func patchGeneric(
 	ctx *context.LoopContext,
 	key string, // Resource cache key for the given resource

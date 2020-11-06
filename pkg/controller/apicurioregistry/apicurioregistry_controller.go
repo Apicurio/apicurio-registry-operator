@@ -3,14 +3,13 @@ package apicurioregistry
 import (
 	registry "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
-	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	ocp_apps "github.com/openshift/api/apps/v1"
-	api_errors "k8s.io/apimachinery/pkg/api/errors"
 
+	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
 	policy "k8s.io/api/policy/v1beta1"
-	"k8s.io/kubernetes/pkg/apis/apps"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -96,15 +95,17 @@ func Add(mgr manager.Manager) error {
 		return err
 	}
 
-	err = c.Watch(&source.Kind{Type: &monitoring.ServiceMonitor{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &registry.ApicurioRegistry{},
-	})
-
+	ismonitoring, err := client.IsMonitoringInstalled()
 	if err != nil {
-		if api_errors.IsNotFound(err) {
-			log.WithValues("type", "Warning", "reason", err.Error()).Info("Could not create ServiceMonitor watch. is prometheus-operator installed?")
-		} else {
+		return err
+	}
+	if ismonitoring {
+		err = c.Watch(&source.Kind{Type: &monitoring.ServiceMonitor{}}, &handler.EnqueueRequestForOwner{
+			IsController: true,
+			OwnerType:    &registry.ApicurioRegistry{},
+		})
+
+		if err != nil {
 			return err
 		}
 	}

@@ -146,6 +146,27 @@ func IsOCP() (bool, error) {
 	return *isOpenshift, nil
 }
 
+func IsMonitoringInstalled() (bool, error) {
+	config, err := inClusterConfig()
+	if err != nil {
+		return false, err
+	}
+
+	client, err := discovery.NewDiscoveryClientForConfig(config)
+	if err != nil {
+		return false, err
+	}
+
+	_, err = client.ServerResourcesForGroupVersion("monitoring.coreos.com/v1")
+
+	if err != nil && api_errors.IsNotFound(err) {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func detectOpenshift() (bool, error) {
 	config, err := inClusterConfig()
 	if err != nil {

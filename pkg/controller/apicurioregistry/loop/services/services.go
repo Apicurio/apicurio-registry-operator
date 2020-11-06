@@ -24,7 +24,7 @@ func NewLoopServices(ctx *context.LoopContext) *LoopServices {
 
 	clients := client.NewClients(ctx)
 
-	patchers := patcher.NewPatchers(ctx, clients)
+	patchers := patcher.NewPatchers(ctx, clients, factoryKube)
 
 	return &LoopServices{
 		Clients:  clients,
