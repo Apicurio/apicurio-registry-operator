@@ -1,9 +1,9 @@
-[#install-olm]
-= Installation using Operator Lifecycle Manager
+[id=install-registry-operator-olm]
+= Installing {operator} using Operator Lifecycle Manager
 
-The recommended way to install {operator} is to use link:{LinkOLMDocs}[{NameOLMDocs}] (OLM), which can automatically manage the operator deployment and upgrades.
+The recommended way to install {operator} is to use link:{LinkOLMDocs}[{NameOLMDocs}] (OLM), which can automatically manage the Operator deployment and upgrades.
 
-{operator} is released to link:{LinkOperatorHub}[{NameOperatorHub}], so if your cluster has OLM and OperatorHub installed, the cluster administrator can use the web UI to deploy the {operator}.
+{operator} is released to the link:{LinkOperatorHub}[{NameOperatorHub}], so if your cluster has the OLM and OperatorHub installed, the cluster administrator can use the OpenShift web console to deploy the {operator}:
 
 image::operator-hub-search-sr.png[]
 
@@ -18,7 +18,7 @@ image::operator-hub-search-sr.png[]
 .. In the left navigation menu, click *Home* > *Project* > *Create Project*.
 .. Enter a project name, for example, `my-project`, and click *Create*.
 
-. In the left navigation menu, click *Catalog/Operators* > *OperatorHub*.
+. In the left navigation menu, click *Operators* > *OperatorHub*.
 
 ifdef::apicurio-registry[]
 . In the *Filter by keyword* text box, enter `registry` to find the *{operator}*.
@@ -51,4 +51,4 @@ This displays the *Operators* > *Installed Operators* page.
 
 .Additional resources
 * link:https://docs.openshift.com/container-platform/4.6/operators/olm-adding-operators-to-cluster.html[Adding Operators to an OpenShift cluster]
-* link:https://github.com/Apicurio/apicurio-registry-operator[Apicurio Registry Operator community in GitHub]
+* link:https://github.com/Apicurio/apicurio-registry-operator[Apicurio Registry Operator project in GitHub]

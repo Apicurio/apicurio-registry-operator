@@ -1,0 +1,15 @@
+include::partial$shared/all-attributes.adoc[]
+
+[id="operator-quickstart"]
+= {operator} quickstart
+
+This chapter explains how to quickly install {operator} on the command line. This quickstart example deploys {registry} using the embedded Infinispan storage option:
+
+* xref:registry-operator-quickstart[]
+* xref:registry-quickstart[]
+
+NOTE: The recommended installation option for production environments is xref:assembly-operator-installation.adoc[]. The recommended storage option for production environments is {kafka-streams}.
+
+// INCLUDES
+include::partial$proc-registry-operator-quickstart-sr.adoc[leveloffset=+1]
+include::partial$proc-registry-quickstart-sr.adoc[leveloffset=+1]

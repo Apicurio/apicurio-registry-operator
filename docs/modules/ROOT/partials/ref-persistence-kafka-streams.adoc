@@ -1,4 +1,4 @@
-[#kafka-streams-persistence-configuration]
+[id="registry-persistence-kafka-streams"]
 = Kafka Streams Persistence Configuration
 
 [#kafka-streams-prerequisites]

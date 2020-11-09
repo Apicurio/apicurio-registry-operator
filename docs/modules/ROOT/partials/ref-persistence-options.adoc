@@ -1,22 +1,20 @@
-[#persistence-options]
-= Persistence Options
+[id="registry-persistence-options"]
+= {registry} storage options
 
-The main decision to make when deploying {registry} is which persistence backend to use.
+The main decision to make when deploying {registry} is which storage backend to use.
 
-Following options are available:
+The following storage options are available:
 
 ifdef::apicurio-registry[]
-* *In-memory* - data are stored in RAM on each {registry} node.
-+
-*This is the easiest deployment to setup, but it is not recommended for production environment.*
-* *Apache Kafka* - data are stored using plain Apache Kafka.
-endif::[]
-* *Apache Kafka Steams* - data are stored using Apache Kafka Streams.
-This option is suggested for most production deployments.
-* *Java Persistence API* (PostgreSQL) - data are stored in a relational database (PostgreSQL 12+).
-* *Infinispan* - data are stored in an embedded Infinispan cache.
+* *In-memory* - data is stored in RAM on each {registry} node. This is the easiest deployment to setup, but it is not recommended for production environment.
 
-The following options require that the storage is set up as a prerequisite:
+* *Apache Kafka* - data is stored using plain Apache Kafka.
+endif::[]
+* *Apache Kafka Steams* - data is stored using Apache Kafka Streams. This option is recommended for most production deployments.
+* *Java Persistence API* (PostgreSQL) - data is stored in a relational database (PostgreSQL 12+).
+* *Infinispan* - data is stored in an embedded Infinispan cache.
+
+The following options require that the {registry} storage is configured as a prerequisite:
 
 ifdef::apicurio-registry[]
 * *Apache Kafka*
@@ -25,10 +23,10 @@ endif::[]
 * *Java Persistence API* (PostgreSQL)
 
 ifdef::service-registry[]
-The following persistence options are available as a https://access.redhat.com/support/offerings/techpreview[Technology Preview] feature:
+The following storage options are available as a https://access.redhat.com/support/offerings/techpreview[Technology Preview] feature:
 
 * *Java Persistence API* (PostgreSQL)
 * *Infinispan*
 
-Red Hat does not recommend using them in production.
+Red Hat does not recommend using Technology Preview features in production.
 endif::[]

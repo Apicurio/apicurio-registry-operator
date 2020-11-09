@@ -1,13 +1,15 @@
-[#registry-operator-quickstart]
-= Command-Line {operator} Installation
+[id="registry-operator-quickstart"]
+= Quickstart {operator} installation
 
-The recommended installation option for production environments is to use the xref::assembly-installation.adoc[OperatorHub].
+You can quickly deploy the {operator} on the command line, without the Operator Lifecycle Manager, by using a downloaded set of installation files and examples.
 
-However, in order to quickly deploy the {operator} without using link:{LinkOLMDocs}[{NameOLMDocs}], you can download a set of installation files and examples from link:{LinkRedHatIntegrationDownloads}[{NameRedHatIntegrationDownloads}].
+.Prerequisites
 
-. Select the product version and download {registry} CRDs zip file.
+* Go to link:{LinkRedHatIntegrationDownloads}[{NameRedHatIntegrationDownloads}], select the product version, and download the {registry} CRDs `.zip` file.
 
-. Create a project for the installation, e.g., `service-registry`:
+.Procedure
+
+. Create a project for the installation, for example, `service-registry`:
 +
 [source,bash]
 ----
@@ -22,5 +24,3 @@ oc new-project service-registry
 ----
 oc apply -f install/
 ----
-
-NOTE: You can find more information in the xref:assembly-installation.adoc[Installation] page.

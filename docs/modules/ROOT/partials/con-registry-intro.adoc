@@ -1,9 +1,9 @@
-[#apicurio-registry-intro]
+[id="registry-intro"]
 = {registry}
 
 {registry} stores and retrieves API designs and event schemas, and gives you control of their evolution.
 
-For more information about the operand, visit documentation at https://www.apicur.io/registry/
+For more information about the {registry} operand, see the documentation at https://www.apicur.io/registry/.
 
 ifdef::service-registry[]
 

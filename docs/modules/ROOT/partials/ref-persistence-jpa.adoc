@@ -1,4 +1,4 @@
-[#persistence-jpa]
+[id="registry-persistence-jpa"]
 = Java Persistence API (PostgreSQL)
 
 .Prerequisites

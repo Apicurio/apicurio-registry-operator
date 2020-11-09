@@ -1,10 +1,15 @@
-[#liveness-and-readiness]
-= Liveness and Readiness
+[id="registry-liveness-and-readiness"]
+= Liveness and readiness environment variables
 
 {registry} provides readiness and liveness probes for OpenShift to ensure application health.
 It is set up to use reasonable defaults, but in case users want to adjust them, the following is an overview of environment variables that can be used:
 
-== Liveness
+NOTE: Definitions: *Liveness Error* - the application cannot make progress, OpenShift will restart the failing pod.
+*Readiness Error* - the application is not ready (e.g. it is overwhelmed by requests).
+OpenShift will stop sending requests to the pod for the time the probe fails.
+If other pods are OK, they will still receive requests.
+
+== Liveness environment variables
 
 |===
 | Name | Value Type | Description
@@ -21,7 +26,6 @@ if this value is 60 and the threshold is 1, the check fails  after two errors oc
 | LIVENESS_STATUS_RESET
 | positive integer, seconds
 | Number of seconds that must elapse without any more errors for the liveness probe to reset to _OK_ status.
-_Note: Since OpenShift restarts the pod that fails the liveness check, this value (unlike readiness) does not actually affect what happens._
 
 | LIVENESS_ERRORS_IGNORED
 | comma-separated list of fully qualified exception class names
@@ -29,7 +33,9 @@ _Note: Since OpenShift restarts the pod that fails the liveness check, this valu
 
 |===
 
-== Readiness
+NOTE: Because OpenShift restarts the pod that fails the liveness check, this value (unlike readiness) does not actually affect what happens.
+
+== Readiness environment variables
 
 |===
 | Name | Value Type | Description
@@ -46,7 +52,6 @@ if this value is 60 and the threshold is 1, the check fails  after two errors oc
 | READINESS_STATUS_RESET
 | positive integer, seconds
 | Number of seconds that must elapse without any more errors for the readiness probe to reset to _OK_ status.
-_Note: _In practice, this means how long the pod remains in a not ready state until it returns to normal operation._
 
 | READINESS_TIMEOUT
 | positive integer, seconds
@@ -55,7 +60,4 @@ If the operation takes more time, it is counted as a readiness error. This value
 
 |===
 
-NOTE: Definitions: *Liveness Error* - the application cannot make progress, OpenShift will restart the failing pod.
-*Readiness Error* - the application is not ready (e.g. it is overwhelmed by requests).
-OpenShift will stop sending requests to the pod for the time the probe fails.
-If other pods are OK, they will still receive requests.
+NOTE: In practice, this means how long the pod remains in a not ready state until it returns to normal operation.

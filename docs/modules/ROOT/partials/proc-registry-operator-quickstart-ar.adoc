@@ -1,8 +1,9 @@
-[#registry-operator-quickstart]
-== {operator}
+[id="registry-operator-quickstart"]
+== {operator} quickstart
 
-There are several installation options, but the simplest one requires executing a single command.
+There are several {operator} installation options, but the simplest option only requires executing a single command.
 
+.Procedure
 . Choose the `$NAMESPACE` to use:
 +
 ----
@@ -32,4 +33,5 @@ sed "s/{NAMESPACE}/$NAMESPACE/g" | kubectl apply -f -
 
 NOTE: If you are deploying to OpenShift, use `oc` with the same arguments.
 
-You can find more information in the xref:assembly-installation.adoc[Installation] page.
+.Additional resources
+xref:assembly-operator-installation.adoc[Installing using the OperatorHub].

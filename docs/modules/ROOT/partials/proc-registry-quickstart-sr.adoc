@@ -1,21 +1,22 @@
-[#registry-quickstart]
-== {registry}
+[id="registry-quickstart"]
+= Quickstart {registry} deployment
 
-To create a new {registry} deployment quickly, we will use the embedded Infinispan persistence option,
-which does not require an external storage to be set up as a prerequisite.
+To quickly create a new {registry} deployment, use the embedded Infinispan persistence option,
+which does not require an external storage to be configured as a prerequisite.
 
-. Install the {operator}
-. Create an `ApicurioRegistry` custom resource (CR) in the same namespace that the operator is deployed in:
+.Prerequisites
+* Ensure that the {operator} is already installed.
+
+.Procedure
+* Create an `ApicurioRegistry` custom resource (CR) in the same namespace that the Operator is deployed:
 +
 [source,bash]
 ----
 oc apply -f ./examples/apicurioregistry_infinispan_cr.yaml -n service-registry
 ----
-
-Example CR for Infinispan persistence:
++
+.Example CR for Infinispan storage:
 [source,yaml]
 ----
 include::example$infinispan_cr.yaml[]
 ----
-
-NOTE: Find more information about the `ApicurioRegistry` CR in the xref:assembly-configuration.adoc[Configuration] page.

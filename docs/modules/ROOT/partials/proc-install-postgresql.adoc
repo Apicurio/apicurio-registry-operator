@@ -1,11 +1,10 @@
-[#install-postgresql]
-= Installation of PostgreSQL database storage from the OpenShift OperatorHub
+[id="install-postgresql-operatorhub"]
+= Installing PostgreSQL database storage using the OpenShift OperatorHub
 
-One of the available persistence options requires that you provide connection information to a PostgreSQL database.
-Any PostgreSQL database available on your OpenShift cluster can be used, but it is recommended to use link:{LinkOperatorHub}[{NameOperatorHub}]
-to choose and install an operator that can manage a PostgreSQL database for you.
+One of the available storage options requires that you provide connection information to a PostgreSQL database.
+You can use any PostgreSQL database available on your OpenShift cluster, but it is recommended to use link:{LinkOperatorHub}[{NameOperatorHub}] to choose and install an Operator that can manage a PostgreSQL database for you.
 
-You can use any PostgresQL operator, but in this section we will describe how to install *PostgreSQL Operator by Dev4Ddevs.com* and create a new database for {registry}.
+You can install your preferred PostgresQL Operator, but this section shows how to install the *PostgreSQL Operator by Dev4Ddevs.com* and create a new database for {registry}.
 
 .Prerequisites
 
@@ -17,7 +16,7 @@ You can use any PostgresQL operator, but in this section we will describe how to
 
 . Change to the OpenShift project in which {registry} is installed. For example, from the *Project* drop-down, select `my-project`.
 
-. In the left navigation menu, click *Catalog* > *OperatorHub*.
+. In the left navigation menu, click *Operators* > *OperatorHub*.
 
 . In the *Filter by keyword* text box, enter `PostgreSQL` to find an Operator suitable for your environment, for example, *PostgreSQL Operator by Dev4Ddevs.com* or *Crunchy PostgreSQL for OpenShift*.
 
