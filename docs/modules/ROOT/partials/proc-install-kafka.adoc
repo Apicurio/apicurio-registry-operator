@@ -1,9 +1,9 @@
 [id=install-kafka-operatorhub]
-= Installing {kafka-streams} storage using the OpenShift OperatorHub
+= Installing {kafka-streams} storage using OpenShift OperatorHub
 
-The recommended Kafka storage option requires that you provide connection information to a Kafka cluster. You can use any Kafka cluster with Kafka Streams support. However, it is recommended to use the {kafka-streams} Operator to provide and maintain a Kafka cluster for you.
+The recommended Kafka Streams storage option requires that you provide connection information to a Kafka cluster. You can use any Kafka cluster with Kafka Streams support. However, it is recommended to use the {kafka-streams} Operator to provide and maintain a Kafka cluster for you.
 
-If you do not already have Kafka installed, you can install the {kafka-streams} Operator on your OpenShift cluster from the link:{LinkOperatorHub}[{NameOperatorHub}].
+If you do not already have Kafka Streams installed, you can install the {kafka-streams} Operator on your OpenShift cluster from the link:{LinkOperatorHub}[{NameOperatorHub}].
 
 .Prerequisites
 

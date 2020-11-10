@@ -6,15 +6,17 @@ The main decision to make when deploying {registry} is which storage backend to 
 The following storage options are available:
 
 ifdef::apicurio-registry[]
-* *In-memory* - data is stored in RAM on each {registry} node. This is the easiest deployment to setup, but it is not recommended for production environment.
+* *In-memory* - data is stored in RAM on each {registry} node. This is the easiest deployment to use, but is not recommended for production environment.
 
 * *Apache Kafka* - data is stored using plain Apache Kafka.
 endif::[]
 * *Apache Kafka Steams* - data is stored using Apache Kafka Streams. This option is recommended for most production deployments.
-* *Java Persistence API* (PostgreSQL) - data is stored in a relational database (PostgreSQL 12+).
+* *Java Persistence API* (PostgreSQL) - data is stored in a relational database, in this case PostgreSQL 12+.
 * *Infinispan* - data is stored in an embedded Infinispan cache.
 
-The following options require that the {registry} storage is configured as a prerequisite:
+
+.Storage requiring installation
+The following options require that the storage is already installed as a prerequisite:
 
 ifdef::apicurio-registry[]
 * *Apache Kafka*
@@ -30,3 +32,6 @@ The following storage options are available as a https://access.redhat.com/suppo
 
 Red Hat does not recommend using Technology Preview features in production.
 endif::[]
+
+.Additional resources
+* xref:assembly-operator-installation.adoc[]

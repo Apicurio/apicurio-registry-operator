@@ -1,5 +1,5 @@
 [id="install-postgresql-operatorhub"]
-= Installing PostgreSQL database storage using the OpenShift OperatorHub
+= Installing PostgreSQL database storage using OpenShift OperatorHub
 
 One of the available storage options requires that you provide connection information to a PostgreSQL database.
 You can use any PostgreSQL database available on your OpenShift cluster, but it is recommended to use link:{LinkOperatorHub}[{NameOperatorHub}] to choose and install an Operator that can manage a PostgreSQL database for you.
@@ -65,3 +65,6 @@ spec:
 ----
 
 . Click *Create Database*, and wait until the database is created.
+
+.Additional resources
+* link:https://access.crunchydata.com/documentation/postgres-operator/4.5.0/quickstart/[Crunchy PostgreSQL Operator QuickStart]

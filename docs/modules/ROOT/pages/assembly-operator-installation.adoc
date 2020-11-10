@@ -1,9 +1,9 @@
 include::partial$shared/all-attributes.adoc[]
 
-[id="configuring-the-registry"]
+[id="installing-the-registry"]
 = Installing {operator} using the OperatorHub
 
-This chapter explains how to install {operator} on Kubernetes or OpenShift. It also shows how to install the {kafka-streams} and Java Persistence API (PostgreSQL) storage options. 
+This chapter explains how to install {operator} on Kubernetes or OpenShift. It also shows how to install the {kafka-streams} or Java Persistence API (PostgreSQL) storage option: 
 
 * xref:install-registry-operator-olm[]
 * xref:install-kafka-operatorhub[]

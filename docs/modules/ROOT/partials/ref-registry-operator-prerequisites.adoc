@@ -15,4 +15,4 @@ endif::[]
 | 3.11.200+, 4+
 |===
 
-NOTE: {operator} does not yet deploy and manage the {registry} storage. You must ensure that storage options such as  Apache Kafka or PostgreSQL are configured.
+NOTE: {operator} does not yet deploy and manage {registry} storage. You must ensure that storage options such as Kafka Streams or PostgreSQL are installed and configured.

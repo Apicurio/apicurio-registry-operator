@@ -1,11 +1,10 @@
 [#spec]
-= {registry} custom resource - Spec
+= {registry} CR spec
 
-`Spec` is the part of the `ApicurioRegistry` CR that is used to provide the desired state (configuration) for the Operator to achieve.
+The `spec` is the part of the `ApicurioRegistry` CR that is used to provide the desired state or configuration for the Operator to achieve.
 
-The following block contains the full tree of possible configuration options.
-Note that some fields may not be required or should not be defined at the same time.
-See more information below.
+.ApicurioRegistry CR spec contents
+The following example block contains the full tree of possible `spec` configuration options. Some fields may not be required or should not be defined at the same time.
 
 [source,yaml]
 ----
@@ -41,148 +40,148 @@ spec:
     host: <string>
 ----
 
-The following table contains summary information for each defined configuration option:
+The following table describes each configuration option:
 
+.ApicurioRegistry CR spec configuration options
+[%header,cols="3,1,2,3"]
 |===
-| Configuration Option | Type | Default Value | Description
+| Configuration option | type | Default value | Description
 
-| configuration
+| `configuration`
 | -
 | -
 | Section for configuration of {registry} application
 
-| configuration/persistence
+| `configuration/persistence`
 | string
-| mem
-| Persistence backend to use;
-one of: `mem`, `jpa`, `kafka`, `streams`, `infinispan`
+| `mem`
+| Storage backend. One of `mem`, `jpa`, `kafka`, `streams`, `infinispan`
 
-| configuration/*dataSource*
+| `configuration/dataSource`
 | -
 | -
-| Database connection configuration for JPA persistence backend
+| Database connection configuration for JPA storage backend
 
-| configuration/*dataSource*/url
+| `configuration/dataSource/url`
 | string
 | _required_
 | Database connection URL string
 
-| configuration/*dataSource*/userName
+| `configuration/dataSource/userName`
 | string
 | _required_
 | Database connection user
 
-| configuration/*dataSource*/password
+| `configuration/dataSource/password`
 | string
 | _empty_
 | Database connection password
 
-| configuration/*kafka*
+| `configuration/kafka`
 | -
 | -
 | Kafka backend configuration section
 
-| configuration/*kafka*/bootstrapServers
+| `configuration/kafka/bootstrapServers`
 | string
 | _required_
 | Kafka bootstrap server URL
 
-| configuration/*streams*
+| `configuration/streams`
 | -
 | -
-| Kafka Streams persistence backend configuration
+| Kafka Streams storage backend configuration
 
-| configuration/*streams*/bootstrapServers
+| `configuration/streams/bootstrapServers`
 | string
 | _required_
-| Kafka bootstrap server URL, for Streams persistence backend
+| Kafka bootstrap server URL, for Streams storage backend
 
-| configuration/*streams*/applicationId
+| `configuration/streams/applicationId`
 | string
 | _ApicurioRegistry CR name_
 | Kafka Streams application ID
 
-| configuration/*streams*/applicationServerPort
+| `configuration/*streams*/applicationServerPort`
 | string
-| 9000
+| `9000`
 | -
 
-| configuration/*streams*/security/*tls*
+| `configuration/streams/security/tls`
 | -
 | -
-| Section to enable and configure TLS authentication for Kafka Streams persistence backend
+| Section to configure TLS authentication for Kafka Streams storage backend
 
-| configuration/*streams*/security/*tls*/truststoreSecretName
+| `configuration/streams/security/tls/truststoreSecretName`
 | string
 | _required_
 | Name of a secret containing TLS truststore for Kafka
 
-| configuration/*streams*/security/*tls*/keystoreSecretName
+| `configuration/streams/security/tls/keystoreSecretName`
 | string
 | _required_
-| Name of a secret containing user's TLS keystore
+| Name of a secret containing user TLS keystore
 
-| configuration/*streams*/security/*scram*/truststoreSecretName
+| `configuration/streams/security/scram/truststoreSecretName`
 | string
 | _required_
 | Name of a secret containing TLS truststore for Kafka
 
-| configuration/*streams*/security/*scram*/user
+| `configuration/streams/security/scram/user`
 | string
 | _required_
 | SCRAM user name
 
-| configuration/*streams*/security/*scram*/passwordSecretName
+| `configuration/streams/security/scram/passwordSecretName`
 | string
 | _required_
 | Name of a secret containing SCRAM user password
 
-| configuration/*streams*/security/*scram*/mechanism
+| `configuration/streams/security/scram/mechanism`
 | string
-| SCRAM-SHA-512
+| `SCRAM-SHA-512`
 | SASL mechanism
 
-| configuration/*infinispan*
+| `configuration/infinispan`
 | -
 | -
 | Infinispan persistence configuration section
 
-| configuration/*infinispan*/clusterName
+| `configuration/infinispan/clusterName`
 | string
 | _ApicurioRegistry CR name_
 | Infinispan cluster name
 
-| configuration/*ui*
+| `configuration/ui`
 | -
 | -
-| Web UI settings
+| {registry} web console settings
 
-| configuration/*ui*/readOnly
+| `configuration/ui/readOnly`
 | string
-| false
-| Set web UI to read-only mode
+| `false`
+| Set {registry} web console to read-only mode
 
-| configuration/logLevel
+| `configuration/logLevel`
 | string
-| INFO
-| Operand log level;
-one of: INFO, DEBUG
+| `INFO`
+| {registry} operand log level. One of `INFO`, `DEBUG`
 
-| deployment
+| `deployment`
 | -
 | -
 | Section for operand deployment settings
 
-| deployment/*replicas*
+| `deployment/replicas`
 | positive integer
-| 1
+| `1`
 | Number of {registry} pods to deploy
 
-| deployment/*host*
+| `deployment/host`
 | string
-| _auto-generated (from ApicurioRegistry CR name and namespace)_
-| Host/URL where the {registry} UI and API is available
+| _auto-generated from ApicurioRegistry CR name and namespace_
+| Host/URL where the {registry} console and API are available
 |===
 
-NOTE: If an option is marked as *required*, it may be conditional on other configuration options being enabled.
-Empty value may be accepted, but the operator will not perform the given action.
+NOTE: If an option is marked as _required_, it might be conditional on other configuration options being enabled.
+Empty values might be accepted, but the Operator does not perform the specified action.

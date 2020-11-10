@@ -1,7 +1,7 @@
 [id=install-registry-operator-olm]
 = Installing {operator} using Operator Lifecycle Manager
 
-The recommended way to install {operator} is to use link:{LinkOLMDocs}[{NameOLMDocs}] (OLM), which can automatically manage the Operator deployment and upgrades.
+The recommended way to install {operator} is to use the link:{LinkOLMDocs}[{NameOLMDocs}] (OLM), which can automatically manage the Operator deployment and upgrades.
 
 {operator} is released to the link:{LinkOperatorHub}[{NameOperatorHub}], so if your cluster has the OLM and OperatorHub installed, the cluster administrator can use the OpenShift web console to deploy the {operator}:
 
@@ -51,4 +51,3 @@ This displays the *Operators* > *Installed Operators* page.
 
 .Additional resources
 * link:https://docs.openshift.com/container-platform/4.6/operators/olm-adding-operators-to-cluster.html[Adding Operators to an OpenShift cluster]
-* link:https://github.com/Apicurio/apicurio-registry-operator[Apicurio Registry Operator project in GitHub]

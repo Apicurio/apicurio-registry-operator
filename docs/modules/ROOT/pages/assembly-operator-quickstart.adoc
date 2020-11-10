@@ -8,7 +8,7 @@ This chapter explains how to quickly install {operator} on the command line. Thi
 * xref:registry-operator-quickstart[]
 * xref:registry-quickstart[]
 
-NOTE: The recommended installation option for production environments is xref:assembly-operator-installation.adoc[]. The recommended storage option for production environments is {kafka-streams}.
+NOTE: The recommended installation option for production environments is xref:assembly-operator-installation.adoc[]. The recommended storage option is Kafka Streams.
 
 // INCLUDES
 include::partial$proc-registry-operator-quickstart-sr.adoc[leveloffset=+1]

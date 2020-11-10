@@ -5,7 +5,7 @@ You can quickly deploy the {operator} on the command line, without the Operator 
 
 .Prerequisites
 
-* Go to link:{LinkRedHatIntegrationDownloads}[{NameRedHatIntegrationDownloads}], select the product version, and download the {registry} CRDs `.zip` file.
+* You must go to link:{LinkRedHatIntegrationDownloads}[{NameRedHatIntegrationDownloads}], select the product version, and download the {registry} CRDs `.zip` file.
 
 .Procedure
 

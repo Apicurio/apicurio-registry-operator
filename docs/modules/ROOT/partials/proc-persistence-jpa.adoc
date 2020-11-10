@@ -1,15 +1,17 @@
 [id="registry-persistence-jpa"]
-= Java Persistence API (PostgreSQL)
+= Configuring Java Persistence API (PostgreSQL) storage
 
 .Prerequisites
 * You must have an OpenShift cluster with cluster administrator access.
-* You must have already installed {operator}.
-* You must have a PostgreSQL database reachable from your OpenShift cluster.
+* You must have already installed {operator} 
+* You have a PostgreSQL database reachable from your OpenShift cluster. See xref:assembly-operator-installation.adoc[].
 
-NOTE: See the xref:assembly-installation.adoc[] page for details about setting up {operator} and a PostgreSQL database.
+ifdef::service-registry[]
+IMPORTANT: The PostgreSQL storage option is a https://access.redhat.com/support/offerings/techpreview[Technology Preview] feature and is currently not suitable for production environments.
+endif::[]
 
 .Procedure
-. In the OpenShift Container Platform web console, log in using an account with cluster administrator privileges.
+. In the OpenShift Container Platform web console, log in with cluster administrator privileges.
 
 . Change to the OpenShift project in which {registry} and your PostgreSQL Operator are installed.
 For example, from the *Project* drop-down, select `my-project`.
@@ -45,5 +47,4 @@ spec:
 . Click *Networking* > *Route* to access the new route for the {registry} web console.
 
 .Additional resources
-* link:https://access.crunchydata.com/documentation/postgres-operator/4.3.2/quickstart/[Crunchy PostgreSQL Operator QuickStart]
-* https://github.com/Apicurio/apicurio-registry-operator/blob/master/docs/minikube-quickstart.md[Apicurio Registry Operator QuickStart]
+* link:https://access.crunchydata.com/documentation/postgres-operator/4.5.0/quickstart/[Crunchy PostgreSQL Operator QuickStart]

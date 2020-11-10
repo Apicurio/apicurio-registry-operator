@@ -1,7 +1,7 @@
 [id="registry-quickstart"]
 = Quickstart {registry} deployment
 
-To quickly create a new {registry} deployment, use the embedded Infinispan persistence option,
+To quickly create a new {registry} deployment, use the embedded Infinispan storage option,
 which does not require an external storage to be configured as a prerequisite.
 
 .Prerequisites
@@ -15,7 +15,7 @@ which does not require an external storage to be configured as a prerequisite.
 oc apply -f ./examples/apicurioregistry_infinispan_cr.yaml -n service-registry
 ----
 +
-.Example CR for Infinispan storage:
+.Example CR for Infinispan storage
 [source,yaml]
 ----
 include::example$infinispan_cr.yaml[]
