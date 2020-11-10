@@ -1,0 +1,17 @@
+include::partial$shared/all-attributes.adoc[]
+
+[id="managing-the-registry"]
+= Managing {registry} deployment
+
+This chapter explains how to manage your {registry} deployment:
+
+* xref:manage-registry-environment-variables[]
+* xref:registry-liveness-and-readiness[]
+* xref:registry-sql-backup[]
+* xref:registry-sql-restore[]
+
+// INCLUDES
+include::partial$proc-manage-environment-variables.adoc[leveloffset=+1]
+include::partial$ref-liveness-and-readiness.adoc[leveloffset=+1]
+include::partial$proc-registry-sql-backup.adoc[leveloffset=+1]
+include::partial$proc-registry-sql-restore.adoc[leveloffset=+1]

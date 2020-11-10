@@ -1,3 +1,5 @@
-* xref:ROOT:assembly-installation.adoc[]
-* xref:ROOT:assembly-configuration.adoc[]
-* xref:ROOT:assembly-maintenance.adoc[]
+* xref:ROOT:assembly-operator-quickstart.adoc[]
+* xref:ROOT:assembly-operator-installation.adoc[]
+* xref:ROOT:assembly-registry-storage.adoc[]
+* xref:ROOT:assembly-registry-maintenance.adoc[]
+* xref:ROOT:assembly-operator-configuration.adoc[]
