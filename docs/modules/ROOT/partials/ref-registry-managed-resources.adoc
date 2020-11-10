@@ -1,19 +1,19 @@
 [#managed-resources]
-= Managed Resources
+= {registry} managed resources
 
-The resources managed by the {operator} when deploying {registry} are the following:
+The resources managed by the {operator} when deploying {registry} are as follows:
 
 ifdef::apicurio-registry[]
-* Deployment (Kubernetes) or DeploymentConfig (OpenShift)
+* `Deployment` (Kubernetes) or `DeploymentConfig` (OpenShift)
 endif::[]
 ifdef::service-registry[]
-* DeploymentConfig
+* `DeploymentConfig`
 endif::[]
 * Service
 ifdef::apicurio-registry[]
-* Ingress and Route (OpenShift)
+* `Ingress` and `Route` (OpenShift)
 endif::[]
 ifdef::service-registry[]
-* Ingress and Route
+* `Ingress` and `Route`
 endif::[]
-* PodDisruptionBudget
+* `PodDisruptionBudget`

@@ -1,8 +1,10 @@
 [#status]
-= {registry} custom resource - Status
+= {registry} CR status
 
-This is the section of the CR, managed by the {operator}, that contains a description of the current deployment and application state.
+The `status` is the section of the CR managed by the {operator} that contains a description of the current deployment and application state.
 
+.ApicurioRegistry CR status contents
+The `status` section contains the following fields:
 [source,yaml]
 ----
 status:
@@ -14,32 +16,32 @@ status:
   host: <string>
 ----
 
+.ApicurioRegistry CR status fields
+[%header,cols="1,1,3"]
 |===
-| Status Entry | Type | Description
+| Status field | Type | Description
 
-| image
+| `image`
 | string
-| Operand image that the operator deploys.
-May change based on the persistence option selected in the configuration.
+| {registry} operand image that the Operator deploys. Might change based on the storage option selected in configuration.
 
-| deploymentName
+| `deploymentName`
 | string
 | Name of the `Deployment` or `DeploymentConfig` managed by the Operator, used to deploy the {registry}.
 
-| serviceName
+| `serviceName`
 | string
-| Name of the `Service` managed by the Operator, to expose the Operand as a service.
+| Name of the `Service` managed by the Operator, to expose the {registry} operand as a service.
 
-| ingressName
+| `ingressName`
 | string
-| Name of the `Ingress` managed by the Operator, to make the {registry} accessible via HTTP.
-On OCP, a `Route` is created as well.
+| Name of the `Ingress` managed by the Operator, to make the {registry} accessible via HTTP. A `Route` is also created on OCP.
 
-| replicaCount
+| `replicaCount`
 | int32
-| Number of the Operand pods deployed.
+| Number of {registry} operand pods deployed.
 
-| host
+| `host`
 | string
 | URL where the {registry} UI and REST API are accessible.
 |===

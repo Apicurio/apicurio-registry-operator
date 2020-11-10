@@ -1,11 +1,12 @@
-[#apicurio-registry-custom-resource]
+[id="apicurio-registry-custom-resource"]
 = {registry} Custom Resource
 
-The operator defines an `ApicurioRegistry` https://docs.openshift.com/container-platform/4.6/operators/understanding/crds/crd-extending-api-with-crds.html[custom resource] (CR) that represents a single deployment of {registry} on OpenShift.
+The {operator} defines an `ApicurioRegistry` link:https://docs.openshift.com/container-platform/4.6/operators/understanding/crds/crd-extending-api-with-crds.html[custom resource (CR)] that represents a single deployment of {registry} on OpenShift.
 
 These resource objects are created and maintained by users to instruct the {operator} how to deploy and configure {registry}.
 
-This is an example `ApicurioRegistry` resource:
+.Example ApicurioRegistry CR
+The following command displays the `ApicurioRegistry` resource:
 
 [source,bash]
 ----
@@ -39,9 +40,11 @@ status:
   serviceName: example-apicurioregistry-service-xvnmz
 ----
 
-IMPORTANT: Currently, {operator} is only watching its own namespace (project).
-Therefore, `ApicurioRegistry` CR must be created in the same namespace.
+IMPORTANT: The {operator} currently only watches its own project namespace. Therefore you must create the `ApicurioRegistry` CR in the same namespace.
 
 ifdef::apicurio-registry[]
 NOTE: These configuration options may change or be renamed until {operator} leaves the alpha development stage.
 endif::[]
+
+.Additional resources
+* link:https://docs.openshift.com/container-platform/4.6/operators/understanding/crds/crd-extending-api-with-crds.html[Extending the Kubernetes API with Custom Resource Definitions]

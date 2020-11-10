@@ -1,5 +1,5 @@
-[#minikube-quickstart]
-= Minikube Quickstart
+[id="minikube-quickstart"]
+= {operator} minikube quickstart
 
 [#requirements]
 == Requirements

@@ -1,0 +1,21 @@
+include::partial$shared/all-attributes.adoc[]
+
+[id="registry-configuration-reference"]
+= Configuring {registry} storage
+
+This chapter explains how to configure the available {registry} storage options:
+
+* xref:registry-persistence-options[]
+* xref:registry-persistence-infinispan[]
+* xref:registry-persistence-kafka-streams-plain[]
+* xref:registry-persistence-kafka-streams-tls[]
+* xref:registry-persistence-kafka-streams-scram[]
+* xref:registry-persistence-jpa[]
+
+// INCLUDES
+include::partial$con-persistence-options.adoc[leveloffset=+1]
+include::partial$proc-persistence-infinispan.adoc[leveloffset=+1]
+include::partial$proc-persistence-kafka-streams-plain.adoc[leveloffset=+1]
+include::partial$proc-persistence-kafka-streams-tls.adoc[leveloffset=+1]
+include::partial$proc-persistence-kafka-streams-scram.adoc[leveloffset=+1]
+include::partial$proc-persistence-jpa.adoc[leveloffset=+1]
