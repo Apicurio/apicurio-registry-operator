@@ -25,14 +25,6 @@ func NewPatchers(ctx *context.LoopContext, clients *client.Clients, factoryKube 
 
 // =====
 
-// func (this *Patchers) OCP() *OCPPatcher {
-// 	return this.ocpPatcher
-// }
-
-// func (this *Patchers) Kube() *KubePatcher {
-// 	return this.kubePatcher
-// }
-
 func (this *Patchers) Reload() {
 	this.kubePatcher.Reload()
 	this.ocpPatcher.Reload()

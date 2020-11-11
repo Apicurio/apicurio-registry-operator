@@ -35,9 +35,9 @@ func NewIngressCF(ctx *context.LoopContext, services *services.LoopServices) loo
 	return &IngressCF{
 		ctx:               ctx,
 		svcResourceCache:  ctx.GetResourceCache(),
-		svcClients:        services.Clients,
+		svcClients:        services.GetClients(),
 		svcStatus:         ctx.GetStatus(),
-		svcKubeFactory:    services.KubeFactory,
+		svcKubeFactory:    services.GetKubeFactory(),
 		isCached:          false,
 		ingresses:         make([]extensions.Ingress, 0),
 		ingressName:       resources.RC_EMPTY_NAME,
