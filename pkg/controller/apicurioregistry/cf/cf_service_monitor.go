@@ -32,8 +32,8 @@ func NewServiceMonitorCF(ctx *context.LoopContext, services *services.LoopServic
 	return &ServiceMonitorCF{
 		ctx:                        ctx,
 		svcResourceCache:           ctx.GetResourceCache(),
-		svcClients:                 services.Clients,
-		monitoringFactory:          services.MonitoringFactory,
+		svcClients:                 services.GetClients(),
+		monitoringFactory:          services.GetMonitoringFactory(),
 		isServiceMonitorRegistered: false,
 		serviceMonitor:             nil,
 		service:                    nil,

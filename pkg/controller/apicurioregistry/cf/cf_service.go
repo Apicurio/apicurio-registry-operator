@@ -33,9 +33,9 @@ func NewServiceCF(ctx *context.LoopContext, services *services.LoopServices) loo
 	return &ServiceCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
-		svcClients:       services.Clients,
+		svcClients:       services.GetClients(),
 		svcStatus:        ctx.GetStatus(),
-		svcKubeFactory:   services.KubeFactory,
+		svcKubeFactory:   services.GetKubeFactory(),
 		isCached:         false,
 		services:         make([]core.Service, 0),
 		serviceName:      resources.RC_EMPTY_NAME,

@@ -26,7 +26,7 @@ func NewOperatorPodCF(ctx *context.LoopContext, services *services.LoopServices)
 	return &OperatorPodCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
-		svcClients:       services.Clients,
+		svcClients:       services.GetClients(),
 		podExists:        false,
 	}
 }

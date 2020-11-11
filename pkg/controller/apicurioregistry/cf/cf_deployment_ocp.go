@@ -32,9 +32,9 @@ func NewDeploymentOcpCF(ctx *context.LoopContext, services *services.LoopService
 	return &DeploymentOcpCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
-		svcClients:       services.Clients,
+		svcClients:       services.GetClients(),
 		svcStatus:        ctx.GetStatus(),
-		svcOCPFactory:    services.OcpFactory,
+		svcOCPFactory:    services.GetOCPFactory(),
 		isCached:         false,
 		deployments:      make([]ocp_apps.DeploymentConfig, 0),
 		deploymentName:   resources.RC_EMPTY_NAME,
