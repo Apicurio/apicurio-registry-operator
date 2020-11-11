@@ -53,7 +53,7 @@ func NewLabelsOcpCF(ctx *context.LoopContext, services *services.LoopServices) l
 	return &LabelsOcpCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
-		svcOCPFactory:    services.OcpFactory,
+		svcOCPFactory:    services.GetOCPFactory(),
 		podLabels:        nil,
 	}
 }

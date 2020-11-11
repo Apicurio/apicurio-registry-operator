@@ -53,7 +53,7 @@ func NewLabelsCF(ctx *context.LoopContext, services *services.LoopServices) loop
 	return &LabelsCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
-		svcKubeFactory:   services.KubeFactory,
+		svcKubeFactory:   services.GetKubeFactory(),
 		podLabels:        nil,
 	}
 }

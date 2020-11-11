@@ -30,8 +30,8 @@ func NewPodDisruptionBudgetCF(ctx *context.LoopContext, services *services.LoopS
 	return &PodDisruptionBudgetCF{
 		ctx:                     ctx,
 		svcResourceCache:        ctx.GetResourceCache(),
-		svcClients:              services.Clients,
-		svcKubeFactory:          services.KubeFactory,
+		svcClients:              services.GetClients(),
+		svcKubeFactory:          services.GetKubeFactory(),
 		isCached:                false,
 		podDisruptionBudgets:    make([]policy.PodDisruptionBudget, 0),
 		podDisruptionBudgetName: resources.RC_EMPTY_NAME,

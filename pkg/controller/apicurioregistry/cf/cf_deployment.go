@@ -31,9 +31,9 @@ func NewDeploymentCF(ctx *context.LoopContext, services *services.LoopServices) 
 	return &DeploymentCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
-		svcClients:       services.Clients,
+		svcClients:       services.GetClients(),
 		svcStatus:        ctx.GetStatus(),
-		svcKubeFactory:   services.KubeFactory,
+		svcKubeFactory:   services.GetKubeFactory(),
 		isCached:         false,
 		deployments:      make([]apps.Deployment, 0),
 		deploymentName:   resources.RC_EMPTY_NAME,

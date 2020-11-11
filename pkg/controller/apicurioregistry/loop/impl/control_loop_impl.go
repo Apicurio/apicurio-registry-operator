@@ -8,7 +8,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/services"
 )
 
-// var _ loop.ControlLoop = &controlLoopImpl{}
+var _ loop.ControlLoop = &controlLoopImpl{}
 
 type controlLoopImpl struct {
 	ctx              *context.LoopContext
@@ -33,8 +33,7 @@ func (this *controlLoopImpl) GetControlFunctions() []loop.ControlFunction {
 }
 
 func (this *controlLoopImpl) Run() {
-	// this.ctx.BeforeRun()
-	this.services.Patchers.Reload()
+	this.services.BeforeRun()
 
 	// CONTROL LOOP
 	maxAttempts := len(this.GetControlFunctions()) * 2
@@ -65,8 +64,7 @@ func (this *controlLoopImpl) Run() {
 		panic("Control loop stabilization limit exceeded.")
 	}
 
-	// this.ctx.AfterRun()
-	this.services.Patchers.Execute()
+	this.services.AfterRun()
 }
 
 func (this *controlLoopImpl) Cleanup() {
