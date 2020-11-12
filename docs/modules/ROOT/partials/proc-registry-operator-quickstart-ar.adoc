@@ -1,26 +1,29 @@
 [id="registry-operator-quickstart"]
-== {operator} quickstart
+= {operator} quickstart
 
-There are several {operator} installation options, but the simplest option only requires executing a single command.
+You can quickly deploy the {operator} on the command line, without the Operator Lifecycle Manager, by executing a single command.
 
 .Procedure
 . Choose the `$NAMESPACE` to use:
 +
+[source,bash]
 ----
 export NAMESPACE="default"
 ----
 
-. Decide which version you want to deploy:
+. Decide if you want to deploy the latest released version or choose a tag for a specific version:
 +
+ifndef::apicurio-registry-operator-dev[]
 [source,bash]
 ----
 export REF="master"
 ----
 or
 +
+endif::[]
 [source,bash,subs="attributes"]
 ----
-export REF="{operator-latest-version}"
+export REF="{operator-version-tag}"
 ----
 
 . Get the installation file and apply it to your cluster:
@@ -31,7 +34,9 @@ curl -sSL "https://raw.githubusercontent.com/apicurio/apicurio-registry-operator
 sed "s/{NAMESPACE}/$NAMESPACE/g" | kubectl apply -f -
 ----
 
-NOTE: If you are deploying to OpenShift, use `oc` with the same arguments.
+NOTE: You must always specify either `master` or a version tag when using the procedure above. +
+Since version `0.0.4`, you can also use `install-dev.yaml` on branch `master` to deploy the latest development version of {operator}. +
+If you are deploying to OpenShift, use `oc` with the same arguments.
 
-.Additional resources
-xref:assembly-operator-installation.adoc[Installing using the OperatorHub].
+//.Additional resources
+//xref:assembly-operator-installation.adoc[Installing using the OperatorHub].

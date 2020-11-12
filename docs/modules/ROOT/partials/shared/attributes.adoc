@@ -1,9 +1,14 @@
-// Standard document attributes to be used in the documentation
+// Standard document attributes to be used in the documentation.
 //
-// The following are shared by all documents
+// The following are shared by all documents:
 
-// Inclusion Arguments:
-// apicurio-registry-operator-downstream - If set, downstream documentation is generated.
+// High-level Parameters:
+
+// :apicurio-registry-operator-downstream:
+//     - If set, downstream documentation is generated. (Inclusion parameter)
+
+:apicurio-registry-operator-dev:
+//     - If set, documentation for the development version is generated.
 
 // Upstream
 ifndef::apicurio-registry-operator-downstream[]
@@ -11,10 +16,23 @@ ifndef::apicurio-registry-operator-downstream[]
 :apicurio-registry:
 :registry: Apicurio Registry
 :operator: {registry} Operator
+
 :registry-version: 1.3.x
 :operator-version: 0.0.4-dev
-:operator-latest-version: 0.0.3
+
+// IMPORTANT: Operator version may be used as a tag when linking to content on GitHub.
+// Therefore, make sure (one of) the tags used is equal to the version being released.
+// Override with "master" for dev versions.
+ifndef::apicurio-registry-operator-dev[]
+:operator-version-tag: {operator-version}
+endif::[]
+
+ifdef::apicurio-registry-operator-dev[]
+:operator-version-tag: master
+endif::[]
+
 :kafka-streams: Strimzi
+:cli-client: kubectl
 
 endif::[]
 
@@ -27,6 +45,7 @@ ifdef::apicurio-registry-operator-downstream[]
 :registry-version: 1.1
 :operator-version: 0.0.4.redhat
 :kafka-streams: AMQ Streams
+:cli-client: oc
 
 endif::[]
 
