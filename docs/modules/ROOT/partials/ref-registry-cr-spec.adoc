@@ -55,7 +55,12 @@ The following table describes each configuration option:
 | `configuration/persistence`
 | string
 | `mem`
+ifdef::service-registry[]
+| Storage backend. One of `jpa`, `streams`, `infinispan`
+endif::[]
+ifdef::apicurio-registry[]
 | Storage backend. One of `mem`, `jpa`, `kafka`, `streams`, `infinispan`
+endif::[]
 
 | `configuration/dataSource`
 | -
@@ -76,7 +81,7 @@ The following table describes each configuration option:
 | string
 | _empty_
 | Database connection password
-
+ifdef::apicurio-registry[]
 | `configuration/kafka`
 | -
 | -
@@ -86,7 +91,7 @@ The following table describes each configuration option:
 | string
 | _required_
 | Kafka bootstrap server URL
-
+endif::[]
 | `configuration/streams`
 | -
 | -

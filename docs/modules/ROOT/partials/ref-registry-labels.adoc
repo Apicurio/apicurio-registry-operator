@@ -23,8 +23,10 @@ Resources managed by the {operator} are usually labeled as follows:
 | `app.kubernetes.io/{star}`
 | A set of recommended Kubernetes labels for application deployments.
 
+ifdef::service-registry[]
 | `com.company` and `rht.{star}``
 | Metering labels for Red Hat products.
+endif::[]
 |===
 
 .Additional resources

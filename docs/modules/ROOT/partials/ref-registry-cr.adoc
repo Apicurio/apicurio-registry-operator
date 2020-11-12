@@ -8,9 +8,9 @@ These resource objects are created and maintained by users to instruct the {oper
 .Example ApicurioRegistry CR
 The following command displays the `ApicurioRegistry` resource:
 
-[source,bash]
+[source,bash,subs="attributes"]
 ----
-oc edit apicurioregistry example-apicurioregistry
+{cli-client} edit apicurioregistry example-apicurioregistry
 ----
 
 [source,yaml]

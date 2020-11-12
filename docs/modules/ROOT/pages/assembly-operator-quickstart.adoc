@@ -3,7 +3,14 @@ include::partial$shared/all-attributes.adoc[]
 [id="operator-quickstart"]
 = {operator} quickstart
 
-This chapter explains how to quickly install {operator} on the command line. This quickstart example deploys {registry} using the embedded Infinispan storage option:
+This chapter explains how to quickly install {operator} on the command line.
+
+ifdef::service-registry[]
+This quickstart example deploys {registry} using the embedded Infinispan storage option:
+endif::[]
+ifdef::apicurio-registry[]
+This quickstart example deploys {registry} using the in-memory storage option:
+endif::[]
 
 * xref:registry-operator-quickstart[]
 * xref:registry-quickstart[]
@@ -11,5 +18,11 @@ This chapter explains how to quickly install {operator} on the command line. Thi
 NOTE: The recommended installation option for production environments is xref:assembly-operator-installation.adoc[]. The recommended storage option is Kafka Streams.
 
 // INCLUDES
+ifdef::service-registry[]
 include::partial$proc-registry-operator-quickstart-sr.adoc[leveloffset=+1]
 include::partial$proc-registry-quickstart-sr.adoc[leveloffset=+1]
+endif::[]
+ifdef::apicurio-registry[]
+include::partial$proc-registry-operator-quickstart-ar.adoc[leveloffset=+1]
+include::partial$proc-registry-quickstart-ar.adoc[leveloffset=+1]
+endif::[]

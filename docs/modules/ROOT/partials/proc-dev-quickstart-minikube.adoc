@@ -1,0 +1,76 @@
+[id="dev-quickstart-minikube"]
+= Deploy {operator} to Minikube
+
+Follow this procedure to deploy {registry} to Minikube using a development {operator} build:
+
+.Prerequisites
+* You must build the {operator} and push the resulting image to a registry of your choice.
+* You must install a https://kubernetes.io/docs/tasks/tools/install-minikube/[Minikube] cluster.
+
+.Procedure
+. Start your Minikube cluster:
++
+----
+minikube start
+----
+
+NOTE: If you are using Kafka storage options and want to run {kafka-streams}, provide extra memory to the cluster: `--memory=6144`
+
+. Make sure the ingress addon is enabled:
++
+----
+minikube addons enable ingress
+----
+
+. Get the IP address of the cluster:
++
+----
+ $ minikube ip
+ 192.168.99.111
+----
+
+. (Optional) Edit you `/etc/hosts` file to resolve registry host to the cluster IP address:
++
+----
+ $ cat /etc/hosts
+ [...]
+ 192.168.99.111   registry.example.com
+----
++
+Use the same host in the `ApicurioRegistry` CR later.
+
+. In order to deploy the {registry} with the in-memory storage, no further prerequisites are needed.
+You can use the build scripts to deploy an example `ApicurioRegistry` CR:
++
+----
+./build.sh mkdeploy -r "$REGISTRY" -n default --cr ./docs/modules/ROOT/examples/in-memory_cr.yaml
+----
+
+. If you want to remove the operator and cleanup the resources, run:
++
+----
+./build.sh mkundeploy -r "$REGISTRY" -n default
+----
+
+. Try the following HTTP requests to test the deployment:
++
+----
+curl -v http://registry.example.com/health
+curl -v http://registry.example.com/health/ready
+curl -v http://registry.example.com/health/live
+----
++
+or create a test artifact:
++
+----
+curl -X POST -H "Content-Type: application/json" \
+     -H "X-Registry-ArtifactType: JSON" \
+     -H "X-Registry-ArtifactId: test1" \
+     -d '{"type": "cat", "color": "black"}' \
+     http://registry.example.com/artifacts
+----
+NOTE: If you did not configure your `/etc/hosts` file, try `+curl -H "Host: registry.example.com" http://$(minikube ip)/health+`
+
+.Additional resources
+* xref:assembly-registry-storage.adoc[]
+* xref:assembly-operator-configuration.adoc[]
