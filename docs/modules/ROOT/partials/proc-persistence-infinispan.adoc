@@ -1,8 +1,7 @@
 [id="registry-persistence-infinispan"]
 = Configuring {registry} Infinispan storage
-:parent: Configuration
 
-The {registry} Infinispan storage option uses RAM on nodes where {registry} is deployed to store the data. This is achieved using an embedded Infinispan in-memory data grid, which also provides data replication between nodes. This configuration is simple, with an optional field to provide a name for the Infinispan cluster.
+The {registry} Infinispan storage option uses RAM to store the data on nodes where {registry} is deployed. This is achieved using an embedded Infinispan in-memory data grid, which also provides data replication between nodes. This configuration is simple, with an optional field to provide a name for the Infinispan cluster.
 
 ifdef::service-registry[]
 IMPORTANT: The Infinispan storage option is a https://access.redhat.com/support/offerings/techpreview[Technology Preview] feature and is currently not suitable for production environments.

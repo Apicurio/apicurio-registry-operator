@@ -15,7 +15,7 @@ OpenShift web console::
 . You can add or modify your environment variable to the *Single values (env)* section.
 . Click *Save* at the bottom.
 
-OpenShiuft CLI::
+OpenShift CLI::
 
 . Select the project where {registry} is installed.
 . Run `oc get apicurioregistry` to get the list of `ApicurioRegistry` CRs

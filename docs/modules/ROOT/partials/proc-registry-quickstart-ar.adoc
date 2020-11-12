@@ -1,0 +1,22 @@
+[id="registry-quickstart"]
+= Quickstart {registry} deployment
+
+To quickly create a new {registry} deployment, use the in-memory storage option,
+which does not require an external storage to be configured as a prerequisite.
+
+.Prerequisites
+* Ensure that the {operator} is already installed.
+
+.Procedure
+* Create an `ApicurioRegistry` custom resource (CR) in the same namespace that the Operator is deployed:
++
+[source,bash,subs="attributes"]
+----
+kubectl apply -f https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/{operator-version-tag}/docs/modules/ROOT/examples/in-memory_cr.yaml
+----
++
+.Example CR for in-memory storage
+[source,yaml]
+----
+include::example$in-memory_cr.yaml[]
+----

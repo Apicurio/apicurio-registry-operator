@@ -1,7 +1,7 @@
 [id="getting-registry-operator-help"]
 = Getting help with {operator} 
 
-See the link:https://github.com/Apicurio/apicurio-registry[{registry}] and https://github.com/Apicurio/apicurio-registry-operator[{operator}] projects on GitHub.
+See the link:https://github.com/Apicurio/apicurio-registry[Apicurio Registry] and https://github.com/Apicurio/apicurio-registry-operator[Apicurio Registry Operator] projects on GitHub.
 Any contributions, suggestions, and issue reports are welcome.
 
 ifdef::apicurio-registry[]
