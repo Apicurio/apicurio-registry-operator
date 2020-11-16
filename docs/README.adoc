@@ -14,3 +14,4 @@ $ antora local-test-playbook.yml
 . Change to the `./target/dist/apicurio-registry-operator` directory.
 . Open the generated `index.html` file in your browser.
 
+NOTE: See `docs/modules/ROOT/partials/shared/attributes.adoc` for configurable parameters.
