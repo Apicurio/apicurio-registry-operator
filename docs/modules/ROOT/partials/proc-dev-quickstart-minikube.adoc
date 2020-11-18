@@ -10,6 +10,7 @@ Follow this procedure to deploy {registry} to Minikube using a development {oper
 .Procedure
 . Start your Minikube cluster:
 +
+[source,bash]
 ----
 minikube start
 ----
@@ -18,12 +19,14 @@ NOTE: If you are using Kafka storage options and want to run {kafka-streams}, pr
 
 . Make sure the ingress addon is enabled:
 +
+[source,bash]
 ----
 minikube addons enable ingress
 ----
 
 . Get the IP address of the cluster:
 +
+[source,bash]
 ----
  $ minikube ip
  192.168.99.111
@@ -31,6 +34,7 @@ minikube addons enable ingress
 
 . (Optional) Edit you `/etc/hosts` file to resolve registry host to the cluster IP address:
 +
+[source,bash]
 ----
  $ cat /etc/hosts
  [...]
@@ -42,18 +46,21 @@ Use the same host in the `ApicurioRegistry` CR later.
 . In order to deploy the {registry} with the in-memory storage, no further prerequisites are needed.
 You can use the build scripts to deploy an example `ApicurioRegistry` CR:
 +
+[source,bash]
 ----
 ./build.sh mkdeploy -r "$REGISTRY" -n default --cr ./docs/modules/ROOT/examples/in-memory_cr.yaml
 ----
 
 . If you want to remove the operator and cleanup the resources, run:
 +
+[source,bash]
 ----
 ./build.sh mkundeploy -r "$REGISTRY" -n default
 ----
 
 . Try the following HTTP requests to test the deployment:
 +
+[source,bash]
 ----
 curl -v http://registry.example.com/health
 curl -v http://registry.example.com/health/ready
@@ -62,6 +69,7 @@ curl -v http://registry.example.com/health/live
 +
 or create a test artifact:
 +
+[source,bash]
 ----
 curl -X POST -H "Content-Type: application/json" \
      -H "X-Registry-ArtifactType: JSON" \

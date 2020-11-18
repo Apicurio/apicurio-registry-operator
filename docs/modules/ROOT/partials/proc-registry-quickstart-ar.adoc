@@ -8,12 +8,36 @@ which does not require an external storage to be configured as a prerequisite.
 * Ensure that the {operator} is already installed.
 
 .Procedure
-* Create an `ApicurioRegistry` custom resource (CR) in the same namespace that the Operator is deployed:
+. Use a `$NAMESPACE` where the {operator} is deployed:
++
+[source,bash]
+----
+export NAMESPACE="default"
+----
+
+. Use the `master` branch or a git tag to select the appropriate example `ApicurioRegistry` CR for the given {operator} version:
++
+ifndef::apicurio-registry-operator-dev[]
+[source,bash]
+----
+export REF="master"
+----
+or
++
+endif::[]
+[source,bash,subs="attributes"]
+----
+export REF="{operator-version-tag}"
+----
+
+. Create an `ApicurioRegistry` custom resource (CR):
 +
 [source,bash,subs="attributes"]
 ----
-kubectl apply -f https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/{operator-version-tag}/docs/modules/ROOT/examples/in-memory_cr.yaml
+kubectl apply -f https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/$REF/docs/modules/ROOT/examples/in-memory_cr.yaml -n $NAMESPACE
 ----
+NOTE: The path to the example `ApicurioRegistry` CR has been changed since version `0.0.4`. If you are deploying an older release,
+use `+https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/$REF/docs/resources/example-cr/in-memory.yaml+`.
 +
 .Example CR for in-memory storage
 [source,yaml]
