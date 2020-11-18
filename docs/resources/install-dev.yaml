@@ -933,13 +933,13 @@ spec:
 
         apicur.io/type: operator
         apicur.io/name: apicurio-registry-operator
-        apicur.io/version: 0.0.4-dev
+        apicur.io/version: 0.0.4
     spec:
       serviceAccountName: apicurio-registry-operator
       containers:
         - name: apicurio-registry-operator
           # Replace this with the built image name
-          image: docker.io/apicurio/apicurio-registry-operator:0.0.4-dev # replaced {OPERATOR_IMAGE}
+          image: docker.io/apicurio/apicurio-registry-operator:0.0.4 # replaced {OPERATOR_IMAGE}
           imagePullPolicy: Always
           resources:
             limits:
