@@ -2,5 +2,5 @@ packageName: apicurio-registry
 defaultChannel: alpha
 channels:
   - name: alpha
-    currentCSV: apicurio-registry.v0.0.4-dev # alpha; replaces 0.0.3-v1.2.3.final
+    currentCSV: apicurio-registry.v0.0.4-v1.3.2.final # alpha; replaces 0.0.3-v1.2.3.final
 # Keep the 'replaces' annotation updated
