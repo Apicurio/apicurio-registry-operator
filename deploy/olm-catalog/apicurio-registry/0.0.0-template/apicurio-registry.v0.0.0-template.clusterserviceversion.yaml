@@ -212,6 +212,8 @@ spec:
   provider:
     name: Apicurio
   relatedImages:
+    - name: apicurio-registry-operator
+      image: docker.io/apicurio/apicurio-registry-operator:invalid
     - name: apicurio-registry-mem
       image: docker.io/apicurio/apicurio-registry-mem:invalid
     - name: apicurio-registry-kafka
