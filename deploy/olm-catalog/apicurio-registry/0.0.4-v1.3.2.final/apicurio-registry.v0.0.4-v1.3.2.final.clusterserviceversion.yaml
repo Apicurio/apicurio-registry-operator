@@ -239,7 +239,8 @@ spec:
                             fieldPath: metadata.namespace
                       - name: OPERATOR_NAME
                         value: apicurio-registry-operator
-                    image: docker.io/apicurio/apicurio-registry-operator:0.0.4
+                    # image: docker.io/apicurio/apicurio-registry-operator:0.0.4
+                    image: localhost:5000/apicurio-registry-operator:latest-ci
                     imagePullPolicy: Always
                     name: apicurio-registry-operator
                     resources:
