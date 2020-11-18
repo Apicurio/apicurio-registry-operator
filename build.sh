@@ -162,7 +162,7 @@ minikube_deploy() {
 }
 
 compile_qs_yaml() {
-  FILE="./docs/resources/install.yaml"
+  FILE="./docs/resources/install-dev.yaml"
   echo "Warning: Make sure generated files like '$FILE' do not contain your private dev changes (e.g. image references) before commiting."
   if [ -f "$FILE" ]; then
     rm "$FILE"
