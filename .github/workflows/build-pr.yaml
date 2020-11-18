@@ -34,7 +34,7 @@ jobs:
 
       - name: Test
         id: test
-        run: CI_BUILD=true OPERATOR_IMAGE="${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}/apicurio-registry-operator:latest" ./.github/scripts/test_operator.sh
+        run: CI_BUILD=true OPERATOR_IMAGE="${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}/apicurio-registry-operator:latest-dev" ./.github/scripts/test_operator.sh
 
       - name: Collect logs
         if: failure()
