@@ -30,8 +30,8 @@ export REF="{operator-version-tag}"
 +
 [source,bash]
 ----
-curl -sSL "https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/$REF/docs/resources/install.yaml" |
-sed "s/{NAMESPACE}/$NAMESPACE/g" | kubectl apply -f -
+curl -sSL "https://raw.githubusercontent.com/Apicurio/apicurio-registry-operator/$REF/docs/resources/install.yaml" |
+sed "s/{NAMESPACE}/$NAMESPACE/g" | kubectl apply -f - -n $NAMESPACE
 ----
 
 NOTE: You must always specify either `master` or a version tag when using the procedure above. +

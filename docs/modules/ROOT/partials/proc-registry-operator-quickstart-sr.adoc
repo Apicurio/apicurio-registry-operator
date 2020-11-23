@@ -22,5 +22,5 @@ oc new-project service-registry
 +
 [source,bash]
 ----
-oc apply -f install/
+oc apply -f install/ -n service-registry
 ----

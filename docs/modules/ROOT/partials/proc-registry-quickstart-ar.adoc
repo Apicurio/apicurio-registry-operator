@@ -34,10 +34,10 @@ export REF="{operator-version-tag}"
 +
 [source,bash,subs="attributes"]
 ----
-kubectl apply -f https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/$REF/docs/modules/ROOT/examples/in-memory_cr.yaml -n $NAMESPACE
+kubectl apply -f https://raw.githubusercontent.com/Apicurio/apicurio-registry-operator/$REF/docs/modules/ROOT/examples/in-memory_cr.yaml -n $NAMESPACE
 ----
 NOTE: The path to the example `ApicurioRegistry` CR has been changed since version `0.0.4`. If you are deploying an older release,
-use `+https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/$REF/docs/resources/example-cr/in-memory.yaml+`.
+use `+https://raw.githubusercontent.com/Apicurio/apicurio-registry-operator/$REF/docs/resources/example-cr/in-memory.yaml+`.
 +
 .Example CR for in-memory storage
 [source,yaml]
