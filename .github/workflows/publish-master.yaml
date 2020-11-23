@@ -27,9 +27,9 @@ jobs:
         id: build
         run: ./build.sh build -r "${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}"
 
-#      - name: Publish
-#        id: publish
-#        run: ./build.sh push -r "${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}" --latest
+      - name: Publish
+        id: publish
+        run: ./build.sh push -r "${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}" --latest
 
       - name: Test
         id: test
