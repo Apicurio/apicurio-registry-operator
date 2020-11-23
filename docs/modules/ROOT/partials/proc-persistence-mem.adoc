@@ -19,8 +19,9 @@ include::example$in-memory_cr.yaml[]
 +
 [source,bash,subs="attributes"]
 ----
-export GIT_REF="{operator-version-tag}" &&
-curl -sSL "https://raw.githubusercontent.com/apicurio/apicurio-registry-operator/$GIT_REF/docs/modules/ROOT/examples/in-memory_cr.yaml" | kubectl apply -f -
+export REF="{operator-version-tag}" &&
+curl -sSL "https://raw.githubusercontent.com/Apicurio/apicurio-registry-operator/$REF/docs/modules/ROOT/examples/in-memory_cr.yaml" |
+kubectl apply -f - -n $NAMESPACE
 ----
 
 IMPORTANT: This persistence option does not support data distribution across {registry} nodes.
