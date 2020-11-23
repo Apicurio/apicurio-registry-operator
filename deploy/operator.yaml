@@ -14,7 +14,7 @@ spec:
 
         apicur.io/type: operator
         apicur.io/name: apicurio-registry-operator
-        apicur.io/version: 0.0.4
+        apicur.io/version: 0.0.5-dev
     spec:
       serviceAccountName: apicurio-registry-operator
       containers:
