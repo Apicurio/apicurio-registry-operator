@@ -102,8 +102,8 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 								core.ResourceMemory: resource.MustParse("1300Mi"),
 							},
 							Requests: core.ResourceList{
-								core.ResourceCPU:    resource.MustParse("0.1"),
-								core.ResourceMemory: resource.MustParse("600Mi"),
+								core.ResourceCPU:    resource.MustParse("500m"),
+								core.ResourceMemory: resource.MustParse("512Mi"),
 							},
 						},
 						LivenessProbe: &core.Probe{
@@ -113,7 +113,7 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 									Port: intstr.FromInt(8080),
 								},
 							},
-							InitialDelaySeconds: 5,
+							InitialDelaySeconds: 15,
 							TimeoutSeconds:      5,
 							PeriodSeconds:       10,
 							SuccessThreshold:    1,
@@ -126,7 +126,7 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 									Port: intstr.FromInt(8080),
 								},
 							},
-							InitialDelaySeconds: 5,
+							InitialDelaySeconds: 15,
 							TimeoutSeconds:      5,
 							PeriodSeconds:       10,
 							SuccessThreshold:    1,
