@@ -6,7 +6,7 @@
 
 * Docker
 * https://github.com/golang/go[go] (1.13+, with `export GO111MODULE='on'`), and `$GOPATH` and `$GOROOT` set.
-* https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md[Operator SDK] v11+
+* https://v0-18-x.sdk.operatorframework.io/docs/install-operator-sdk/[Operator SDK] v0.18.x
 * A running Kubernetes, https://kubernetes.io/docs/tasks/tools/install-minikube/[Minikube], OpenShift, or Minishift deployment with system admin access.
 
 [#quickstart]
