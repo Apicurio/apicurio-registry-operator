@@ -1,7 +1,13 @@
 #!/bin/bash
 set -e -a
 
-OPERATOR_METADATA_IMAGE=docker.io/apicurio/apicurio-registry-operator-metadata:latest-dev
+VERSION=$(sed -n 's/^.*Version.*=.*"\(.*\)".*$/\1/p' ./version/version.go)
+
+echo $VERSION
+
+OPERATOR_IMAGE="${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}/apicurio-registry-operator:$VERSION"
+OPERATOR_METADATA_IMAGE="${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}/apicurio-registry-operator-metadata:$VERSION"
+
 BUNDLE_URL=${PWD}/docs/resources/install-dev.yaml
 
 git clone https://github.com/Apicurio/apicurio-registry-k8s-tests-e2e.git
