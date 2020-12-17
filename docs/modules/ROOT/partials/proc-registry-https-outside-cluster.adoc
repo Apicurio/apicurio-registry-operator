@@ -1,7 +1,7 @@
 [id="registry-https-outside-cluster"]
-= Configuring HTTPS connection to {registry} from outside the cluster
+= Configuring an HTTPS connection to {registry} from outside the OpenShift cluster
 
-The following procedure shows how to configure {registry} deployment to expose a HTTPS edge-terminated route for connections from outside the cluster.
+The following procedure shows how to configure {registry} deployment to expose an HTTPS edge-terminated route for connections from outside the OpenShift cluster.
 
 .Prerequisites
 * You must have already installed the {operator}.
@@ -45,7 +45,7 @@ openssl genrsa 2048 > host.key &&
 openssl req -new -x509 -nodes -sha256 -days 365 -key host.key -out host.cert
 ----
 +
-and then create a route using CLI:
+and then create a route using the OpenShift CLI:
 +
 [source,bash]
 ----
