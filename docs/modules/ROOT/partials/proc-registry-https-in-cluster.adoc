@@ -1,11 +1,11 @@
 [id="registry-https-in-cluster"]
-= Configuring HTTPS connection to {registry} from inside the cluster
+= Configuring an HTTPS connection to {registry} from inside the OpenShift cluster
 
-The following procedure shows how to configure {registry} deployment to expose a port for HTTPS connections from inside the cluster.
+The following procedure shows how to configure {registry} deployment to expose a port for HTTPS connections from inside the OpenShift cluster.
 
 WARNING: This kind of connection is not directly available outside of the cluster.
-Routing is based on hostname, which is encoded in case of an HTTPS connection.
-Therefore, edge termination or other configuration is still be needed.
+Routing is based on hostname, which is encoded in the case of an HTTPS connection.
+Therefore, edge termination or other configuration is still needed.
 See xref:registry-https-outside-cluster[].
 
 .Prerequisites
@@ -21,7 +21,7 @@ keytool -genkey -trustcacerts -keyalg RSA -keystore registry-keystore.jks -store
 ----
 
 . Create a new secret to hold the keystore and keystore password.
-.. In the left navigation menu of the OpenShift UI, click *Workloads* > *Secrets* > *Create Key/Value Secret*.
+.. In the left navigation menu of the OpenShift web console, click *Workloads* > *Secrets* > *Create Key/Value Secret*.
 .. Use the following values: +
    Name: `registry-keystore` +
    Key 1: `keystore.jks` +
@@ -29,7 +29,7 @@ keytool -genkey -trustcacerts -keyalg RSA -keystore registry-keystore.jks -store
    Key 2: `password` +
    Value 2: _password_
 +
-NOTE: If you encounter a `java.io.IOException: Invalid keystore format`, the upload of the binary file using UI form did not work properly.
+NOTE: If you encounter a `java.io.IOException: Invalid keystore format`, the upload of the binary file did not work properly.
 As an alternative, encode the file as a base64 string using `cat registry-keystore.jks | base64 -w0 > data.txt` and edit the *Secret* resource as yaml to manually add the encoded file.
 
 . Edit the *DeploymentConfig* resource of the {registry} instance.
@@ -74,7 +74,7 @@ volumeMounts:
 +
 NOTE: Order is important when using string interpolation.
 
-.. Enable HTTPS port:
+.. Enable the HTTPS port:
 +
 [source,yaml]
 ----
@@ -109,7 +109,7 @@ ports:
 oc rsh -n default example-apicurioregistry-deployment-vx28s-4-lmtqb
 ----
 
-.. Find the cluster IP of the {registry} pod from the *Service* resource (see the *Location* column in the UI).
+.. Find the cluster IP of the {registry} pod from the *Service* resource (see the *Location* column in the web console).
 Afterwards, execute a test request (we are using self-signed certificate, so an insecure flag is required):
 +
 [source,bash]
