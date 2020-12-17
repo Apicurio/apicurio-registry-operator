@@ -1,0 +1,119 @@
+[id="registry-https-in-cluster"]
+= Configuring HTTPS connection to {registry} from inside the cluster
+
+The following procedure shows how to configure {registry} deployment to expose a port for HTTPS connections from inside the cluster.
+
+WARNING: This kind of connection is not directly available outside of the cluster.
+Routing is based on hostname, which is encoded in case of an HTTPS connection.
+Therefore, edge termination or other configuration is still be needed.
+See xref:registry-https-outside-cluster[].
+
+.Prerequisites
+* You must have already installed the {operator}.
+
+.Procedure
+. Generate a `keystore` with a self-signed certificate.
+You can skip this step if you are using your own certificates.
++
+[source,bash]
+----
+keytool -genkey -trustcacerts -keyalg RSA -keystore registry-keystore.jks -storepass password
+----
+
+. Create a new secret to hold the keystore and keystore password.
+.. In the left navigation menu of the OpenShift UI, click *Workloads* > *Secrets* > *Create Key/Value Secret*.
+.. Use the following values: +
+   Name: `registry-keystore` +
+   Key 1: `keystore.jks` +
+   Value 1: _registry-keystore.jks_ (uploaded file) +
+   Key 2: `password` +
+   Value 2: _password_
++
+NOTE: If you encounter a `java.io.IOException: Invalid keystore format`, the upload of the binary file using UI form did not work properly.
+As an alternative, encode the file as a base64 string using `cat registry-keystore.jks | base64 -w0 > data.txt` and edit the *Secret* resource as yaml to manually add the encoded file.
+
+. Edit the *DeploymentConfig* resource of the {registry} instance.
+You can find the correct name in a status field of the {operator}.
+.. Add the keystore secret as a volume:
++
+[source,yaml]
+----
+template:
+  spec:
+    volumes:
+    - name: registry-keystore-secret-volume
+      secret:
+      secretName: registry-keystore
+----
+
+.. Add a volume mount:
++
+[source,yaml]
+----
+volumeMounts:
+  - name: registry-keystore-secret-volume
+    mountPath: /etc/registry-keystore
+    readOnly: true
+----
+
+.. Add `JAVA_OPTIONS` and `KEYSTORE_PASSWORD` environment variables:
++
+[source,yaml]
+----
+- name: KEYSTORE_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: registry-keystore
+      key: password
+- name: JAVA_OPTIONS
+    value: >-
+     -Dquarkus.http.ssl.certificate.key-store-file=/etc/registry-keystore/keystore.jks
+     -Dquarkus.http.ssl.certificate.key-store-file-type=jks
+     -Dquarkus.http.ssl.certificate.key-store-password=$(KEYSTORE_PASSWORD)
+----
++
+NOTE: Order is important when using string interpolation.
+
+.. Enable HTTPS port:
++
+[source,yaml]
+----
+ports:
+  - containerPort: 8080
+    protocol: TCP
+  - containerPort: 8443
+    protocol: TCP
+----
+
+. Edit the *Service* resource of the {registry} instance.
+You can find the correct name in a status field of the {operator}.
++
+[source,yaml]
+----
+ports:
+  - name: http
+    protocol: TCP
+    port: 8080
+    targetPort: 8080
+  - name: https
+    protocol: TCP
+    port: 8443
+    targetPort: 8443
+----
+
+. Verify that the connection is working:
+.. Connect into a pod on the cluster using SSH (you can use the {registry} pod):
++
+[source,bash]
+----
+oc rsh -n default example-apicurioregistry-deployment-vx28s-4-lmtqb
+----
+
+.. Find the cluster IP of the {registry} pod from the *Service* resource (see the *Location* column in the UI).
+Afterwards, execute a test request (we are using self-signed certificate, so an insecure flag is required):
++
+[source,bash]
+----
+curl -k https://172.30.209.198:8443/health
+[...]
+----
