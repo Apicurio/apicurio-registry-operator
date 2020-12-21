@@ -3,7 +3,7 @@ name: Apicurio Registry Operator - Build a pull request
 on: [pull_request]
 
 env:
-  IMAGE_REGISTRY: docker.io
+  IMAGE_REGISTRY: quay.io
   IMAGE_REGISTRY_ORG: apicurio
 
 jobs:
