@@ -15,7 +15,7 @@ metadata:
     capabilities: Basic Install
     categories: Streaming & Messaging
     certified: "false"
-    containerImage: docker.io/apicurio/apicurio-registry-operator:0.0.5-dev
+    containerImage: quay.io/apicurio/apicurio-registry-operator:0.0.5-dev
     createdAt: 2020-11-23
     description: Deploy and manage Apicurio Registry on Kubernetes.
     repository: https://github.com/Apicurio/apicurio-registry-operator
@@ -133,7 +133,7 @@ spec:
             x-descriptors:
               - urn:alm:descriptor:com.tectonic.ui:fieldGroup:ui
               - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-          - description: Override the image name according to selected Persistence Type for example, MEM="docker.io/apicurio/apicurio-registry-mem:latest" KAFKA="docker.io/apicurio/apicurio-registry-kafka:latest" STREAMS="docker.io/apicurio/apicurio-registry-streams:latest" JPA="docker.io/apicurio/apicurio-registry-jpa:latest" INFINISPAN="docker.io/apicurio/apicurio-registry-infinispan:latest"
+          - description: Override the image name according to selected Persistence Type for example, MEM="quay.io/apicurio/apicurio-registry-mem:latest" KAFKA="quay.io/apicurio/apicurio-registry-kafka:latest" STREAMS="quay.io/apicurio/apicurio-registry-streams:latest" JPA="quay.io/apicurio/apicurio-registry-jpa:latest" INFINISPAN="quay.io/apicurio/apicurio-registry-infinispan:latest"
             displayName: Image Name
             path: image.name
             x-descriptors:
@@ -216,15 +216,15 @@ spec:
                       - name: REGISTRY_VERSION
                         value: latest
                       - name: REGISTRY_IMAGE_MEM
-                        value: docker.io/apicurio/apicurio-registry-mem:latest
+                        value: quay.io/apicurio/apicurio-registry-mem:latest
                       - name: REGISTRY_IMAGE_KAFKA
-                        value: docker.io/apicurio/apicurio-registry-kafka:latest
+                        value: quay.io/apicurio/apicurio-registry-kafka:latest
                       - name: REGISTRY_IMAGE_STREAMS
-                        value: docker.io/apicurio/apicurio-registry-streams:latest
+                        value: quay.io/apicurio/apicurio-registry-streams:latest
                       - name: REGISTRY_IMAGE_JPA
-                        value: docker.io/apicurio/apicurio-registry-jpa:latest
+                        value: quay.io/apicurio/apicurio-registry-jpa:latest
                       - name: REGISTRY_IMAGE_INFINISPAN
-                        value: docker.io/apicurio/apicurio-registry-infinispan:latest
+                        value: quay.io/apicurio/apicurio-registry-infinispan:latest
                       - name: WATCH_NAMESPACE
                         valueFrom:
                           fieldRef:
@@ -239,7 +239,7 @@ spec:
                             fieldPath: metadata.namespace
                       - name: OPERATOR_NAME
                         value: apicurio-registry-operator
-                    image: docker.io/apicurio/apicurio-registry-operator:0.0.5-dev
+                    image: quay.io/apicurio/apicurio-registry-operator:0.0.5-dev
                     imagePullPolicy: Always
                     name: apicurio-registry-operator
                     resources:
@@ -370,14 +370,14 @@ spec:
   version: 0.0.5-dev
   relatedImages:
     - name: apicurio-registry-operator
-      image: docker.io/apicurio/apicurio-registry-operator:0.0.5-dev
+      image: quay.io/apicurio/apicurio-registry-operator:0.0.5-dev
     - name: apicurio-registry-mem
-      image: docker.io/apicurio/apicurio-registry-mem:latest
+      image: quay.io/apicurio/apicurio-registry-mem:latest
     - name: apicurio-registry-kafka
-      image: docker.io/apicurio/apicurio-registry-kafka:latest
+      image: quay.io/apicurio/apicurio-registry-kafka:latest
     - name: apicurio-registry-streams
-      image: docker.io/apicurio/apicurio-registry-streams:latest
+      image: quay.io/apicurio/apicurio-registry-streams:latest
     - name: apicurio-registry-jpa
-      image: docker.io/apicurio/apicurio-registry-jpa:latest
+      image: quay.io/apicurio/apicurio-registry-jpa:latest
     - name: apicurio-registry-infinispan
-      image: docker.io/apicurio/apicurio-registry-infinispan:latest
+      image: quay.io/apicurio/apicurio-registry-infinispan:latest

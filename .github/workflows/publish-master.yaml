@@ -5,7 +5,7 @@ on:
       - master
 
 env:
-  IMAGE_REGISTRY: docker.io
+  IMAGE_REGISTRY: quay.io
   IMAGE_REGISTRY_ORG: apicurio
 
 jobs:
