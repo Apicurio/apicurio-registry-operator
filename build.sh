@@ -123,8 +123,8 @@ gen_csv() {
     # Update the 'containerImage' field
     yq w -i -P "$CSV_PATH" "metadata.annotations.containerImage" "$OPERATOR_IMAGE"
 
-    echo "Warning: Make sure generated CSV do not contain your private dev changes before commiting."
-    echo "Warning: If you want to create CSV for release, rename the generated 'dev' one and replace tags with SHA using 'skopeo' (also in the 'relatedImages' section)."
+    echo "⚠️ Warning: Make sure generated CSV does not contain your private dev changes before commiting."
+    echo "⚠️ Warning: If you want to create CSV for release, rename the generated 'dev' one and replace tags with SHA using 'skopeo' (also in the 'relatedImages' section)."
   fi
 }
 
@@ -175,7 +175,7 @@ minikube_deploy() {
 
 compile_qs_yaml() {
   FILE="./docs/resources/install-dev.yaml"
-  echo "Warning: Make sure generated files like '$FILE' do not contain your private dev changes (e.g. image references) before commiting."
+  echo "⚠️ Warning: Make sure generated files like '$FILE' do not contain your private dev changes (e.g. image references) before commiting."
   if [ -f "$FILE" ]; then
     rm "$FILE"
   fi
