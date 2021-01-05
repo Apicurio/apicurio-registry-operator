@@ -133,7 +133,7 @@ spec:
             x-descriptors:
               - urn:alm:descriptor:com.tectonic.ui:fieldGroup:ui
               - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-          - description: Override the image name according to selected Persistence Type for example, MEM="docker.io/apicurio/apicurio-registry-mem:latest" KAFKA="docker.io/apicurio/apicurio-registry-kafka:latest" STREAMS="docker.io/apicurio/apicurio-registry-streams:latest" JPA="docker.io/apicurio/apicurio-registry-jpa:latest" INFINISPAN="docker.io/apicurio/apicurio-registry-infinispan:latest"
+          - description: Override the image name according to selected Persistence Type for example, MEM="quay.io/apicurio/apicurio-registry-mem:latest" KAFKA="quay.io/apicurio/apicurio-registry-kafka:latest" STREAMS="quay.io/apicurio/apicurio-registry-streams:latest" JPA="quay.io/apicurio/apicurio-registry-jpa:latest" INFINISPAN="quay.io/apicurio/apicurio-registry-infinispan:latest"
             displayName: Image Name
             path: image.name
             x-descriptors:
@@ -213,17 +213,17 @@ spec:
     name: Apicurio
   relatedImages:
     - name: apicurio-registry-operator
-      image: docker.io/apicurio/apicurio-registry-operator:invalid
+      image: quay.io/apicurio/apicurio-registry-operator:invalid
     - name: apicurio-registry-mem
-      image: docker.io/apicurio/apicurio-registry-mem:invalid
+      image: quay.io/apicurio/apicurio-registry-mem:invalid
     - name: apicurio-registry-kafka
-      image: docker.io/apicurio/apicurio-registry-kafka:invalid
+      image: quay.io/apicurio/apicurio-registry-kafka:invalid
     - name: apicurio-registry-streams
-      image: docker.io/apicurio/apicurio-registry-streams:invalid
+      image: quay.io/apicurio/apicurio-registry-streams:invalid
     - name: apicurio-registry-jpa
-      image: docker.io/apicurio/apicurio-registry-jpa:invalid
+      image: quay.io/apicurio/apicurio-registry-jpa:invalid
     - name: apicurio-registry-infinispan
-      image: docker.io/apicurio/apicurio-registry-infinispan:invalid
+      image: quay.io/apicurio/apicurio-registry-infinispan:invalid
   replaces: invalid
   selector: {}
   version: 0.0.0-template
