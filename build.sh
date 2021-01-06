@@ -87,8 +87,10 @@ gen_csv() {
     CSV_TEMPLATE_PATH="./deploy/olm-catalog/apicurio-registry/0.0.0-template/apicurio-registry.v0.0.0-template.clusterserviceversion.yaml"
     CSV_PATH="./deploy/olm-catalog/apicurio-registry/$VERSION/apicurio-registry.v$VERSION.clusterserviceversion.yaml"
     PACKAGE_PATH="./deploy/olm-catalog/apicurio-registry/apicurio-registry-operator.package.yaml"
-    PREVIOUS_VERSION_ALPHA=$(sed -n 's/^ *currentCSV:.*# alpha; replaces \([^ ]*\)$/\1/p' "$PACKAGE_PATH")
-    require "$PREVIOUS_VERSION_ALPHA" "Could not determine previous CSV version."
+    PREVIOUS_VERSION_2x=$(sed -n 's/^ *currentCSV:.*# apicurio-registry-2.x; replaces \([^ ]*\)$/\1/p' "$PACKAGE_PATH")
+    if [[ -z "$PREVIOUS_VERSION_2x" ]]; then
+      echo "⚠️ Warning: Previous CSV version is empty. Make sure this is the first CSV in the channel."
+    fi
 
     # Copy specDescriptors from template, this has to be done explicitly
     yq r "$CSV_TEMPLATE_PATH" "spec.customresourcedefinitions.owned[0].specDescriptors" |
@@ -114,7 +116,11 @@ gen_csv() {
     yq w -i "$CSV_PATH" "spec.relatedImages[name==apicurio-registry-infinispan].image" "$_IMAGE"
 
     # Update the 'replaces' field
-    yq w -i -P "$CSV_PATH" "spec.replaces" "apicurio-registry.v$PREVIOUS_VERSION_ALPHA"
+    if [[ -n "$PREVIOUS_VERSION_2x" ]]; then
+      yq w -i -P "$CSV_PATH" "spec.replaces" "apicurio-registry.v$PREVIOUS_VERSION_2x"
+    else
+      yq d -i -P "$CSV_PATH" "spec.replaces"
+    fi
 
     # Update the 'createdAt' field
     CREATED_AT=$(date -Idate)
