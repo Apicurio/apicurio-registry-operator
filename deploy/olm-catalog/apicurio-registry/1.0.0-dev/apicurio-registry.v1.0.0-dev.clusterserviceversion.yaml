@@ -15,12 +15,12 @@ metadata:
     capabilities: Basic Install
     categories: Streaming & Messaging
     certified: "false"
-    containerImage: quay.io/apicurio/apicurio-registry-operator:0.0.5-dev
+    containerImage: quay.io/apicurio/apicurio-registry-operator:1.0.0-dev
     createdAt: 2021-01-06
     description: Deploy and manage Apicurio Registry on Kubernetes.
     repository: https://github.com/Apicurio/apicurio-registry-operator
     support: Apicurio
-  name: apicurio-registry.v0.0.5-dev
+  name: apicurio-registry.v1.0.0-dev
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -208,7 +208,7 @@ spec:
                 labels:
                   apicur.io/name: apicurio-registry-operator
                   apicur.io/type: operator
-                  apicur.io/version: 0.0.5-dev
+                  apicur.io/version: 1.0.0-dev
                   name: apicurio-registry-operator
               spec:
                 containers:
@@ -239,7 +239,7 @@ spec:
                             fieldPath: metadata.namespace
                       - name: OPERATOR_NAME
                         value: apicurio-registry-operator
-                    image: quay.io/apicurio/apicurio-registry-operator:0.0.5-dev
+                    image: quay.io/apicurio/apicurio-registry-operator:1.0.0-dev
                     imagePullPolicy: Always
                     name: apicurio-registry-operator
                     resources:
@@ -365,12 +365,11 @@ spec:
   maturity: alpha
   provider:
     name: Apicurio
-  replaces: apicurio-registry.v0.0.4-v1.3.2.final
   selector: {}
-  version: 0.0.5-dev
+  version: 1.0.0-dev
   relatedImages:
     - name: apicurio-registry-operator
-      image: quay.io/apicurio/apicurio-registry-operator:0.0.5-dev
+      image: quay.io/apicurio/apicurio-registry-operator:1.0.0-dev
     - name: apicurio-registry-mem
       image: quay.io/apicurio/apicurio-registry-mem:latest-snapshot
     - name: apicurio-registry-kafka
