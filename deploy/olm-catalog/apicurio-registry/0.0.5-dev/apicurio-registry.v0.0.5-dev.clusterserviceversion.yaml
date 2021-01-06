@@ -16,7 +16,7 @@ metadata:
     categories: Streaming & Messaging
     certified: "false"
     containerImage: quay.io/apicurio/apicurio-registry-operator:0.0.5-dev
-    createdAt: 2020-11-23
+    createdAt: 2021-01-06
     description: Deploy and manage Apicurio Registry on Kubernetes.
     repository: https://github.com/Apicurio/apicurio-registry-operator
     support: Apicurio
@@ -133,7 +133,7 @@ spec:
             x-descriptors:
               - urn:alm:descriptor:com.tectonic.ui:fieldGroup:ui
               - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-          - description: Override the image name according to selected Persistence Type for example, MEM="quay.io/apicurio/apicurio-registry-mem:latest" KAFKA="quay.io/apicurio/apicurio-registry-kafka:latest" STREAMS="quay.io/apicurio/apicurio-registry-streams:latest" JPA="quay.io/apicurio/apicurio-registry-jpa:latest" INFINISPAN="quay.io/apicurio/apicurio-registry-infinispan:latest"
+          - description: Override the image name according to selected Persistence Type for example, MEM="quay.io/apicurio/apicurio-registry-mem:latest-snapshot" KAFKA="quay.io/apicurio/apicurio-registry-kafka:latest-snapshot" STREAMS="quay.io/apicurio/apicurio-registry-streams:latest-snapshot" JPA="quay.io/apicurio/apicurio-registry-jpa:latest-snapshot" INFINISPAN="quay.io/apicurio/apicurio-registry-infinispan:latest-snapshot"
             displayName: Image Name
             path: image.name
             x-descriptors:
@@ -214,17 +214,17 @@ spec:
                 containers:
                   - env:
                       - name: REGISTRY_VERSION
-                        value: latest
+                        value: 2.0.x
                       - name: REGISTRY_IMAGE_MEM
-                        value: quay.io/apicurio/apicurio-registry-mem:latest
+                        value: quay.io/apicurio/apicurio-registry-mem:latest-snapshot
                       - name: REGISTRY_IMAGE_KAFKA
-                        value: quay.io/apicurio/apicurio-registry-kafka:latest
+                        value: quay.io/apicurio/apicurio-registry-kafka:latest-snapshot
                       - name: REGISTRY_IMAGE_STREAMS
-                        value: quay.io/apicurio/apicurio-registry-streams:latest
+                        value: quay.io/apicurio/apicurio-registry-streams:latest-snapshot
                       - name: REGISTRY_IMAGE_JPA
-                        value: quay.io/apicurio/apicurio-registry-jpa:latest
+                        value: quay.io/apicurio/apicurio-registry-jpa:latest-snapshot
                       - name: REGISTRY_IMAGE_INFINISPAN
-                        value: quay.io/apicurio/apicurio-registry-infinispan:latest
+                        value: quay.io/apicurio/apicurio-registry-infinispan:latest-snapshot
                       - name: WATCH_NAMESPACE
                         valueFrom:
                           fieldRef:
@@ -372,12 +372,12 @@ spec:
     - name: apicurio-registry-operator
       image: quay.io/apicurio/apicurio-registry-operator:0.0.5-dev
     - name: apicurio-registry-mem
-      image: quay.io/apicurio/apicurio-registry-mem:latest
+      image: quay.io/apicurio/apicurio-registry-mem:latest-snapshot
     - name: apicurio-registry-kafka
-      image: quay.io/apicurio/apicurio-registry-kafka:latest
+      image: quay.io/apicurio/apicurio-registry-kafka:latest-snapshot
     - name: apicurio-registry-streams
-      image: quay.io/apicurio/apicurio-registry-streams:latest
+      image: quay.io/apicurio/apicurio-registry-streams:latest-snapshot
     - name: apicurio-registry-jpa
-      image: quay.io/apicurio/apicurio-registry-jpa:latest
+      image: quay.io/apicurio/apicurio-registry-jpa:latest-snapshot
     - name: apicurio-registry-infinispan
-      image: quay.io/apicurio/apicurio-registry-infinispan:latest
+      image: quay.io/apicurio/apicurio-registry-infinispan:latest-snapshot
