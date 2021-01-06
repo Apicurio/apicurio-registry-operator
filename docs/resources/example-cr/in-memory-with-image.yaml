@@ -6,6 +6,6 @@ spec:
   configuration:
     persistence: "mem"
   image:
-    name: "quay.io/apicurio/apicurio-registry-mem:latest"
+    name: "quay.io/apicurio/apicurio-registry-mem:latest-snapshot"
 #   ^ IMPORTANT: This field is *deprecated* and may be removed in the future.
 #     The operand images are specified using environment variables in the operator Deployment/DeploymentConfig resource.
