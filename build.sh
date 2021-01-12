@@ -58,11 +58,7 @@ init_image() {
 
 replace() {
   init_image
-  sed -i "s|{OPERATOR_IMAGE}|$OPERATOR_IMAGE # replaced {OPERATOR_IMAGE}|g" ./deploy/operator.yaml
-}
-
-unreplace() {
-  sed -i "s|$OPERATOR_IMAGE # replaced {OPERATOR_IMAGE}|{OPERATOR_IMAGE}|g" ./deploy/operator.yaml
+  yq w -i ./deploy/operator.yaml "spec.template.spec.containers[0].image" "$OPERATOR_IMAGE"
 }
 
 gen_csv() {
@@ -144,7 +140,6 @@ build() {
   docker tag "$METADATA_IMAGE" "$METADATA_IMAGE_LATEST" # Tag as latest
 
   compile_qs_yaml
-  #unreplace
 }
 
 minikube_deploy_cr() {
