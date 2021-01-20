@@ -22,7 +22,7 @@ jobs:
 
       - name: Setup Docker
         run: |
-          docker login -u "${{ secrets.REGISTRY_USER }}" -p "${{ secrets.REGISTRY_SECRET }}" "${IMAGE_REGISTRY}"
+          docker login -u "${{ secrets.QUAY_USERNAME }}" -p "${{ secrets.QUAY_PASSWORD }}" "${IMAGE_REGISTRY}"
 
       - name: Build
         id: build
