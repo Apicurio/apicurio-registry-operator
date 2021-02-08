@@ -102,12 +102,10 @@ gen_csv() {
     yq w -i "$CSV_PATH" "spec.relatedImages[name==apicurio-registry-operator].image" "$_IMAGE"
     _IMAGE=$(yq r "$CSV_PATH" "spec.install.spec.deployments[0].spec.template.spec.containers[0].env[name==REGISTRY_IMAGE_MEM].value")
     yq w -i "$CSV_PATH" "spec.relatedImages[name==apicurio-registry-mem].image" "$_IMAGE"
-    _IMAGE=$(yq r "$CSV_PATH" "spec.install.spec.deployments[0].spec.template.spec.containers[0].env[name==REGISTRY_IMAGE_KAFKA].value")
-    yq w -i "$CSV_PATH" "spec.relatedImages[name==apicurio-registry-kafka].image" "$_IMAGE"
     _IMAGE=$(yq r "$CSV_PATH" "spec.install.spec.deployments[0].spec.template.spec.containers[0].env[name==REGISTRY_IMAGE_STREAMS].value")
     yq w -i "$CSV_PATH" "spec.relatedImages[name==apicurio-registry-streams].image" "$_IMAGE"
-    _IMAGE=$(yq r "$CSV_PATH" "spec.install.spec.deployments[0].spec.template.spec.containers[0].env[name==REGISTRY_IMAGE_JPA].value")
-    yq w -i "$CSV_PATH" "spec.relatedImages[name==apicurio-registry-jpa].image" "$_IMAGE"
+    _IMAGE=$(yq r "$CSV_PATH" "spec.install.spec.deployments[0].spec.template.spec.containers[0].env[name==REGISTRY_IMAGE_SQL].value")
+    yq w -i "$CSV_PATH" "spec.relatedImages[name==apicurio-registry-sql].image" "$_IMAGE"
     _IMAGE=$(yq r "$CSV_PATH" "spec.install.spec.deployments[0].spec.template.spec.containers[0].env[name==REGISTRY_IMAGE_INFINISPAN].value")
     yq w -i "$CSV_PATH" "spec.relatedImages[name==apicurio-registry-infinispan].image" "$_IMAGE"
 

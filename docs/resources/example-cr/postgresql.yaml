@@ -4,7 +4,7 @@ metadata:
   name: example-apicurioregistry
 spec:
   configuration:
-    persistence: "jpa"
+    persistence: "sql"
     dataSource:
       url: "jdbc:postgresql://<service name>.<namespace>.svc:5432/<database name>"
       # e.g. url: "jdbc:postgresql://acid-minimal-cluster.default.svc:5432/registry"

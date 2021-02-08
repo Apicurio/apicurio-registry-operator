@@ -14,9 +14,8 @@ import (
 var _ loop.ControlFunction = &ImageCF{}
 
 const ENV_OPERATOR_REGISTRY_IMAGE_MEM = "REGISTRY_IMAGE_MEM"
-const ENV_OPERATOR_REGISTRY_IMAGE_KAFKA = "REGISTRY_IMAGE_KAFKA"
 const ENV_OPERATOR_REGISTRY_IMAGE_STREAMS = "REGISTRY_IMAGE_STREAMS"
-const ENV_OPERATOR_REGISTRY_IMAGE_JPA = "REGISTRY_IMAGE_JPA"
+const ENV_OPERATOR_REGISTRY_IMAGE_SQL = "REGISTRY_IMAGE_SQL"
 const ENV_OPERATOR_REGISTRY_IMAGE_INFINISPAN = "REGISTRY_IMAGE_INFINISPAN"
 
 // This CF takes care of keeping the "image" section of the CRD applied.
@@ -78,12 +77,10 @@ func (this *ImageCF) Sense() {
 		switch persistence {
 		case "", "mem":
 			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_MEM)
-		case "kafka":
-			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_KAFKA)
 		case "streams":
 			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_STREAMS)
-		case "jpa":
-			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_JPA)
+		case "sql":
+			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_SQL)
 		case "infinispan":
 			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_INFINISPAN)
 		}

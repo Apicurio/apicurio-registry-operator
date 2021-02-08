@@ -127,9 +127,7 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 		c.AddControlFunction(cf.NewImageOcpCF(ctx))
 		c.AddControlFunction(cf.NewInfinispanCF(ctx))
 		c.AddControlFunction(cf.NewIngressCF(ctx, services))
-		c.AddControlFunction(cf.NewJpaCF(ctx))
 
-		c.AddControlFunction(cf.NewKafkaCF(ctx))
 		c.AddControlFunction(cf.NewLabelsOcpCF(ctx, services))
 		c.AddControlFunction(cf.NewLogLevelCF(ctx))
 		c.AddControlFunction(cf.NewOperatorPodCF(ctx, services))
@@ -143,6 +141,7 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 		c.AddControlFunction(cf.NewStreamsCF(ctx))
 		c.AddControlFunction(cf.NewStreamsSecurityScramOcpCF(ctx))
 		c.AddControlFunction(cf.NewStreamsSecurityTLSOcpCF(ctx))
+		c.AddControlFunction(cf.NewSqlCF(ctx))
 		c.AddControlFunction(cf.NewTolerationOcpCF(ctx))
 		c.AddControlFunction(cf.NewUICF(ctx))
 
@@ -159,8 +158,6 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 		c.AddControlFunction(cf.NewImageCF(ctx))
 		c.AddControlFunction(cf.NewInfinispanCF(ctx))
 		c.AddControlFunction(cf.NewIngressCF(ctx, services))
-		c.AddControlFunction(cf.NewJpaCF(ctx))
-		c.AddControlFunction(cf.NewKafkaCF(ctx))
 
 		c.AddControlFunction(cf.NewLabelsCF(ctx, services))
 		c.AddControlFunction(cf.NewLogLevelCF(ctx))
@@ -175,6 +172,7 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 
 		c.AddControlFunction(cf.NewStreamsSecurityScramCF(ctx))
 		c.AddControlFunction(cf.NewStreamsSecurityTLSCF(ctx))
+		c.AddControlFunction(cf.NewSqlCF(ctx))
 		c.AddControlFunction(cf.NewTolerationCF(ctx))
 		c.AddControlFunction(cf.NewUICF(ctx))
 	}
