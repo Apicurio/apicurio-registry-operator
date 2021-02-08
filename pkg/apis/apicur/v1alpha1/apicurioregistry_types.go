@@ -43,10 +43,9 @@ type ApicurioRegistrySpecImage struct {
 
 // +k8s:openapi-gen=true
 type ApicurioRegistrySpecConfiguration struct {
-	// +kubebuilder:validation:Enum=mem;jpa;kafka;streams;infinispan;
+	// +kubebuilder:validation:Enum=mem;sql;streams;infinispan;
 	Persistence string                                      `json:"persistence,omitempty"`
 	DataSource  ApicurioRegistrySpecConfigurationDataSource `json:"dataSource,omitempty"`
-	Kafka       ApicurioRegistrySpecConfigurationKafka      `json:"kafka,omitempty"`
 	Streams     ApicurioRegistrySpecConfigurationStreams    `json:"streams,omitempty"`
 	Infinispan  ApicurioRegistrySpecConfigurationInfinispan `json:"infinispan,omitempty"`
 	UI          ApicurioRegistrySpecConfigurationUI         `json:"ui,omitempty"`
@@ -58,11 +57,6 @@ type ApicurioRegistrySpecConfigurationDataSource struct {
 	Url      string `json:"url,omitempty"`
 	UserName string `json:"userName,omitempty"`
 	Password string `json:"password,omitempty"`
-}
-
-// +k8s:openapi-gen=true
-type ApicurioRegistrySpecConfigurationKafka struct {
-	BootstrapServers string `json:"bootstrapServers,omitempty"`
 }
 
 // +k8s:openapi-gen=true

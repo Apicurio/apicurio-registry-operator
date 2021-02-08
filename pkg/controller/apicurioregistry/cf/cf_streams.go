@@ -11,7 +11,7 @@ import (
 
 var _ loop.ControlFunction = &StreamsCF{}
 
-// +ENV_KAFKA_BOOTSTRAP_SERVERS
+const ENV_KAFKA_BOOTSTRAP_SERVERS = "KAFKA_BOOTSTRAP_SERVERS"
 const ENV_APPLICATION_SERVER_HOST = "APPLICATION_SERVER_HOST"
 const ENV_APPLICATION_SERVER_PORT = "APPLICATION_SERVER_PORT"
 const ENV_APPLICATION_ID = "APPLICATION_ID"
@@ -95,7 +95,7 @@ func (this *StreamsCF) Sense() {
 
 func (this *StreamsCF) Compare() bool {
 	// Condition #1
-	// Is JPA & config values are valid
+	// Is Streams & config values are valid
 	// Condition #2 + #3
 	// The required env vars are not present OR they differ
 	return this.valid && (this.bootstrapServers != this.envBootstrapServers ||

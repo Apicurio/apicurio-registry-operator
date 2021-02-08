@@ -33,12 +33,10 @@ spec:
               value: "2.0.x"
             - name: REGISTRY_IMAGE_MEM
               value: "quay.io/apicurio/apicurio-registry-mem:latest-snapshot"
-            - name: REGISTRY_IMAGE_KAFKA
-              value: "quay.io/apicurio/apicurio-registry-kafka:latest-snapshot"
             - name: REGISTRY_IMAGE_STREAMS
               value: "quay.io/apicurio/apicurio-registry-streams:latest-snapshot"
-            - name: REGISTRY_IMAGE_JPA
-              value: "quay.io/apicurio/apicurio-registry-jpa:latest-snapshot"
+            - name: REGISTRY_IMAGE_SQL
+              value: "quay.io/apicurio/apicurio-registry-sql:latest-snapshot"
             - name: REGISTRY_IMAGE_INFINISPAN
               value: "quay.io/apicurio/apicurio-registry-infinispan:latest-snapshot"
             - name: WATCH_NAMESPACE
