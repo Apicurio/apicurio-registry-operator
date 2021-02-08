@@ -55,12 +55,6 @@ spec:
             x-descriptors:
               - urn:alm:descriptor:com.tectonic.ui:fieldGroup:infinispan
               - urn:alm:descriptor:com.tectonic.ui:text
-          - description: The kafka  Bootstrap Servers
-            displayName: Bootstrap Servers
-            path: configuration.kafka.bootstrapServers
-            x-descriptors:
-              - urn:alm:descriptor:com.tectonic.ui:fieldGroup:kafka
-              - urn:alm:descriptor:com.tectonic.ui:text
           - description: Log Level
             displayName: Log Level
             path: configuration.logLevel
@@ -133,7 +127,7 @@ spec:
             x-descriptors:
               - urn:alm:descriptor:com.tectonic.ui:fieldGroup:ui
               - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
-          - description: Override the image name according to selected Persistence Type for example, MEM="quay.io/apicurio/apicurio-registry-mem:latest-snapshot" KAFKA="quay.io/apicurio/apicurio-registry-kafka:latest-snapshot" STREAMS="quay.io/apicurio/apicurio-registry-streams:latest-snapshot" JPA="quay.io/apicurio/apicurio-registry-jpa:latest-snapshot" INFINISPAN="quay.io/apicurio/apicurio-registry-infinispan:latest-snapshot"
+          - description: Override the image name according to selected Persistence Type for example, MEM="quay.io/apicurio/apicurio-registry-mem:latest-snapshot" STREAMS="quay.io/apicurio/apicurio-registry-streams:latest-snapshot" SQL="quay.io/apicurio/apicurio-registry-sql:latest-snapshot" INFINISPAN="quay.io/apicurio/apicurio-registry-infinispan:latest-snapshot"
             displayName: Image Name
             path: image.name
             x-descriptors:
@@ -156,7 +150,7 @@ spec:
     - Provides a REST API to manage the artifacts and artifact meta-data
     - Includes Serializers and Deserializers for Kafka client integration
     - Configurable rules to control schema validity and evolution (compatibility)
-    - Storage options: Kafka Streams, Kafka, PostgreSQL, in-memory
+    - Storage options: Kafka Streams, PostgreSQL, in-memory
     - Compatible with Confluent and IBM APIs
     - Runs on a lightweight Quarkus platform
     - Includes Maven plugin to integrate with Maven based builds
@@ -217,12 +211,10 @@ spec:
                         value: 2.0.x
                       - name: REGISTRY_IMAGE_MEM
                         value: quay.io/apicurio/apicurio-registry-mem:latest-snapshot
-                      - name: REGISTRY_IMAGE_KAFKA
-                        value: quay.io/apicurio/apicurio-registry-kafka:latest-snapshot
                       - name: REGISTRY_IMAGE_STREAMS
                         value: quay.io/apicurio/apicurio-registry-streams:latest-snapshot
-                      - name: REGISTRY_IMAGE_JPA
-                        value: quay.io/apicurio/apicurio-registry-jpa:latest-snapshot
+                      - name: REGISTRY_IMAGE_SQL
+                        value: quay.io/apicurio/apicurio-registry-sql:latest-snapshot
                       - name: REGISTRY_IMAGE_INFINISPAN
                         value: quay.io/apicurio/apicurio-registry-infinispan:latest-snapshot
                       - name: WATCH_NAMESPACE
@@ -372,11 +364,9 @@ spec:
       image: quay.io/apicurio/apicurio-registry-operator:1.0.0-dev
     - name: apicurio-registry-mem
       image: quay.io/apicurio/apicurio-registry-mem:latest-snapshot
-    - name: apicurio-registry-kafka
-      image: quay.io/apicurio/apicurio-registry-kafka:latest-snapshot
     - name: apicurio-registry-streams
       image: quay.io/apicurio/apicurio-registry-streams:latest-snapshot
-    - name: apicurio-registry-jpa
-      image: quay.io/apicurio/apicurio-registry-jpa:latest-snapshot
+    - name: apicurio-registry-sql
+      image: quay.io/apicurio/apicurio-registry-sql:latest-snapshot
     - name: apicurio-registry-infinispan
       image: quay.io/apicurio/apicurio-registry-infinispan:latest-snapshot

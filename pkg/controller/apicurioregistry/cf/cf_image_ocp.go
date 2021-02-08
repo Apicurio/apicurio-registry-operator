@@ -72,12 +72,10 @@ func (this *ImageOcpCF) Sense() {
 		switch persistence {
 		case "", "mem":
 			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_MEM)
-		case "kafka":
-			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_KAFKA)
 		case "streams":
 			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_STREAMS)
-		case "jpa":
-			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_JPA)
+		case "sql":
+			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_SQL)
 		case "infinispan":
 			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_INFINISPAN)
 		}

@@ -8,13 +8,13 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 )
 
-var _ loop.ControlFunction = &JpaCF{}
+var _ loop.ControlFunction = &SqlCF{}
 
-const ENV_QUARKUS_DATASOURCE_URL = "QUARKUS_DATASOURCE_URL"
-const ENV_QUARKUS_DATASOURCE_USERNAME = "QUARKUS_DATASOURCE_USERNAME"
-const ENV_QUARKUS_DATASOURCE_PASSWORD = "QUARKUS_DATASOURCE_PASSWORD"
+const ENV_REGISTRY_DATASOURCE_URL = "REGISTRY_DATASOURCE_URL"
+const ENV_REGISTRY_DATASOURCE_USERNAME = "REGISTRY_DATASOURCE_USERNAME"
+const ENV_REGISTRY_DATASOURCE_PASSWORD = "REGISTRY_DATASOURCE_PASSWORD"
 
-type JpaCF struct {
+type SqlCF struct {
 	ctx              *context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcEnvCache      env.EnvCache
@@ -28,8 +28,8 @@ type JpaCF struct {
 	envPassword      string
 }
 
-func NewJpaCF(ctx *context.LoopContext) loop.ControlFunction {
-	return &JpaCF{
+func NewSqlCF(ctx *context.LoopContext) loop.ControlFunction {
+	return &SqlCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
 		svcEnvCache:      ctx.GetEnvCache(),
@@ -44,11 +44,11 @@ func NewJpaCF(ctx *context.LoopContext) loop.ControlFunction {
 	}
 }
 
-func (this *JpaCF) Describe() string {
-	return "JpaCF"
+func (this *SqlCF) Describe() string {
+	return "SqlCF"
 }
 
-func (this *JpaCF) Sense() {
+func (this *SqlCF) Sense() {
 	// Observation #1
 	// Read the config values
 	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
@@ -63,26 +63,26 @@ func (this *JpaCF) Sense() {
 	// Observation #2 + #3
 	// Is the correct persistence type selected?
 	// Validate the config values
-	this.valid = this.persistence == "jpa" && this.url != "" && this.user != ""
+	this.valid = this.persistence == "sql" && this.url != "" && this.user != ""
 
 	// Observation #4
 	// Read the env values
-	if val, exists := this.svcEnvCache.Get(ENV_QUARKUS_DATASOURCE_URL); exists {
+	if val, exists := this.svcEnvCache.Get(ENV_REGISTRY_DATASOURCE_URL); exists {
 		this.envUrl = val.GetValue().Value
 	}
-	if val, exists := this.svcEnvCache.Get(ENV_QUARKUS_DATASOURCE_USERNAME); exists {
+	if val, exists := this.svcEnvCache.Get(ENV_REGISTRY_DATASOURCE_USERNAME); exists {
 		this.envUser = val.GetValue().Value
 	}
-	if val, exists := this.svcEnvCache.Get(ENV_QUARKUS_DATASOURCE_PASSWORD); exists {
+	if val, exists := this.svcEnvCache.Get(ENV_REGISTRY_DATASOURCE_PASSWORD); exists {
 		this.envPassword = val.GetValue().Value
 	}
 
 	// We won't actively delete old env values if not used
 }
 
-func (this *JpaCF) Compare() bool {
+func (this *SqlCF) Compare() bool {
 	// Condition #1
-	// Is JPA & config values are valid
+	// Is SQL & config values are valid
 	// Condition #2 + #3
 	// The required env vars are not present OR they differ
 	return this.valid && (this.url != this.envUrl ||
@@ -90,16 +90,16 @@ func (this *JpaCF) Compare() bool {
 		this.password != this.envPassword)
 }
 
-func (this *JpaCF) Respond() {
+func (this *SqlCF) Respond() {
 	// Response #1
 	// Just set the value(s)!
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_QUARKUS_DATASOURCE_URL, this.url))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_QUARKUS_DATASOURCE_USERNAME, this.user))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_QUARKUS_DATASOURCE_PASSWORD, this.password))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_DATASOURCE_URL, this.url))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_DATASOURCE_USERNAME, this.user))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_DATASOURCE_PASSWORD, this.password))
 
 }
 
-func (this *JpaCF) Cleanup() bool {
+func (this *SqlCF) Cleanup() bool {
 	// No cleanup
 	return true
 }

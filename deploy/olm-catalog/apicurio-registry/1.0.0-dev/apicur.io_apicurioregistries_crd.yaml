@@ -47,18 +47,12 @@ spec:
                     clusterName:
                       type: string
                   type: object
-                kafka:
-                  properties:
-                    bootstrapServers:
-                      type: string
-                  type: object
                 logLevel:
                   type: string
                 persistence:
                   enum:
                   - mem
-                  - jpa
-                  - kafka
+                  - sql
                   - streams
                   - infinispan
                   type: string
