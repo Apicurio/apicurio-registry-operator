@@ -1,8 +1,9 @@
-name: Apicurio Registry Operator - Build and publish from master
+name: Apicurio Registry Operator - Build and publish from 0.x
+
 on:
   push:
     branches:
-      - master
+      - 0.x
 
 env:
   IMAGE_REGISTRY: quay.io

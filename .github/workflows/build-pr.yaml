@@ -1,6 +1,9 @@
-name: Apicurio Registry Operator - Build a pull request
+name: Apicurio Registry Operator - Build a pull request to 0.x
 
-on: [pull_request]
+on:
+  pull_request:
+    branches:
+      - 0.x
 
 env:
   IMAGE_REGISTRY: quay.io
