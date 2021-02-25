@@ -4,12 +4,15 @@ import "github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicuriore
 
 const RC_KEY_SPEC = "SPEC"
 const RC_KEY_DEPLOYMENT = "DEPLOYMENT"
-const RC_KEY_DEPLOYMENT_OCP = "DEPLOYMENT_OCP"
+
+// const RC_KEY_DEPLOYMENT_OCP = "DEPLOYMENT_OCP"
+
 const RC_KEY_SERVICE = "SERVICE"
 const RC_KEY_INGRESS = "INGRESS"
 const RC_KEY_ROUTE_OCP = "ROUTE_OCP"
 const RC_KEY_POD_DISRUPTION_BUDGET = "POD_DISRUPTION_BUDGET"
-const RC_KEY_OPERATOR_POD = "OPERATOR_POD"
+
+// const RC_KEY_OPERATOR_POD = "OPERATOR_POD"
 
 const RC_EMPTY_NAME = ""
 

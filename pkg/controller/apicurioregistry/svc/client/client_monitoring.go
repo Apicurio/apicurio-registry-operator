@@ -5,7 +5,6 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monclientv1 "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/rest"
@@ -50,9 +49,9 @@ func (this *MonitoringClient) UpdateServiceMonitor(namespace common.Namespace, o
 	return this.client.ServiceMonitors(namespace.Str()).Update(obj)
 }
 
-func (this *MonitoringClient) IsServiceMonitorRegistered() (bool, error) {
-	return k8sutil.ResourceExists(this.discoveryClient, "monitoring.coreos.com/v1", "ServiceMonitor")
-}
+// func (this *MonitoringClient) IsServiceMonitorRegistered() (bool, error) {
+// 	return k8sutil.ResourceExists(this.discoveryClient, "monitoring.coreos.com/v1", "ServiceMonitor")
+// }
 
 func (this *MonitoringClient) DeleteServiceMonitor(value *monitoring.ServiceMonitor, options *v1.DeleteOptions) error {
 	return this.client.ServiceMonitors(value.Namespace).Delete(value.Name, options)

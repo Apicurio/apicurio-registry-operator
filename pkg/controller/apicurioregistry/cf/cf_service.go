@@ -25,7 +25,7 @@ type ServiceCF struct {
 	isCached         bool
 	services         []core.Service
 	serviceName      string
-	deploymentName   string
+	// deploymentName   string
 }
 
 func NewServiceCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
@@ -39,7 +39,7 @@ func NewServiceCF(ctx *context.LoopContext, services *services.LoopServices) loo
 		isCached:         false,
 		services:         make([]core.Service, 0),
 		serviceName:      resources.RC_EMPTY_NAME,
-		deploymentName:   resources.RC_EMPTY_NAME,
+		// deploymentName:   resources.RC_EMPTY_NAME,
 	}
 }
 
@@ -75,21 +75,21 @@ func (this *ServiceCF) Sense() {
 		}
 	}
 
-	this.deploymentName = resources.RC_EMPTY_NAME
+	// this.deploymentName = resources.RC_EMPTY_NAME
 
-	// Observation #3
-	// Is there a Deployment already? It must have been created (has a name)
-	deploymentEntry, deploymentExists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT)
-	if deploymentExists {
-		this.deploymentName = deploymentEntry.GetName().Str()
-	}
+	// // Observation #3
+	// // Is there a Deployment already? It must have been created (has a name)
+	// deploymentEntry, deploymentExists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT)
+	// if deploymentExists {
+	// 	this.deploymentName = deploymentEntry.GetName().Str()
+	// }
 
-	// Observation #4
-	// Same for OCP !!!
-	deploymentEntry, deploymentExists = this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT_OCP)
-	if deploymentExists {
-		this.deploymentName = deploymentEntry.GetName().Str()
-	}
+	// // Observation #4
+	// // Same for OCP !!!
+	// deploymentEntry, deploymentExists = this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT_OCP)
+	// if deploymentExists {
+	// 	this.deploymentName = deploymentEntry.GetName().Str()
+	// }
 
 	// Update the status
 	this.svcStatus.SetConfig(status.CFG_STA_SERVICE_NAME, this.serviceName)
@@ -98,9 +98,7 @@ func (this *ServiceCF) Sense() {
 func (this *ServiceCF) Compare() bool {
 	// Condition #1
 	// If we already have a service cached, skip
-	// Condition #2
-	// The deployment has been created
-	return !this.isCached && this.deploymentName != resources.RC_EMPTY_NAME
+	return !this.isCached
 }
 
 func (this *ServiceCF) Respond() {

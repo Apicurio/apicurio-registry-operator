@@ -19,10 +19,6 @@ type LabelsCF struct {
 	svcResourceCache resources.ResourceCache
 	svcKubeFactory   *factory.KubeFactory
 
-	podEntry    resources.ResourceCacheEntry
-	podIsCached bool
-	podLabels   map[string]string
-
 	caLabels map[string]string
 
 	deploymentEntry     resources.ResourceCacheEntry
@@ -54,7 +50,6 @@ func NewLabelsCF(ctx *context.LoopContext, services *services.LoopServices) loop
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
 		svcKubeFactory:   services.GetKubeFactory(),
-		podLabels:        nil,
 	}
 }
 
@@ -64,31 +59,25 @@ func (this *LabelsCF) Describe() string {
 
 func (this *LabelsCF) Sense() {
 	// Observation #1
-	// Operator Pod
-	this.podEntry, this.podIsCached = this.svcResourceCache.Get(resources.RC_KEY_OPERATOR_POD)
-	if this.podIsCached {
-		this.podLabels = this.podEntry.GetValue().(*core.Pod).Labels
-	}
-	// Observation #2
 	// Deployment & Deployment Pod Template
 	this.deploymentEntry, this.deploymentIsCached = this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT)
 	if this.deploymentIsCached {
 		this.deploymentLabels = this.deploymentEntry.GetValue().(*apps.Deployment).Labels
 		this.deploymentPodLabels = this.deploymentEntry.GetValue().(*apps.Deployment).Spec.Template.Labels
 	}
-	// Observation #3
+	// Observation #2
 	// Service
 	this.serviceEntry, this.serviceIsCached = this.svcResourceCache.Get(resources.RC_KEY_SERVICE)
 	if this.serviceIsCached {
 		this.serviceLabels = this.serviceEntry.GetValue().(*core.Service).Labels
 	}
-	// Observation #4
+	// Observation #3
 	// Ingress
 	this.ingressEntry, this.ingressIsCached = this.svcResourceCache.Get(resources.RC_KEY_INGRESS)
 	if this.ingressIsCached {
 		this.ingressLabels = this.ingressEntry.GetValue().(*extensions.Ingress).Labels
 	}
-	// Observation #5
+	// Observation #4
 	// PodDisruptionBudget
 	this.pdbEntry, this.pdbIsCached = this.svcResourceCache.Get(resources.RC_KEY_POD_DISRUPTION_BUDGET)
 	if this.pdbIsCached {
@@ -104,7 +93,7 @@ func (this *LabelsCF) Compare() bool {
 	this.updateIngress = this.ingressIsCached && !LabelsEqual(this.ingressLabels, this.caLabels)
 	this.updatePdb = this.pdbIsCached && !LabelsEqual(this.pdbLabels, this.caLabels)
 
-	return this.podIsCached && (this.updateDeployment ||
+	return (this.updateDeployment ||
 		this.updateDeploymentPod ||
 		this.updateService ||
 		this.updateIngress ||

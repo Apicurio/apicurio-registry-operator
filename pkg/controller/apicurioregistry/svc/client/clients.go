@@ -11,6 +11,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
+	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/rest"
@@ -23,6 +24,7 @@ import (
 const RecommendedConfigPathEnvVar = "KUBECONFIG"
 
 var isOpenshift *bool
+var isMonitoringInstalled *bool
 
 var log = logf.Log.WithName("controller_apicurioregistry-Clients")
 
@@ -147,6 +149,47 @@ func IsOCP() (bool, error) {
 }
 
 func IsMonitoringInstalled() (bool, error) {
+	if isMonitoringInstalled == nil {
+		m, err := detectServiceMonitoring()
+		if err != nil {
+			return m, err
+		}
+		isMonitoringInstalled = &m
+	}
+	return *isMonitoringInstalled, nil
+
+	// config, err := inClusterConfig()
+	// if err != nil {
+	// 	return false, err
+	// }
+
+	// client, err := discovery.NewDiscoveryClientForConfig(config)
+	// if err != nil {
+	// 	return false, err
+	// }
+
+	// _, err = client.ServerResourcesForGroupVersion("monitoring.coreos.com/v1")
+
+	// if err != nil && api_errors.IsNotFound(err) {
+	// 	return false, nil
+	// } else if err != nil {
+	// 	return false, err
+	// }
+
+	// serviceMonitorRegistered, err := k8sutil.ResourceExists(client, "monitoring.coreos.com/v1", "ServiceMonitor")
+
+	// if err != nil && api_errors.IsNotFound(err) {
+	// 	return false, nil
+	// } else if err != nil {
+	// 	return false, err
+	// }
+
+	// isMonitoringInstalled = &serviceMonitorRegistered
+
+	// return *isMonitoringInstalled, nil
+}
+
+func detectServiceMonitoring() (bool, error) {
 	config, err := inClusterConfig()
 	if err != nil {
 		return false, err
@@ -164,7 +207,15 @@ func IsMonitoringInstalled() (bool, error) {
 	} else if err != nil {
 		return false, err
 	}
-	return true, nil
+
+	serviceMonitorRegistered, err := k8sutil.ResourceExists(client, "monitoring.coreos.com/v1", "ServiceMonitor")
+
+	if err != nil && api_errors.IsNotFound(err) {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	return serviceMonitorRegistered, nil
 }
 
 func detectOpenshift() (bool, error) {

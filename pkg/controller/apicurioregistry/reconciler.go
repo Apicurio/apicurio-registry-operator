@@ -115,67 +115,52 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 	isOCP, _ := client.IsOCP()
 	if isOCP {
 		log.Info("This operator is running on OpenShift")
-
-		// Keep alphabetical!
-		c.AddControlFunction(cf.NewAffinityOcpCF(ctx))
-		c.AddControlFunction(cf.NewDeploymentOcpCF(ctx, services))
-		c.AddControlFunction(cf.NewEnvOcpCF(ctx))
-		c.AddControlFunction(cf.NewHostCF(ctx))
-		c.AddControlFunction(cf.NewHostInitCF(ctx))
-
-		c.AddControlFunction(cf.NewHostInitRouteOcpCF(ctx))
-		c.AddControlFunction(cf.NewImageOcpCF(ctx))
-		c.AddControlFunction(cf.NewInfinispanCF(ctx))
-		c.AddControlFunction(cf.NewIngressCF(ctx, services))
-
-		c.AddControlFunction(cf.NewLabelsOcpCF(ctx, services))
-		c.AddControlFunction(cf.NewLogLevelCF(ctx))
-		c.AddControlFunction(cf.NewOperatorPodCF(ctx, services))
-		c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, services))
-
-		c.AddControlFunction(cf.NewProfileCF(ctx))
-		c.AddControlFunction(cf.NewReplicasOcpCF(ctx))
-		c.AddControlFunction(cf.NewServiceCF(ctx, services))
-		c.AddControlFunction(cf.NewServiceMonitorCF(ctx, services))
-
-		c.AddControlFunction(cf.NewStreamsCF(ctx))
-		c.AddControlFunction(cf.NewStreamsSecurityScramOcpCF(ctx))
-		c.AddControlFunction(cf.NewStreamsSecurityTLSOcpCF(ctx))
-		c.AddControlFunction(cf.NewSqlCF(ctx))
-		c.AddControlFunction(cf.NewTolerationOcpCF(ctx))
-		c.AddControlFunction(cf.NewUICF(ctx))
-
 	} else {
 		log.Info("This operator is running on Kubernetes")
-
-		// Keep alphabetical!
-		c.AddControlFunction(cf.NewAffinityCF(ctx))
-		c.AddControlFunction(cf.NewDeploymentCF(ctx, services))
-		c.AddControlFunction(cf.NewEnvCF(ctx))
-		c.AddControlFunction(cf.NewHostCF(ctx))
-		c.AddControlFunction(cf.NewHostInitCF(ctx))
-
-		c.AddControlFunction(cf.NewImageCF(ctx))
-		c.AddControlFunction(cf.NewInfinispanCF(ctx))
-		c.AddControlFunction(cf.NewIngressCF(ctx, services))
-
-		c.AddControlFunction(cf.NewLabelsCF(ctx, services))
-		c.AddControlFunction(cf.NewLogLevelCF(ctx))
-		c.AddControlFunction(cf.NewOperatorPodCF(ctx, services))
-		c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, services))
-		c.AddControlFunction(cf.NewProfileCF(ctx))
-
-		c.AddControlFunction(cf.NewReplicasCF(ctx))
-		c.AddControlFunction(cf.NewServiceCF(ctx, services))
-		c.AddControlFunction(cf.NewServiceMonitorCF(ctx, services))
-		c.AddControlFunction(cf.NewStreamsCF(ctx))
-
-		c.AddControlFunction(cf.NewStreamsSecurityScramCF(ctx))
-		c.AddControlFunction(cf.NewStreamsSecurityTLSCF(ctx))
-		c.AddControlFunction(cf.NewSqlCF(ctx))
-		c.AddControlFunction(cf.NewTolerationCF(ctx))
-		c.AddControlFunction(cf.NewUICF(ctx))
 	}
+
+	//functions ordered so execution is optimized
+
+	//host init, executed only once
+	c.AddControlFunction(cf.NewHostInitCF(ctx))
+
+	//deployment
+	c.AddControlFunction(cf.NewDeploymentCF(ctx, services))
+
+	//dependents of deployment
+	c.AddControlFunction(cf.NewAffinityCF(ctx))
+	c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, services))
+	c.AddControlFunction(cf.NewServiceMonitorCF(ctx, services))
+	c.AddControlFunction(cf.NewTolerationCF(ctx))
+	//deployment modifiers
+	c.AddControlFunction(cf.NewImageCF(ctx))
+	c.AddControlFunction(cf.NewReplicasCF(ctx))
+	//deployment env vars modifiers
+	c.AddControlFunction(cf.NewInfinispanCF(ctx))
+	c.AddControlFunction(cf.NewSqlCF(ctx))
+	c.AddControlFunction(cf.NewStreamsCF(ctx))
+	c.AddControlFunction(cf.NewStreamsSecurityScramCF(ctx))
+	c.AddControlFunction(cf.NewStreamsSecurityTLSCF(ctx))
+	c.AddControlFunction(cf.NewLogLevelCF(ctx))
+	c.AddControlFunction(cf.NewProfileCF(ctx))
+	c.AddControlFunction(cf.NewUICF(ctx))
+	//env vars applier
+	c.AddControlFunction(cf.NewEnvCF(ctx))
+
+	//service
+	c.AddControlFunction(cf.NewServiceCF(ctx, services))
+
+	//ingress (depends on service)
+	c.AddControlFunction(cf.NewIngressCF(ctx, services))
+
+	//dependents of ingress
+	if isOCP {
+		c.AddControlFunction(cf.NewHostInitRouteOcpCF(ctx))
+	}
+	c.AddControlFunction(cf.NewHostCF(ctx))
+
+	//dependent on everything :)
+	c.AddControlFunction(cf.NewLabelsCF(ctx, services))
 
 	return c
 }
