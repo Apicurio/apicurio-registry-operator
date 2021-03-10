@@ -4,7 +4,7 @@ metadata:
   annotations:
     alm-examples: '[]'
     capabilities: Basic Install
-  name: apicurio-registry-operator-new2.v0.0.0
+  name: apicurio-registry-operator.v0.0.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -37,7 +37,7 @@ spec:
   - TODO
   links:
   - name: Apicurio Registry Operator New2
-    url: https://apicurio-registry-operator-new2.domain
+    url: https://apicurio-registry-operator.domain
   maturity: alpha
   provider:
     name: TODO
