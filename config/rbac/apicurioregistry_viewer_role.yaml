@@ -1,0 +1,20 @@
+# permissions for end users to view apicurioregistries.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: apicurioregistry-viewer-role
+rules:
+- apiGroups:
+  - registry.apicur.io
+  resources:
+  - apicurioregistries
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - registry.apicur.io
+  resources:
+  - apicurioregistries/status
+  verbs:
+  - get

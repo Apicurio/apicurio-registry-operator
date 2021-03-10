@@ -1,0 +1,7 @@
+apiVersion: registry.apicur.io/v2
+kind: ApicurioRegistry
+metadata:
+  name: apicurioregistry-sample
+spec:
+  # Add fields here
+  foo: bar
