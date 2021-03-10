@@ -29,6 +29,8 @@ type ApicurioRegistrySpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of ApicurioRegistry. Edit ApicurioRegistry_types.go to remove/update
+
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Test",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	Foo string `json:"foo,omitempty"`
 }
 
