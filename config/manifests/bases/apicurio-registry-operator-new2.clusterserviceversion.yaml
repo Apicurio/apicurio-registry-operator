@@ -1,0 +1,44 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+  name: apicurio-registry-operator-new2.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: ApicurioRegistry is the Schema for the apicurioregistries API
+      displayName: Apicurio Registry
+      kind: ApicurioRegistry
+      name: apicurioregistries.registry.apicur.io
+      version: v2
+  description: TODO
+  displayName: Apicurio Registry
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - TODO
+  links:
+  - name: Apicurio Registry Operator New2
+    url: https://apicurio-registry-operator-new2.domain
+  maturity: alpha
+  provider:
+    name: TODO
+  version: 0.0.0
