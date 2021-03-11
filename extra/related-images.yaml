@@ -1,0 +1,17 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  name: apicurio-registry-operator.v0.0.0
+  namespace: placeholder
+spec:
+  relatedImages:
+    - name: apicurio-registry-operator
+      image: quay.io/apicurio/apicurio-registry-operator:invalid
+    - name: apicurio-registry-mem
+      image: quay.io/apicurio/apicurio-registry-mem:invalid
+    - name: apicurio-registry-streams
+      image: quay.io/apicurio/apicurio-registry-streams:invalid
+    - name: apicurio-registry-sql
+      image: quay.io/apicurio/apicurio-registry-sql:invalid
+    - name: apicurio-registry-infinispan
+      image: quay.io/apicurio/apicurio-registry-infinispan:invalid
