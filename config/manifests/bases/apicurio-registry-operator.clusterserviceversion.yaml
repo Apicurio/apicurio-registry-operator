@@ -10,13 +10,13 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
-    - description: ApicurioRegistry is the Schema for the apicurioregistries API
+    - description: ApicurioRegistry represents an Apicurio Registry instance
       displayName: Apicurio Registry
       kind: ApicurioRegistry
       name: apicurioregistries.registry.apicur.io
       specDescriptors:
       - displayName: Test
-        path: foo
+        path: image.name
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       version: v2
