@@ -1,10 +1,10 @@
 package cf
 
 import (
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/env"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	ocp_apps "github.com/openshift/api/apps/v1"
 )
 

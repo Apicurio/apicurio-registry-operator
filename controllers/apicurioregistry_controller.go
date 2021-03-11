@@ -1,8 +1,8 @@
-package apicurioregistry
+package controllers
 
 import (
-	registry "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
+	registry "github.com/Apicurio/apicurio-registry-operator/api/v2"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
 	ocp_apps "github.com/openshift/api/apps/v1"
 
 	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
