@@ -17,33 +17,106 @@ limitations under the License.
 package v2
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// ### Spec
 
 // ApicurioRegistrySpec defines the desired state of ApicurioRegistry
 type ApicurioRegistrySpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of ApicurioRegistry. Edit ApicurioRegistry_types.go to remove/update
-
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Test",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
-	Foo string `json:"foo,omitempty"`
+	Image         ApicurioRegistrySpecImage         `json:"image,omitempty"`
+	Configuration ApicurioRegistrySpecConfiguration `json:"configuration,omitempty"`
+	Deployment    ApicurioRegistrySpecDeployment    `json:"deployment,omitempty"`
 }
+
+type ApicurioRegistrySpecImage struct {
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Test",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	Name string `json:"name,omitempty"`
+}
+
+type ApicurioRegistrySpecConfiguration struct {
+	// +kubebuilder:validation:Enum=mem;sql;streams;infinispan;
+	Persistence string                                      `json:"persistence,omitempty"`
+	DataSource  ApicurioRegistrySpecConfigurationDataSource `json:"dataSource,omitempty"`
+	Streams     ApicurioRegistrySpecConfigurationStreams    `json:"streams,omitempty"`
+	Infinispan  ApicurioRegistrySpecConfigurationInfinispan `json:"infinispan,omitempty"`
+	UI          ApicurioRegistrySpecConfigurationUI         `json:"ui,omitempty"`
+	LogLevel    string                                      `json:"logLevel,omitempty"`
+}
+
+type ApicurioRegistrySpecConfigurationDataSource struct {
+	Url      string `json:"url,omitempty"`
+	UserName string `json:"userName,omitempty"`
+	Password string `json:"password,omitempty"`
+}
+
+type ApicurioRegistrySpecConfigurationStreams struct {
+	BootstrapServers      string                                           `json:"bootstrapServers,omitempty"`
+	ApplicationServerPort string                                           `json:"applicationServerPort,omitempty"`
+	ApplicationId         string                                           `json:"applicationId,omitempty"`
+	Security              ApicurioRegistrySpecConfigurationStreamsSecurity `json:"security,omitempty"`
+}
+
+type ApicurioRegistrySpecConfigurationStreamsSecurity struct {
+	Tls   ApicurioRegistrySpecConfigurationStreamsSecurityTls   `json:"tls,omitempty"`
+	Scram ApicurioRegistrySpecConfigurationStreamsSecurityScram `json:"scram,omitempty"`
+}
+
+type ApicurioRegistrySpecConfigurationStreamsSecurityTls struct {
+	TruststoreSecretName string `json:"truststoreSecretName,omitempty"`
+	KeystoreSecretName   string `json:"keystoreSecretName,omitempty"`
+}
+
+type ApicurioRegistrySpecConfigurationStreamsSecurityScram struct {
+	TruststoreSecretName string `json:"truststoreSecretName,omitempty"`
+	User                 string `json:"user,omitempty"`
+	PasswordSecretName   string `json:"passwordSecretName,omitempty"`
+	Mechanism            string `json:"mechanism,omitempty"`
+}
+
+type ApicurioRegistrySpecConfigurationInfinispan struct {
+	ClusterName string `json:"clusterName,omitempty"`
+}
+
+type ApicurioRegistrySpecConfigurationUI struct {
+	ReadOnly bool `json:"readOnly,omitempty"`
+}
+
+type ApicurioRegistrySpecDeployment struct {
+	Replicas    int32               `json:"replicas,omitempty"`
+	Host        string              `json:"host,omitempty"`
+	Affinity    *corev1.Affinity    `json:"affinity,omitempty"`
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
+}
+
+type ApicurioRegistrySpecDeploymentResources struct {
+	Cpu    ApicurioRegistrySpecDeploymentResourcesRequestsLimit `json:"cpu,omitempty"`
+	Memory ApicurioRegistrySpecDeploymentResourcesRequestsLimit `json:"memory,omitempty"`
+}
+
+type ApicurioRegistrySpecDeploymentResourcesRequestsLimit struct {
+	Requests string `json:"requests,omitempty"`
+	Limit    string `json:"limit,omitempty"`
+}
+
+// ### Status
 
 // ApicurioRegistryStatus defines the observed state of ApicurioRegistry
 type ApicurioRegistryStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Image          string `json:"image,omitempty"`
+	DeploymentName string `json:"deploymentName,omitempty"`
+	ServiceName    string `json:"serviceName,omitempty"`
+	IngressName    string `json:"ingressName,omitempty"`
+	ReplicaCount   int32  `json:"replicaCount,omitempty"`
+	Host           string `json:"host,omitempty"`
 }
 
+// ### Roots
+
+// ApicurioRegistry represents an Apicurio Registry instance
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-
-// ApicurioRegistry is the Schema for the apicurioregistries API
 type ApicurioRegistry struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -52,9 +125,8 @@ type ApicurioRegistry struct {
 	Status ApicurioRegistryStatus `json:"status,omitempty"`
 }
 
-// +kubebuilder:object:root=true
-
 // ApicurioRegistryList contains a list of ApicurioRegistry
+// +kubebuilder:object:root=true
 type ApicurioRegistryList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
