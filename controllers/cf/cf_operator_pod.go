@@ -3,12 +3,12 @@ package cf
 import (
 	"os"
 
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/services"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

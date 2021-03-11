@@ -3,9 +3,9 @@ package impl
 import (
 	"strconv"
 
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/services"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
 )
 
 var _ loop.ControlLoop = &controlLoopImpl{}
