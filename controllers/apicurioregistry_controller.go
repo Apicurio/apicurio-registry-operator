@@ -1,63 +1,116 @@
-/*
-Copyright 2021.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-package controllers
+package apicurioregistry
 
 import (
-	"context"
+	registry "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
+	ocp_apps "github.com/openshift/api/apps/v1"
 
-	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	apps "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	extensions "k8s.io/api/extensions/v1beta1"
+	policy "k8s.io/api/policy/v1beta1"
 
-	registryv2 "github.com/Apicurio/apicurio-registry-operator/api/v2"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-// ApicurioRegistryReconciler reconciles a ApicurioRegistry object
-type ApicurioRegistryReconciler struct {
-	client.Client
-	Log    logr.Logger
-	Scheme *runtime.Scheme
-}
+var log = logf.Log.WithName("controller_apicurioregistry")
 
-// +kubebuilder:rbac:groups=registry.apicur.io,resources=apicurioregistries,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=registry.apicur.io,resources=apicurioregistries/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=registry.apicur.io,resources=apicurioregistries/finalizers,verbs=update
+func Add(mgr manager.Manager) error {
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the ApicurioRegistry object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.7.0/pkg/reconcile
-func (r *ApicurioRegistryReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = r.Log.WithValues("apicurioregistry", req.NamespacedName)
+	r := NewApicurioRegistryReconciler(mgr)
 
-	// your logic here
+	// Create a new controller
+	c, err := controller.New("apicurioregistry-controller", mgr, controller.Options{Reconciler: r})
+	if err != nil {
+		return err
+	}
 
-	return ctrl.Result{}, nil
-}
+	r.setController(c)
 
-// SetupWithManager sets up the controller with the Manager.
-func (r *ApicurioRegistryReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&registryv2.ApicurioRegistry{}).
-		Complete(r)
+	err = c.Watch(&source.Kind{Type: &registry.ApicurioRegistry{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			// Ignore updates to the ApicurioRegistry status in which case metadata.Generation does not change
+			return e.MetaOld.GetGeneration() != e.MetaNew.GetGeneration()
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	isocp, err := client.IsOCP()
+	if err != nil {
+		return err
+	}
+	if isocp {
+		err := c.Watch(&source.Kind{Type: &ocp_apps.DeploymentConfig{}}, &handler.EnqueueRequestForOwner{
+			IsController: true,
+			OwnerType:    &registry.ApicurioRegistry{},
+		})
+
+		if err != nil {
+			return err
+		}
+	} else {
+		err = c.Watch(&source.Kind{Type: &apps.Deployment{}}, &handler.EnqueueRequestForOwner{
+			IsController: true,
+			OwnerType:    &registry.ApicurioRegistry{},
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &registry.ApicurioRegistry{},
+	})
+
+	if err != nil {
+		return err
+	}
+
+	err = c.Watch(&source.Kind{Type: &extensions.Ingress{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &registry.ApicurioRegistry{},
+	})
+
+	if err != nil {
+		return err
+	}
+
+	err = c.Watch(&source.Kind{Type: &policy.PodDisruptionBudget{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &registry.ApicurioRegistry{},
+	})
+
+	if err != nil {
+		return err
+	}
+
+	ismonitoring, err := client.IsMonitoringInstalled()
+	if err != nil {
+		return err
+	}
+	if ismonitoring {
+		err = c.Watch(&source.Kind{Type: &monitoring.ServiceMonitor{}}, &handler.EnqueueRequestForOwner{
+			IsController: true,
+			OwnerType:    &registry.ApicurioRegistry{},
+		})
+
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects, restart apicurio-registry operator after installing prometheus-operator")
+	}
+
+	return nil
 }
