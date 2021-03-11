@@ -6,6 +6,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	"github.com/go-logr/logr"
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	sigs_client "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -23,6 +24,8 @@ type LoopContext struct {
 	resourceCache resources.ResourceCache
 	status        *status.Status
 	envCache      env.EnvCache
+	mountPath     string
+	volumeSource  core.VolumeSource
 }
 
 // Create a new context when the operator is deployed, provide mostly static data
@@ -84,4 +87,12 @@ func (this *LoopContext) GetStatus() *status.Status {
 
 func (this *LoopContext) GetEnvCache() env.EnvCache {
 	return this.envCache
+}
+
+func (this *LoopContext) GetMountPath() string {
+	return this.mountPath
+}
+
+func (this *LoopContext) GetVolumeSource() core.VolumeSource {
+	return this.volumeSource
 }
