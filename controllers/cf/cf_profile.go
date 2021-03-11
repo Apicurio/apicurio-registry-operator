@@ -1,9 +1,9 @@
 package cf
 
 import (
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/env"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
 )
 
 var _ loop.ControlFunction = &ProfileCF{}

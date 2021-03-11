@@ -1,10 +1,10 @@
 package services
 
 import (
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/client"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/factory"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/patcher"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/patcher"
 )
 
 type LoopServices struct {

@@ -1,6 +1,6 @@
 package loop
 
-import "github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
+import "github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 
 type ControlLoop interface {
 	AddControlFunction(cf ControlFunction)

@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"

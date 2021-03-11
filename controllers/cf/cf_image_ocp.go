@@ -3,11 +3,11 @@ package cf
 import (
 	"os"
 
-	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
+	ar "github.com/Apicurio/apicurio-registry-operator/api/v2"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
 	ocp_apps "github.com/openshift/api/apps/v1"
 )
 

@@ -1,7 +1,7 @@
 package env
 
 import (
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	core "k8s.io/api/core/v1"
 )
 

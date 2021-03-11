@@ -1,10 +1,10 @@
 package context
 
 import (
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/env"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	sigs_client "sigs.k8s.io/controller-runtime/pkg/client"

@@ -1,6 +1,6 @@
 package resources
 
-import "github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
+import "github.com/Apicurio/apicurio-registry-operator/controllers/common"
 
 const RC_KEY_SPEC = "SPEC"
 const RC_KEY_DEPLOYMENT = "DEPLOYMENT"

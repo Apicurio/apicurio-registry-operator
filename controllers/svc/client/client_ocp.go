@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/common"
-	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	ocp_apps "github.com/openshift/api/apps/v1"
 	ocp_route "github.com/openshift/api/route/v1"
 	ocp_apps_client "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
