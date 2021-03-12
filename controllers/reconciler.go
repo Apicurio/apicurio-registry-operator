@@ -1,4 +1,4 @@
-package apicurioregistry
+package controllers
 
 import (
 	"context"
