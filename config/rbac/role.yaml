@@ -7,6 +7,57 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  - deployments
+  - replicasets
+  - statefulsets
+  verbs:
+  - '*'
+- apiGroups:
+  - apps.openshift.io
+  resources:
+  - deploymentconfigs
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - endpoints
+  - persistentvolumeclaims
+  - pods
+  - secrets
+  - services
+  - services/finalizers
+  verbs:
+  - '*'
+- apiGroups:
+  - events
+  resources:
+  - events
+  verbs:
+  - '*'
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs:
+  - '*'
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - '*'
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  verbs:
+  - '*'
+- apiGroups:
   - registry.apicur.io
   resources:
   - apicurioregistries
@@ -32,3 +83,10 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  - routes/custom-host
+  verbs:
+  - '*'
