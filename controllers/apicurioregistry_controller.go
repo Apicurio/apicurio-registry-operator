@@ -51,6 +51,25 @@ func NewApicurioRegistryReconciler(mgr manager.Manager) *ApicurioRegistryReconci
 	}
 }
 
+// Apicurio Registry CR
+// +kubebuilder:rbac:groups=registry.apicur.io,resources=apicurioregistries,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=registry.apicur.io,resources=apicurioregistries/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=registry.apicur.io,resources=apicurioregistries/finalizers,verbs=update
+
+// OpenShift
+// +kubebuilder:rbac:groups=route.openshift.io,resources=routes;routes/custom-host,verbs=*
+// +kubebuilder:rbac:groups=apps.openshift.io,resources=deploymentconfigs,verbs=*
+
+// Common
+// +kubebuilder:rbac:groups=extensions,resources=ingresses,verbs=*
+// +kubebuilder:rbac:groups=policy,resources=poddisruptionbudgets,verbs=*
+// +kubebuilder:rbac:groups=apps,resources=deployments;daemonsets;replicasets;statefulsets,verbs=*
+// +kubebuilder:rbac:groups=core,resources=pods;services;endpoints;persistentvolumeclaims;configmaps;secrets;services/finalizers,verbs=*
+// +kubebuilder:rbac:groups=events,resources=events,verbs=*
+
+// Monitoring
+// +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=*
+
 func (this *ApicurioRegistryReconciler) Reconcile(_ context.Context, request reconcile.Request) (reconcile.Result, error) {
 	appName := common.Name(request.Name)
 	appNamespace := common.Namespace(request.Namespace)
@@ -122,7 +141,7 @@ func (this *ApicurioRegistryReconciler) getApicurioRegistryResource(appNamespace
 func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNamespace common.Namespace) loop.ControlLoop {
 
 	//log.Info("Creating new context")
-	ctx := loop_context.NewLoopContext(appName, appNamespace, /*log*/nil, this.scheme, this.client)
+	ctx := loop_context.NewLoopContext(appName, appNamespace, /*log*/ nil, this.scheme, this.client)
 	services := services.NewLoopServices(ctx)
 	c := impl.NewControlLoopImpl(ctx, services)
 
