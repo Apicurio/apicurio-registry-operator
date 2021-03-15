@@ -18,7 +18,10 @@ package main
 
 import (
 	"flag"
+	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"strings"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -65,6 +68,19 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
+	//namespaces := []string{"foo", "bar"}
+
+	namespaces, err := k8sutil.GetWatchNamespace()
+	if err != nil {
+		setupLog.Error(err, "Failed to get watch namespaces.")
+		os.Exit(1)
+	}
+
+	var newCache cache.NewCacheFunc = nil // Defaults to all
+	if namespaces != "" {
+		newCache = cache.MultiNamespacedCacheBuilder(strings.Split(namespaces, ","))
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
@@ -72,12 +88,14 @@ func main() {
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "0eef189c.apicur.io",
+		NewCache:               newCache,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
 
+	//controllers.NewApicurioRegistryReconciler()
 	if err = (&controllers.ApicurioRegistryReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("ApicurioRegistry"),
