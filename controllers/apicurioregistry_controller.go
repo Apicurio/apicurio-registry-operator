@@ -4,6 +4,7 @@ import (
 	"context"
 	registry "github.com/Apicurio/apicurio-registry-operator/api/v2"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
+	"github.com/go-logr/logr"
 	ocp_apps "github.com/openshift/api/apps/v1"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -24,35 +25,39 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	sigs_client "sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 var _ reconcile.Reconciler = &ApicurioRegistryReconciler{}
 
 type ApicurioRegistryReconciler struct {
-	client     sigs_client.Client
-	scheme     *runtime.Scheme
-	controller controller.Controller
-	loops      map[string]loop.ControlLoop
+	client sigs_client.Client
+	scheme *runtime.Scheme
+	//controller controller.Controller
+	loops map[string]loop.ControlLoop
+	log   logr.Logger
 }
 
-func NewApicurioRegistryReconciler(mgr manager.Manager) *ApicurioRegistryReconciler {
+func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog logr.Logger) (*ApicurioRegistryReconciler, error) {
 
-	return &ApicurioRegistryReconciler{
+	r := &ApicurioRegistryReconciler{
 		client: mgr.GetClient(),
 		scheme: mgr.GetScheme(),
 		loops:  make(map[string]loop.ControlLoop),
+		log:    rootLog.WithName("controllers").WithValues("controller", "ApicurioRegistry"),
 	}
+	if err := r.setupWithManager(mgr); err != nil {
+		return nil, err
+	}
+
+	return r, nil
 }
 
 // Apicurio Registry CR
-// +kubebuilder:rbac:groups=registry.apicur.io,resources=apicurioregistries,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=registry.apicur.io,resources=apicurioregistries,verbs=*
 // +kubebuilder:rbac:groups=registry.apicur.io,resources=apicurioregistries/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=registry.apicur.io,resources=apicurioregistries/finalizers,verbs=update
 
@@ -70,11 +75,11 @@ func NewApicurioRegistryReconciler(mgr manager.Manager) *ApicurioRegistryReconci
 // Monitoring
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=*
 
-func (this *ApicurioRegistryReconciler) Reconcile(_ context.Context, request reconcile.Request) (reconcile.Result, error) {
+func (this *ApicurioRegistryReconciler) Reconcile( /*_ context.Context, */ request reconcile.Request) (reconcile.Result, error) {
 	appName := common.Name(request.Name)
 	appNamespace := common.Namespace(request.Namespace)
 
-	//log.Info("Reconciler executing.")
+	this.log.Info("Reconciler executing.")
 
 	// Find the spec
 	spec, err := this.getApicurioRegistryResource(appNamespace, appName)
@@ -111,9 +116,9 @@ func (this *ApicurioRegistryReconciler) Reconcile(_ context.Context, request rec
 	return reconcile.Result{Requeue: controlLoop.GetContext().GetAndResetRequeue()}, nil
 }
 
-func (this *ApicurioRegistryReconciler) setController(c controller.Controller) {
-	this.controller = c
-}
+//func (this *ApicurioRegistryReconciler) setController(c controller.Controller) {
+//	this.controller = c
+//}
 
 // Returns nil if the resource is not found, but request was OK
 func (this *ApicurioRegistryReconciler) getApicurioRegistryResource(appNamespace common.Namespace, appName common.Name) (*ar.ApicurioRegistry, error) {
@@ -140,18 +145,18 @@ func (this *ApicurioRegistryReconciler) getApicurioRegistryResource(appNamespace
 
 func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNamespace common.Namespace) loop.ControlLoop {
 
-	//log.Info("Creating new context")
-	ctx := loop_context.NewLoopContext(appName, appNamespace, /*log*/ nil, this.scheme, this.client)
-	services := services.NewLoopServices(ctx)
-	c := impl.NewControlLoopImpl(ctx, services)
+	this.log.Info("Creating new context")
+	ctx := loop_context.NewLoopContext(appName, appNamespace, this.log, this.scheme, this.client)
+	loopServices := services.NewLoopServices(ctx)
+	c := impl.NewControlLoopImpl(ctx, loopServices)
 
 	isOCP, _ := client.IsOCP()
 	if isOCP {
-		//log.Info("This operator is running on OpenShift")
+		this.log.Info("This operator is running on OpenShift")
 
 		// Keep alphabetical!
 		c.AddControlFunction(cf.NewAffinityOcpCF(ctx))
-		c.AddControlFunction(cf.NewDeploymentOcpCF(ctx, services))
+		c.AddControlFunction(cf.NewDeploymentOcpCF(ctx, loopServices))
 		c.AddControlFunction(cf.NewEnvOcpCF(ctx))
 		c.AddControlFunction(cf.NewHostCF(ctx))
 		c.AddControlFunction(cf.NewHostInitCF(ctx))
@@ -159,17 +164,17 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 		c.AddControlFunction(cf.NewHostInitRouteOcpCF(ctx))
 		c.AddControlFunction(cf.NewImageOcpCF(ctx))
 		c.AddControlFunction(cf.NewInfinispanCF(ctx))
-		c.AddControlFunction(cf.NewIngressCF(ctx, services))
+		c.AddControlFunction(cf.NewIngressCF(ctx, loopServices))
 
-		c.AddControlFunction(cf.NewLabelsOcpCF(ctx, services))
+		c.AddControlFunction(cf.NewLabelsOcpCF(ctx, loopServices))
 		c.AddControlFunction(cf.NewLogLevelCF(ctx))
-		c.AddControlFunction(cf.NewOperatorPodCF(ctx, services))
-		c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, services))
+		c.AddControlFunction(cf.NewOperatorPodCF(ctx, loopServices))
+		c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, loopServices))
 
 		c.AddControlFunction(cf.NewProfileCF(ctx))
 		c.AddControlFunction(cf.NewReplicasOcpCF(ctx))
-		c.AddControlFunction(cf.NewServiceCF(ctx, services))
-		c.AddControlFunction(cf.NewServiceMonitorCF(ctx, services))
+		c.AddControlFunction(cf.NewServiceCF(ctx, loopServices))
+		c.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))
 
 		c.AddControlFunction(cf.NewStreamsCF(ctx))
 		c.AddControlFunction(cf.NewStreamsSecurityScramOcpCF(ctx))
@@ -179,28 +184,28 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 		c.AddControlFunction(cf.NewUICF(ctx))
 
 	} else {
-		//log.Info("This operator is running on Kubernetes")
+		this.log.Info("This operator is running on Kubernetes")
 
 		// Keep alphabetical!
 		c.AddControlFunction(cf.NewAffinityCF(ctx))
-		c.AddControlFunction(cf.NewDeploymentCF(ctx, services))
+		c.AddControlFunction(cf.NewDeploymentCF(ctx, loopServices))
 		c.AddControlFunction(cf.NewEnvCF(ctx))
 		c.AddControlFunction(cf.NewHostCF(ctx))
 		c.AddControlFunction(cf.NewHostInitCF(ctx))
 
 		c.AddControlFunction(cf.NewImageCF(ctx))
 		c.AddControlFunction(cf.NewInfinispanCF(ctx))
-		c.AddControlFunction(cf.NewIngressCF(ctx, services))
+		c.AddControlFunction(cf.NewIngressCF(ctx, loopServices))
 
-		c.AddControlFunction(cf.NewLabelsCF(ctx, services))
+		c.AddControlFunction(cf.NewLabelsCF(ctx, loopServices))
 		c.AddControlFunction(cf.NewLogLevelCF(ctx))
-		c.AddControlFunction(cf.NewOperatorPodCF(ctx, services))
-		c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, services))
+		c.AddControlFunction(cf.NewOperatorPodCF(ctx, loopServices))
+		c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, loopServices))
 		c.AddControlFunction(cf.NewProfileCF(ctx))
 
 		c.AddControlFunction(cf.NewReplicasCF(ctx))
-		c.AddControlFunction(cf.NewServiceCF(ctx, services))
-		c.AddControlFunction(cf.NewServiceMonitorCF(ctx, services))
+		c.AddControlFunction(cf.NewServiceCF(ctx, loopServices))
+		c.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))
 		c.AddControlFunction(cf.NewStreamsCF(ctx))
 
 		c.AddControlFunction(cf.NewStreamsSecurityScramCF(ctx))
@@ -215,95 +220,41 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 
 // ######################################
 
-func (this *ApicurioRegistryReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (this *ApicurioRegistryReconciler) setupWithManager(mgr ctrl.Manager) error {
 
-	r := NewApicurioRegistryReconciler(mgr)
+	builder := ctrl.NewControllerManagedBy(mgr).
+		Named("ApicurioRegistry-controller")
 
-	// Create a new controller
-	c, err := controller.New("apicurioregistry-controller", mgr, controller.Options{Reconciler: r})
-	if err != nil {
-		return err
-	}
-
-	r.setController(c)
-
-	err = c.Watch(&source.Kind{Type: &registry.ApicurioRegistry{}}, &handler.EnqueueRequestForObject{}, predicate.Funcs{
+	builder.For(&registry.ApicurioRegistry{}).WithEventFilter(predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			// Ignore updates to the ApicurioRegistry status in which case metadata.Generation does not change
-			return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
+			return e.MetaOld.GetGeneration() != e.MetaNew.GetGeneration()
 		},
 	})
+
+	isOCP, err := client.IsOCP()
 	if err != nil {
 		return err
 	}
-
-	isocp, err := client.IsOCP()
-	if err != nil {
-		return err
-	}
-	if isocp {
-		err := c.Watch(&source.Kind{Type: &ocp_apps.DeploymentConfig{}}, &handler.EnqueueRequestForOwner{
-			IsController: true,
-			OwnerType:    &registry.ApicurioRegistry{},
-		})
-
-		if err != nil {
-			return err
-		}
+	if isOCP {
+		builder.Owns(&ocp_apps.DeploymentConfig{})
 	} else {
-		err = c.Watch(&source.Kind{Type: &apps.Deployment{}}, &handler.EnqueueRequestForOwner{
-			IsController: true,
-			OwnerType:    &registry.ApicurioRegistry{},
-		})
-
-		if err != nil {
-			return err
-		}
+		builder.Owns(&apps.Deployment{})
 	}
 
-	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &registry.ApicurioRegistry{},
-	})
+	builder.Owns(&corev1.Service{})
+	builder.Owns(&extensions.Ingress{})
+	builder.Owns(&policy.PodDisruptionBudget{})
 
+	isMonitoring, err := client.IsMonitoringInstalled()
 	if err != nil {
 		return err
 	}
-
-	err = c.Watch(&source.Kind{Type: &extensions.Ingress{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &registry.ApicurioRegistry{},
-	})
-
-	if err != nil {
-		return err
-	}
-
-	err = c.Watch(&source.Kind{Type: &policy.PodDisruptionBudget{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &registry.ApicurioRegistry{},
-	})
-
-	if err != nil {
-		return err
-	}
-
-	ismonitoring, err := client.IsMonitoringInstalled()
-	if err != nil {
-		return err
-	}
-	if ismonitoring {
-		err = c.Watch(&source.Kind{Type: &monitoring.ServiceMonitor{}}, &handler.EnqueueRequestForOwner{
-			IsController: true,
-			OwnerType:    &registry.ApicurioRegistry{},
-		})
-
-		if err != nil {
-			return err
-		}
+	if isMonitoring {
+		builder.Owns(&monitoring.ServiceMonitor{})
 	} else {
-		//log.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects, restart apicurio-registry operator after installing prometheus-operator")
+		this.log.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects, restart apicurio-registry operator after installing prometheus-operator")
 	}
 
-	return nil
+	return builder.Complete(this)
 }
