@@ -17,10 +17,12 @@ limitations under the License.
 package main
 
 import (
+	"errors"
 	"flag"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"strings"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -36,6 +38,8 @@ import (
 
 	registryv2 "github.com/Apicurio/apicurio-registry-operator/api/v2"
 	"github.com/Apicurio/apicurio-registry-operator/controllers"
+	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	ocp_apps "github.com/openshift/api/apps/v1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -48,7 +52,21 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(registryv2.AddToScheme(scheme))
+
+	utilruntime.Must(ocp_apps.AddToScheme(scheme))
+
+	utilruntime.Must(monitoring.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
+}
+
+func initControllers(mgr manager.Manager) error {
+
+	if _, err := controllers.NewApicurioRegistryReconciler(mgr, ctrl.Log); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "ApicurioRegistry")
+		return errors.New("unable to create ApicurioRegistry controller")
+	}
+
+	return nil
 }
 
 func main() {
@@ -67,8 +85,6 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
-
-	//namespaces := []string{"foo", "bar"}
 
 	namespaces, err := k8sutil.GetWatchNamespace()
 	if err != nil {
@@ -95,13 +111,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	//controllers.NewApicurioRegistryReconciler()
-	if err = (&controllers.ApicurioRegistryReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("ApicurioRegistry"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ApicurioRegistry")
+	// Controller(s)
+	if err := initControllers(mgr); err != nil {
+		setupLog.Error(err, "unable to create controllers")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
