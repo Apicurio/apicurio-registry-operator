@@ -62,13 +62,7 @@ rules:
   resources:
   - apicurioregistries
   verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
+  - '*'
 - apiGroups:
   - registry.apicur.io
   resources:
