@@ -16,7 +16,6 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 // RecommendedConfigPathEnvVar is a environment variable for path configuration
@@ -24,7 +23,7 @@ const RecommendedConfigPathEnvVar = "KUBECONFIG"
 
 var isOpenshift *bool
 
-var log = logf.Log.WithName("controller_apicurioregistry-Clients")
+//var log = logf.Log.WithName("controller_apicurioregistry-Clients")
 
 type Clients struct {
 	ctx              *context.LoopContext
@@ -86,7 +85,7 @@ func outOfClusterConfig() (*rest.Config, error) {
 
 	if len(configFile) > 0 {
 
-		log.Info("Reading config from file" + configFile)
+		//log.Info("Reading config from file" + configFile) TODO
 		// use the current context in kubeconfig
 		// This is very useful for running locally.
 		clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
@@ -107,7 +106,7 @@ func getKubeConfigFile() string {
 
 	usr, err := user.Current()
 	if err != nil {
-		log.Info("Could not get current user; error %v", err)
+		//log.Info("Could not get current user; error %v", err) TODO
 	} else {
 		configFile = path.Join(usr.HomeDir, ".kube", "config")
 	}

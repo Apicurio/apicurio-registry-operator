@@ -7,7 +7,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
-	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"

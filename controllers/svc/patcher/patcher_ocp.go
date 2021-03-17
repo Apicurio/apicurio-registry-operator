@@ -31,7 +31,7 @@ func (this *OCPPatcher) reloadDeployment() {
 		r, e := this.clients.OCP().
 			GetDeployment(this.ctx.GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
 		if e != nil {
-			this.ctx.GetLog().WithValues("name", entry.GetName()).Info("Resource not found. (May have been deleted).")
+			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
 			this.ctx.GetResourceCache().Remove(resources.RC_KEY_DEPLOYMENT_OCP)
 			this.ctx.SetRequeue()
 		} else {
@@ -68,7 +68,7 @@ func (this *OCPPatcher) reloadRoute() {
 		r, e := this.clients.OCP().
 			GetRoute(this.ctx.GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
 		if e != nil {
-			this.ctx.GetLog().WithValues("name", entry.GetName()).Info("Resource not found. (May have been deleted).")
+			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
 			this.ctx.GetResourceCache().Remove(resources.RC_KEY_ROUTE_OCP)
 			this.ctx.SetRequeue()
 		} else {

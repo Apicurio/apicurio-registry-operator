@@ -1,0 +1,6 @@
+apiVersion: registry.apicur.io/v2
+kind: ApicurioRegistry
+metadata:
+  name: example-apicurioregistry
+spec: {}
+# No config required for dev deployment

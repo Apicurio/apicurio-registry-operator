@@ -19,7 +19,6 @@ package main
 import (
 	"errors"
 	"flag"
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -38,8 +37,8 @@ import (
 
 	registryv2 "github.com/Apicurio/apicurio-registry-operator/api/v2"
 	"github.com/Apicurio/apicurio-registry-operator/controllers"
-	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	ocp_apps "github.com/openshift/api/apps/v1"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -50,11 +49,8 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-
 	utilruntime.Must(registryv2.AddToScheme(scheme))
-
 	utilruntime.Must(ocp_apps.AddToScheme(scheme))
-
 	utilruntime.Must(monitoring.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
@@ -86,7 +82,7 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
-	namespaces, err := k8sutil.GetWatchNamespace()
+	namespaces, err := getWatchNamespace()
 	if err != nil {
 		setupLog.Error(err, "Failed to get watch namespaces.")
 		os.Exit(1)
@@ -132,4 +128,13 @@ func main() {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}
+}
+
+// From k8sutil
+func getWatchNamespace() (string, error) {
+	ns, found := os.LookupEnv("WATCH_NAMESPACE")
+	if !found {
+		return "", errors.New("environment variable WATCH_NAMESPACE required")
+	}
+	return ns, nil
 }
