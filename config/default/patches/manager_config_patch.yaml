@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apicurio-registry-operator
+spec:
+  template:
+    spec:
+      containers:
+      - name: apicurio-registry-operator
+        args:
+        - "--config=manager_config.yaml"
+        volumeMounts:
+        - name: manager-config
+          mountPath: /manager_config.yaml
+          subPath: manager_config.yaml
+      volumes:
+      - name: manager-config
+        configMap:
+          name: apicurio-registry-operator-config

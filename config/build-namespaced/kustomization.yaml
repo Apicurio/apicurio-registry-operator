@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+commonLabels:
+  apicur.io/type: operator
+  apicur.io/name: apicurio-registry-operator
+  apicur.io/version: 1.0.0-dev
+
+# Do not forget to update `subjects[0].namespace` in `./patches/role_binding_patch.yaml`.
+# Kustomize ignores it currently.
+namespace: system
+
+resources:
+  - resources/namespace.yaml
+  - ../default
+
+patchesStrategicMerge:
+  - patches/role_binding_patch.yaml

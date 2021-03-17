@@ -2,7 +2,7 @@ package factory
 
 import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
-	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

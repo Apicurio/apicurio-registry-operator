@@ -110,18 +110,21 @@ install: manifests kustomize ## Install CRDs into a cluster
 uninstall: manifests kustomize ## Uninstall CRDs from a cluster
 	$(KUSTOMIZE) build config/crd | kubectl delete -f -
 
+NAMESPACE ?= "system"
 
 deploy: manifests kustomize ## Deploy controller in the configured Kubernetes cluster in ~/.kube/config
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${OPERATOR_IMAGE}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	cd config/manager && $(KUSTOMIZE) edit set image REGISTRY_OPERATOR_IMAGE=${OPERATOR_IMAGE}
+	# $(KUSTOMIZE) build config/build-namespaced | sed "s/\$${NAMESPACE}/${NAMESPACE}/g" | kubectl apply -f -
+	$(KUSTOMIZE) build config/build-namespaced | kubectl apply -f -
 
 
 undeploy: ## Undeploy controller from the configured Kubernetes cluster in ~/.kube/config
-	$(KUSTOMIZE) build config/default | kubectl delete -f -
+	# $(KUSTOMIZE) build config/build-namespaced | sed "s/\$${NAMESPACE}/${NAMESPACE}/g" | kubectl delete -f -
+	$(KUSTOMIZE) build config/build-namespaced | kubectl delete -f -
 
 
 manifests: controller-gen ## Generate manifests e.g. CRD, RBAC etc.
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=apicurio-registry-operator-role paths="./..." output:crd:artifacts:config=config/crd/resources output:rbac:artifacts:config=config/rbac/resources
 
 
 fmt: ## Run 'go fmt' against code
@@ -150,7 +153,7 @@ docker-push: ## Push operator docker image
 .PHONY: bundle
 bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
 	$(OPERATOR_SDK) generate kustomize manifests -q
-	cd config/manager && $(KUSTOMIZE) edit set image controller=$(OPERATOR_IMAGE)
+	cd config/manager && $(KUSTOMIZE) edit set image REGISTRY_OPERATOR_IMAGE=$(OPERATOR_IMAGE)
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(OPERATOR_VERSION) $(BUNDLE_METADATA_OPTS)
 	$(OPERATOR_SDK) bundle validate ./bundle
 
@@ -183,10 +186,5 @@ PACKAGE_VERSION = $(OPERATOR_VERSION)-$(LC_OPERAND_VERSION)
 
 packagemanifests: kustomize manifests ## Generate package manifests.
 	$(OPERATOR_SDK) generate kustomize manifests -q
-	cd config/manager && $(KUSTOMIZE) edit set image controller=$(OPERATOR_IMAGE)
+	cd config/manager && $(KUSTOMIZE) edit set image REGISTRY_OPERATOR_IMAGE=$(OPERATOR_IMAGE)
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate packagemanifests -q --version $(PACKAGE_VERSION) $(PACKAGE_MANIFESTS_OPTS)
-
-
-.PHONY: foo
-foo:
-	echo $(LC_OPERAND_VERSION)
