@@ -17,5 +17,3 @@ func (s Name) Str() string {
 //	namespace Namespace
 //	name Name
 //}
-
-

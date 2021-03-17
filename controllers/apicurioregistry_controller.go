@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"context"
+	ctx "context"
 	registry "github.com/Apicurio/apicurio-registry-operator/api/v2"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
 	"github.com/go-logr/logr"
@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	monitoring "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	extensions "k8s.io/api/extensions/v1beta1"
@@ -75,7 +75,10 @@ func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog logr.Logger) (*A
 // Monitoring
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=servicemonitors,verbs=*
 
-func (this *ApicurioRegistryReconciler) Reconcile( /*_ context.Context, */ request reconcile.Request) (reconcile.Result, error) {
+// Cluster Info (k8s vs. OCP)
+// +kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get
+
+func (this *ApicurioRegistryReconciler) Reconcile(reconcileCtx ctx.Context /* TODO or context.TODO()*/, request reconcile.Request) (reconcile.Result, error) {
 	appName := common.Name(request.Name)
 	appNamespace := common.Namespace(request.Namespace)
 
@@ -124,7 +127,7 @@ func (this *ApicurioRegistryReconciler) Reconcile( /*_ context.Context, */ reque
 func (this *ApicurioRegistryReconciler) getApicurioRegistryResource(appNamespace common.Namespace, appName common.Name) (*ar.ApicurioRegistry, error) {
 	specList := &ar.ApicurioRegistryList{}
 	listOps := sigs_client.ListOptions{Namespace: appNamespace.Str()}
-	err := this.client.List(context.TODO(), specList, &listOps)
+	err := this.client.List(ctx.TODO(), specList, &listOps)
 	if err != nil {
 		if api_errors.IsNotFound(err) {
 			return nil, nil
@@ -228,7 +231,7 @@ func (this *ApicurioRegistryReconciler) setupWithManager(mgr ctrl.Manager) error
 	builder.For(&registry.ApicurioRegistry{}).WithEventFilter(predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			// Ignore updates to the ApicurioRegistry status in which case metadata.Generation does not change
-			return e.MetaOld.GetGeneration() != e.MetaNew.GetGeneration()
+			return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
 		},
 	})
 
