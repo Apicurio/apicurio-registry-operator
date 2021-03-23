@@ -99,12 +99,18 @@ type ApicurioRegistrySpecConfigurationUI struct {
 
 // +k8s:openapi-gen=true
 type ApicurioRegistrySpecDeployment struct {
-	Replicas    int32               `json:"replicas,omitempty"`
-	Host        string              `json:"host,omitempty"`
-	Affinity    *corev1.Affinity    `json:"affinity,omitempty"`
-	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
-	//Route     string                                  `json:"route,omitempty"`
-	//Resources ApicurioRegistrySpecDeploymentResources `json:"resources,omitempty"`
+	Replicas    int32                                   `json:"replicas,omitempty"`
+	Host        string                                  `json:"host,omitempty"`
+	Affinity    *corev1.Affinity                        `json:"affinity,omitempty"`
+	Tolerations []corev1.Toleration                     `json:"tolerations,omitempty"`
+	Volumes     []ApicurioRegistrySpecDeploymentVolumes `json:"volumes,omitempty"`
+	Resources   ApicurioRegistrySpecDeploymentResources `json:"resources,omitempty"`
+	// Route             string                                  `json:"route,omitempty"`
+}
+
+type ApicurioRegistrySpecDeploymentVolumes struct {
+	corev1.VolumeMount  `json:volumeMount`
+	corev1.VolumeSource `json:volumeSource`
 }
 
 // +k8s:openapi-gen=true
@@ -128,12 +134,12 @@ type ApicurioRegistryStatus struct {
 	IngressName    string `json:"ingressName,omitempty"`
 	ReplicaCount   int32  `json:"replicaCount,omitempty"`
 	Host           string `json:"host,omitempty"`
-	//Route          string `json:"route,omitempty"`
-	//CpuRequests string `json:"cpuRequests,omitempty"`
-	//CpuLimits string `json:"cpuLimits,omitempty"`
-	//MemoryRequests string `json:"memoryRequests,omitempty"`
-	//MemoryLimits string `json:"memoryLimits,omitempty"`
-	//PersistenceConfigurationValid bool `json:"persistenceConfigurationValid,omitempty"`
+	// Route                         string `json:"route,omitempty"`
+	// CpuRequests                   string `json:"cpuRequests,omitempty"`
+	// CpuLimits                     string `json:"cpuLimits,omitempty"`
+	// MemoryRequests                string `json:"memoryRequests,omitempty"`
+	// MemoryLimits                  string `json:"memoryLimits,omitempty"`
+	// PersistenceConfigurationValid bool   `json:"persistenceConfigurationValid,omitempty"`
 }
 
 func init() {

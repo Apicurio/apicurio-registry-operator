@@ -5,6 +5,7 @@ import (
 
 	ar "github.com/Apicurio/apicurio-registry-operator/pkg/apis/apicur/v1alpha1"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/pkg/controller/apicurioregistry/svc/status"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
@@ -75,6 +76,62 @@ func (this *KubeFactory) createObjectMeta(typeTag string) meta.ObjectMeta {
 func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 	var terminationGracePeriodSeconds int64 = 30
 	var replicas int32 = 1
+	var Limits, Requests core.ResourceList
+	var vol []core.Volume
+	var volMnt []core.VolumeMount
+
+	specEntry, specExists := this.ctx.GetResourceCache().Get(resources.RC_KEY_SPEC)
+	if specExists {
+		spec := specEntry.GetValue().(*ar.ApicurioRegistry)
+		for _, addVol := range spec.Spec.Deployment.Volumes {
+			vol = append(vol, core.Volume{
+				Name:         addVol.Name,
+				VolumeSource: addVol.VolumeSource,
+			})
+			volMnt = append(volMnt, core.VolumeMount{
+				Name:             addVol.Name,
+				ReadOnly:         addVol.ReadOnly,
+				MountPath:        addVol.MountPath,
+				SubPath:          addVol.SubPath,
+				MountPropagation: addVol.MountPropagation,
+				SubPathExpr:      addVol.SubPathExpr,
+			})
+		}
+
+		_, err := resource.ParseQuantity(spec.Spec.Deployment.Resources.Cpu.Limit)
+		if err == nil {
+			if spec.Spec.Deployment.Resources.Cpu.Limit != "0" {
+				Limits[core.ResourceCPU] = resource.MustParse(spec.Spec.Deployment.Resources.Cpu.Limit)
+			}
+		} else {
+			Limits[core.ResourceCPU] = resource.MustParse("1")
+		}
+		_, err = resource.ParseQuantity(spec.Spec.Deployment.Resources.Memory.Limit)
+		if err == nil {
+			if spec.Spec.Deployment.Resources.Memory.Limit != "0" {
+				Limits[core.ResourceMemory] = resource.MustParse(spec.Spec.Deployment.Resources.Memory.Limit)
+			}
+		} else {
+			Limits[core.ResourceMemory] = resource.MustParse("1280Mi")
+		}
+
+		_, err = resource.ParseQuantity(spec.Spec.Deployment.Resources.Cpu.Requests)
+		if err == nil {
+			if spec.Spec.Deployment.Resources.Cpu.Requests != "0" {
+				Requests[core.ResourceCPU] = resource.MustParse(spec.Spec.Deployment.Resources.Cpu.Requests)
+			}
+		} else {
+			Requests[core.ResourceCPU] = resource.MustParse("500m")
+		}
+		_, err = resource.ParseQuantity(spec.Spec.Deployment.Resources.Memory.Requests)
+		if err == nil {
+			if spec.Spec.Deployment.Resources.Memory.Requests != "0" {
+				Requests[core.ResourceMemory] = resource.MustParse(spec.Spec.Deployment.Resources.Memory.Requests)
+			}
+		} else {
+			Requests[core.ResourceMemory] = resource.MustParse("512Mi")
+		}
+	}
 
 	return &apps.Deployment{
 		ObjectMeta: this.createObjectMeta("deployment"),
@@ -97,14 +154,8 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 						},
 						Env: []core.EnvVar{},
 						Resources: core.ResourceRequirements{
-							Limits: core.ResourceList{
-								core.ResourceCPU:    resource.MustParse("1"),
-								core.ResourceMemory: resource.MustParse("1300Mi"),
-							},
-							Requests: core.ResourceList{
-								core.ResourceCPU:    resource.MustParse("500m"),
-								core.ResourceMemory: resource.MustParse("512Mi"),
-							},
+							Limits:   Limits,
+							Requests: Requests,
 						},
 						LivenessProbe: &core.Probe{
 							Handler: core.Handler{
@@ -134,23 +185,12 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 						},
 						TerminationMessagePath: "/dev/termination-log",
 						ImagePullPolicy:        core.PullAlways,
-						VolumeMounts: []core.VolumeMount{
-							core.VolumeMount{
-								Name:      "tmp",
-								ReadOnly:  false,
-								MountPath: this.ctx.GetMountPath(),
-							},
-						},
+						VolumeMounts:           volMnt,
 					}},
 					RestartPolicy:                 core.RestartPolicyAlways,
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					DNSPolicy:                     core.DNSClusterFirst,
-					Volumes: []core.Volume{
-						core.Volume{
-							Name:         "tmp",
-							VolumeSource: this.ctx.GetVolumeSource(),
-						},
-					},
+					Volumes:                       vol,
 				},
 			},
 			Strategy: apps.DeploymentStrategy{

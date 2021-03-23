@@ -20,7 +20,7 @@ type EnvCacheEntry interface {
 type envCacheEntry struct {
 	value        *core.EnvVar
 	dependencies []string
-	managed bool
+	managed      bool
 }
 
 var _ EnvCacheEntry = &envCacheEntry{}
