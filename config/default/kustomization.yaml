@@ -13,8 +13,3 @@ resources:
 
 #patchesStrategicMerge:
 #- patches/manager_config_patch.yaml
-
-#images:
-#- name: REGISTRY_OPERATOR_IMAGE
-#  newName: quay.io/jsenkorh/apicurio-registry-operator
-#  newTag: 1.0.0-dev

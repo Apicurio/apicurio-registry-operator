@@ -85,7 +85,11 @@ endef
 
 ###
 
-all: manager ## Run manager target
+build: manager docker-build ## Build the Apicurio Registry Operator image from scratch
+
+build-push: build docker-push ## Build the Apicurio Registry Operator image from scratch and push it
+
+build-reload: undeploy build-push deploy ## Undeploy, Rebuild, Push and Redeploy the Apicurio Registry Operator
 
 
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
