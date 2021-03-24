@@ -23,3 +23,5 @@ See https://github.com/operator-framework/operator-sdk/issues/4503 .
 **TODO** Figure out how to include it.
 
 Can not rename `config/manifests/bases` to `config/manifests/resources`.
+
+Operator manager ConfigMap does not work, manager does not know `--config` property.
