@@ -188,7 +188,13 @@ PACKAGE_MANIFESTS_OPTS ?= $(PACKAGE_FROM_VERSION) $(PACKAGE_CHANNELS) $(PACKAGE_
 
 PACKAGE_VERSION = $(OPERATOR_VERSION)-$(LC_OPERAND_VERSION)
 
+.PHONY: packagemanifests
 packagemanifests: kustomize manifests ## Generate package manifests.
 	$(OPERATOR_SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image REGISTRY_OPERATOR_IMAGE=$(OPERATOR_IMAGE)
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate packagemanifests -q --version $(PACKAGE_VERSION) $(PACKAGE_MANIFESTS_OPTS)
+
+.PHONY: dist
+dist: kustomize
+	mkdir -p dist
+	$(KUSTOMIZE) build config/default/ > ./dist/default-install.yaml
