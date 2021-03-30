@@ -30,12 +30,10 @@ spec:
               value: 2.0.x
             - name: REGISTRY_IMAGE_MEM
               value: "quay.io/apicurio/apicurio-registry-mem:latest-snapshot"
-            - name: REGISTRY_IMAGE_STREAMS
-              value: "quay.io/apicurio/apicurio-registry-streams:latest-snapshot"
+            - name: REGISTRY_IMAGE_KAFKASQL
+              value: "quay.io/apicurio/apicurio-registry-kafkasql:latest-snapshot"
             - name: REGISTRY_IMAGE_SQL
               value: "quay.io/apicurio/apicurio-registry-sql:latest-snapshot"
-            - name: REGISTRY_IMAGE_INFINISPAN
-              value: "quay.io/apicurio/apicurio-registry-infinispan:latest-snapshot"
             - name: WATCH_NAMESPACE
               valueFrom:
                 fieldRef:
@@ -52,18 +50,18 @@ spec:
               value: apicurio-registry-operator
           securityContext:
             allowPrivilegeEscalation: false
-#          livenessProbe:
-#            httpGet:
-#              path: /healthz
-#              port: 8081
-#            initialDelaySeconds: 15
-#            periodSeconds: 20
-#          readinessProbe:
-#            httpGet:
-#              path: /readyz
-#              port: 8081
-#            initialDelaySeconds: 5
-#            periodSeconds: 10
+          #          livenessProbe:
+          #            httpGet:
+          #              path: /healthz
+          #              port: 8081
+          #            initialDelaySeconds: 15
+          #            periodSeconds: 20
+          #          readinessProbe:
+          #            httpGet:
+          #              path: /readyz
+          #              port: 8081
+          #            initialDelaySeconds: 5
+          #            periodSeconds: 10
           resources:
             limits:
               cpu: 100m

@@ -14,9 +14,8 @@ import (
 var _ loop.ControlFunction = &ImageCF{}
 
 const ENV_OPERATOR_REGISTRY_IMAGE_MEM = "REGISTRY_IMAGE_MEM"
-const ENV_OPERATOR_REGISTRY_IMAGE_STREAMS = "REGISTRY_IMAGE_STREAMS"
+const ENV_OPERATOR_REGISTRY_IMAGE_KAFKASQL = "REGISTRY_IMAGE_KAFKASQL"
 const ENV_OPERATOR_REGISTRY_IMAGE_SQL = "REGISTRY_IMAGE_SQL"
-const ENV_OPERATOR_REGISTRY_IMAGE_INFINISPAN = "REGISTRY_IMAGE_INFINISPAN"
 
 // This CF takes care of keeping the "image" section of the CRD applied.
 type ImageCF struct {
@@ -68,30 +67,25 @@ func (this *ImageCF) Sense() {
 	persistence := ""
 	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry).Spec
-		this.targetImage = spec.Image.Name // TODO remove this
 		persistence = spec.Configuration.Persistence
 	}
 
-	if this.targetImage == "" {
-		envImage := ""
-		switch persistence {
-		case "", "mem":
-			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_MEM)
-		case "streams":
-			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_STREAMS)
-		case "sql":
-			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_SQL)
-		case "infinispan":
-			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_INFINISPAN)
-		}
-		if envImage != "" {
-			this.targetImage = envImage
-		} else {
-			this.ctx.GetLog().WithValues("type", "Warning").
-				Info("WARNING: The operand image is not selected. " +
-					"Set the 'spec.configuration.persistence' property in your 'apicurioregistry' resource " +
-					"to select the appropriate Service Registry image. You can override using 'spec.image.name'.")
-		}
+	envImage := ""
+	switch persistence {
+	case "", "mem":
+		envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_MEM)
+	case "kafkasql":
+		envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_KAFKASQL)
+	case "sql":
+		envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_SQL)
+	}
+	if envImage != "" {
+		this.targetImage = envImage
+	} else {
+		this.ctx.GetLog().WithValues("type", "Warning").
+			Info("WARNING: The operand image is not selected. " +
+				"Set the 'spec.configuration.persistence' property in your 'apicurioregistry' resource " +
+				"to select the appropriate Service Registry image.")
 	}
 
 	// Update state

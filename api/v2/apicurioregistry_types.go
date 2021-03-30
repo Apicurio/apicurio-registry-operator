@@ -25,24 +25,23 @@ import (
 
 // ApicurioRegistrySpec defines the desired state of ApicurioRegistry
 type ApicurioRegistrySpec struct {
-	Image         ApicurioRegistrySpecImage         `json:"image,omitempty"`
+	//Image         ApicurioRegistrySpecImage         `json:"image,omitempty"`
 	Configuration ApicurioRegistrySpecConfiguration `json:"configuration,omitempty"`
 	Deployment    ApicurioRegistrySpecDeployment    `json:"deployment,omitempty"`
 }
 
-type ApicurioRegistrySpecImage struct {
-	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Test",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
-	Name string `json:"name,omitempty"`
-}
+//type ApicurioRegistrySpecImage struct {
+//	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Test",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+//	Name string `json:"name,omitempty"`
+//}
 
 type ApicurioRegistrySpecConfiguration struct {
-	// +kubebuilder:validation:Enum=mem;sql;streams;infinispan;
-	Persistence string                                      `json:"persistence,omitempty"`
-	DataSource  ApicurioRegistrySpecConfigurationDataSource `json:"dataSource,omitempty"`
-	Streams     ApicurioRegistrySpecConfigurationStreams    `json:"streams,omitempty"`
-	Infinispan  ApicurioRegistrySpecConfigurationInfinispan `json:"infinispan,omitempty"`
-	UI          ApicurioRegistrySpecConfigurationUI         `json:"ui,omitempty"`
-	LogLevel    string                                      `json:"logLevel,omitempty"`
+	// +kubebuilder:validation:Enum=mem;sql;kafkasql;
+	Persistence string                                    `json:"persistence,omitempty"`
+	Sql         ApicurioRegistrySpecConfigurationSql      `json:"sql,omitempty"`
+	Kafkasql    ApicurioRegistrySpecConfigurationKafkasql `json:"kafkasql,omitempty"`
+	UI          ApicurioRegistrySpecConfigurationUI       `json:"ui,omitempty"`
+	LogLevel    string                                    `json:"logLevel,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationDataSource struct {
@@ -51,32 +50,30 @@ type ApicurioRegistrySpecConfigurationDataSource struct {
 	Password string `json:"password,omitempty"`
 }
 
-type ApicurioRegistrySpecConfigurationStreams struct {
-	BootstrapServers      string                                           `json:"bootstrapServers,omitempty"`
-	ApplicationServerPort string                                           `json:"applicationServerPort,omitempty"`
-	ApplicationId         string                                           `json:"applicationId,omitempty"`
-	Security              ApicurioRegistrySpecConfigurationStreamsSecurity `json:"security,omitempty"`
+type ApicurioRegistrySpecConfigurationSql struct {
+	DataSource ApicurioRegistrySpecConfigurationDataSource `json:"dataSource,omitempty"`
 }
 
-type ApicurioRegistrySpecConfigurationStreamsSecurity struct {
-	Tls   ApicurioRegistrySpecConfigurationStreamsSecurityTls   `json:"tls,omitempty"`
-	Scram ApicurioRegistrySpecConfigurationStreamsSecurityScram `json:"scram,omitempty"`
+type ApicurioRegistrySpecConfigurationKafkasql struct {
+	BootstrapServers string                                         `json:"bootstrapServers,omitempty"`
+	Security         ApicurioRegistrySpecConfigurationKafkaSecurity `json:"security,omitempty"`
 }
 
-type ApicurioRegistrySpecConfigurationStreamsSecurityTls struct {
+type ApicurioRegistrySpecConfigurationKafkaSecurity struct {
+	Tls   ApicurioRegistrySpecConfigurationKafkaSecurityTls   `json:"tls,omitempty"`
+	Scram ApicurioRegistrySpecConfigurationKafkaSecurityScram `json:"scram,omitempty"`
+}
+
+type ApicurioRegistrySpecConfigurationKafkaSecurityTls struct {
 	TruststoreSecretName string `json:"truststoreSecretName,omitempty"`
 	KeystoreSecretName   string `json:"keystoreSecretName,omitempty"`
 }
 
-type ApicurioRegistrySpecConfigurationStreamsSecurityScram struct {
+type ApicurioRegistrySpecConfigurationKafkaSecurityScram struct {
 	TruststoreSecretName string `json:"truststoreSecretName,omitempty"`
 	User                 string `json:"user,omitempty"`
 	PasswordSecretName   string `json:"passwordSecretName,omitempty"`
 	Mechanism            string `json:"mechanism,omitempty"`
-}
-
-type ApicurioRegistrySpecConfigurationInfinispan struct {
-	ClusterName string `json:"clusterName,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationUI struct {
@@ -90,15 +87,15 @@ type ApicurioRegistrySpecDeployment struct {
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 }
 
-type ApicurioRegistrySpecDeploymentResources struct {
-	Cpu    ApicurioRegistrySpecDeploymentResourcesRequestsLimit `json:"cpu,omitempty"`
-	Memory ApicurioRegistrySpecDeploymentResourcesRequestsLimit `json:"memory,omitempty"`
-}
-
-type ApicurioRegistrySpecDeploymentResourcesRequestsLimit struct {
-	Requests string `json:"requests,omitempty"`
-	Limit    string `json:"limit,omitempty"`
-}
+//type ApicurioRegistrySpecDeploymentResources struct {
+//	Cpu    ApicurioRegistrySpecDeploymentResourcesRequestsLimit `json:"cpu,omitempty"`
+//	Memory ApicurioRegistrySpecDeploymentResourcesRequestsLimit `json:"memory,omitempty"`
+//}
+//
+//type ApicurioRegistrySpecDeploymentResourcesRequestsLimit struct {
+//	Requests string `json:"requests,omitempty"`
+//	Limit    string `json:"limit,omitempty"`
+//}
 
 // ### Status
 

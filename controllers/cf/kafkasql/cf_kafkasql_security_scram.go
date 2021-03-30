@@ -1,4 +1,4 @@
-package cf
+package kafkasql
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v2"
@@ -10,20 +10,23 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-var _ loop.ControlFunction = &StreamsSecurityScramCF{}
+var _ loop.ControlFunction = &KafkasqlSecurityScramCF{}
 
-const ENV_REGISTRY_STREAMS_SCRAM_USER = "REGISTRY_STREAMS_SCRAM_USER"
-const ENV_REGISTRY_STREAMS_SCRAM_PASSWORD = "REGISTRY_STREAMS_SCRAM_PASSWORD"
+// REGISTRY_KAFKASQL_PRODUCER_
+// REGISTRY_KAFKASQL_CONSUMER_
 
-const ENV_REGISTRY_STREAMS_TOPOLOGY_SASL_MECHANISM = "REGISTRY_STREAMS_TOPOLOGY_SASL_MECHANISM"
-const ENV_REGISTRY_STREAMS_TOPOLOGY_SASL_JAAS_CONFIG = "REGISTRY_STREAMS_TOPOLOGY_SASL_JAAS_CONFIG"
+const ENV_REGISTRY_KAFKASQL_SCRAM_USER = "REGISTRY_KAFKASQL_SCRAM_USER"
+const ENV_REGISTRY_KAFKASQL_SCRAM_PASSWORD = "REGISTRY_KAFKASQL_SCRAM_PASSWORD"
 
-const ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SASL_MECHANISM = "REGISTRY_STREAMS_STORAGE-PRODUCER_SASL_MECHANISM"
-const ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SASL_JAAS_CONFIG = "REGISTRY_STREAMS_STORAGE-PRODUCER_SASL_JAAS_CONFIG"
+const ENV_REGISTRY_KAFKASQL_PRODUCER_SASL_MECHANISM = "REGISTRY_KAFKASQL_PRODUCER_SASL_MECHANISM"
+const ENV_REGISTRY_KAFKASQL_PRODUCER_SASL_JAAS_CONFIG = "REGISTRY_KAFKASQL_PRODUCER_SASL_JAAS_CONFIG"
 
-const SCRAM_TRUSTSTORE_SECRET_VOLUME_NAME = "registry-streams-scram-truststore"
+const ENV_REGISTRY_KAFKASQL_CONSUMER_SASL_MECHANISM = "REGISTRY_KAFKASQL_CONSUMER_SASL_MECHANISM"
+const ENV_REGISTRY_KAFKASQL_CONSUMER_SASL_JAAS_CONFIG = "REGISTRY_KAFKASQL_CONSUMER_SASL_JAAS_CONFIG"
 
-type StreamsSecurityScramCF struct {
+const SCRAM_TRUSTSTORE_SECRET_VOLUME_NAME = "registry-kafkasql-scram-truststore"
+
+type KafkasqlSecurityScramCF struct {
 	ctx                          *context.LoopContext
 	svcResourceCache             resources.ResourceCache
 	svcEnvCache                  env.EnvCache
@@ -43,8 +46,8 @@ type StreamsSecurityScramCF struct {
 	mechOk                       bool
 }
 
-func NewStreamsSecurityScramCF(ctx *context.LoopContext) loop.ControlFunction {
-	return &StreamsSecurityScramCF{
+func NewKafkasqlSecurityScramCF(ctx *context.LoopContext) loop.ControlFunction {
+	return &KafkasqlSecurityScramCF{
 		ctx:                          ctx,
 		svcResourceCache:             ctx.GetResourceCache(),
 		svcEnvCache:                  ctx.GetEnvCache(),
@@ -63,22 +66,22 @@ func NewStreamsSecurityScramCF(ctx *context.LoopContext) loop.ControlFunction {
 	}
 }
 
-func (this *StreamsSecurityScramCF) Describe() string {
-	return "StreamsSecurityScramCF"
+func (this *KafkasqlSecurityScramCF) Describe() string {
+	return "KafkasqlSecurityScramCF"
 }
 
-func (this *StreamsSecurityScramCF) Sense() {
+func (this *KafkasqlSecurityScramCF) Sense() {
 	// Observation #1
 	// Read the config values
 	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry)
 		this.persistence = spec.Spec.Configuration.Persistence
-		this.bootstrapServers = spec.Spec.Configuration.Streams.BootstrapServers
+		this.bootstrapServers = spec.Spec.Configuration.Kafkasql.BootstrapServers
 
-		this.truststoreSecretName = spec.Spec.Configuration.Streams.Security.Scram.TruststoreSecretName
-		this.scramUser = spec.Spec.Configuration.Streams.Security.Scram.User
-		this.scramPasswordSecretName = spec.Spec.Configuration.Streams.Security.Scram.PasswordSecretName
-		this.scramMechanism = spec.Spec.Configuration.Streams.Security.Scram.Mechanism
+		this.truststoreSecretName = spec.Spec.Configuration.Kafkasql.Security.Scram.TruststoreSecretName
+		this.scramUser = spec.Spec.Configuration.Kafkasql.Security.Scram.User
+		this.scramPasswordSecretName = spec.Spec.Configuration.Kafkasql.Security.Scram.PasswordSecretName
+		this.scramMechanism = spec.Spec.Configuration.Kafkasql.Security.Scram.Mechanism
 	}
 
 	if this.scramMechanism == "" {
@@ -101,25 +104,25 @@ func (this *StreamsSecurityScramCF) Sense() {
 	this.deploymentExists = deploymentExists
 	this.deploymentEntry = deploymentEntry
 
-	if entry, exists := this.svcEnvCache.Get(ENV_REGISTRY_STREAMS_SCRAM_USER); exists {
+	if entry, exists := this.svcEnvCache.Get(ENV_REGISTRY_KAFKASQL_SCRAM_USER); exists {
 		this.foundScramUser = entry.GetValue().Value
 	}
-	if entry, exists := this.svcEnvCache.Get(ENV_REGISTRY_STREAMS_SCRAM_PASSWORD); exists {
+	if entry, exists := this.svcEnvCache.Get(ENV_REGISTRY_KAFKASQL_SCRAM_PASSWORD); exists {
 		this.foundScramPasswordSecretName = entry.GetValue().ValueFrom.SecretKeyRef.Name
 	}
 
 	mechTopology := ""
 	mechStorage := ""
-	if entry, exists := this.svcEnvCache.Get(ENV_REGISTRY_STREAMS_TOPOLOGY_SASL_MECHANISM); exists {
+	if entry, exists := this.svcEnvCache.Get(ENV_REGISTRY_KAFKASQL_PRODUCER_SASL_MECHANISM); exists {
 		mechTopology = entry.GetValue().Value
 	}
-	if entry, exists := this.svcEnvCache.Get(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SASL_MECHANISM); exists {
+	if entry, exists := this.svcEnvCache.Get(ENV_REGISTRY_KAFKASQL_CONSUMER_SASL_MECHANISM); exists {
 		mechStorage = entry.GetValue().Value
 	}
 
 	// Observation #3
 	// Validate the config values
-	this.valid = this.persistence == "streams" && this.bootstrapServers != "" &&
+	this.valid = this.persistence == PERSISTENCE_ID && this.bootstrapServers != "" &&
 		this.truststoreSecretName != "" &&
 		this.scramUser != "" &&
 		this.scramPasswordSecretName != ""
@@ -130,7 +133,7 @@ func (this *StreamsSecurityScramCF) Sense() {
 	// We won't actively delete old env values if not used
 }
 
-func (this *StreamsSecurityScramCF) Compare() bool {
+func (this *KafkasqlSecurityScramCF) Compare() bool {
 	// Condition #1
 	return this.valid && (this.truststoreSecretName != this.foundTruststoreSecretName ||
 		this.scramUser != this.foundScramUser ||
@@ -139,7 +142,7 @@ func (this *StreamsSecurityScramCF) Compare() bool {
 		!this.mechOk)
 }
 
-func (this *StreamsSecurityScramCF) Respond() {
+func (this *KafkasqlSecurityScramCF) Respond() {
 	this.AddEnv(this.truststoreSecretName, SCRAM_TRUSTSTORE_SECRET_VOLUME_NAME,
 		this.scramUser, this.scramPasswordSecretName, this.scramMechanism)
 
@@ -148,14 +151,14 @@ func (this *StreamsSecurityScramCF) Respond() {
 	this.AddSecretMountPatch(this.deploymentEntry, SCRAM_TRUSTSTORE_SECRET_VOLUME_NAME, "etc/"+SCRAM_TRUSTSTORE_SECRET_VOLUME_NAME)
 }
 
-func (this *StreamsSecurityScramCF) AddEnv(truststoreSecretName string, truststoreSecretVolumeName string,
+func (this *KafkasqlSecurityScramCF) AddEnv(truststoreSecretName string, truststoreSecretVolumeName string,
 	scramUser string, scramPasswordSecretName string, scramMechanism string) {
 
 	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_PROPERTIES_PREFIX, "REGISTRY_"))
 
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_SCRAM_USER, scramUser))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_SCRAM_USER, scramUser))
 	this.svcEnvCache.Set(env.NewEnvCacheEntry(&core.EnvVar{
-		Name: ENV_REGISTRY_STREAMS_SCRAM_PASSWORD,
+		Name: ENV_REGISTRY_KAFKASQL_SCRAM_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
 				LocalObjectReference: core.LocalObjectReference{
@@ -166,22 +169,22 @@ func (this *StreamsSecurityScramCF) AddEnv(truststoreSecretName string, truststo
 		},
 	}))
 
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SASL_MECHANISM, scramMechanism))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_PRODUCER_SASL_MECHANISM, scramMechanism))
 
-	jaasConfig := "org.apache.kafka.common.security.scram.ScramLoginModule required username='$(" + ENV_REGISTRY_STREAMS_SCRAM_USER +
-		")' password='$(" + ENV_REGISTRY_STREAMS_SCRAM_PASSWORD + ")';"
+	jaasConfig := "org.apache.kafka.common.security.scram.ScramLoginModule required username='$(" + ENV_REGISTRY_KAFKASQL_SCRAM_USER +
+		")' password='$(" + ENV_REGISTRY_KAFKASQL_SCRAM_PASSWORD + ")';"
 
-	jaasconfigEntry := env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SASL_JAAS_CONFIG, jaasConfig)
-	jaasconfigEntry.SetInterpolationDependency(ENV_REGISTRY_STREAMS_SCRAM_USER)
-	jaasconfigEntry.SetInterpolationDependency(ENV_REGISTRY_STREAMS_SCRAM_PASSWORD)
+	jaasconfigEntry := env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_PRODUCER_SASL_JAAS_CONFIG, jaasConfig)
+	jaasconfigEntry.SetInterpolationDependency(ENV_REGISTRY_KAFKASQL_SCRAM_USER)
+	jaasconfigEntry.SetInterpolationDependency(ENV_REGISTRY_KAFKASQL_SCRAM_PASSWORD)
 	this.svcEnvCache.Set(jaasconfigEntry)
 
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SECURITY_PROTOCOL, "SASL_SSL"))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_TRUSTSTORE_TYPE, "PKCS12"))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_TRUSTSTORE_LOCATION,
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_PRODUCER_SECURITY_PROTOCOL, "SASL_SSL"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_PRODUCER_SSL_TRUSTSTORE_TYPE, "PKCS12"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_PRODUCER_SSL_TRUSTSTORE_LOCATION,
 		"/etc/"+truststoreSecretVolumeName+"/ca.p12"))
 	this.svcEnvCache.Set(env.NewEnvCacheEntry(&core.EnvVar{
-		Name: ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_TRUSTSTORE_PASSWORD,
+		Name: ENV_REGISTRY_KAFKASQL_PRODUCER_SSL_TRUSTSTORE_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
 				LocalObjectReference: core.LocalObjectReference{
@@ -192,19 +195,19 @@ func (this *StreamsSecurityScramCF) AddEnv(truststoreSecretName string, truststo
 		},
 	}))
 
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SASL_MECHANISM, scramMechanism))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_CONSUMER_SASL_MECHANISM, scramMechanism))
 
-	jaasconfigEntry = env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SASL_JAAS_CONFIG, jaasConfig)
-	jaasconfigEntry.SetInterpolationDependency(ENV_REGISTRY_STREAMS_SCRAM_USER)
-	jaasconfigEntry.SetInterpolationDependency(ENV_REGISTRY_STREAMS_SCRAM_PASSWORD)
+	jaasconfigEntry = env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_CONSUMER_SASL_JAAS_CONFIG, jaasConfig)
+	jaasconfigEntry.SetInterpolationDependency(ENV_REGISTRY_KAFKASQL_SCRAM_USER)
+	jaasconfigEntry.SetInterpolationDependency(ENV_REGISTRY_KAFKASQL_SCRAM_PASSWORD)
 	this.svcEnvCache.Set(jaasconfigEntry)
 
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SECURITY_PROTOCOL, "SASL_SSL"))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_TRUSTSTORE_TYPE, "PKCS12"))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_TRUSTSTORE_LOCATION,
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_CONSUMER_SECURITY_PROTOCOL, "SASL_SSL"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_CONSUMER_SSL_TRUSTSTORE_TYPE, "PKCS12"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_CONSUMER_SSL_TRUSTSTORE_LOCATION,
 		"/etc/"+truststoreSecretVolumeName+"/ca.p12"))
 	this.svcEnvCache.Set(env.NewEnvCacheEntry(&core.EnvVar{
-		Name: ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_TRUSTSTORE_PASSWORD,
+		Name: ENV_REGISTRY_KAFKASQL_CONSUMER_SSL_TRUSTSTORE_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
 				LocalObjectReference: core.LocalObjectReference{
@@ -217,7 +220,7 @@ func (this *StreamsSecurityScramCF) AddEnv(truststoreSecretName string, truststo
 
 }
 
-func (this *StreamsSecurityScramCF) AddSecretVolumePatch(deploymentEntry resources.ResourceCacheEntry, secretName string, volumeName string) {
+func (this *KafkasqlSecurityScramCF) AddSecretVolumePatch(deploymentEntry resources.ResourceCacheEntry, secretName string, volumeName string) {
 	deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 		deployment := value.(*apps.Deployment).DeepCopy()
 		volume := core.Volume{
@@ -242,7 +245,7 @@ func (this *StreamsSecurityScramCF) AddSecretVolumePatch(deploymentEntry resourc
 	})
 }
 
-func (this *StreamsSecurityScramCF) AddSecretMountPatch(deploymentEntry resources.ResourceCacheEntry, volumeName string, mountPath string) {
+func (this *KafkasqlSecurityScramCF) AddSecretMountPatch(deploymentEntry resources.ResourceCacheEntry, volumeName string, mountPath string) {
 	deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 		deployment := value.(*apps.Deployment).DeepCopy()
 		for ci, c := range deployment.Spec.Template.Spec.Containers {
@@ -268,7 +271,7 @@ func (this *StreamsSecurityScramCF) AddSecretMountPatch(deploymentEntry resource
 	})
 }
 
-func (this *StreamsSecurityScramCF) Cleanup() bool {
+func (this *KafkasqlSecurityScramCF) Cleanup() bool {
 	// No cleanup
 	return true
 }
