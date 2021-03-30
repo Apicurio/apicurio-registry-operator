@@ -1,4 +1,4 @@
-package cf
+package kafkasql
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v2"
@@ -10,9 +10,9 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-var _ loop.ControlFunction = &StreamsSecurityTLSOcpCF{}
+var _ loop.ControlFunction = &KafkasqlSecurityTLSOcpCF{}
 
-type StreamsSecurityTLSOcpCF struct {
+type KafkasqlSecurityTLSOcpCF struct {
 	ctx                       *context.LoopContext
 	svcResourceCache          resources.ResourceCache
 	svcEnvCache               env.EnvCache
@@ -27,8 +27,8 @@ type StreamsSecurityTLSOcpCF struct {
 	deploymentEntry           resources.ResourceCacheEntry
 }
 
-func NewStreamsSecurityTLSOcpCF(ctx *context.LoopContext) loop.ControlFunction {
-	return &StreamsSecurityTLSOcpCF{
+func NewKafkasqlSecurityTLSOcpCF(ctx *context.LoopContext) loop.ControlFunction {
+	return &KafkasqlSecurityTLSOcpCF{
 		ctx:                       ctx,
 		svcResourceCache:          ctx.GetResourceCache(),
 		svcEnvCache:               ctx.GetEnvCache(),
@@ -42,20 +42,20 @@ func NewStreamsSecurityTLSOcpCF(ctx *context.LoopContext) loop.ControlFunction {
 	}
 }
 
-func (this *StreamsSecurityTLSOcpCF) Describe() string {
-	return "StreamsSecurityTLSOcpCF"
+func (this *KafkasqlSecurityTLSOcpCF) Describe() string {
+	return "KafkasqlSecurityTLSOcpCF"
 }
 
-func (this *StreamsSecurityTLSOcpCF) Sense() {
+func (this *KafkasqlSecurityTLSOcpCF) Sense() {
 	// Observation #1
 	// Read the config values
 	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry)
 		this.persistence = spec.Spec.Configuration.Persistence
-		this.bootstrapServers = spec.Spec.Configuration.Streams.BootstrapServers
+		this.bootstrapServers = spec.Spec.Configuration.Kafkasql.BootstrapServers
 
-		this.keystoreSecretName = spec.Spec.Configuration.Streams.Security.Tls.KeystoreSecretName
-		this.truststoreSecretName = spec.Spec.Configuration.Streams.Security.Tls.TruststoreSecretName
+		this.keystoreSecretName = spec.Spec.Configuration.Kafkasql.Security.Tls.KeystoreSecretName
+		this.truststoreSecretName = spec.Spec.Configuration.Kafkasql.Security.Tls.TruststoreSecretName
 	}
 
 	// Observation #2
@@ -80,19 +80,19 @@ func (this *StreamsSecurityTLSOcpCF) Sense() {
 
 	// Observation #3
 	// Validate the config values
-	this.valid = this.persistence == "streams" && this.bootstrapServers != "" &&
+	this.valid = this.persistence == PERSISTENCE_ID && this.bootstrapServers != "" &&
 		this.keystoreSecretName != "" && this.truststoreSecretName != ""
 
 	// We won't actively delete old env values if not used
 }
 
-func (this *StreamsSecurityTLSOcpCF) Compare() bool {
+func (this *KafkasqlSecurityTLSOcpCF) Compare() bool {
 	// Condition #1
 	return this.valid && (this.keystoreSecretName != this.foundKeystoreSecretName ||
 		this.truststoreSecretName != this.foundTruststoreSecretName)
 }
 
-func (this *StreamsSecurityTLSOcpCF) Respond() {
+func (this *KafkasqlSecurityTLSOcpCF) Respond() {
 	this.AddEnv(this.keystoreSecretName, KEYSTORE_SECRET_VOLUME_NAME,
 		this.truststoreSecretName, TRUSTSTORE_SECRET_VOLUME_NAME)
 
@@ -103,17 +103,17 @@ func (this *StreamsSecurityTLSOcpCF) Respond() {
 	this.AddSecretMountPatch(this.deploymentEntry, TRUSTSTORE_SECRET_VOLUME_NAME, "etc/"+TRUSTSTORE_SECRET_VOLUME_NAME)
 }
 
-func (this *StreamsSecurityTLSOcpCF) AddEnv(keystoreSecretName string, keystoreSecretVolumeName string,
+func (this *KafkasqlSecurityTLSOcpCF) AddEnv(keystoreSecretName string, keystoreSecretVolumeName string,
 	truststoreSecretName string, truststoreSecretVolumeName string) {
 
 	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_PROPERTIES_PREFIX, "REGISTRY_"))
 
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SECURITY_PROTOCOL, "SSL"))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_KEYSTORE_TYPE, "PKCS12"))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_KEYSTORE_LOCATION,
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_PRODUCER_SECURITY_PROTOCOL, "SSL"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_PRODUCER_SSL_KEYSTORE_TYPE, "PKCS12"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_PRODUCER_SSL_KEYSTORE_LOCATION,
 		"/etc/"+keystoreSecretVolumeName+"/user.p12"))
 	this.svcEnvCache.Set(env.NewEnvCacheEntry(&core.EnvVar{
-		Name: ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_KEYSTORE_PASSWORD,
+		Name: ENV_REGISTRY_KAFKASQL_PRODUCER_SSL_KEYSTORE_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
 				LocalObjectReference: core.LocalObjectReference{
@@ -123,11 +123,11 @@ func (this *StreamsSecurityTLSOcpCF) AddEnv(keystoreSecretName string, keystoreS
 			},
 		},
 	}))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_TRUSTSTORE_TYPE, "PKCS12"))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_TRUSTSTORE_LOCATION,
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_PRODUCER_SSL_TRUSTSTORE_TYPE, "PKCS12"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_PRODUCER_SSL_TRUSTSTORE_LOCATION,
 		"/etc/"+truststoreSecretVolumeName+"/ca.p12"))
 	this.svcEnvCache.Set(env.NewEnvCacheEntry(&core.EnvVar{
-		Name: ENV_REGISTRY_STREAMS_TOPOLOGY_SSL_TRUSTSTORE_PASSWORD,
+		Name: ENV_REGISTRY_KAFKASQL_PRODUCER_SSL_TRUSTSTORE_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
 				LocalObjectReference: core.LocalObjectReference{
@@ -138,12 +138,12 @@ func (this *StreamsSecurityTLSOcpCF) AddEnv(keystoreSecretName string, keystoreS
 		},
 	}))
 
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SECURITY_PROTOCOL, "SSL"))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_KEYSTORE_TYPE, "PKCS12"))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_KEYSTORE_LOCATION,
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_CONSUMER_SECURITY_PROTOCOL, "SSL"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_CONSUMER_SSL_KEYSTORE_TYPE, "PKCS12"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_CONSUMER_SSL_KEYSTORE_LOCATION,
 		"/etc/"+keystoreSecretVolumeName+"/user.p12"))
 	this.svcEnvCache.Set(env.NewEnvCacheEntry(&core.EnvVar{
-		Name: ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_KEYSTORE_PASSWORD,
+		Name: ENV_REGISTRY_KAFKASQL_CONSUMER_SSL_KEYSTORE_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
 				LocalObjectReference: core.LocalObjectReference{
@@ -153,11 +153,11 @@ func (this *StreamsSecurityTLSOcpCF) AddEnv(keystoreSecretName string, keystoreS
 			},
 		},
 	}))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_TRUSTSTORE_TYPE, "PKCS12"))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_TRUSTSTORE_LOCATION,
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_CONSUMER_SSL_TRUSTSTORE_TYPE, "PKCS12"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_CONSUMER_SSL_TRUSTSTORE_LOCATION,
 		"/etc/"+truststoreSecretVolumeName+"/ca.p12"))
 	this.svcEnvCache.Set(env.NewEnvCacheEntry(&core.EnvVar{
-		Name: ENV_REGISTRY_STREAMS_STORAGE_PRODUCER_SSL_TRUSTSTORE_PASSWORD,
+		Name: ENV_REGISTRY_KAFKASQL_CONSUMER_SSL_TRUSTSTORE_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
 				LocalObjectReference: core.LocalObjectReference{
@@ -169,7 +169,7 @@ func (this *StreamsSecurityTLSOcpCF) AddEnv(keystoreSecretName string, keystoreS
 	}))
 }
 
-func (this *StreamsSecurityTLSOcpCF) AddSecretVolumePatch(deploymentEntry resources.ResourceCacheEntry, secretName string, volumeName string) {
+func (this *KafkasqlSecurityTLSOcpCF) AddSecretVolumePatch(deploymentEntry resources.ResourceCacheEntry, secretName string, volumeName string) {
 	deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 		deployment := value.(*ocp_apps.DeploymentConfig).DeepCopy()
 		volume := core.Volume{
@@ -194,7 +194,7 @@ func (this *StreamsSecurityTLSOcpCF) AddSecretVolumePatch(deploymentEntry resour
 	})
 }
 
-func (this *StreamsSecurityTLSOcpCF) AddSecretMountPatch(deploymentEntry resources.ResourceCacheEntry, volumeName string, mountPath string) {
+func (this *KafkasqlSecurityTLSOcpCF) AddSecretMountPatch(deploymentEntry resources.ResourceCacheEntry, volumeName string, mountPath string) {
 	deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 		deployment := value.(*ocp_apps.DeploymentConfig).DeepCopy()
 		for ci, c := range deployment.Spec.Template.Spec.Containers {
@@ -220,7 +220,7 @@ func (this *StreamsSecurityTLSOcpCF) AddSecretMountPatch(deploymentEntry resourc
 	})
 }
 
-func (this *StreamsSecurityTLSOcpCF) Cleanup() bool {
+func (this *KafkasqlSecurityTLSOcpCF) Cleanup() bool {
 	// No cleanup
 	return true
 }
