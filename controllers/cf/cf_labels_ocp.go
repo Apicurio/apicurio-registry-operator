@@ -8,7 +8,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	ocp_apps "github.com/openshift/api/apps/v1"
 	core "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	policy "k8s.io/api/policy/v1beta1"
 )
 
@@ -86,7 +86,7 @@ func (this *LabelsOcpCF) Sense() {
 	// Ingress
 	this.ingressEntry, this.ingressIsCached = this.svcResourceCache.Get(resources.RC_KEY_INGRESS)
 	if this.ingressIsCached {
-		this.ingressLabels = this.ingressEntry.GetValue().(*extensions.Ingress).Labels
+		this.ingressLabels = this.ingressEntry.GetValue().(*networking.Ingress).Labels
 	}
 	// Observation #5
 	// PodDisruptionBudget
@@ -143,7 +143,7 @@ func (this *LabelsOcpCF) Respond() {
 	// Ingress
 	if this.updateIngress {
 		this.ingressEntry.ApplyPatch(func(value interface{}) interface{} {
-			ingress := value.(*extensions.Ingress).DeepCopy()
+			ingress := value.(*networking.Ingress).DeepCopy()
 			LabelsUpdate(ingress.Labels, this.caLabels)
 			return ingress
 		})

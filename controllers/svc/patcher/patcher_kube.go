@@ -12,7 +12,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	policy "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -177,18 +177,18 @@ func (this *KubePatcher) patchIngress() {
 		this.ctx,
 		resources.RC_KEY_INGRESS,
 		func(value interface{}) string {
-			return value.(*extensions.Ingress).String()
+			return value.(*networking.Ingress).String()
 		},
-		&extensions.Ingress{},
-		"extensions.Ingress",
+		&networking.Ingress{},
+		"networking.Ingress",
 		func(namespace common.Namespace, value interface{}) (interface{}, error) {
-			return this.clients.Kube().CreateIngress(namespace, value.(*extensions.Ingress))
+			return this.clients.Kube().CreateIngress(namespace, value.(*networking.Ingress))
 		},
 		func(namespace common.Namespace, name common.Name, data []byte) (interface{}, error) {
 			return this.clients.Kube().PatchIngress(namespace, name, data)
 		},
 		func(value interface{}) common.Name {
-			return common.Name(value.(*extensions.Ingress).GetName())
+			return common.Name(value.(*networking.Ingress).GetName())
 		},
 	)
 }
