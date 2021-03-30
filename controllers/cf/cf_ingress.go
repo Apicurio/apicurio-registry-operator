@@ -10,7 +10,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -24,7 +24,7 @@ type IngressCF struct {
 	svcStatus         *status.Status
 	svcKubeFactory    *factory.KubeFactory
 	isCached          bool
-	ingresses         []extensions.Ingress
+	ingresses         []networking.Ingress
 	ingressName       string
 	serviceName       string
 	targetHostIsEmpty bool
@@ -39,7 +39,7 @@ func NewIngressCF(ctx *context.LoopContext, services *services.LoopServices) loo
 		svcStatus:         ctx.GetStatus(),
 		svcKubeFactory:    services.GetKubeFactory(),
 		isCached:          false,
-		ingresses:         make([]extensions.Ingress, 0),
+		ingresses:         make([]networking.Ingress, 0),
 		ingressName:       resources.RC_EMPTY_NAME,
 		serviceName:       resources.RC_EMPTY_NAME,
 		targetHostIsEmpty: true,
@@ -64,7 +64,7 @@ func (this *IngressCF) Sense() {
 
 	// Observation #2
 	// Get ingress(s) we *should* track
-	this.ingresses = make([]extensions.Ingress, 0)
+	this.ingresses = make([]networking.Ingress, 0)
 	ingresses, err := this.svcClients.Kube().GetIngresses(
 		this.ctx.GetAppNamespace(),
 		&meta.ListOptions{
@@ -145,7 +145,7 @@ func (this *IngressCF) Respond() {
 func (this *IngressCF) Cleanup() bool {
 	// Ingress should not have any deletion dependencies
 	if ingressEntry, ingressExists := this.svcResourceCache.Get(resources.RC_KEY_INGRESS); ingressExists {
-		if err := this.svcClients.Kube().DeleteIngress(ingressEntry.GetValue().(*extensions.Ingress), &meta.DeleteOptions{}); err != nil && !api_errors.IsNotFound(err) {
+		if err := this.svcClients.Kube().DeleteIngress(ingressEntry.GetValue().(*networking.Ingress), &meta.DeleteOptions{}); err != nil && !api_errors.IsNotFound(err) {
 			this.ctx.GetLog().Error(err, "Could not delete ingress during cleanup.")
 			return false
 		} else {

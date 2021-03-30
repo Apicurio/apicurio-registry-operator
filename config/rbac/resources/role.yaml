@@ -46,15 +46,15 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-  - extensions
-  resources:
-  - ingresses
-  verbs:
-  - '*'
-- apiGroups:
   - monitoring.coreos.com
   resources:
   - servicemonitors
+  verbs:
+  - '*'
+- apiGroups:
+  - networking
+  resources:
+  - ingresses
   verbs:
   - '*'
 - apiGroups:
