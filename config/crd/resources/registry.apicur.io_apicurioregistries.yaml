@@ -37,36 +37,10 @@ spec:
             description: ApicurioRegistrySpec defines the desired state of ApicurioRegistry
             properties:
               configuration:
+                description: Image         ApicurioRegistrySpecImage         `json:"image,omitempty"`
                 properties:
-                  dataSource:
+                  kafkasql:
                     properties:
-                      password:
-                        type: string
-                      url:
-                        type: string
-                      userName:
-                        type: string
-                    type: object
-                  infinispan:
-                    properties:
-                      clusterName:
-                        type: string
-                    type: object
-                  logLevel:
-                    type: string
-                  persistence:
-                    enum:
-                    - mem
-                    - sql
-                    - streams
-                    - infinispan
-                    type: string
-                  streams:
-                    properties:
-                      applicationId:
-                        type: string
-                      applicationServerPort:
-                        type: string
                       bootstrapServers:
                         type: string
                       security:
@@ -89,6 +63,26 @@ spec:
                               truststoreSecretName:
                                 type: string
                             type: object
+                        type: object
+                    type: object
+                  logLevel:
+                    type: string
+                  persistence:
+                    enum:
+                    - mem
+                    - sql
+                    - kafkasql
+                    type: string
+                  sql:
+                    properties:
+                      dataSource:
+                        properties:
+                          password:
+                            type: string
+                          url:
+                            type: string
+                          userName:
+                            type: string
                         type: object
                     type: object
                   ui:
@@ -761,11 +755,6 @@ spec:
                           type: string
                       type: object
                     type: array
-                type: object
-              image:
-                properties:
-                  name:
-                    type: string
                 type: object
             type: object
           status:
