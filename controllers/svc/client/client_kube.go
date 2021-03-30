@@ -6,7 +6,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	policy "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -108,11 +108,11 @@ func (this *KubeClient) DeleteService(value *core.Service, options *meta.DeleteO
 // ===
 // Ingress
 
-func (this *KubeClient) CreateIngress(namespace common.Namespace, value *extensions.Ingress) (*extensions.Ingress, error) {
+func (this *KubeClient) CreateIngress(namespace common.Namespace, value *networking.Ingress) (*networking.Ingress, error) {
 	if err := controllerutil.SetControllerReference(getSpec(this.ctx), value, this.ctx.GetScheme()); err != nil {
 		return nil, err
 	}
-	res, err := this.client.ExtensionsV1beta1().Ingresses(namespace.Str()).
+	res, err := this.client.NetworkingV1beta1().Ingresses(namespace.Str()).
 		Create(ctx.TODO(), value, meta.CreateOptions{})
 	if err != nil {
 		return nil, err
@@ -120,28 +120,28 @@ func (this *KubeClient) CreateIngress(namespace common.Namespace, value *extensi
 	return res, nil
 }
 
-func (this *KubeClient) GetIngress(namespace common.Namespace, name common.Name, options *meta.GetOptions) (*extensions.Ingress, error) {
-	return this.client.ExtensionsV1beta1().Ingresses(namespace.Str()).
+func (this *KubeClient) GetIngress(namespace common.Namespace, name common.Name, options *meta.GetOptions) (*networking.Ingress, error) {
+	return this.client.NetworkingV1beta1().Ingresses(namespace.Str()).
 		Get(ctx.TODO(), name.Str(), meta.GetOptions{})
 }
 
-func (this *KubeClient) UpdateIngress(namespace common.Namespace, value *extensions.Ingress) (*extensions.Ingress, error) {
-	return this.client.ExtensionsV1beta1().Ingresses(namespace.Str()).
+func (this *KubeClient) UpdateIngress(namespace common.Namespace, value *networking.Ingress) (*networking.Ingress, error) {
+	return this.client.NetworkingV1beta1().Ingresses(namespace.Str()).
 		Update(ctx.TODO(), value, meta.UpdateOptions{})
 }
 
-func (this *KubeClient) PatchIngress(namespace common.Namespace, name common.Name, patchData []byte) (*extensions.Ingress, error) {
-	return this.client.ExtensionsV1beta1().Ingresses(namespace.Str()).
+func (this *KubeClient) PatchIngress(namespace common.Namespace, name common.Name, patchData []byte) (*networking.Ingress, error) {
+	return this.client.NetworkingV1beta1().Ingresses(namespace.Str()).
 		Patch(ctx.TODO(), name.Str(), types.StrategicMergePatchType, patchData, meta.PatchOptions{})
 }
 
-func (this *KubeClient) GetIngresses(namespace common.Namespace, options *meta.ListOptions) (*extensions.IngressList, error) {
-	return this.client.ExtensionsV1beta1().Ingresses(namespace.Str()).
+func (this *KubeClient) GetIngresses(namespace common.Namespace, options *meta.ListOptions) (*networking.IngressList, error) {
+	return this.client.NetworkingV1beta1().Ingresses(namespace.Str()).
 		List(ctx.TODO(), *options)
 }
 
-func (this *KubeClient) DeleteIngress(value *extensions.Ingress, options *meta.DeleteOptions) error {
-	return this.client.ExtensionsV1beta1().Ingresses(value.Namespace).Delete(ctx.TODO(), value.Name, *options)
+func (this *KubeClient) DeleteIngress(value *networking.Ingress, options *meta.DeleteOptions) error {
+	return this.client.NetworkingV1beta1().Ingresses(value.Namespace).Delete(ctx.TODO(), value.Name, *options)
 }
 
 // ===

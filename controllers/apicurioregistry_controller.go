@@ -13,7 +13,7 @@ import (
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	policy "k8s.io/api/policy/v1beta1"
 
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v2"
@@ -67,7 +67,7 @@ func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog logr.Logger) (*A
 // +kubebuilder:rbac:groups=apps.openshift.io,resources=deploymentconfigs,verbs=*
 
 // Common
-// +kubebuilder:rbac:groups=extensions,resources=ingresses,verbs=*
+// +kubebuilder:rbac:groups=networking,resources=ingresses,verbs=*
 // +kubebuilder:rbac:groups=policy,resources=poddisruptionbudgets,verbs=*
 // +kubebuilder:rbac:groups=apps,resources=deployments;daemonsets;replicasets;statefulsets,verbs=*
 // +kubebuilder:rbac:groups=core,resources=pods;services;endpoints;persistentvolumeclaims;configmaps;secrets;services/finalizers,verbs=*
@@ -246,7 +246,7 @@ func (this *ApicurioRegistryReconciler) setupWithManager(mgr ctrl.Manager) error
 	}
 
 	builder.Owns(&corev1.Service{})
-	builder.Owns(&extensions.Ingress{})
+	builder.Owns(&networking.Ingress{})
 	builder.Owns(&policy.PodDisruptionBudget{})
 
 	isMonitoring, err := client.IsMonitoringInstalled()

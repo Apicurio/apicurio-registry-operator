@@ -6,7 +6,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
-	extensions "k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 )
 
 var _ loop.ControlFunction = &HostCF{}
@@ -63,7 +63,7 @@ func (this *HostCF) Sense() {
 	// Get the existing host (if present)
 	this.existingHost = resources.RC_EMPTY_NAME
 	if this.ingressExists && this.serviceName != resources.RC_EMPTY_NAME {
-		this.existingHost = readHost(this.serviceName, this.ingressEntry.GetValue().(*extensions.Ingress))
+		this.existingHost = readHost(this.serviceName, this.ingressEntry.GetValue().(*networking.Ingress))
 	}
 
 	// Observation #4
@@ -95,7 +95,7 @@ func (this *HostCF) Respond() {
 	// Response #1
 	// Patch the resource
 	this.ingressEntry.ApplyPatch(func(value interface{}) interface{} {
-		ingress := value.(*extensions.Ingress).DeepCopy()
+		ingress := value.(*networking.Ingress).DeepCopy()
 		writeHost(this.serviceName, ingress, this.targetHost)
 		return ingress
 	})
@@ -106,7 +106,7 @@ func (this *HostCF) Cleanup() bool {
 	return true
 }
 
-func readHost(serviceName string, ingress *extensions.Ingress) string {
+func readHost(serviceName string, ingress *networking.Ingress) string {
 	for _, rule := range ingress.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
 			if path.Backend.ServiceName == serviceName {
@@ -117,11 +117,11 @@ func readHost(serviceName string, ingress *extensions.Ingress) string {
 	return resources.RC_EMPTY_NAME
 }
 
-func writeHost(serviceName string, ingress *extensions.Ingress, host string) {
+func writeHost(serviceName string, ingress *networking.Ingress, host string) {
 	for i, rule := range ingress.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
 			if path.Backend.ServiceName == serviceName {
-				ingress.Spec.Rules[i] = extensions.IngressRule{
+				ingress.Spec.Rules[i] = networking.IngressRule{
 					Host:             host,
 					IngressRuleValue: rule.IngressRuleValue,
 				}
