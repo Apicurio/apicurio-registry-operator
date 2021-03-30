@@ -59,6 +59,8 @@ endif
 
 ### Tools
 
+CLIENT ?= kubectl
+
 OPERATOR_SDK = $(shell which operator-sdk)
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
@@ -111,23 +113,23 @@ run: generate fmt vet manifests ## ??? Run against the configured Kubernetes clu
 
 
 install: manifests kustomize ## Install CRDs into a cluster
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	$(KUSTOMIZE) build config/crd | $(CLIENT) apply -f -
 
 
 uninstall: manifests kustomize ## Uninstall CRDs from a cluster
-	$(KUSTOMIZE) build config/crd | kubectl delete -f -
+	$(KUSTOMIZE) build config/crd | $(CLIENT) delete -f -
 
 NAMESPACE ?= "system"
 
 deploy: manifests kustomize ## Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 	cd config/manager && $(KUSTOMIZE) edit set image REGISTRY_OPERATOR_IMAGE=${OPERATOR_IMAGE}
-	# $(KUSTOMIZE) build config/build-namespaced | sed "s/\$${NAMESPACE}/${NAMESPACE}/g" | kubectl apply -f -
-	$(KUSTOMIZE) build config/build-namespaced | kubectl apply -f -
+	# $(KUSTOMIZE) build config/build-namespaced | sed "s/\$${NAMESPACE}/${NAMESPACE}/g" | $(CLIENT) apply -f -
+	$(KUSTOMIZE) build config/build-namespaced | $(CLIENT) apply -f -
 
 
 undeploy: ## Undeploy controller from the configured Kubernetes cluster in ~/.kube/config
-	# $(KUSTOMIZE) build config/build-namespaced | sed "s/\$${NAMESPACE}/${NAMESPACE}/g" | kubectl delete -f -
-	$(KUSTOMIZE) build config/build-namespaced | kubectl delete -f -
+	# $(KUSTOMIZE) build config/build-namespaced | sed "s/\$${NAMESPACE}/${NAMESPACE}/g" | $(CLIENT) delete -f -
+	$(KUSTOMIZE) build config/build-namespaced | $(CLIENT) delete -f -
 
 
 manifests: controller-gen ## Generate manifests e.g. CRD, RBAC etc.
