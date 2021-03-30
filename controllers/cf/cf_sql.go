@@ -54,9 +54,9 @@ func (this *SqlCF) Sense() {
 	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry).Spec
 		this.persistence = spec.Configuration.Persistence
-		this.url = spec.Configuration.DataSource.Url
-		this.user = spec.Configuration.DataSource.UserName
-		this.password = spec.Configuration.DataSource.Password // Leave empty as default
+		this.url = spec.Configuration.Sql.DataSource.Url
+		this.user = spec.Configuration.Sql.DataSource.UserName
+		this.password = spec.Configuration.Sql.DataSource.Password // Leave empty as default
 		// TODO Use secrets!
 	}
 

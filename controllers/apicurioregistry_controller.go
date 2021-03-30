@@ -18,6 +18,7 @@ import (
 
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v2"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/cf"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/cf/kafkasql"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	loop_context "github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
@@ -165,23 +166,23 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 		c.AddControlFunction(cf.NewHostInitCF(ctx))
 
 		c.AddControlFunction(cf.NewHostInitRouteOcpCF(ctx))
-		c.AddControlFunction(cf.NewImageOcpCF(ctx))
-		c.AddControlFunction(cf.NewInfinispanCF(ctx))
-		c.AddControlFunction(cf.NewIngressCF(ctx, loopServices))
 
+		c.AddControlFunction(cf.NewImageOcpCF(ctx))
+		c.AddControlFunction(cf.NewIngressCF(ctx, loopServices))
 		c.AddControlFunction(cf.NewLabelsOcpCF(ctx, loopServices))
 		c.AddControlFunction(cf.NewLogLevelCF(ctx))
 		c.AddControlFunction(cf.NewOperatorPodCF(ctx, loopServices))
-		c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, loopServices))
 
+		c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, loopServices))
 		c.AddControlFunction(cf.NewProfileCF(ctx))
 		c.AddControlFunction(cf.NewReplicasOcpCF(ctx))
 		c.AddControlFunction(cf.NewServiceCF(ctx, loopServices))
 		c.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))
 
-		c.AddControlFunction(cf.NewStreamsCF(ctx))
-		c.AddControlFunction(cf.NewStreamsSecurityScramOcpCF(ctx))
-		c.AddControlFunction(cf.NewStreamsSecurityTLSOcpCF(ctx))
+		c.AddControlFunction(kafkasql.NewKafkasqlCF(ctx))
+		c.AddControlFunction(kafkasql.NewKafkasqlSecurityScramOcpCF(ctx))
+		c.AddControlFunction(kafkasql.NewKafkasqlSecurityTLSOcpCF(ctx))
+
 		c.AddControlFunction(cf.NewSqlCF(ctx))
 		c.AddControlFunction(cf.NewTolerationOcpCF(ctx))
 		c.AddControlFunction(cf.NewUICF(ctx))
@@ -197,22 +198,21 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 		c.AddControlFunction(cf.NewHostInitCF(ctx))
 
 		c.AddControlFunction(cf.NewImageCF(ctx))
-		c.AddControlFunction(cf.NewInfinispanCF(ctx))
 		c.AddControlFunction(cf.NewIngressCF(ctx, loopServices))
-
 		c.AddControlFunction(cf.NewLabelsCF(ctx, loopServices))
 		c.AddControlFunction(cf.NewLogLevelCF(ctx))
 		c.AddControlFunction(cf.NewOperatorPodCF(ctx, loopServices))
+
 		c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, loopServices))
 		c.AddControlFunction(cf.NewProfileCF(ctx))
-
 		c.AddControlFunction(cf.NewReplicasCF(ctx))
 		c.AddControlFunction(cf.NewServiceCF(ctx, loopServices))
 		c.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))
-		c.AddControlFunction(cf.NewStreamsCF(ctx))
 
-		c.AddControlFunction(cf.NewStreamsSecurityScramCF(ctx))
-		c.AddControlFunction(cf.NewStreamsSecurityTLSCF(ctx))
+		c.AddControlFunction(kafkasql.NewKafkasqlCF(ctx))
+		c.AddControlFunction(kafkasql.NewKafkasqlSecurityScramCF(ctx))
+		c.AddControlFunction(kafkasql.NewKafkasqlSecurityTLSCF(ctx))
+
 		c.AddControlFunction(cf.NewSqlCF(ctx))
 		c.AddControlFunction(cf.NewTolerationCF(ctx))
 		c.AddControlFunction(cf.NewUICF(ctx))
