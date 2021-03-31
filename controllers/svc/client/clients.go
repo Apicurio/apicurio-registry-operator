@@ -22,6 +22,7 @@ import (
 const RecommendedConfigPathEnvVar = "KUBECONFIG"
 
 var isOpenshift *bool
+var isMonitoringInstalled *bool
 
 //var log = logf.Log.WithName("controller_apicurioregistry-Clients")
 
@@ -146,16 +147,25 @@ func IsOCP() (bool, error) {
 }
 
 func IsMonitoringInstalled() (bool, error) {
+	if isMonitoringInstalled == nil {
+		m, err := detectServiceMonitoring()
+		if err != nil {
+			return m, err
+		}
+		isMonitoringInstalled = &m
+	}
+	return *isMonitoringInstalled, nil
+}
+
+func detectServiceMonitoring() (bool, error) {
 	config, err := inClusterConfig()
 	if err != nil {
 		return false, err
 	}
-
 	client, err := discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
 		return false, err
 	}
-
 	_, err = client.ServerResourcesForGroupVersion("monitoring.coreos.com/v1")
 
 	if err != nil && api_errors.IsNotFound(err) {
@@ -163,7 +173,34 @@ func IsMonitoringInstalled() (bool, error) {
 	} else if err != nil {
 		return false, err
 	}
-	return true, nil
+
+	serviceMonitorRegistered, err := resourceExists(client, "monitoring.coreos.com/v1", "ServiceMonitor")
+
+	if err != nil && api_errors.IsNotFound(err) {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	return serviceMonitorRegistered, nil
+}
+
+// From k8sutil
+func resourceExists(dc discovery.DiscoveryInterface, apiGroupVersion, kind string) (bool, error) {
+
+	_, apiLists, err := dc.ServerGroupsAndResources()
+	if err != nil {
+		return false, err
+	}
+	for _, apiList := range apiLists {
+		if apiList.GroupVersion == apiGroupVersion {
+			for _, r := range apiList.APIResources {
+				if r.Kind == kind {
+					return true, nil
+				}
+			}
+		}
+	}
+	return false, nil
 }
 
 func detectOpenshift() (bool, error) {
