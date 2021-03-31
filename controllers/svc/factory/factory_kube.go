@@ -8,7 +8,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	networking "k8s.io/api/networking/v1beta1"
 	policy "k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -170,7 +170,7 @@ func (this *KubeFactory) CreateService() *core.Service {
 	return service
 }
 
-func (this *KubeFactory) CreateIngress(serviceName string) *v1beta1.Ingress {
+func (this *KubeFactory) CreateIngress(serviceName string) *networking.Ingress {
 	if serviceName == "" {
 		panic("Required argument.")
 	}
@@ -180,18 +180,18 @@ func (this *KubeFactory) CreateIngress(serviceName string) *v1beta1.Ingress {
 		"nginx.ingress.kubernetes.io/rewrite-target":     "/",
 		"nginx.ingress.kubernetes.io/ssl-redirect":       "false",
 	}
-	res := &v1beta1.Ingress{
+	res := &networking.Ingress{
 		ObjectMeta: metaData,
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
+		Spec: networking.IngressSpec{
+			Rules: []networking.IngressRule{
 				{
 					Host: "",
-					IngressRuleValue: v1beta1.IngressRuleValue{
-						HTTP: &v1beta1.HTTPIngressRuleValue{
-							Paths: []v1beta1.HTTPIngressPath{
+					IngressRuleValue: networking.IngressRuleValue{
+						HTTP: &networking.HTTPIngressRuleValue{
+							Paths: []networking.HTTPIngressPath{
 								{
 									Path: "/",
-									Backend: v1beta1.IngressBackend{
+									Backend: networking.IngressBackend{
 										ServiceName: serviceName,
 										ServicePort: intstr.FromInt(8080),
 									},
