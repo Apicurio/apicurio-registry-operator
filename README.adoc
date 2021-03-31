@@ -22,13 +22,13 @@ This will build the operator image from scratch, push it into your registry, and
 Run `make` without any parameters to get a help message.
 
 1. To create a new Apicurio Registry deployment, the fastest way is to use in-memory persistence option and one of the example CRs:
-`$ cat config/examples/resources/registry_v2_apicurioregistry.yaml | kubectl -n system apply -f -`
+`$ cat config/examples/resources/registry_v1_apicurioregistry.yaml | kubectl -n system apply -f -`
 
 1. Verify that your Apicurio Registry deployment is healthy (for Minikube):
 `$ kubectl -n system get ingress`
 `$ curl -H "Host: example-apicurioregistry.system" http://$(minikube ip)/health`
 
-1. Run `$ cat config/examples/resources/registry_v2_apicurioregistry.yaml | kubectl -n system delete -f -; make undeploy`
+1. Run `$ cat config/examples/resources/registry_v1_apicurioregistry.yaml | kubectl -n system delete -f -; make undeploy`
 to remove the operator from your cluster.
 
 NOTE: The in-memory deployment is not suitable for production.

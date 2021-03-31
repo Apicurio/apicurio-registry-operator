@@ -35,7 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	registryv2 "github.com/Apicurio/apicurio-registry-operator/api/v2"
+	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers"
 	ocp_apps "github.com/openshift/api/apps/v1"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -49,7 +49,7 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(registryv2.AddToScheme(scheme))
+	utilruntime.Must(ar.AddToScheme(scheme))
 	utilruntime.Must(ocp_apps.AddToScheme(scheme))
 	utilruntime.Must(monitoring.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme

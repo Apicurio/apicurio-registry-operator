@@ -1,4 +1,4 @@
-apiVersion: registry.apicur.io/v2
+apiVersion: registry.apicur.io/v1
 kind: ApicurioRegistry
 metadata:
   name: example-apicurioregistry
