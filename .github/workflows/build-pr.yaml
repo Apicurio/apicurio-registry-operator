@@ -18,7 +18,7 @@ jobs:
 
       - name: Build
         id: build
-        run: make build
+        run: make build bundle-build
   test:
     name: Test PR build
     runs-on: ubuntu-latest
