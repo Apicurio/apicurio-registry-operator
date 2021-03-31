@@ -15,7 +15,8 @@ help:
 
 ### Config
 
-OPERATOR_VERSION ?= 1.0.0-dev
+OPERATOR_VERSION=$(shell sed -n 's/^.*Version.*=.*"\(.*\)".*$$/\1/p' ./version/version.go)
+DASH_VERSION=$(shell echo "$(OPERATOR_VERSION)" | sed -n 's/^[0-9\.]*-\([^-+]*\).*$$/-\1/p')
 
 OPERAND_VERSION ?= 2.0.0-SNAPSHOT
 
@@ -35,12 +36,14 @@ endif
 
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
-OPERATOR_IMAGE_REPOSITORY ?= "quay.io/apicurio"
-OPERATOR_IMAGE_NAME ?= "$(OPERATOR_IMAGE_REPOSITORY)/apicurio-registry-operator"
-OPERATOR_IMAGE ?= "$(OPERATOR_IMAGE_NAME):$(OPERATOR_VERSION)"
+IMAGE_REGISTRY ?= quay.io
+IMAGE_REGISTRY_ORG ?= apicurio
+OPERATOR_IMAGE_REPOSITORY ?= $(IMAGE_REGISTRY)/$(IMAGE_REGISTRY_ORG)
+OPERATOR_IMAGE_NAME ?= $(OPERATOR_IMAGE_REPOSITORY)/apicurio-registry-operator
+OPERATOR_IMAGE ?= $(OPERATOR_IMAGE_NAME):$(OPERATOR_VERSION)
 
-BUNDLE_IMAGE_NAME ?= "$(OPERATOR_IMAGE_NAME)-bundle"
-BUNDLE_IMAGE ?= "$(BUNDLE_IMAGE_NAME):$(OPERATOR_VERSION)"
+BUNDLE_IMAGE_NAME ?= $(OPERATOR_IMAGE_NAME)-bundle
+BUNDLE_IMAGE ?= $(BUNDLE_IMAGE_NAME):$(OPERATOR_VERSION)
 
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
@@ -146,13 +149,12 @@ generate: controller-gen ## ??? Generate code
 docker-build: test ## Build operator docker image
 	docker build -t ${OPERATOR_IMAGE} .
 
-
 docker-push: ## Push operator docker image
+ifeq ($(LATEST),true)
+	docker tag $(OPERATOR_IMAGE) $(OPERATOR_IMAGE_NAME):latest$(DASH_VERSION)
+	docker push $(OPERATOR_IMAGE_NAME):latest$(DASH_VERSION)
+endif
 	docker push ${OPERATOR_IMAGE}
-
-
-
-
 
 .PHONY: bundle
 bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
@@ -161,11 +163,17 @@ bundle: manifests kustomize ## Generate bundle manifests and metadata, then vali
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(OPERATOR_VERSION) $(BUNDLE_METADATA_OPTS)
 	$(OPERATOR_SDK) bundle validate ./bundle
 
-
 .PHONY: bundle-build
-bundle-build: ## Build the bundle image
+bundle-build: bundle ## Build the bundle image
 	docker build -f bundle.Dockerfile -t $(BUNDLE_IMAGE) .
 
+.PHONY: bundle-push
+bundle-push: ## Build the bundle image
+ifeq ($(LATEST),true)
+	docker tag $(BUNDLE_IMAGE) $(BUNDLE_IMAGE_NAME):latest$(DASH_VERSION)
+	docker push $(BUNDLE_IMAGE_NAME):latest$(DASH_VERSION)
+endif
+	docker push $(BUNDLE_IMAGE)
 
 # Options for "packagemanifests".
 
@@ -197,4 +205,5 @@ packagemanifests: kustomize manifests ## Generate package manifests.
 .PHONY: dist
 dist: kustomize
 	mkdir -p dist
+	cd config/manager && $(KUSTOMIZE) edit set image REGISTRY_OPERATOR_IMAGE=$(OPERATOR_IMAGE)
 	$(KUSTOMIZE) build config/default/ > ./dist/default-install.yaml
