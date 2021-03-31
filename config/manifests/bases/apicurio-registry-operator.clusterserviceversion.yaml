@@ -26,7 +26,7 @@ spec:
         path: image.name
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
-      version: v2
+      version: v1
   description: |
     ## Apicurio Registry
 
