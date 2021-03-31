@@ -25,11 +25,11 @@ jobs:
 
       - name: Build
         id: build
-        run: ./build.sh build -r "${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}"
+        run: make build bundle-build
 
       - name: Publish
         id: publish
-        run: ./build.sh push -r "${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}" --latest
+        run: LATEST=true make docker-push bundle-push
 
       - name: Test
         id: test

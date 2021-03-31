@@ -3,11 +3,19 @@ layout: go.kubebuilder.io/v3
 projectName: apicurio-registry-operator
 repo: github.com/Apicurio/apicurio-registry-operator
 resources:
-- crdVersion: v1
+- api:
+    crdVersion: v1
+    # TODO(user): Uncomment the below line if this resource's CRD is namespace scoped, else delete it.
+    # namespaced: true
+  # TODO(user): Uncomment the below line if this resource implements a controller, else delete it.
+  # controller: true
+  domain: apicur.io
   group: registry
   kind: ApicurioRegistry
+  # TODO(user): Update the package path for your API if the below value is incorrect.
+  path: github.com/Apicurio/apicurio-registry-operator/api/v2
   version: v2
-version: 3-alpha
+version: "3"
 plugins:
   manifests.sdk.operatorframework.io/v2: {}
 # scorecard.sdk.operatorframework.io/v2: {}
