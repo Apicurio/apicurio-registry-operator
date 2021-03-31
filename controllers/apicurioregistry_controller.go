@@ -2,6 +2,7 @@ package controllers
 
 import (
 	ctx "context"
+
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
 	"github.com/go-logr/logr"
 	ocp_apps "github.com/openshift/api/apps/v1"
@@ -156,66 +157,51 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 	isOCP, _ := client.IsOCP()
 	if isOCP {
 		this.log.Info("This operator is running on OpenShift")
-
-		// Keep alphabetical!
-		c.AddControlFunction(cf.NewAffinityOcpCF(ctx))
-		c.AddControlFunction(cf.NewDeploymentOcpCF(ctx, loopServices))
-		c.AddControlFunction(cf.NewEnvOcpCF(ctx))
-		c.AddControlFunction(cf.NewHostCF(ctx))
-		c.AddControlFunction(cf.NewHostInitCF(ctx))
-
-		c.AddControlFunction(cf.NewHostInitRouteOcpCF(ctx))
-
-		c.AddControlFunction(cf.NewImageOcpCF(ctx))
-		c.AddControlFunction(cf.NewIngressCF(ctx, loopServices))
-		c.AddControlFunction(cf.NewLabelsOcpCF(ctx, loopServices))
-		c.AddControlFunction(cf.NewLogLevelCF(ctx))
-		c.AddControlFunction(cf.NewOperatorPodCF(ctx, loopServices))
-
-		c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, loopServices))
-		c.AddControlFunction(cf.NewProfileCF(ctx))
-		c.AddControlFunction(cf.NewReplicasOcpCF(ctx))
-		c.AddControlFunction(cf.NewServiceCF(ctx, loopServices))
-		c.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))
-
-		c.AddControlFunction(kafkasql.NewKafkasqlCF(ctx))
-		c.AddControlFunction(kafkasql.NewKafkasqlSecurityScramOcpCF(ctx))
-		c.AddControlFunction(kafkasql.NewKafkasqlSecurityTLSOcpCF(ctx))
-
-		c.AddControlFunction(cf.NewSqlCF(ctx))
-		c.AddControlFunction(cf.NewTolerationOcpCF(ctx))
-		c.AddControlFunction(cf.NewUICF(ctx))
-
 	} else {
 		this.log.Info("This operator is running on Kubernetes")
-
-		// Keep alphabetical!
-		c.AddControlFunction(cf.NewAffinityCF(ctx))
-		c.AddControlFunction(cf.NewDeploymentCF(ctx, loopServices))
-		c.AddControlFunction(cf.NewEnvCF(ctx))
-		c.AddControlFunction(cf.NewHostCF(ctx))
-		c.AddControlFunction(cf.NewHostInitCF(ctx))
-
-		c.AddControlFunction(cf.NewImageCF(ctx))
-		c.AddControlFunction(cf.NewIngressCF(ctx, loopServices))
-		c.AddControlFunction(cf.NewLabelsCF(ctx, loopServices))
-		c.AddControlFunction(cf.NewLogLevelCF(ctx))
-		c.AddControlFunction(cf.NewOperatorPodCF(ctx, loopServices))
-
-		c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, loopServices))
-		c.AddControlFunction(cf.NewProfileCF(ctx))
-		c.AddControlFunction(cf.NewReplicasCF(ctx))
-		c.AddControlFunction(cf.NewServiceCF(ctx, loopServices))
-		c.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))
-
-		c.AddControlFunction(kafkasql.NewKafkasqlCF(ctx))
-		c.AddControlFunction(kafkasql.NewKafkasqlSecurityScramCF(ctx))
-		c.AddControlFunction(kafkasql.NewKafkasqlSecurityTLSCF(ctx))
-
-		c.AddControlFunction(cf.NewSqlCF(ctx))
-		c.AddControlFunction(cf.NewTolerationCF(ctx))
-		c.AddControlFunction(cf.NewUICF(ctx))
 	}
+
+	//functions ordered so execution is optimized
+
+	//host init, executed only once
+	c.AddControlFunction(cf.NewHostInitCF(ctx))
+
+	//deployment
+	c.AddControlFunction(cf.NewDeploymentCF(ctx, loopServices))
+
+	//dependents of deployment
+	c.AddControlFunction(cf.NewAffinityCF(ctx))
+	c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, loopServices))
+	c.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))
+	c.AddControlFunction(cf.NewTolerationCF(ctx))
+	//deployment modifiers
+	c.AddControlFunction(cf.NewImageCF(ctx))
+	c.AddControlFunction(cf.NewReplicasCF(ctx))
+	//deployment env vars modifiers
+	c.AddControlFunction(cf.NewSqlCF(ctx))
+	c.AddControlFunction(kafkasql.NewKafkasqlCF(ctx))
+	c.AddControlFunction(kafkasql.NewKafkasqlSecurityScramCF(ctx))
+	c.AddControlFunction(kafkasql.NewKafkasqlSecurityTLSCF(ctx))
+	c.AddControlFunction(cf.NewLogLevelCF(ctx))
+	c.AddControlFunction(cf.NewProfileCF(ctx))
+	c.AddControlFunction(cf.NewUICF(ctx))
+	//env vars applier
+	c.AddControlFunction(cf.NewEnvCF(ctx))
+
+	//service
+	c.AddControlFunction(cf.NewServiceCF(ctx, loopServices))
+
+	//ingress (depends on service)
+	c.AddControlFunction(cf.NewIngressCF(ctx, loopServices))
+
+	//dependents of ingress
+	if isOCP {
+		c.AddControlFunction(cf.NewHostInitRouteOcpCF(ctx))
+	}
+	c.AddControlFunction(cf.NewHostCF(ctx))
+
+	//dependent on everything :)
+	c.AddControlFunction(cf.NewLabelsCF(ctx, loopServices))
 
 	return c
 }
