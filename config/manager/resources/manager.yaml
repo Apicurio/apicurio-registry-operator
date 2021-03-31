@@ -15,8 +15,6 @@ spec:
         name: apicurio-registry-operator
     spec:
       serviceAccountName: apicurio-registry-operator
-      securityContext:
-        runAsUser: 65532
       containers:
         - command:
             - /manager
@@ -48,8 +46,6 @@ spec:
                   fieldPath: metadata.namespace
             - name: OPERATOR_NAME
               value: apicurio-registry-operator
-          securityContext:
-            allowPrivilegeEscalation: false
           #          livenessProbe:
           #            httpGet:
           #              path: /healthz
@@ -65,8 +61,8 @@ spec:
           resources:
             limits:
               cpu: 100m
-              memory: 30Mi
+              memory: 100Mi
             requests:
               cpu: 100m
-              memory: 20Mi
+              memory: 50Mi
       terminationGracePeriodSeconds: 10

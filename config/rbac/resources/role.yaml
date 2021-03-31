@@ -52,7 +52,7 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-  - networking
+  - networking.k8s.io
   resources:
   - ingresses
   verbs:
