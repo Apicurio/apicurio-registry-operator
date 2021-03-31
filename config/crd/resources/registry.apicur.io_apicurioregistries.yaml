@@ -16,7 +16,7 @@ spec:
     singular: apicurioregistry
   scope: Namespaced
   versions:
-  - name: v2
+  - name: v1
     schema:
       openAPIV3Schema:
         description: ApicurioRegistry represents an Apicurio Registry instance

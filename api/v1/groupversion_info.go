@@ -17,7 +17,7 @@ limitations under the License.
 // Package v2 contains API Schema definitions for the registry v2 API group
 // +kubebuilder:object:generate=true
 // +groupName=registry.apicur.io
-package v2
+package v1
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"

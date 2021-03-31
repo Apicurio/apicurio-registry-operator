@@ -7,7 +7,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 
-	ar "github.com/Apicurio/apicurio-registry-operator/api/v2"
+	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	ocp_apps "github.com/openshift/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )

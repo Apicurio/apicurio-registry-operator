@@ -7,7 +7,7 @@ import (
 	"os/user"
 	"path"
 
-	ar "github.com/Apicurio/apicurio-registry-operator/api/v2"
+	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"

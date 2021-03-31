@@ -2,7 +2,6 @@ package controllers
 
 import (
 	ctx "context"
-	registry "github.com/Apicurio/apicurio-registry-operator/api/v2"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
 	"github.com/go-logr/logr"
 	ocp_apps "github.com/openshift/api/apps/v1"
@@ -16,7 +15,7 @@ import (
 	networking "k8s.io/api/networking/v1"
 	policy "k8s.io/api/policy/v1beta1"
 
-	ar "github.com/Apicurio/apicurio-registry-operator/api/v2"
+	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/cf"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/cf/kafkasql"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
@@ -228,7 +227,7 @@ func (this *ApicurioRegistryReconciler) setupWithManager(mgr ctrl.Manager) error
 	builder := ctrl.NewControllerManagedBy(mgr).
 		Named("ApicurioRegistry-controller")
 
-	builder.For(&registry.ApicurioRegistry{}).WithEventFilter(predicate.Funcs{
+	builder.For(&ar.ApicurioRegistry{}).WithEventFilter(predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			// Ignore updates to the ApicurioRegistry status in which case metadata.Generation does not change
 			return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
