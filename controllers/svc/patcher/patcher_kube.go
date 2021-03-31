@@ -12,7 +12,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	policy "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"

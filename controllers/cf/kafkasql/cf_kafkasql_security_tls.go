@@ -28,7 +28,6 @@ const ENV_REGISTRY_KAFKA_COMMON_SSL_TRUSTSTORE_PASSWORD = "REGISTRY_KAFKA_COMMON
 
 // =====
 
-
 // =====
 
 const KEYSTORE_SECRET_VOLUME_NAME = "registry-kafkasql-tls-keystore"

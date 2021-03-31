@@ -8,7 +8,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	ocp_apps "github.com/openshift/api/apps/v1"
 	core "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	policy "k8s.io/api/policy/v1beta1"
 )
 
