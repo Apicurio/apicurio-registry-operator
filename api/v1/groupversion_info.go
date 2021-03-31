@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package v2 contains API Schema definitions for the registry v2 API group
+// Package v1 contains API Schema definitions for the registry v1 API group
 // +kubebuilder:object:generate=true
 // +groupName=registry.apicur.io
 package v1
