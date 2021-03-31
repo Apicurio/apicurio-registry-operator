@@ -6,7 +6,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 )
 
 var _ loop.ControlFunction = &HostCF{}
@@ -109,7 +109,7 @@ func (this *HostCF) Cleanup() bool {
 func readHost(serviceName string, ingress *networking.Ingress) string {
 	for _, rule := range ingress.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
-			if path.Backend.ServiceName == serviceName {
+			if path.Backend.Service.Name == serviceName {
 				return rule.Host
 			}
 		}
@@ -120,7 +120,7 @@ func readHost(serviceName string, ingress *networking.Ingress) string {
 func writeHost(serviceName string, ingress *networking.Ingress, host string) {
 	for i, rule := range ingress.Spec.Rules {
 		for _, path := range rule.HTTP.Paths {
-			if path.Backend.ServiceName == serviceName {
+			if path.Backend.Service.Name == serviceName {
 				ingress.Spec.Rules[i] = networking.IngressRule{
 					Host:             host,
 					IngressRuleValue: rule.IngressRuleValue,

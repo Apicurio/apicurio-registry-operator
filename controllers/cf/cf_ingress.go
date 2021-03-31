@@ -10,7 +10,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

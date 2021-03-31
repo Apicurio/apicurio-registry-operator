@@ -20,7 +20,6 @@ const ENV_REGISTRY_KAFKASQL_SCRAM_PASSWORD = "REGISTRY_KAFKASQL_SCRAM_PASSWORD"
 const ENV_REGISTRY_KAFKA_COMMON_SASL_MECHANISM = "REGISTRY_KAFKA_COMMON_SASL_MECHANISM"
 const ENV_REGISTRY_KAFKA_COMMON_SASL_JAAS_CONFIG = "REGISTRY_KAFKA_COMMON_SASL_JAAS_CONFIG"
 
-
 const SCRAM_TRUSTSTORE_SECRET_VOLUME_NAME = "registry-kafkasql-scram-truststore"
 
 type KafkasqlSecurityScramCF struct {
@@ -118,7 +117,6 @@ func (this *KafkasqlSecurityScramCF) Sense() {
 		this.scramUser != "" &&
 		this.scramPasswordSecretName != ""
 
-
 	this.foundScramMechanism = mech
 	// We won't actively delete old env values if not used
 }
@@ -183,7 +181,6 @@ func (this *KafkasqlSecurityScramCF) AddEnv(truststoreSecretName string, trustst
 			},
 		},
 	}))
-
 
 }
 

@@ -13,7 +13,7 @@ import (
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1beta1"
+	networking "k8s.io/api/networking/v1"
 	policy "k8s.io/api/policy/v1beta1"
 
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v2"
