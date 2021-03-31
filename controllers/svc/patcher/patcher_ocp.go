@@ -24,43 +24,6 @@ func NewOCPPatcher(ctx *context.LoopContext, clients *client.Clients) *OCPPatche
 	}
 }
 
-// ===
-
-func (this *OCPPatcher) reloadDeployment() {
-	if entry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_DEPLOYMENT_OCP); exists {
-		r, e := this.clients.OCP().
-			GetDeployment(this.ctx.GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
-		if e != nil {
-			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
-			this.ctx.GetResourceCache().Remove(resources.RC_KEY_DEPLOYMENT_OCP)
-			this.ctx.SetRequeue()
-		} else {
-			this.ctx.GetResourceCache().Set(resources.RC_KEY_DEPLOYMENT_OCP, resources.NewResourceCacheEntry(common.Name(r.Name), r))
-		}
-	}
-}
-
-func (this *OCPPatcher) patchDeployment() {
-	patchGeneric(
-		this.ctx,
-		resources.RC_KEY_DEPLOYMENT_OCP,
-		func(value interface{}) string {
-			return value.(*ocp_apps.DeploymentConfig).String()
-		},
-		&ocp_apps.DeploymentConfig{},
-		"ocp_apps.DeploymentConfig",
-		func(namespace common.Namespace, value interface{}) (interface{}, error) {
-			return this.clients.OCP().CreateDeployment(namespace, value.(*ocp_apps.DeploymentConfig))
-		},
-		func(namespace common.Namespace, name common.Name, data []byte) (interface{}, error) {
-			return this.clients.OCP().PatchDeployment(namespace, name, data)
-		},
-		func(value interface{}) common.Name {
-			return common.Name(value.(*ocp_apps.DeploymentConfig).GetName())
-		},
-	)
-}
-
 // =====
 
 func (this *OCPPatcher) reloadRoute() {
@@ -97,10 +60,9 @@ func (this *OCPPatcher) reloadRoute() {
 // =====
 
 func (this *OCPPatcher) Reload() {
-	this.reloadDeployment()
 	this.reloadRoute()
 }
 
 func (this *OCPPatcher) Execute() {
-	this.patchDeployment()
+	//empty
 }

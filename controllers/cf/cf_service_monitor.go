@@ -50,7 +50,7 @@ func (this *ServiceMonitorCF) Sense() {
 
 	// Observation #1
 	// Is ServiceMonitor registered?
-	isServiceMonitorRegistered, err := monitoringClient.IsServiceMonitorRegistered()
+	isServiceMonitorRegistered, err := client.IsMonitoringInstalled()
 	if err != nil {
 		this.ctx.GetLog().Error(err, "Could not check ServiceMonitor is registered")
 		return
@@ -108,7 +108,7 @@ func (this *ServiceMonitorCF) Respond() {
 func (this *ServiceMonitorCF) Cleanup() bool {
 	// SM should not have any deletion dependencies
 	monitoringClient := this.svcClients.Monitoring()
-	if isServiceMonitorRegistered, _ := monitoringClient.IsServiceMonitorRegistered(); isServiceMonitorRegistered {
+	if isServiceMonitorRegistered, _ := client.IsMonitoringInstalled(); isServiceMonitorRegistered {
 		namespace := this.ctx.GetAppNamespace()
 		name := this.ctx.GetAppName()
 		if serviceMonitor, err := monitoringClient.GetServiceMonitor(namespace, name); err == nil {
