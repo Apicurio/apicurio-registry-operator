@@ -12,14 +12,12 @@ type LoopServices struct {
 	patchers *patcher.Patchers
 
 	kubeFactory       *factory.KubeFactory
-	ocpFactory        *factory.OCPFactory
 	monitoringFactory *factory.MonitoringFactory
 }
 
 func NewLoopServices(ctx *context.LoopContext) *LoopServices {
 
 	factoryKube := factory.NewKubeFactory(ctx)
-	factoryOcp := factory.NewOCPFactory(ctx, factoryKube)
 	factoryMonitoring := factory.NewMonitoringFactory(ctx, factoryKube)
 
 	clients := client.NewClients(ctx)
@@ -31,7 +29,6 @@ func NewLoopServices(ctx *context.LoopContext) *LoopServices {
 		patchers: patchers,
 
 		kubeFactory:       factoryKube,
-		ocpFactory:        factoryOcp,
 		monitoringFactory: factoryMonitoring,
 	}
 }
@@ -54,10 +51,6 @@ func (svcs *LoopServices) GetPatchers() *patcher.Patchers {
 
 func (svcs *LoopServices) GetKubeFactory() *factory.KubeFactory {
 	return svcs.kubeFactory
-}
-
-func (svcs *LoopServices) GetOCPFactory() *factory.OCPFactory {
-	return svcs.ocpFactory
 }
 
 func (svcs *LoopServices) GetMonitoringFactory() *factory.MonitoringFactory {

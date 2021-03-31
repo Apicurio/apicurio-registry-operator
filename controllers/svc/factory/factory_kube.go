@@ -66,9 +66,9 @@ func (this *KubeFactory) GetSelectorLabels() map[string]string {
 
 func (this *KubeFactory) createObjectMeta(typeTag string) meta.ObjectMeta {
 	return meta.ObjectMeta{
-		GenerateName: this.ctx.GetAppName().Str() + "-" + typeTag + "-",
-		Namespace:    this.ctx.GetAppNamespace().Str(),
-		Labels:       this.GetLabels(),
+		Name:      this.ctx.GetAppName().Str() + "-" + typeTag,
+		Namespace: this.ctx.GetAppNamespace().Str(),
+		Labels:    this.GetLabels(),
 	}
 }
 
