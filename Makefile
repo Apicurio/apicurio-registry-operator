@@ -94,8 +94,9 @@ build: manager docker-build ## Build the Apicurio Registry Operator image from s
 
 build-push: build docker-push ## Build the Apicurio Registry Operator image from scratch and push it
 
-build-reload: undeploy build-push deploy ## Undeploy, Rebuild, Push and Redeploy the Apicurio Registry Operator
+build-redeploy: undeploy build-push deploy ## Undeploy, Rebuild, Push and Redeploy the Apicurio Registry Operator
 
+redeploy: undeploy build-push deploy ## Undeploy and Redeploy the Apicurio Registry Operator
 
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 test: generate fmt vet manifests ## Run tests

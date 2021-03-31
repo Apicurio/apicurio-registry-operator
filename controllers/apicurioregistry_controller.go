@@ -67,7 +67,7 @@ func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog logr.Logger) (*A
 // +kubebuilder:rbac:groups=apps.openshift.io,resources=deploymentconfigs,verbs=*
 
 // Common
-// +kubebuilder:rbac:groups=networking,resources=ingresses,verbs=*
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=*
 // +kubebuilder:rbac:groups=policy,resources=poddisruptionbudgets,verbs=*
 // +kubebuilder:rbac:groups=apps,resources=deployments;daemonsets;replicasets;statefulsets,verbs=*
 // +kubebuilder:rbac:groups=core,resources=pods;services;endpoints;persistentvolumeclaims;configmaps;secrets;services/finalizers,verbs=*

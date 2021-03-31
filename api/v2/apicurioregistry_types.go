@@ -36,7 +36,7 @@ type ApicurioRegistrySpec struct {
 //}
 
 type ApicurioRegistrySpecConfiguration struct {
-	// +kubebuilder:validation:Enum=mem;sql;kafkasql;
+	// + kubebuilder:validation:Enum=mem;sql;kafkasql; TODO Remove enum so adding persistence options does not break compatibility?
 	Persistence string                                    `json:"persistence,omitempty"`
 	Sql         ApicurioRegistrySpecConfigurationSql      `json:"sql,omitempty"`
 	Kafkasql    ApicurioRegistrySpecConfigurationKafkasql `json:"kafkasql,omitempty"`
