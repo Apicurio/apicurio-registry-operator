@@ -107,7 +107,6 @@ func (this *KafkasqlSecurityScramOcpCF) Sense() {
 		this.scramUser != "" &&
 		this.scramPasswordSecretName != ""
 
-
 	this.foundScramMechanism = mech
 	// We won't actively delete old env values if not used
 }
@@ -172,7 +171,6 @@ func (this *KafkasqlSecurityScramOcpCF) AddEnv(truststoreSecretName string, trus
 			},
 		},
 	}))
-
 
 }
 
