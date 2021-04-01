@@ -1,6 +1,6 @@
 module github.com/Apicurio/apicurio-registry-operator
 
-go 1.15
+go 1.14
 
 require (
 	github.com/go-logr/logr v0.3.0
