@@ -12,7 +12,7 @@ BUNDLE_URL=${PWD}/dist/default-install.yaml
 
 make dist
 
-git clone -b update-operator-v2 https://github.com/Apicurio/apicurio-registry-k8s-tests-e2e.git
+git clone https://github.com/Apicurio/apicurio-registry-k8s-tests-e2e.git
 
 pushd apicurio-registry-k8s-tests-e2e
 
