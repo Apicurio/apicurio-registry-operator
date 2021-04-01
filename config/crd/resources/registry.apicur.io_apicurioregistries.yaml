@@ -708,6 +708,19 @@ spec:
                     type: object
                   host:
                     type: string
+                  resources:
+                    requests:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                      type: object
+                    limits:
+                      cpu:
+                        type: string
+                      memory:
+                        type: string
+                    type: object
                   replicas:
                     format: int32
                     type: integer
@@ -749,6 +762,28 @@ spec:
                             to. If the operator is Exists, the value should be empty,
                             otherwise just a regular string.
                           type: string
+                      type: object
+                    type: array
+                  volumes:
+                    items:
+                      volumeMount:
+                        name:
+                          type: string
+                        readOnly:
+                          type: boolean
+                        mountPath:
+                          type: string
+                        subPath:
+                          type: string
+                        mountPropagation:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                        subPathExpr:
+                          type: string
+                        type: object
+                      volumeSource:
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
                       type: object
                     type: array
                 type: object

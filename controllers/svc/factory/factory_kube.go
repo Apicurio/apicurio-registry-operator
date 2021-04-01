@@ -115,18 +115,18 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 			Limits[core.ResourceMemory] = resource.MustParse("1280Mi")
 		}
 
-		_, err = resource.ParseQuantity(spec.Spec.Deployment.Resources.Cpu.Requests)
+		_, err = resource.ParseQuantity(spec.Spec.Deployment.Resources.Cpu.Request)
 		if err == nil {
-			if spec.Spec.Deployment.Resources.Cpu.Requests != "0" {
-				Requests[core.ResourceCPU] = resource.MustParse(spec.Spec.Deployment.Resources.Cpu.Requests)
+			if spec.Spec.Deployment.Resources.Cpu.Request != "0" {
+				Requests[core.ResourceCPU] = resource.MustParse(spec.Spec.Deployment.Resources.Cpu.Request)
 			}
 		} else {
 			Requests[core.ResourceCPU] = resource.MustParse("500m")
 		}
-		_, err = resource.ParseQuantity(spec.Spec.Deployment.Resources.Memory.Requests)
+		_, err = resource.ParseQuantity(spec.Spec.Deployment.Resources.Memory.Request)
 		if err == nil {
-			if spec.Spec.Deployment.Resources.Memory.Requests != "0" {
-				Requests[core.ResourceMemory] = resource.MustParse(spec.Spec.Deployment.Resources.Memory.Requests)
+			if spec.Spec.Deployment.Resources.Memory.Request != "0" {
+				Requests[core.ResourceMemory] = resource.MustParse(spec.Spec.Deployment.Resources.Memory.Request)
 			}
 		} else {
 			Requests[core.ResourceMemory] = resource.MustParse("512Mi")

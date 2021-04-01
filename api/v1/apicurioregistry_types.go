@@ -81,16 +81,29 @@ type ApicurioRegistrySpecConfigurationUI struct {
 }
 
 type ApicurioRegistrySpecDeployment struct {
-	Replicas    int32               `json:"replicas,omitempty"`
-	Host        string              `json:"host,omitempty"`
-	Affinity    *corev1.Affinity    `json:"affinity,omitempty"`
-	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
+	Replicas    int32                                   `json:"replicas,omitempty"`
+	Host        string                                  `json:"host,omitempty"`
+	Affinity    *corev1.Affinity                        `json:"affinity,omitempty"`
+	Tolerations []corev1.Toleration                     `json:"tolerations,omitempty"`
+	Resources   ApicurioRegistrySpecDeploymentResources `json:"resources,omitempty"`
+	Volumes     []ApicurioRegistrySpecDeploymentVolumes `json:"volumes,omitempty"`
 }
 
-//type ApicurioRegistrySpecDeploymentResources struct {
-//	Cpu    ApicurioRegistrySpecDeploymentResourcesRequestsLimit `json:"cpu,omitempty"`
-//	Memory ApicurioRegistrySpecDeploymentResourcesRequestsLimit `json:"memory,omitempty"`
-//}
+type ApicurioRegistrySpecDeploymentVolumes struct {
+	corev1.VolumeMount  `json:"volumeMount"`
+	corev1.VolumeSource `json:"volumeSource"`
+}
+
+type ApicurioRegistrySpecDeploymentResources struct {
+	Cpu    ApicurioRegistrySpecDeploymentResourcesRequestsLimits `json:"cpu,omitempty"`
+	Memory ApicurioRegistrySpecDeploymentResourcesRequestsLimits `json:"memory,omitempty"`
+}
+
+type ApicurioRegistrySpecDeploymentResourcesRequestsLimits struct {
+	Request string `json:"requests,omitempty"`
+	Limit   string `json:"limits,omitempty"`
+}
+
 //
 //type ApicurioRegistrySpecDeploymentResourcesRequestsLimit struct {
 //	Requests string `json:"requests,omitempty"`
