@@ -16,7 +16,6 @@ type LoopServices struct {
 }
 
 func NewLoopServices(ctx *context.LoopContext) *LoopServices {
-
 	factoryKube := factory.NewKubeFactory(ctx)
 	factoryMonitoring := factory.NewMonitoringFactory(ctx, factoryKube)
 
