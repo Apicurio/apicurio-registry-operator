@@ -18,7 +18,7 @@ jobs:
 
       - name: Build
         id: build
-        run: ./build.sh build -r "${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}"
+        run: make build bundle-build
   test:
     name: Test PR build
     runs-on: ubuntu-latest
@@ -30,7 +30,7 @@ jobs:
 
       - name: Build
         id: build
-        run: ./build.sh build -r "${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}"
+        run: make build bundle-build
 
       - name: Test
         id: test

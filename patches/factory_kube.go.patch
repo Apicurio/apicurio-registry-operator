@@ -1,0 +1,20 @@
+diff --git a/pkg/controller/apicurioregistry/svc/factory/factory_kube.go b/pkg/controller/apicurioregistry/svc/factory/factory_kube.go
+index 32fc3af..93c1371 100644
+--- a/pkg/controller/apicurioregistry/svc/factory/factory_kube.go
++++ b/pkg/controller/apicurioregistry/svc/factory/factory_kube.go
+@@ -64,11 +64,11 @@ func (this *KubeFactory) GetSelectorLabels() map[string]string {
+ 	}
+ }
+ 
+-func (this *KubeFactory) createObjectMeta(typeTag string) meta.ObjectMeta {
++func (this *KubeFactory) createObjectMeta(_ string) meta.ObjectMeta {
+ 	return meta.ObjectMeta{
+-		GenerateName: this.ctx.GetAppName().Str() + "-" + typeTag + "-",
+-		Namespace:    this.ctx.GetAppNamespace().Str(),
+-		Labels:       this.GetLabels(),
++		Name:      this.ctx.GetAppName().Str(),
++		Namespace: this.ctx.GetAppNamespace().Str(),
++		Labels:    this.GetLabels(),
+ 	}
+ }
+ 

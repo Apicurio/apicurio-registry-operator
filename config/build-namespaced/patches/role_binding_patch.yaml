@@ -1,0 +1,8 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: apicurio-registry-operator-rolebinding
+subjects:
+- kind: ServiceAccount
+  name: apicurio-registry-operator
+  namespace: system

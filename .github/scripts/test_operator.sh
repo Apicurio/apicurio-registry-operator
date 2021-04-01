@@ -5,10 +5,12 @@ VERSION=$(sed -n 's/^.*Version.*=.*"\(.*\)".*$/\1/p' ./version/version.go)
 
 echo $VERSION
 
-OPERATOR_IMAGE="${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}/apicurio-registry-operator:$VERSION"
-OPERATOR_METADATA_IMAGE="${IMAGE_REGISTRY}/${IMAGE_REGISTRY_ORG}/apicurio-registry-operator-metadata:$VERSION"
+OPERATOR_IMAGE="quay.io/apicurio/apicurio-registry-operator:$VERSION"
+OPERATOR_METADATA_IMAGE="quay.io/apicurio/apicurio-registry-operator-bundle:$VERSION"
 
-BUNDLE_URL=${PWD}/docs/resources/install-dev.yaml
+BUNDLE_URL=${PWD}/dist/default-install.yaml
+
+make dist
 
 git clone https://github.com/Apicurio/apicurio-registry-k8s-tests-e2e.git
 

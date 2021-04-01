@@ -1,0 +1,5 @@
+resources:
+- resources/registry.apicur.io_apicurioregistries.yaml
+
+configurations:
+- kustomizeconfig.yaml

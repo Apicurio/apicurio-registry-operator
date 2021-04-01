@@ -5,16 +5,10 @@ echo "Set up golang"
 export GO111MODULE="on"
 
 echo "Install Operator SDK"
-export OPERATOR_SDK_VERSION="0.17.0"
-curl -fsSL "https://github.com/operator-framework/operator-sdk/releases/download/v$OPERATOR_SDK_VERSION/operator-sdk-v$OPERATOR_SDK_VERSION-x86_64-linux-gnu" > operator-sdk
+export OPERATOR_SDK_VERSION="1.4.2"
+curl -fsSL "https://github.com/operator-framework/operator-sdk/releases/download/v$OPERATOR_SDK_VERSION/operator-sdk_linux_amd64" > operator-sdk
 chmod +x operator-sdk
 sudo mv operator-sdk /usr/local/bin/operator-sdk
-
-echo "Install 'yq'"
-export YQ_VERSION="3.4.1"
-curl -fsSL "https://github.com/mikefarah/yq/releases/download/$YQ_VERSION/yq_linux_amd64" > yq
-chmod +x yq
-sudo mv yq /usr/local/bin/yq
 
 echo "Clean cache"
 sudo apt-get clean

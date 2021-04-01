@@ -1,0 +1,6 @@
+resources:
+  - resources/service_account.yaml
+  - resources/role.yaml
+  - resources/role_binding.yaml
+  - resources/leader_election_role.yaml
+  - resources/leader_election_role_binding.yaml

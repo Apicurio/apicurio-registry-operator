@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apicurio-registry-operator
+  labels:
+    name: apicurio-registry-operator
+spec:
+  selector:
+    matchLabels:
+      name: apicurio-registry-operator
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: apicurio-registry-operator
+    spec:
+      serviceAccountName: apicurio-registry-operator
+      containers:
+        - command:
+            - /manager
+          args:
+            - --leader-elect
+          name: apicurio-registry-operator
+          image: REGISTRY_OPERATOR_IMAGE
+          imagePullPolicy: Always
+          env:
+            - name: REGISTRY_VERSION
+              value: 2.0.x
+            - name: REGISTRY_IMAGE_MEM
+              value: "quay.io/apicurio/apicurio-registry-mem:latest-snapshot"
+            - name: REGISTRY_IMAGE_KAFKASQL
+              value: "quay.io/apicurio/apicurio-registry-kafkasql:latest-snapshot"
+            - name: REGISTRY_IMAGE_SQL
+              value: "quay.io/apicurio/apicurio-registry-sql:latest-snapshot"
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: OPERATOR_NAME
+              value: apicurio-registry-operator
+          #          livenessProbe:
+          #            httpGet:
+          #              path: /healthz
+          #              port: 8081
+          #            initialDelaySeconds: 15
+          #            periodSeconds: 20
+          #          readinessProbe:
+          #            httpGet:
+          #              path: /readyz
+          #              port: 8081
+          #            initialDelaySeconds: 5
+          #            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 100m
+              memory: 50Mi
+      terminationGracePeriodSeconds: 10

@@ -1,0 +1,3 @@
+resources:
+  - resources/registry_v1_apicurioregistry.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples
