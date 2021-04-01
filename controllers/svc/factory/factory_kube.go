@@ -180,6 +180,7 @@ func (this *KubeFactory) CreateIngress(serviceName string) *networking.Ingress {
 		"nginx.ingress.kubernetes.io/rewrite-target":     "/",
 		"nginx.ingress.kubernetes.io/ssl-redirect":       "false",
 	}
+	pathTypePrefix := networking.PathTypePrefix
 	res := &networking.Ingress{
 		ObjectMeta: metaData,
 		Spec: networking.IngressSpec{
@@ -190,12 +191,12 @@ func (this *KubeFactory) CreateIngress(serviceName string) *networking.Ingress {
 						HTTP: &networking.HTTPIngressRuleValue{
 							Paths: []networking.HTTPIngressPath{
 								{
-									Path: "/",
+									Path:     "/",
+									PathType: &pathTypePrefix,
 									Backend: networking.IngressBackend{
 										Service: &networking.IngressServiceBackend{
 											Name: serviceName,
 											Port: networking.ServiceBackendPort{
-												Name:   "http",
 												Number: 8080,
 											},
 										},
