@@ -1,124 +1,30 @@
 ---
-- - :license
-  - github.com/Masterminds/semver
-  - MIT License
-  - :who: 
-    :why: 
-    :versions: []
-    :when: 2020-06-18 13:12:57.593706837 Z
-- - :license
-  - github.com/go-logr/logr
-  - Apache License 2.0
-  - :who: 
-    :why: 
-    :versions: []
-    :when: 2020-06-18 13:14:32.092196373 Z
-- - :license
-  - github.com/openshift/api
-  - Apache License 2.0
-  - :who: 
-    :why: 
-    :versions: []
-    :when: 2020-06-18 13:16:24.779314513 Z
-- - :license
-  - github.com/openshift/api
-  - Apache License 2.0
-  - :who: 
-    :why: 
-    :versions: []
-    :when: 2020-06-18 13:43:14.388550793 Z
-- - :license
-  - golang.org/x/net
-  - BSD-3-Clause
-  - :who: 
-    :why: 
-    :versions: []
-    :when: 2020-06-18 13:46:23.487628610 Z
-- - :license
-  - github.com/google/gofuzz
-  - Apache-2.0
-  - :who: 
-    :why: 
-    :versions: []
-    :when: 2020-06-18 13:46:39.952493742 Z
-- - :license
-  - github.com/gogo/protobuf
-  - BSD-3-Clause
-  - :who: 
-    :why: 
-    :versions: []
-    :when: 2020-06-18 13:46:52.763328025 Z
-- - :license
-  - k8s.io/api
-  - Apache-2.0
-  - :who: 
-    :why: 
-    :versions: []
-    :when: 2020-06-18 13:48:25.572721307 Z
-- - :license
-  - k8s.io/apimachinery
-  - Apache-2.0
-  - :who: 
-    :why: 
-    :versions: []
-    :when: 2020-06-18 13:48:36.394603373 Z
-- - :license
-  - gopkg.in/inf.v0
-  - BSD-3-Clause
-  - :who: 
-    :why: 
-    :versions: []
-    :when: 2020-06-18 13:48:47.945283594 Z
-- - :license
-  - github.com/openshift/client-go
-  - Apache License 2.0
-  - :who: 
-    :why: 
-    :versions: []
-    :when: 2020-06-18 13:50:32.750817833 Z
-- - :license
-  - github.com/operator-framework/operator-sdk
-  - Apache License 2.0
-  - :who: 
-    :why: 
-    :versions: []
-    :when: 2020-06-18 13:52:00.214665789 Z
-- - :license
-  - github.com/spf13/pflag
-  - BSD-3-Clause
-  - :who: 
-    :why: 
-    :versions: []
-    :when: 2020-06-18 13:52:42.846528338 Z
-- - :license
-  - k8s.io/client-go
-  - Apache 2.0
-  - :who: 
-    :why: 
-    :versions: []
-    :when: 2020-06-18 13:54:43.329109246 Z
-- - :license
-  - sigs.k8s.io/controller-runtime
-  - Apache-2.0
-  - :who: 
-    :why: 
-    :versions: []
-    :when: 2020-06-18 13:56:15.624554066 Z
-- - :whitelist
-  - Apache 2.0
-  - :who: 
-    :why: 
-    :versions: []
-    :when: 2020-06-18 13:59:22.352856594 Z
-- - :whitelist
+- - :permit
   - MIT
-  - :who: 
-    :why: 
+  - :who:
+    :why:
     :versions: []
-    :when: 2020-06-18 13:59:41.386475169 Z
-- - :whitelist
+    :when: 2021-04-04 15:45:10.865654206 Z
+- - :permit
+  - Apache 2.0
+  - &1
+    :who:
+    :why:
+    :versions: []
+    :when: 2021-04-04 15:45:57.973966149 Z
+- - :permit
   - New BSD
-  - :who: 
-    :why: 
+  - *1
+- - :permit
+  - Simplified BSD
+  - *1
+- - :permit
+  - Mozilla Public License 2.0
+  - &2
+    :who:
+    :why:
     :versions: []
-    :when: 2020-06-18 13:59:48.739720890 Z
+    :when: 2021-04-04 15:47:04.654827683 Z
+- - :permit
+  - ISC
+  - *2
