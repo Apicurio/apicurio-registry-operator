@@ -25,18 +25,11 @@ import (
 
 // ApicurioRegistrySpec defines the desired state of ApicurioRegistry
 type ApicurioRegistrySpec struct {
-	//Image         ApicurioRegistrySpecImage         `json:"image,omitempty"`
 	Configuration ApicurioRegistrySpecConfiguration `json:"configuration,omitempty"`
 	Deployment    ApicurioRegistrySpecDeployment    `json:"deployment,omitempty"`
 }
 
-//type ApicurioRegistrySpecImage struct {
-//	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Test",xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
-//	Name string `json:"name,omitempty"`
-//}
-
 type ApicurioRegistrySpecConfiguration struct {
-	// + kubebuilder:validation:Enum=mem;sql;kafkasql; TODO Remove enum so adding persistence options does not break compatibility?
 	Persistence string                                    `json:"persistence,omitempty"`
 	Sql         ApicurioRegistrySpecConfigurationSql      `json:"sql,omitempty"`
 	Kafkasql    ApicurioRegistrySpecConfigurationKafkasql `json:"kafkasql,omitempty"`
@@ -86,16 +79,6 @@ type ApicurioRegistrySpecDeployment struct {
 	Affinity    *corev1.Affinity    `json:"affinity,omitempty"`
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 }
-
-//type ApicurioRegistrySpecDeploymentResources struct {
-//	Cpu    ApicurioRegistrySpecDeploymentResourcesRequestsLimit `json:"cpu,omitempty"`
-//	Memory ApicurioRegistrySpecDeploymentResourcesRequestsLimit `json:"memory,omitempty"`
-//}
-//
-//type ApicurioRegistrySpecDeploymentResourcesRequestsLimit struct {
-//	Requests string `json:"requests,omitempty"`
-//	Limit    string `json:"limit,omitempty"`
-//}
 
 // ### Status
 

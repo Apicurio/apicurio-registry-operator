@@ -37,7 +37,6 @@ spec:
             description: ApicurioRegistrySpec defines the desired state of ApicurioRegistry
             properties:
               configuration:
-                description: Image         ApicurioRegistrySpecImage         `json:"image,omitempty"`
                 properties:
                   kafkasql:
                     properties:
