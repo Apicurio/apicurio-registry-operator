@@ -132,10 +132,22 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 						},
 						TerminationMessagePath: "/dev/termination-log",
 						ImagePullPolicy:        core.PullAlways,
+						VolumeMounts: []core.VolumeMount{
+							core.VolumeMount{
+								Name:      "tmp",
+								MountPath: "/tmp",
+							},
+						},
 					}},
 					RestartPolicy:                 core.RestartPolicyAlways,
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					DNSPolicy:                     core.DNSClusterFirst,
+					Volumes: []core.Volume{
+						core.Volume{
+							Name:         "tmp",
+							VolumeSource: core.VolumeSource{EmptyDir: &core.EmptyDirVolumeSource{}},
+						},
+					},
 				},
 			},
 			Strategy: apps.DeploymentStrategy{
