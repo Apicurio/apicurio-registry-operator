@@ -97,6 +97,5 @@ spec:
   maturity: alpha
   provider:
     name: Apicurio
-  replaces: invalid
   selector: {}
   version: 0.0.0
