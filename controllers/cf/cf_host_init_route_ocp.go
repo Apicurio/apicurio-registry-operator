@@ -61,6 +61,7 @@ func (this *HostInitRouteOcpCF) Sense() {
 				this.existingRouterCanonicalHostname = v.RouterCanonicalHostname
 			}
 		}
+		this.ctx.SetRequeueDelaySec(5)
 	}
 }
 

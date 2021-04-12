@@ -40,7 +40,7 @@ func (this *KubePatcher) reloadApicurioRegistry() {
 	if e != nil {
 		this.ctx.GetLog().WithValues("name", this.ctx.GetAppName()).Error(e, "Resource not found. (May have been deleted).")
 		this.ctx.GetResourceCache().Remove(resources.RC_KEY_SPEC)
-		this.ctx.SetRequeue()
+		this.ctx.SetRequeueNow()
 	} else {
 		this.ctx.GetResourceCache().Set(resources.RC_KEY_SPEC, resources.NewResourceCacheEntry(common.Name(r.Name), r))
 	}
@@ -83,7 +83,7 @@ func (this *KubePatcher) patchApicurioRegistryStatus() {
 			if err != nil {
 				this.ctx.GetLog().WithValues("name", specEntry.GetName()).Error(err, "Resource not found. (May have been deleted).")
 				this.ctx.GetResourceCache().Remove(resources.RC_KEY_SPEC)
-				this.ctx.SetRequeue()
+				this.ctx.SetRequeueNow()
 			}
 		}
 	}
@@ -95,7 +95,7 @@ func (this *KubePatcher) reloadDeployment() {
 		if e != nil {
 			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
 			this.ctx.GetResourceCache().Remove(resources.RC_KEY_DEPLOYMENT)
-			this.ctx.SetRequeue()
+			this.ctx.SetRequeueNow()
 		} else {
 			this.ctx.GetResourceCache().Set(resources.RC_KEY_DEPLOYMENT, resources.NewResourceCacheEntry(common.Name(r.Name), r))
 		}
@@ -130,7 +130,7 @@ func (this *KubePatcher) reloadService() {
 		if e != nil {
 			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
 			this.ctx.GetResourceCache().Remove(resources.RC_KEY_SERVICE)
-			this.ctx.SetRequeue()
+			this.ctx.SetRequeueNow()
 		} else {
 			this.ctx.GetResourceCache().Set(resources.RC_KEY_SERVICE, resources.NewResourceCacheEntry(common.Name(r.Name), r))
 		}
@@ -165,7 +165,7 @@ func (this *KubePatcher) reloadIngress() {
 		if e != nil {
 			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
 			this.ctx.GetResourceCache().Remove(resources.RC_KEY_INGRESS)
-			this.ctx.SetRequeue()
+			this.ctx.SetRequeueNow()
 		} else {
 			this.ctx.GetResourceCache().Set(resources.RC_KEY_INGRESS, resources.NewResourceCacheEntry(common.Name(r.Name), r))
 		}
@@ -200,7 +200,7 @@ func (this *KubePatcher) reloadPodDisruptionBudget() {
 		if e != nil {
 			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
 			this.ctx.GetResourceCache().Remove(resources.RC_KEY_POD_DISRUPTION_BUDGET)
-			this.ctx.SetRequeue()
+			this.ctx.SetRequeueNow()
 		} else {
 			this.ctx.GetResourceCache().Set(resources.RC_KEY_POD_DISRUPTION_BUDGET, resources.NewResourceCacheEntry(common.Name(r.Name), r))
 		}

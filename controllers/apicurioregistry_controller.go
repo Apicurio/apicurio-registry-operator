@@ -117,7 +117,8 @@ func (this *ApicurioRegistryReconciler) Reconcile(reconcileCtx ctx.Context /* TO
 	controlLoop.Run()
 
 	// Reschedule if requested
-	return reconcile.Result{Requeue: controlLoop.GetContext().GetAndResetRequeue()}, nil
+	requeue, delay := controlLoop.GetContext().GetAndResetRequeue()
+	return reconcile.Result{Requeue: requeue, RequeueAfter: delay}, nil
 }
 
 //func (this *ApicurioRegistryReconciler) setController(c controller.Controller) {

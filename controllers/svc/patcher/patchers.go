@@ -88,7 +88,7 @@ func patchGeneric(
 				// Remove patch changes...
 				// ctx.GetResourceCache().Set(key, NewResourceCacheEntry(genericGetName(original), original)) TODO
 				ctx.GetResourceCache().Remove(key)
-				ctx.SetRequeue()
+				ctx.SetRequeueNow()
 				return
 			}
 			patched, err := genericPatch(namespace, name, patchData)
@@ -102,7 +102,7 @@ func patchGeneric(
 				// Remove patch changes
 				// ctx.GetResourceCache().Set(key, NewResourceCacheEntry(genericGetName(original), original)) TODO
 				ctx.GetResourceCache().Remove(key)
-				ctx.SetRequeue()
+				ctx.SetRequeueNow()
 				return
 			}
 			// Reset PF after patching
