@@ -8,6 +8,7 @@ import (
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	sigs_client "sigs.k8s.io/controller-runtime/pkg/client"
+	"time"
 )
 
 // A long-lived singleton container for shared, data only, 0 dependencies, components
@@ -16,6 +17,7 @@ type LoopContext struct {
 	appNamespace common.Namespace
 	log          logr.Logger
 	requeue      bool
+	requeueDelay time.Duration
 
 	client sigs_client.Client
 	scheme *runtime.Scheme
@@ -31,6 +33,7 @@ func NewLoopContext(appName common.Name, appNamespace common.Namespace, log logr
 		appName:      appName,
 		appNamespace: appNamespace,
 		requeue:      false,
+		requeueDelay: 0,
 	}
 	this.log = log.WithValues("app", appName.Str(), "namespace", appNamespace.Str())
 
@@ -56,14 +59,21 @@ func (this *LoopContext) GetAppNamespace() common.Namespace {
 	return this.appNamespace
 }
 
-func (this *LoopContext) SetRequeue() {
-	this.requeue = true
+func (this *LoopContext) SetRequeueNow() {
+	this.SetRequeueDelaySec(0)
 }
 
-func (this *LoopContext) GetAndResetRequeue() bool {
-	res := this.requeue
-	this.requeue = false
-	return res
+func (this *LoopContext) SetRequeueDelaySec(delay uint) {
+	this.requeue = true
+	this.requeueDelay = time.Duration(delay) * time.Second
+}
+
+func (this *LoopContext) GetAndResetRequeue() (bool, time.Duration) {
+	defer func() {
+		this.requeue = false
+		this.requeueDelay = 0
+	}()
+	return this.requeue, this.requeueDelay
 }
 
 func (this *LoopContext) GetResourceCache() resources.ResourceCache {
