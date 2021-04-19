@@ -42,6 +42,7 @@ type ApicurioRegistrySpecConfiguration struct {
 	Kafkasql    ApicurioRegistrySpecConfigurationKafkasql `json:"kafkasql,omitempty"`
 	UI          ApicurioRegistrySpecConfigurationUI       `json:"ui,omitempty"`
 	LogLevel    string                                    `json:"logLevel,omitempty"`
+	Security    ApicurioRegistrySpecConfigurationSecurity `json:"security,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationDataSource struct {
@@ -78,6 +79,17 @@ type ApicurioRegistrySpecConfigurationKafkaSecurityScram struct {
 
 type ApicurioRegistrySpecConfigurationUI struct {
 	ReadOnly bool `json:"readOnly,omitempty"`
+}
+
+type ApicurioRegistrySpecConfigurationSecurity struct {
+	Keycloak ApicurioRegistrySpecConfigurationSecurityKeycloak `json:"keycloak,omitempty"`
+}
+
+type ApicurioRegistrySpecConfigurationSecurityKeycloak struct {
+	Url         string `json:"url,omitempty"`
+	Realm       string `json:"realm,omitempty"`
+	ApiClientId string `json:"apiClientId,omitempty"`
+	UiClientId  string `json:"uiClientId,omitempty"`
 }
 
 type ApicurioRegistrySpecDeployment struct {

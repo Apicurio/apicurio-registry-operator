@@ -186,6 +186,7 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 	c.AddControlFunction(cf.NewLogLevelCF(ctx))
 	c.AddControlFunction(cf.NewProfileCF(ctx))
 	c.AddControlFunction(cf.NewUICF(ctx))
+	c.AddControlFunction(cf.NewKeycloakCF(ctx))
 	//env vars applier
 	c.AddControlFunction(cf.NewEnvCF(ctx))
 
