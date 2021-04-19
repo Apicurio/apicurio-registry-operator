@@ -1,0 +1,20 @@
+﻿kind: Service
+apiVersion: v1
+metadata:
+  name: keycloak-http
+  namespace: keycloak
+  labels:
+    app: keycloak
+spec:
+  ports:
+    - name: keycloak-http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: keycloak
+    component: keycloak
+  type: ClusterIP
+  sessionAffinity: None
+status:
+  loadBalancer: {}
