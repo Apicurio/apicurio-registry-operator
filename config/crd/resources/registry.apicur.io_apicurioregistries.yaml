@@ -68,6 +68,20 @@ spec:
                     type: string
                   persistence:
                     type: string
+                  security:
+                    properties:
+                      keycloak:
+                        properties:
+                          apiClientId:
+                            type: string
+                          realm:
+                            type: string
+                          uiClientId:
+                            type: string
+                          url:
+                            type: string
+                        type: object
+                    type: object
                   sql:
                     properties:
                       dataSource:
