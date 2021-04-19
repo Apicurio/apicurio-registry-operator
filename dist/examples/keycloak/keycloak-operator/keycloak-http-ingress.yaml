@@ -1,0 +1,17 @@
+﻿kind: Ingress
+apiVersion: extensions/v1beta1
+metadata:
+  name: keycloak-http
+  namespace: keycloak
+  labels:
+    app: keycloak
+spec:
+  rules:
+    - host: keycloak-http.local
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              serviceName: keycloak-http
+              servicePort: 8080
