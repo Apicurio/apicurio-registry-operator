@@ -1,12 +1,11 @@
-﻿kind: Route
-apiVersion: route.openshift.io/v1
+﻿apiVersion: route.openshift.io/v1
+kind: Route
 metadata:
   name: keycloak-http
-  namespace: keycloak
   labels:
     app: keycloak
 spec:
-  host: keycloak-http.local
+  path: /
   to:
     kind: Service
     name: keycloak-http

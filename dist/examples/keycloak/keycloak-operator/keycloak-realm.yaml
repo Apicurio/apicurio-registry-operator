@@ -2,7 +2,6 @@ apiVersion: keycloak.org/v1alpha1
 kind: KeycloakRealm
 metadata:
   name: registry-keycloakrealm
-  namespace: keycloak
 spec:
   instanceSelector:
     matchLabels:
