@@ -41,6 +41,7 @@ func (this *controlLoopImpl) Run() {
 	for ; attempt < maxAttempts; attempt++ {
 		this.ctx.GetLog().WithValues("attempt", strconv.Itoa(attempt), "maxAttempts", strconv.Itoa(maxAttempts)).
 			Info("Control loop executing.")
+		this.ctx.SetAttempts(attempt)
 		// Run the CFs until we exceed the limit or the state has stabilized,
 		// i.e. no action was taken by any CF
 		stabilized := true
@@ -51,7 +52,6 @@ func (this *controlLoopImpl) Run() {
 				this.ctx.GetLog().WithValues("cf", cf.Describe()).Info("Control function responding.")
 				cf.Respond()
 				stabilized = false
-				break // Loop is restarted as soon as an action was taken
 			}
 		}
 

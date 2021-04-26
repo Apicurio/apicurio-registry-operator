@@ -2,6 +2,7 @@ package patcher
 
 import (
 	"encoding/json"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
 
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
@@ -16,9 +17,9 @@ type Patchers struct {
 	ocpPatcher  *OCPPatcher
 }
 
-func NewPatchers(ctx *context.LoopContext, clients *client.Clients, factoryKube *factory.KubeFactory) *Patchers {
+func NewPatchers(ctx *context.LoopContext, clients *client.Clients, factoryKube *factory.KubeFactory, status *status.Status) *Patchers {
 	this := &Patchers{}
-	this.kubePatcher = NewKubePatcher(ctx, clients, factoryKube)
+	this.kubePatcher = NewKubePatcher(ctx, clients, factoryKube, status)
 	this.ocpPatcher = NewOCPPatcher(ctx, clients)
 	return this
 }

@@ -32,7 +32,7 @@ func NewDeploymentCF(ctx *context.LoopContext, services *services.LoopServices) 
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
 		svcClients:       services.GetClients(),
-		svcStatus:        ctx.GetStatus(),
+		svcStatus:        services.GetStatus(),
 		svcKubeFactory:   services.GetKubeFactory(),
 		isCached:         false,
 		deployments:      make([]apps.Deployment, 0),

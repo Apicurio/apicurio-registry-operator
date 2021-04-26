@@ -1,7 +1,10 @@
 package status
 
 import (
-	"github.com/go-logr/logr"
+	api "github.com/Apicurio/apicurio-registry-operator/api/v1"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status/conditions"
 	"strconv"
 )
 
@@ -14,20 +17,20 @@ const CFG_STA_REPLICA_COUNT = "CFG_STA_REPLICA_COUNT"
 const CFG_STA_ROUTE = "CFG_STA_ROUTE"
 
 type Status struct {
-	config map[string]string
-	log    logr.Logger
+	config     map[string]string
+	ctx        *context.LoopContext
+	conditions conditions.ConditionManager
 }
 
-// This is at the moment only used for status vars.
-// TODO Refactor
-func NewStatus(log logr.Logger) *Status {
+func NewStatus(ctx *context.LoopContext, conditions conditions.ConditionManager) *Status {
 
-	res := &Status{
-		config: make(map[string]string),
-		log:    log,
+	this := &Status{
+		config:     make(map[string]string),
+		ctx:        ctx,
+		conditions: conditions,
 	}
-	res.init()
-	return res
+	this.init()
+	return this
 }
 
 func (this *Status) init() {
@@ -78,4 +81,47 @@ func (this *Status) GetConfigInt32P(key string) *int32 {
 	i, _ := strconv.ParseInt(this.GetConfig(key), 10, 32)
 	i2 := int32(i)
 	return &i2
+}
+
+func (this *Status) ComputeStatus() {
+	entry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_STATUS)
+	if exists {
+		entry.ApplyPatch(func(value interface{}) interface{} {
+			status := value.(*api.ApicurioRegistryStatus)
+
+			// Info
+			status.Info.Host = this.GetConfig(CFG_STA_ROUTE)
+
+			// Conditions
+			status.Conditions = this.conditions.Execute()
+
+			// Resources
+			// TODO Refactor
+			res := make([]api.ApicurioRegistryStatusManagedResource, 0)
+			if this.GetConfig(CFG_STA_DEPLOYMENT_NAME) != "" {
+				res = append(res, api.ApicurioRegistryStatusManagedResource{
+					Type:      "Deployment",
+					Namespace: this.ctx.GetAppNamespace().Str(),
+					Name:      this.GetConfig(CFG_STA_DEPLOYMENT_NAME),
+				})
+			}
+			if this.GetConfig(CFG_STA_SERVICE_NAME) != "" {
+				res = append(res, api.ApicurioRegistryStatusManagedResource{
+					Type:      "Service",
+					Namespace: this.ctx.GetAppNamespace().Str(),
+					Name:      this.GetConfig(CFG_STA_SERVICE_NAME),
+				})
+			}
+			if this.GetConfig(CFG_STA_INGRESS_NAME) != "" {
+				res = append(res, api.ApicurioRegistryStatusManagedResource{
+					Type:      "Ingress",
+					Namespace: this.ctx.GetAppNamespace().Str(),
+					Name:      this.GetConfig(CFG_STA_INGRESS_NAME),
+				})
+			}
+			status.ManagedResources = res
+
+			return status
+		})
+	}
 }

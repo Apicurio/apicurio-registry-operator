@@ -3,6 +3,7 @@ package resources
 import "github.com/Apicurio/apicurio-registry-operator/controllers/common"
 
 const RC_KEY_SPEC = "SPEC"
+const RC_KEY_STATUS = "STATUS"
 const RC_KEY_DEPLOYMENT = "DEPLOYMENT"
 const RC_KEY_SERVICE = "SERVICE"
 const RC_KEY_INGRESS = "INGRESS"

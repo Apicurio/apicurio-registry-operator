@@ -94,14 +94,37 @@ type ApicurioRegistrySpecDeployment struct {
 
 // ### Status
 
-// ApicurioRegistryStatus defines the observed state of ApicurioRegistry
 type ApicurioRegistryStatus struct {
-	Image          string `json:"image,omitempty"`
-	DeploymentName string `json:"deploymentName,omitempty"`
-	ServiceName    string `json:"serviceName,omitempty"`
-	IngressName    string `json:"ingressName,omitempty"`
-	ReplicaCount   int32  `json:"replicaCount,omitempty"`
-	Host           string `json:"host,omitempty"`
+	// Information about the deployed application.
+	Info ApicurioRegistryStatusInfo `json:"info,omitempty"`
+	// List of status conditions.
+	Conditions []ApicurioRegistryStatusCondition `json:"conditions,omitempty"`
+	// List of resources managed by this operator.
+	ManagedResources []ApicurioRegistryStatusManagedResource `json:"managedResources,omitempty"`
+}
+
+type ApicurioRegistryStatusInfo struct {
+	Host string `json:"host,omitempty"`
+}
+
+// ApicurioRegistryStatus defines the observed state of ApicurioRegistry
+type ApicurioRegistryStatusCondition struct {
+	// The unique identifier of a condition, used to distinguish between other conditions in the resource.
+	Type string `json:"type,omitempty"`
+	// The status of the condition, either True, False or Unknown.
+	Status string `json:"status,omitempty"`
+	// The reason for the condition's last transition (a single word in CamelCase).
+	Reason string `json:"reason,omitempty"`
+	// Human-readable message indicating details about the condition's last transition.
+	Message string `json:"message,omitempty"`
+	// Last time the condition of a type changed from one status to another. The required format is RFC-3339, in the UTC time zone.
+	LastTransitionTime string `json:"lastTransitionTime,omitempty"`
+}
+
+type ApicurioRegistryStatusManagedResource struct {
+	Type      string `json:"type,omitempty"`
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
 }
 
 // ### Roots

@@ -2,6 +2,7 @@ package client
 
 import (
 	ctx "context"
+	"errors"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	ocp_apps "github.com/openshift/api/apps/v1"
@@ -33,7 +34,11 @@ func NewOCPClient(ctx *context.LoopContext, clientConfig *rest.Config) *OCPClien
 // Deployment
 
 func (this *OCPClient) CreateDeployment(namespace common.Namespace, value *ocp_apps.DeploymentConfig) (*ocp_apps.DeploymentConfig, error) {
-	if err := controllerutil.SetControllerReference(getSpec(this.ctx), value, this.ctx.GetScheme()); err != nil {
+	spec := getSpec(this.ctx)
+	if spec == nil {
+		return nil, errors.New("Could not find ApicurioRegistry. Retrying.")
+	}
+	if err := controllerutil.SetControllerReference(spec, value, this.ctx.GetScheme()); err != nil {
 		return nil, err
 	}
 	res, err := this.ocpAppsClient.DeploymentConfigs(namespace.Str()).Create(ctx.TODO(), value, meta.CreateOptions{})

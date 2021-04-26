@@ -3,9 +3,7 @@ package factory
 import (
 	"os"
 
-	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
@@ -208,18 +206,6 @@ func (this *KubeFactory) CreateIngress(serviceName string) *networking.Ingress {
 				},
 			},
 		},
-	}
-	return res
-}
-
-func (this *KubeFactory) CreateStatus(spec *ar.ApicurioRegistry) *ar.ApicurioRegistryStatus {
-	res := &ar.ApicurioRegistryStatus{
-		Image:          this.ctx.GetStatus().GetConfig(status.CFG_STA_IMAGE),
-		DeploymentName: this.ctx.GetStatus().GetConfig(status.CFG_STA_DEPLOYMENT_NAME),
-		ServiceName:    this.ctx.GetStatus().GetConfig(status.CFG_STA_SERVICE_NAME),
-		IngressName:    this.ctx.GetStatus().GetConfig(status.CFG_STA_INGRESS_NAME),
-		ReplicaCount:   *this.ctx.GetStatus().GetConfigInt32P(status.CFG_STA_REPLICA_COUNT),
-		Host:           this.ctx.GetStatus().GetConfig(status.CFG_STA_ROUTE),
 	}
 	return res
 }

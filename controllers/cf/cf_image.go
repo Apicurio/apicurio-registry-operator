@@ -1,6 +1,7 @@
 package cf
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
 	"os"
 
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
@@ -26,17 +27,22 @@ type ImageCF struct {
 	deploymentExists bool
 	existingImage    string
 	targetImage      string
+	services         *services.LoopServices
+	persistence      string
+	persistenceError bool
 }
 
-func NewImageCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewImageCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
 	return &ImageCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
-		svcStatus:        ctx.GetStatus(),
+		svcStatus:        services.GetStatus(),
+		services:         services,
 		deploymentEntry:  nil,
 		deploymentExists: false,
-		existingImage:    resources.RC_EMPTY_NAME,
-		targetImage:      resources.RC_EMPTY_NAME,
+		existingImage:    "",
+		targetImage:      "",
+		persistence:      "",
 	}
 }
 
@@ -53,7 +59,7 @@ func (this *ImageCF) Sense() {
 
 	// Observation #2
 	// Get the existing image name (if present)
-	this.existingImage = resources.RC_EMPTY_NAME
+	this.existingImage = ""
 	if this.deploymentExists {
 		for i, c := range deploymentEntry.GetValue().(*apps.Deployment).Spec.Template.Spec.Containers {
 			if c.Name == this.ctx.GetAppName().Str() {
@@ -64,14 +70,15 @@ func (this *ImageCF) Sense() {
 
 	// Observation #3
 	// Get the target image name
-	persistence := ""
+	this.persistence = ""
 	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry).Spec
-		persistence = spec.Configuration.Persistence
+		this.persistence = spec.Configuration.Persistence
 	}
 
 	envImage := ""
-	switch persistence {
+	this.persistenceError = false
+	switch this.persistence {
 	case "", "mem":
 		envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_MEM)
 	case "kafkasql":
@@ -82,6 +89,7 @@ func (this *ImageCF) Sense() {
 	if envImage != "" {
 		this.targetImage = envImage
 	} else {
+		this.persistenceError = true
 		this.ctx.GetLog().WithValues("type", "Warning").
 			Info("WARNING: The operand image is not selected. " +
 				"Set the 'spec.configuration.persistence' property in your 'apicurioregistry' resource " +
@@ -97,11 +105,16 @@ func (this *ImageCF) Compare() bool {
 	// Deployment exists
 	// Condition #2
 	// Existing image is not the same as the target image (assuming it is never empty)
-	return this.deploymentEntry != nil &&
-		this.existingImage != this.targetImage
+	return (this.deploymentEntry != nil && this.existingImage != this.targetImage) ||
+		(this.persistenceError && this.ctx.GetAttempts() == 0)
 }
 
 func (this *ImageCF) Respond() {
+	if this.persistenceError {
+		this.services.GetConditionManager().GetConfigurationErrorCondition().TransitionInvalidPersistence(this.persistence)
+		this.services.GetConditionManager().GetReadyCondition().TransitionError()
+		return
+	}
 	// Response #1
 	// Patch the resource
 	this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {

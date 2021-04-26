@@ -4,6 +4,7 @@ import (
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
 	networking "k8s.io/api/networking/v1"
@@ -25,16 +26,16 @@ type HostCF struct {
 // This CF makes sure number of host is aligned
 // If there is some other way of determining the number of host needed outside of CR,
 // modify the Sense stage so this CF knows about it
-func NewHostCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewHostCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
 	return &HostCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
-		svcStatus:        ctx.GetStatus(),
+		svcStatus:        services.GetStatus(),
 		ingressEntry:     nil,
 		ingressExists:    false,
 		serviceName:      resources.RC_EMPTY_NAME,
-		existingHost:     resources.RC_EMPTY_NAME,
-		targetHost:       resources.RC_EMPTY_NAME,
+		existingHost:     "",
+		targetHost:       "",
 	}
 }
 
