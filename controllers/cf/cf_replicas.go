@@ -4,6 +4,7 @@ import (
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
 	apps "k8s.io/api/apps/v1"
@@ -24,11 +25,11 @@ type ReplicasCF struct {
 // This CF makes sure number of replicas is aligned
 // If there is some other way of determining the number of replicas needed outside of CR,
 // modify the Sense stage so this CF knows about it
-func NewReplicasCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewReplicasCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
 	return &ReplicasCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
-		svcStatus:        ctx.GetStatus(),
+		svcStatus:        services.GetStatus(),
 		deploymentEntry:  nil,
 		deploymentExists: false,
 		existingReplicas: 0,

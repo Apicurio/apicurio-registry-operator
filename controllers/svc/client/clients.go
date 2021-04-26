@@ -227,7 +227,8 @@ func detectOpenshift() (bool, error) {
 func getSpec(ctx *context.LoopContext) *ar.ApicurioRegistry {
 	entry, exists := ctx.GetResourceCache().Get(resources.RC_KEY_SPEC)
 	if !exists {
-		panic("Could not get ApicurioRegistry from resource cache.")
+		// This will be handled by callers
+		return nil
 	}
 	return entry.GetValue().(*ar.ApicurioRegistry)
 }

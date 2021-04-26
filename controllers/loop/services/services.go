@@ -5,6 +5,8 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/patcher"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status/conditions"
 )
 
 type LoopServices struct {
@@ -13,46 +15,52 @@ type LoopServices struct {
 
 	kubeFactory       *factory.KubeFactory
 	monitoringFactory *factory.MonitoringFactory
+
+	conditionManager conditions.ConditionManager
+	status           *status.Status
 }
 
 func NewLoopServices(ctx *context.LoopContext) *LoopServices {
-
-	factoryKube := factory.NewKubeFactory(ctx)
-	factoryMonitoring := factory.NewMonitoringFactory(ctx, factoryKube)
-
-	clients := client.NewClients(ctx)
-
-	patchers := patcher.NewPatchers(ctx, clients, factoryKube)
-
-	return &LoopServices{
-		clients:  clients,
-		patchers: patchers,
-
-		kubeFactory:       factoryKube,
-		monitoringFactory: factoryMonitoring,
-	}
+	this := &LoopServices{}
+	this.kubeFactory = factory.NewKubeFactory(ctx)
+	this.monitoringFactory = factory.NewMonitoringFactory(ctx, this.kubeFactory)
+	this.clients = client.NewClients(ctx)
+	this.conditionManager = conditions.NewConditionManager(ctx)
+	this.status = status.NewStatus(ctx, this.conditionManager)
+	this.patchers = patcher.NewPatchers(ctx, this.clients, this.kubeFactory, this.status)
+	return this
 }
 
-func (svcs *LoopServices) BeforeRun() {
-	svcs.patchers.Reload()
+func (this *LoopServices) BeforeRun() {
+	this.patchers.Reload()
 }
 
-func (svcs *LoopServices) AfterRun() {
-	svcs.patchers.Execute()
+func (this *LoopServices) AfterRun() {
+	this.conditionManager.AfterLoop() // TODO Unify nomenclature
+	this.status.ComputeStatus()
+	this.patchers.Execute()
 }
 
-func (svcs *LoopServices) GetClients() *client.Clients {
-	return svcs.clients
+func (this *LoopServices) GetClients() *client.Clients {
+	return this.clients
 }
 
-func (svcs *LoopServices) GetPatchers() *patcher.Patchers {
-	return svcs.patchers
+func (this *LoopServices) GetPatchers() *patcher.Patchers {
+	return this.patchers
 }
 
-func (svcs *LoopServices) GetKubeFactory() *factory.KubeFactory {
-	return svcs.kubeFactory
+func (this *LoopServices) GetKubeFactory() *factory.KubeFactory {
+	return this.kubeFactory
 }
 
-func (svcs *LoopServices) GetMonitoringFactory() *factory.MonitoringFactory {
-	return svcs.monitoringFactory
+func (this *LoopServices) GetMonitoringFactory() *factory.MonitoringFactory {
+	return this.monitoringFactory
+}
+
+func (this *LoopServices) GetConditionManager() conditions.ConditionManager {
+	return this.conditionManager
+}
+
+func (this *LoopServices) GetStatus() *status.Status {
+	return this.status
 }

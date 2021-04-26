@@ -2,6 +2,7 @@ package controllers
 
 import (
 	ctx "context"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/cf/condition"
 
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
 	"github.com/go-logr/logr"
@@ -164,7 +165,8 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 
 	//functions ordered so execution is optimized
 
-	//host init, executed only once
+	// Initialization, executed only once (or only for a short time)
+	c.AddControlFunction(condition.NewInitializingCF(ctx, loopServices))
 	c.AddControlFunction(cf.NewHostInitCF(ctx))
 
 	//deployment
@@ -175,9 +177,11 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 	c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, loopServices))
 	c.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))
 	c.AddControlFunction(cf.NewTolerationCF(ctx))
+
 	//deployment modifiers
-	c.AddControlFunction(cf.NewImageCF(ctx))
-	c.AddControlFunction(cf.NewReplicasCF(ctx))
+	c.AddControlFunction(cf.NewImageCF(ctx, loopServices))
+	c.AddControlFunction(cf.NewReplicasCF(ctx, loopServices))
+
 	//deployment env vars modifiers
 	c.AddControlFunction(cf.NewSqlCF(ctx))
 	c.AddControlFunction(kafkasql.NewKafkasqlCF(ctx))
@@ -187,6 +191,7 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 	c.AddControlFunction(cf.NewProfileCF(ctx))
 	c.AddControlFunction(cf.NewUICF(ctx))
 	c.AddControlFunction(cf.NewKeycloakCF(ctx))
+
 	//env vars applier
 	c.AddControlFunction(cf.NewEnvCF(ctx))
 
@@ -200,10 +205,11 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 	if isOCP {
 		c.AddControlFunction(cf.NewHostInitRouteOcpCF(ctx))
 	}
-	c.AddControlFunction(cf.NewHostCF(ctx))
+	c.AddControlFunction(cf.NewHostCF(ctx, loopServices))
 
-	//dependent on everything :)
+	// Other / Dependent on everything :)
 	c.AddControlFunction(cf.NewLabelsCF(ctx, loopServices))
+	c.AddControlFunction(condition.NewAppHealthCF(ctx, loopServices))
 
 	return c
 }

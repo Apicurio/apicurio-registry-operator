@@ -2,6 +2,7 @@ package client
 
 import (
 	ctx "context"
+	"errors"
 
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
@@ -33,7 +34,11 @@ func NewMonitoringClient(ctx *context.LoopContext, config *rest.Config) *Monitor
 // ServiceMonitor
 
 func (this *MonitoringClient) CreateServiceMonitor(namespace common.Namespace, obj *monitoring.ServiceMonitor) (*monitoring.ServiceMonitor, error) {
-	if err := controllerutil.SetControllerReference(getSpec(this.ctx), obj, this.ctx.GetScheme()); err != nil {
+	spec := getSpec(this.ctx)
+	if spec == nil {
+		return nil, errors.New("Could not find ApicurioRegistry. Retrying.")
+	}
+	if err := controllerutil.SetControllerReference(spec, obj, this.ctx.GetScheme()); err != nil {
 		return nil, err
 	}
 	res, err := this.client.ServiceMonitors(namespace.Str()).Create(ctx.TODO(), obj, v1.CreateOptions{})

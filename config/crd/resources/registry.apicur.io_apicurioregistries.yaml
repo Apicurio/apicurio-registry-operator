@@ -767,21 +767,54 @@ spec:
                 type: object
             type: object
           status:
-            description: ApicurioRegistryStatus defines the observed state of ApicurioRegistry
             properties:
-              deploymentName:
-                type: string
-              host:
-                type: string
-              image:
-                type: string
-              ingressName:
-                type: string
-              replicaCount:
-                format: int32
-                type: integer
-              serviceName:
-                type: string
+              conditions:
+                description: List of status conditions.
+                items:
+                  description: ApicurioRegistryStatus defines the observed state of
+                    ApicurioRegistry
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition of a type changed from
+                        one status to another. The required format is RFC-3339, in
+                        the UTC time zone.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        the condition's last transition.
+                      type: string
+                    reason:
+                      description: The reason for the condition's last transition
+                        (a single word in CamelCase).
+                      type: string
+                    status:
+                      description: The status of the condition, either True, False
+                        or Unknown.
+                      type: string
+                    type:
+                      description: The unique identifier of a condition, used to distinguish
+                        between other conditions in the resource.
+                      type: string
+                  type: object
+                type: array
+              info:
+                description: Information about the deployed application.
+                properties:
+                  host:
+                    type: string
+                type: object
+              managedResources:
+                description: List of resources managed by this operator.
+                items:
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                    type:
+                      type: string
+                  type: object
+                type: array
             type: object
         type: object
     served: true

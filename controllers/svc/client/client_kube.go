@@ -2,6 +2,7 @@ package client
 
 import (
 	ctx "context"
+	"errors"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	apps "k8s.io/api/apps/v1"
@@ -33,7 +34,11 @@ func NewKubeClient(ctx *context.LoopContext, config *rest.Config) *KubeClient {
 // Deployment
 
 func (this *KubeClient) CreateDeployment(namespace common.Namespace, value *apps.Deployment) (*apps.Deployment, error) {
-	if err := controllerutil.SetControllerReference(getSpec(this.ctx), value, this.ctx.GetScheme()); err != nil {
+	spec := getSpec(this.ctx)
+	if spec == nil {
+		return nil, errors.New("Could not find ApicurioRegistry. Retrying.")
+	}
+	if err := controllerutil.SetControllerReference(spec, value, this.ctx.GetScheme()); err != nil {
 		return nil, err
 	}
 	res, err := this.client.AppsV1().Deployments(namespace.Str()).Create(ctx.TODO(), value, meta.CreateOptions{})
@@ -71,7 +76,11 @@ func (this *KubeClient) DeleteDeployment(value *apps.Deployment, options *meta.D
 // Service
 
 func (this *KubeClient) CreateService(namespace common.Namespace, value *core.Service) (*core.Service, error) {
-	if err := controllerutil.SetControllerReference(getSpec(this.ctx), value, this.ctx.GetScheme()); err != nil {
+	spec := getSpec(this.ctx)
+	if spec == nil {
+		return nil, errors.New("Could not find ApicurioRegistry. Retrying.")
+	}
+	if err := controllerutil.SetControllerReference(spec, value, this.ctx.GetScheme()); err != nil {
 		return nil, err
 	}
 	res, err := this.client.CoreV1().Services(namespace.Str()).Create(ctx.TODO(), value, meta.CreateOptions{})
@@ -109,7 +118,11 @@ func (this *KubeClient) DeleteService(value *core.Service, options *meta.DeleteO
 // Ingress
 
 func (this *KubeClient) CreateIngress(namespace common.Namespace, value *networking.Ingress) (*networking.Ingress, error) {
-	if err := controllerutil.SetControllerReference(getSpec(this.ctx), value, this.ctx.GetScheme()); err != nil {
+	spec := getSpec(this.ctx)
+	if spec == nil {
+		return nil, errors.New("Could not find ApicurioRegistry. Retrying.")
+	}
+	if err := controllerutil.SetControllerReference(spec, value, this.ctx.GetScheme()); err != nil {
 		return nil, err
 	}
 	res, err := this.client.NetworkingV1().Ingresses(namespace.Str()).
@@ -148,7 +161,11 @@ func (this *KubeClient) DeleteIngress(value *networking.Ingress, options *meta.D
 // PodDisruptionBudget
 
 func (this *KubeClient) CreatePodDisruptionBudget(namespace common.Namespace, value *policy.PodDisruptionBudget) (*policy.PodDisruptionBudget, error) {
-	if err := controllerutil.SetControllerReference(getSpec(this.ctx), value, this.ctx.GetScheme()); err != nil {
+	spec := getSpec(this.ctx)
+	if spec == nil {
+		return nil, errors.New("Could not find ApicurioRegistry. Retrying.")
+	}
+	if err := controllerutil.SetControllerReference(spec, value, this.ctx.GetScheme()); err != nil {
 		return nil, err
 	}
 	res, err := this.client.PolicyV1beta1().PodDisruptionBudgets(namespace.Str()).Create(ctx.TODO(), value, meta.CreateOptions{})
