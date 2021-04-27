@@ -1,14 +1,13 @@
 package conditions
 
 import (
-	api "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
-	"time"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type condition struct {
-	previousData *api.ApicurioRegistryStatusCondition
-	data         *api.ApicurioRegistryStatusCondition
+	previousData *metav1.Condition
+	data         *metav1.Condition
 	ctype        ConditionType
 }
 
@@ -20,11 +19,11 @@ func (this *condition) GetType() ConditionType {
 	return this.ctype
 }
 
-func (this *condition) GetPreviousData() *api.ApicurioRegistryStatusCondition {
+func (this *condition) GetPreviousData() *metav1.Condition {
 	return this.previousData
 }
 
-func (this *condition) GetData() *api.ApicurioRegistryStatusCondition {
+func (this *condition) GetData() *metav1.Condition {
 	return this.data
 }
 
@@ -33,15 +32,15 @@ func (this *condition) Reset() {
 		panic("Condition type not set!")
 	}
 	if this.data == nil {
-		this.data = &api.ApicurioRegistryStatusCondition{
+		this.data = &metav1.Condition{
 			Type:   string(this.GetType()),
-			Status: string(CONDITION_STATUS_UNKNOWN),
+			Status: metav1.ConditionUnknown,
 		}
 	}
 	this.previousData = this.data
-	this.data = &api.ApicurioRegistryStatusCondition{
+	this.data = &metav1.Condition{
 		Type:               string(this.GetType()),
-		Status:             string(CONDITION_STATUS_UNKNOWN),
+		Status:             metav1.ConditionUnknown,
 		LastTransitionTime: this.previousData.LastTransitionTime,
 	}
 }
@@ -87,19 +86,18 @@ func (this *conditionManager) AfterLoop() {
 	}
 }
 
-func (this *conditionManager) Execute() []api.ApicurioRegistryStatusCondition {
-	res := make([]api.ApicurioRegistryStatusCondition, 0)
-	now := time.Now().UTC().Format(time.RFC3339)
+func (this *conditionManager) Execute() []metav1.Condition {
+	res := make([]metav1.Condition, 0)
 	for _, v := range this.conditionMap {
 		if v.IsActive() {
 			previousData := v.GetPreviousData()
 			data := v.GetData()
-			if data.LastTransitionTime == "" ||
+			if data.LastTransitionTime.IsZero() ||
 				data.Status != previousData.Status ||
 				data.Reason != previousData.Reason ||
 				data.Message != previousData.Message {
 				// Update time if the condition changed
-				data.LastTransitionTime = now
+				data.LastTransitionTime = metav1.Now()
 			}
 			res = append(res, *data)
 		}
