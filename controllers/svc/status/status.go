@@ -100,21 +100,21 @@ func (this *Status) ComputeStatus() {
 			res := make([]api.ApicurioRegistryStatusManagedResource, 0)
 			if this.GetConfig(CFG_STA_DEPLOYMENT_NAME) != "" {
 				res = append(res, api.ApicurioRegistryStatusManagedResource{
-					Type:      "Deployment",
+					Kind:      "Deployment",
 					Namespace: this.ctx.GetAppNamespace().Str(),
 					Name:      this.GetConfig(CFG_STA_DEPLOYMENT_NAME),
 				})
 			}
 			if this.GetConfig(CFG_STA_SERVICE_NAME) != "" {
 				res = append(res, api.ApicurioRegistryStatusManagedResource{
-					Type:      "Service",
+					Kind:      "Service",
 					Namespace: this.ctx.GetAppNamespace().Str(),
 					Name:      this.GetConfig(CFG_STA_SERVICE_NAME),
 				})
 			}
 			if this.GetConfig(CFG_STA_INGRESS_NAME) != "" {
 				res = append(res, api.ApicurioRegistryStatusManagedResource{
-					Type:      "Ingress",
+					Kind:      "Ingress",
 					Namespace: this.ctx.GetAppNamespace().Str(),
 					Name:      this.GetConfig(CFG_STA_INGRESS_NAME),
 				})

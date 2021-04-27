@@ -108,7 +108,7 @@ type ApicurioRegistryStatusInfo struct {
 }
 
 type ApicurioRegistryStatusManagedResource struct {
-	Type      string `json:"type,omitempty"`
+	Kind      string `json:"kind,omitempty"`
 	Name      string `json:"name,omitempty"`
 	Namespace string `json:"namespace,omitempty"`
 }
