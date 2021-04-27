@@ -848,11 +848,11 @@ spec:
                 description: List of resources managed by this operator.
                 items:
                   properties:
+                    kind:
+                      type: string
                     name:
                       type: string
                     namespace:
-                      type: string
-                    type:
                       type: string
                   type: object
                 type: array
