@@ -1,7 +1,7 @@
 package conditions
 
 import (
-	api "github.com/Apicurio/apicurio-registry-operator/api/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type ConditionType string
@@ -13,24 +13,16 @@ const (
 	// CONDITION_TYPE_OPERATOR_ERROR ConditionType = "OperatorError" // General error
 )
 
-type ConditionStatus string
-
-const (
-	CONDITION_STATUS_TRUE    ConditionStatus = "True"
-	CONDITION_STATUS_FALSE   ConditionStatus = "False"
-	CONDITION_STATUS_UNKNOWN ConditionStatus = "Unknown"
-)
-
 type Condition interface {
 	SetType(ConditionType)
 
 	GetType() ConditionType
 
 	// References an internal state. Make a copy before using the data unless intended.
-	GetPreviousData() *api.ApicurioRegistryStatusCondition
+	GetPreviousData() *metav1.Condition
 
 	// References an internal state. Make a copy before using the data unless intended.
-	GetData() *api.ApicurioRegistryStatusCondition
+	GetData() *metav1.Condition
 
 	IsActive() bool
 
@@ -82,5 +74,5 @@ type ConditionManager interface {
 	// Run after the control loop
 	AfterLoop()
 
-	Execute() []api.ApicurioRegistryStatusCondition
+	Execute() []metav1.Condition
 }

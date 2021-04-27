@@ -1,5 +1,9 @@
 package conditions
 
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
 type ReadyCondition struct {
 	condition
 }
@@ -20,7 +24,7 @@ func (this *ReadyCondition) IsActive() bool {
 // Transitions in decreasing order of priority
 
 func (this *ReadyCondition) TransitionError() {
-	this.data.Status = string(CONDITION_STATUS_FALSE)
+	this.data.Status = metav1.ConditionFalse
 	this.data.Reason = string(READY_CONDITION_REASON_ERROR)
 	this.data.Message = "An error occurred in the operator or the application. Please check other conditions and logs."
 }
@@ -28,7 +32,7 @@ func (this *ReadyCondition) TransitionError() {
 func (this *ReadyCondition) TransitionInitializing() {
 	if this.data.Reason != string(READY_CONDITION_REASON_ERROR) {
 
-		this.data.Status = string(CONDITION_STATUS_FALSE)
+		this.data.Status = metav1.ConditionFalse
 		this.data.Reason = string(READY_CONDITION_REASON_INITIALIZING)
 	}
 }
@@ -37,7 +41,7 @@ func (this *ReadyCondition) TransitionReconciling() {
 	if this.data.Reason != string(READY_CONDITION_REASON_ERROR) &&
 		this.data.Reason != string(READY_CONDITION_REASON_INITIALIZING) {
 
-		this.data.Status = string(CONDITION_STATUS_FALSE)
+		this.data.Status = metav1.ConditionFalse
 		this.data.Reason = string(READY_CONDITION_REASON_RECONCILING)
 	}
 }
@@ -47,7 +51,7 @@ func (this *ReadyCondition) TransitionReconciled() {
 		this.data.Reason != string(READY_CONDITION_REASON_INITIALIZING) &&
 		this.data.Reason != string(READY_CONDITION_REASON_RECONCILING) {
 
-		this.data.Status = string(CONDITION_STATUS_TRUE)
+		this.data.Status = metav1.ConditionTrue
 		this.data.Reason = string(READY_CONDITION_REASON_RECONCILED)
 	}
 }
