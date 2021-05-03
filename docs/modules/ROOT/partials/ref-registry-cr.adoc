@@ -10,37 +10,49 @@ The following command displays the `ApicurioRegistry` resource:
 
 [source,bash,subs="attributes"]
 ----
+{cli-client} get apicurioregistry
 {cli-client} edit apicurioregistry example-apicurioregistry
 ----
 
 [source,yaml]
 ----
-apiVersion: apicur.io/v1alpha1
+apiVersion: registry.apicur.io/v1
 kind: ApicurioRegistry
 metadata:
   name: example-apicurioregistry
-  namespace: demo-streams
+  namespace: demo-kafka
   # ...
 spec:
   configuration:
-    persistence: streams
-    streams:
-      bootstrapServers: 'my-cluster-kafka-bootstrap.demo-streams.svc:9092'
+    persistence: kafkasql
+    kafkasql:
+      bootstrapServers: 'my-cluster-kafka-bootstrap.demo-kafka.svc:9092'
   deployment:
     host: >-
-      example-apicurioregistry.demo-streams.example.com
+      example-apicurioregistry.demo-kafka.example.com
 status:
-  deploymentName: example-apicurioregistry-deployment-qsdb7
-  host: >-
-    example-apicurioregistry.demo-streams.example.com
-  image: >-
-    registry.redhat.io/integration/service-registry-streams-rhel8@sha256:4b56da802333d2115cb3a0acc8d97445bd0dab67b639c361816df27b7f1aa296
-  ingressName: example-apicurioregistry-ingress-7mlnw
-  replicaCount: 1
-  serviceName: example-apicurioregistry-service-xvnmz
+  conditions:
+  - lastTransitionTime: "2021-05-03T10:47:11Z"
+    message: ""
+    reason: Reconciled
+    status: "True"
+    type: Ready
+  info:
+    host: example-apicurioregistry.demo-kafka.example.com
+  managedResources:
+  - kind: Deployment
+    name: example-apicurioregistry-deployment
+    namespace: demo-kafka
+  - kind: Service
+    name: example-apicurioregistry-service
+    namespace: demo-kafka
+  - kind: Ingress
+    name: example-apicurioregistry-ingress
+    namespace: demo-kafka
 ----
 
-IMPORTANT: The {operator} currently only watches its own project namespace. Therefore you must create the `ApicurioRegistry` CR in the same namespace.
+IMPORTANT: By default, the {operator} only watches its own project namespace. Therefore you must create the `ApicurioRegistry` CR in the same namespace, if you are deploying the operator manually.
+You can modify this behavior by updating `WATCH_NAMESPACE` environment variable in the operator `Deployment` resource.
 
 ifdef::apicurio-registry[]
 NOTE: These configuration options may change or be renamed until {operator} leaves the alpha development stage.

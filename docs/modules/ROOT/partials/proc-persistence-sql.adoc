@@ -1,5 +1,5 @@
-[id="registry-persistence-jpa"]
-= Configuring Java Persistence API (PostgreSQL) storage
+[id="registry-persistence-sql"]
+= Configuring SQL (PostgreSQL) storage
 
 .Prerequisites
 * You must have an OpenShift cluster with cluster administrator access.
@@ -27,19 +27,7 @@ endif::[]
 +
 [source,yaml]
 ----
-apiVersion: apicur.io/v1alpha1
-kind: ApicurioRegistry
-metadata:
-  name: example-apicurioregistry
-spec:
-  configuration:
-    persistence: "jpa"
-    dataSource:
-      url: "jdbc:postgresql://SERVICE_NAME.NAMESPACE.svc:5432/"
-      # e.g. url: "jdbc:postgresql://acid-minimal-cluster.my-project.svc:5432/"
-      userName: "postgres"
-      password: "PASSWORD"
-      # ^ Optional
+include::example$apicurioregistry_sql_cr.yaml[]
 ----
 
 . Click *Create* and wait for the {registry} route to be created on OpenShift.

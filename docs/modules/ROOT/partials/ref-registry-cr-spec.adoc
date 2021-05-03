@@ -11,16 +11,13 @@ The following example block contains the full tree of possible `spec` configurat
 spec:
   configuration:
     persistence: <string>
-    dataSource:
-      url: <string>
-      userName: <string>
-      password: <string>
-    kafka:
+    sql:
+      dataSource:
+        url: <string>
+        userName: <string>
+        password: <string>
+    kafkasql:
       bootstrapServers: <string>
-    streams:
-      bootstrapServers: <string>
-      applicationId: <string>
-      applicationServerPort: <string>
       security:
         tls:
           truststoreSecretName: <string>
@@ -30,14 +27,20 @@ spec:
           truststoreSecretName: <string>
           user: <string>
           passwordSecretName: <string>
-    infinispan:
-      clusterName: <string>
     ui:
       readOnly: <string>
     logLevel: <string>
+    security:
+      keycloak:
+        url: <string>
+        realm: <string>
+        apiClientId: <string>
+        uiClientId: <string>
   deployment:
     replicas: <int32>
     host: <string>
+    affinity: <k8s.io/api/core/v1 Affinity struct>
+    tolerations: <k8s.io/api/core/v1 []Toleration slice>
 ----
 
 The following table describes each configuration option:
@@ -54,115 +57,91 @@ The following table describes each configuration option:
 
 | `configuration/persistence`
 | string
-| `mem`
 ifdef::service-registry[]
-| Storage backend. One of `jpa`, `streams`, `infinispan`
+| _required_
+| Storage backend. One of `sql`, `kafkasql`
 endif::[]
 ifdef::apicurio-registry[]
-| Storage backend. One of `mem`, `jpa`, `kafka`, `streams`, `infinispan`
+| `mem`
+| Storage backend. One of `mem`, `sql`, `kafkasql`
 endif::[]
 
-| `configuration/dataSource`
+| `configuration/sql`
 | -
 | -
-| Database connection configuration for JPA storage backend
+| SQL storage backend configuration
 
-| `configuration/dataSource/url`
+| `configuration/*sql*/dataSource`
+| -
+| -
+| Database connection configuration for SQL storage backend
+
+| `configuration/*sql*/dataSource/url`
 | string
 | _required_
 | Database connection URL string
 
-| `configuration/dataSource/userName`
+| `configuration/*sql*/dataSource/userName`
 | string
 | _required_
 | Database connection user
 
-| `configuration/dataSource/password`
+| `configuration/*sql*/dataSource/password`
 | string
 | _empty_
 | Database connection password
-ifdef::apicurio-registry[]
-| `configuration/kafka`
-| -
-| -
-| Kafka backend configuration section
 
-| `configuration/kafka/bootstrapServers`
-| string
-| _required_
-| Kafka bootstrap server URL
-endif::[]
-| `configuration/streams`
+| `configuration/kafkasql`
 | -
 | -
-| Kafka Streams storage backend configuration
+| Kafka storage backend configuration
 
-| `configuration/streams/bootstrapServers`
+| `configuration/*kafkasql*/bootstrapServers`
 | string
 | _required_
 | Kafka bootstrap server URL, for Streams storage backend
 
-| `configuration/streams/applicationId`
-| string
-| _ApicurioRegistry CR name_
-| Kafka Streams application ID
-
-| `configuration/*streams*/applicationServerPort`
-| string
-| `9000`
-| -
-
-| `configuration/streams/security/tls`
+| `configuration/*kafkasql*/security/tls`
 | -
 | -
-| Section to configure TLS authentication for Kafka Streams storage backend
+| Section to configure TLS authentication for Kafka storage backend
 
-| `configuration/streams/security/tls/truststoreSecretName`
+| `configuration/*kafkasql*/security/tls/truststoreSecretName`
 | string
 | _required_
 | Name of a secret containing TLS truststore for Kafka
 
-| `configuration/streams/security/tls/keystoreSecretName`
+| `configuration/*kafkasql*/security/tls/keystoreSecretName`
 | string
 | _required_
 | Name of a secret containing user TLS keystore
 
-| `configuration/streams/security/scram/truststoreSecretName`
+| `configuration/*kafkasql*/security/scram/truststoreSecretName`
 | string
 | _required_
 | Name of a secret containing TLS truststore for Kafka
 
-| `configuration/streams/security/scram/user`
+| `configuration/*kafkasql*/security/scram/user`
 | string
 | _required_
 | SCRAM user name
 
-| `configuration/streams/security/scram/passwordSecretName`
+| `configuration/*kafkasql*/security/scram/passwordSecretName`
 | string
 | _required_
 | Name of a secret containing SCRAM user password
 
-| `configuration/streams/security/scram/mechanism`
+| `configuration/*kafkasql*/security/scram/mechanism`
 | string
 | `SCRAM-SHA-512`
 | SASL mechanism
-
-| `configuration/infinispan`
-| -
-| -
-| Infinispan persistence configuration section
-
-| `configuration/infinispan/clusterName`
-| string
-| _ApicurioRegistry CR name_
-| Infinispan cluster name
 
 | `configuration/ui`
 | -
 | -
 | {registry} web console settings
 
-| `configuration/ui/readOnly`
+| `configuration/*ui*/readOnly`
 | string
 | `false`
 | Set {registry} web console to read-only mode
@@ -171,6 +150,36 @@ endif::[]
 | string
 | `INFO`
 | {registry} operand log level. One of `INFO`, `DEBUG`
+
+| `configuration/security`
+| -
+| -
+| {registry} web console and REST API security settings
+
+| `configuration/security/keycloak`
+| -
+| -
+| Web console and REST API security configuration using Keycloak
+
+| `configuration/*security*/keycloak/url`
+| string
+| _required_
+| Keycloak URL, must end with `/auth`
+
+| `configuration/*security*/keycloak/realm`
+| string
+| _required_
+| Keycloak realm
+
+| `configuration/*security*/keycloak/apiClientId`
+| string
+| `registry-client-api`
+| Keycloak client for REST API
+
+| `configuration/*security*/keycloak/uiClientId`
+| string
+| `registry-client-ui`
+| Keycloak client for web console
 
 | `deployment`
 | -
@@ -184,8 +193,18 @@ endif::[]
 
 | `deployment/host`
 | string
-| _auto-generated from ApicurioRegistry CR name and namespace_
-| Host/URL where the {registry} console and API are available
+| _auto-generated_
+| Host/URL where the {registry} console and API are available. If possible, {operator} attempts to determine the correct value based on the settings of your cluster router. The value is auto-generated only once, so user can override it afterwards.
+
+| `deployment/affinity`
+| k8s.io/api/core/v1 Affinity struct
+| _empty_
+| {registry} deployment affinity configuration
+
+| `deployment/tolerations`
+| k8s.io/api/core/v1 []Toleration slice
+| _empty_
+| {registry} deployment tolerations configuration
 |===
 
 NOTE: If an option is marked as _required_, it might be conditional on other configuration options being enabled.

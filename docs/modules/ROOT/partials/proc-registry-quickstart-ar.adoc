@@ -42,5 +42,5 @@ use `+https://raw.githubusercontent.com/Apicurio/apicurio-registry-operator/$REF
 .Example CR for in-memory storage
 [source,yaml]
 ----
-include::example$in-memory_cr.yaml[]
+include::example$apicurioregistry_mem_cr.yaml[]
 ----

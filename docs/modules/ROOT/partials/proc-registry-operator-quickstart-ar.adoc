@@ -35,7 +35,6 @@ sed "s/{NAMESPACE}/$NAMESPACE/g" | kubectl apply -f - -n $NAMESPACE
 ----
 
 NOTE: You must always specify either `master` or a version tag when using the procedure above. +
-Since version `0.0.4`, you can also use `install-dev.yaml` on branch `master` to deploy the latest development version of {operator}. +
 If you are deploying to OpenShift, use `oc` with the same arguments.
 
 //.Additional resources

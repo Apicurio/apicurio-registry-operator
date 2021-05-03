@@ -8,12 +8,18 @@ The `status` section contains the following fields:
 [source,yaml]
 ----
 status:
-  image: <string>
-  deploymentName: <string>
-  serviceName: <string>
-  ingressName: <string>
-  replicaCount: <int32>
-  host: <string>
+  info:
+    host: <string>
+  conditions: <list of:>
+  - type: <string>
+    status: <string, one of: True, False, Unknown>
+    reason: <string>
+    message: <string>
+    lastTransitionTime: <string, RFC-3339 timestamp>
+  managedResources: <list of:>
+  - kind: <string>
+    namespace: <string>
+    name: <string>
 ----
 
 .ApicurioRegistry CR status fields
@@ -21,27 +27,51 @@ status:
 |===
 | Status field | Type | Description
 
-| `image`
-| string
-| {registry} operand image that the Operator deploys. Might change based on the storage option selected in configuration.
+| `info`
+| -
+| Section with information about the deployed {registry}.
 
-| `deploymentName`
-| string
-| Name of the `Deployment` or `DeploymentConfig` managed by the Operator, used to deploy the {registry}.
-
-| `serviceName`
-| string
-| Name of the `Service` managed by the Operator, to expose the {registry} operand as a service.
-
-| `ingressName`
-| string
-| Name of the `Ingress` managed by the Operator, to make the {registry} accessible via HTTP. A `Route` is also created on OCP.
-
-| `replicaCount`
-| int32
-| Number of {registry} operand pods deployed.
-
-| `host`
+| `info/host`
 | string
 | URL where the {registry} UI and REST API are accessible.
+
+| `conditions`
+| -
+| List of conditions, that report the status of the {registry} or the operator with respect to that operand.
+
+| `conditions/type`
+| string
+| Type of the condition.
+
+| `conditions/status`
+| string
+| Status of the condition, one of `True`, `False`, `Unknown`.
+
+| `conditions/reason`
+| string
+| A programmatic identifier indicating the reason for the condition's last transition.
+
+| `conditions/message`
+| string
+| A human readable message indicating details about the transition.
+
+| `conditions/lastTransitionTime`
+| string
+| The last time the condition transitioned from one status to another.
+
+| `managedResources`
+| -
+| List of {platform} resources managed by {operator}
+
+| `managedResources/kind`
+| string
+| Resource kind.
+
+| `managedResources/namespace`
+| string
+| Resource namespace.
+
+| `managedResources/name`
+| string
+| Resource name.
 |===
