@@ -1,5 +1,5 @@
-[id="registry-persistence-kafka-streams-scram"]
-= Configuring Kafka Streams storage with SCRAM security
+[id="registry-persistence-kafkasql-scram"]
+= Configuring Kafka storage with SCRAM security
 
 You can configure the {kafka-streams} Operator and {operator} to use Salted Challenge Response Authentication Mechanism (SCRAM-SHA-512) for the Kafka cluster.
 
@@ -54,14 +54,23 @@ spec:
     userOperator: {}
 ----
 
-. Click the *Kafka Topic* tab, and then *Create Kafka Topic* to create the required `global-id-topic`:
+. The default Kafka topic name that {registry} uses to store data is `kafkasql-journal`.
+This topic is created automatically by {registry}.
+You can override this behavior or the default topic name by setting the appropriate environment variables (default values):
+** `REGISTRY_KAFKASQL_TOPIC_AUTO_CREATE=true` and
+** `REGISTRY_KAFKASQL_TOPIC=kafkasql-journal`.
+
++
+If you decide not to create the Kafka topic manually, skip the next step.
+
+. Click the *Kafka Topic* tab, and then *Create Kafka Topic* to create the `kafkasql-journal` topic:
 +
 [source,yaml]
 ----
 apiVersion: kafka.strimzi.io/v1beta1
 kind: KafkaTopic
 metadata:
-  name: global-id-topic
+  name: kafkasql-journal
   labels:
     strimzi.io/cluster: my-cluster
   namespace: registry-example-streams-plain
@@ -72,10 +81,6 @@ spec:
     retention.ms: 604800000
     segment.bytes: 1073741824
 ----
-
-. Change the topic name to `global-id-topic`, and optionally decrease the partition and replica count to minimum, which is sufficient for an example deployment.
-
-. Perform the same steps to create the required `storage-topic` topic.
 
 . Create a *Kafka User* resource to configure SCRAM authentication and authorization for the {registry} user. For example, in the `spec` block, see the `authentication` section.
 +
@@ -128,20 +133,7 @@ NOTE: The name of the secret can vary based on your cluster or user name.
 +
 [source,yaml]
 ----
-apiVersion: apicur.io/v1alpha1
-kind: ApicurioRegistry
-metadata:
-  name: example-apicurioregistry
-spec:
-  configuration:
-    persistence: "streams"
-    streams:
-      bootstrapServers: "my-cluster-kafka-bootstrap.registry-example-streams-scram.svc:9093"
-      security:
-        scram:
-          truststoreSecretName: my-cluster-cluster-ca-cert
-          user: my-user
-          passwordSecretName: my-user
+include::example$apicurioregistry_kafkasql_scram_cr.yaml[]
 ----
 
 IMPORTANT: You must use a different `bootstrapServers` address than in the plain insecure use case. The address must support TLS connections, and is found in the specified *Kafka* resource under the `type: tls` field.

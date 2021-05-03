@@ -1,7 +1,7 @@
-[id="registry-persistence-kafka-plain"]
-= Configuring plain Kafka storage
+[id="registry-persistence-kafkasql-plain"]
+= Configuring plain Kafka storage with no security
 
-You can configure the {kafka-streams} Operator and {operator} to use plain Kafka (without Kafka Streams) and with no security.
+You can configure the {kafka-streams} Operator and {operator} to use a default connection with no security.
 
 .Prerequisites
 
@@ -20,7 +20,7 @@ apiVersion: kafka.strimzi.io/v1beta1
 kind: Kafka
 metadata:
   name: my-cluster
-  namespace: registry-example-kafka
+  namespace: registry-example-streams-plain
 spec:
   kafka:
     version: 2.5.0
@@ -55,24 +55,33 @@ status:
     ...
   listeners:
     - addresses:
-        - host: my-cluster-kafka-bootstrap.registry-example-kafka.svc
+        - host: my-cluster-kafka-bootstrap.registry-example-streams-plain.svc
           port: 9092
-      bootstrapServers: 'my-cluster-kafka-bootstrap.registry-example-kafka.svc:9092'
+      bootstrapServers: 'my-cluster-kafka-bootstrap.registry-example-streams-plain.svc:9092'
       type: plain
   ...
 ----
 
-. Click the *Kafka Topic* tab, and then *Create Kafka Topic* to create the required `global-id-topic`:
+. The default Kafka topic name that {registry} uses to store data is `kafkasql-journal`.
+This topic is created automatically by {registry}.
+You can override this behavior or the default topic name by setting the appropriate environment variables (default values):
+ ** `REGISTRY_KAFKASQL_TOPIC_AUTO_CREATE=true` and
+ ** `REGISTRY_KAFKASQL_TOPIC=kafkasql-journal`.
+
++
+If you decide not to create the Kafka topic manually, skip the next step.
+
+. Click the *Kafka Topic* tab, and then *Create Kafka Topic* to create the `kafkasql-journal` topic:
 +
 [source,yaml]
 ----
 apiVersion: kafka.strimzi.io/v1beta1
 kind: KafkaTopic
 metadata:
-  name: global-id-topic
+  name: kafkasql-journal
   labels:
     strimzi.io/cluster: my-cluster
-  namespace: registry-example-kafka
+  namespace: registry-example-streams-plain
 spec:
   partitions: 2
   replicas: 1
@@ -81,23 +90,11 @@ spec:
     segment.bytes: 1073741824
 ----
 
-. Change the topic name to `global-id-topic`, and optionally decrease the partition and replica count to minimum, which is sufficient for an example deployment.
-
-. Perform the same steps to create the required `storage-topic` topic.
-
 . Select the *{operator}*, and in the *ApicurioRegistry* tab, click *Create ApicurioRegistry*, using the following example, but replace your value in the `bootstrapServers` field.
 +
 [source,yaml]
 ----
-apiVersion: apicur.io/v1alpha1
-kind: ApicurioRegistry
-metadata:
-  name: example-apicurioregistry
-spec:
-  configuration:
-    persistence: "kafka"
-    kafka:
-      bootstrapServers: "my-cluster-kafka-bootstrap.registry-example-kafka.svc:9092"
+include::example$apicurioregistry_kafkasql_plain_cr.yaml[]
 ----
 
 . Wait a few minutes to see the *Route* being created, where you can access the application.

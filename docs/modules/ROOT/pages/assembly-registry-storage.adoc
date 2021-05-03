@@ -11,16 +11,10 @@ ifdef::apicurio-registry[]
 * xref:registry-persistence-mem[]
 endif::[]
 
-* xref:registry-persistence-infinispan[]
-
-ifdef::apicurio-registry[]
-* xref:registry-persistence-kafka-plain[]
-endif::[]
-
-* xref:registry-persistence-kafka-streams-plain[]
-* xref:registry-persistence-kafka-streams-tls[]
-* xref:registry-persistence-kafka-streams-scram[]
-* xref:registry-persistence-jpa[]
+* xref:registry-persistence-kafkasql-plain[]
+* xref:registry-persistence-kafkasql-tls[]
+* xref:registry-persistence-kafkasql-scram[]
+* xref:registry-persistence-sql[]
 
 ifdef::apicurio-registry[]
 NOTE: This chapter mostly focuses on storage configuration procedures for OpenShift using OperatorHub UI.
@@ -35,13 +29,7 @@ ifdef::apicurio-registry[]
 include::partial$proc-persistence-mem.adoc[leveloffset=+1]
 endif::[]
 
-include::partial$proc-persistence-infinispan.adoc[leveloffset=+1]
-
-ifdef::apicurio-registry[]
-include::partial$proc-persistence-kafka.adoc[leveloffset=+1]
-endif::[]
-
-include::partial$proc-persistence-kafka-streams-plain.adoc[leveloffset=+1]
-include::partial$proc-persistence-kafka-streams-tls.adoc[leveloffset=+1]
-include::partial$proc-persistence-kafka-streams-scram.adoc[leveloffset=+1]
-include::partial$proc-persistence-jpa.adoc[leveloffset=+1]
+include::partial$proc-persistence-kafkasql-plain.adoc[leveloffset=+1]
+include::partial$proc-persistence-kafkasql-tls.adoc[leveloffset=+1]
+include::partial$proc-persistence-kafkasql-scram.adoc[leveloffset=+1]
+include::partial$proc-persistence-sql.adoc[leveloffset=+1]

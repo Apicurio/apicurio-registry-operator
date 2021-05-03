@@ -1,43 +1,143 @@
-[#apicurio-registry-operator]
 = Apicurio Registry Operator
 
-[#requirements]
-== Requirements
+Apicurio Registry Operator provides a quick and easy way to deploy and manage
+https://github.com/Apicurio/apicurio-registry[Apicurio Registry] on Kubernetes or OpenShift.
+
+== Deployment Requirements
+
+The Apicurio Registry Operator supports the following platform versions:
+
+.Apicurio Registry Operator platforms
+[%header,cols=2*]
+|===
+| Platform | Required version
+| Kubernetes
+| 1.19+
+| OpenShift
+| 4.6+
+|===
+
+== Build Requirements
 
 * Docker
-* https://github.com/golang/go[go] (1.14+, with `export GO111MODULE='on'`), and `$GOPATH` and `$GOROOT` set.
-* https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md[Operator SDK] v1.4+
-* A running Kubernetes, https://kubernetes.io/docs/tasks/tools/install-minikube/[Minikube], OpenShift, or Minishift deployment with system admin access.
+* https://golang.org/[go] v1.14+ (with `export GO111MODULE='on'`, `$GOPATH` and `$GOROOT`)
+* https://sdk.operatorframework.io/docs/installation/[Operator SDK] v1.4+
+* A running Kubernetes (https://minikube.sigs.k8s.io/docs/start/[Minikube]) or OpenShift (https://www.okd.io/minishift/[Minishift]) cluster with system admin access
 
-[#quickstart]
 == Quickstart
 
-1. Prepare your Kubernetes cluster.
-If you are using Minikube, run `minikube addons enable ingress`.
+This section explains how to quickly install *development version* of the Apicurio Registry Operator on the command line.
 
-1. Choose a Docker registry where you can push operator images that you built during testing. e.g. `quay.io/foo`
+NOTE: The recommended installation option for non-development environments is https://operatorhub.io/operator/apicurio-registry[OperatorHub.io].
+The recommended storage options are SQL or Kafka.
+Please visit the latest https://www.apicur.io/registry/docs[Apicurio Registry and Operator documentation].
 
-1. Run `make build-reload OPERATOR_IMAGE_REPOSITORY="quay.io/foo"`.
-This will build the operator image from scratch, push it into your registry, and deploy it in the `system` namespace in your cluster.
-Run `make` without any parameters to get a help message.
+.Procedure
+. Prepare your Kubernetes or OpenShift cluster.
+If you are using Minikube, run:
++
+[source,bash]
+----
+minikube addons enable ingress
+----
 
-1. To create a new Apicurio Registry deployment, the fastest way is to use in-memory persistence option and one of the example CRs:
-`$ cat config/examples/resources/registry_v1_apicurioregistry.yaml | kubectl -n system apply -f -`
+. Build the latest distribution bundle:
++
+[source,bash]
+----
+make dist
+----
++
+NOTE: Run `make` without any parameters to get a help message.
 
-1. Verify that your Apicurio Registry deployment is healthy (for Minikube):
-`$ kubectl -n system get ingress`
-`$ curl -H "Host: example-apicurioregistry.system" http://$(minikube ip)/health`
+. Follow the instructions in `./dist/README.adoc` file.
 
-1. Run `$ cat config/examples/resources/registry_v1_apicurioregistry.yaml | kubectl -n system delete -f -; make undeploy`
-to remove the operator from your cluster.
+== Build and Deploy Apicurio Registry Operator
 
+This section explains how to build Apicurio Registry Operator on your own and deploy it for testing and development.
+
+.Procedure
+. Prepare your Kubernetes or OpenShift cluster.
+If you are using Minikube, run:
++
+[source,bash]
+----
+minikube addons enable ingress
+----
++
+NOTE: Run `export CLIENT="oc"` if you are deploying to OpenShift.
+
+. Choose a namespace where the operator will be deployed:
++
+[source,bash]
+----
+export NAMESPACE="apicurio-registry-operator-namespace"
+kubectl create namespace "$NAMESPACE"
+----
+
+. Choose a Docker registry where to push the operator images that you build, e.g. `quay.io/foo`:
++
+[source,bash]
+----
+export OPERATOR_IMAGE_REPOSITORY="quay.io/foo"
+----
+
+. The following command will build the operator image, push it into your registry, and deploy it the selected namespace in your cluster.
++
+[source,bash]
+----
+make build docker-push deploy
+----
+
+. To remove the operator from your cluster, run:
++
+[source,bash]
+----
+make undeploy
+----
+
+== Deploy Apicurio Registry
+
+After the Apicurio Registry Operator has been deployed, it can deploy an Apicurio Registry instance.
+
+.Procedure
+. To create a new Apicurio Registry deployment, the fastest way is to use one of the example `ApicurioRegistry` custom resources:
++
+[source,bash]
+----
+cat config/examples/resources/apicurioregistry_mem_cr.yaml | kubectl apply -f - -n "$NAMESPACE"
+----
+
+. Optionally, build the latest distribution bundle that contains additional examples:
++
+[source,bash]
+----
+make dist
+----
+
+. Verify that your Apicurio Registry deployment is healthy (for Minikube).
+Find out the hostname of the deployed Apicurio Registry:
++
+[source,bash]
+----
+kubectl get ingress -n "$NAMESPACE"
+export HOSTNAME="..."
+./hack/modify_etc_hosts.sh "$HOSTNAME"
+----
++
+and issue a request to the metrics endpoint:
++
+[source,bash]
+----
+curl "http://$HOSTNAME/health"
+----
++
 NOTE: The in-memory deployment is not suitable for production.
-We recommend using Kafka Streams persistence option for that.
-See the contents of `./docs` for more information.
+We recommend using SQL or Kafka persistence options for that.
+See the documentation for more information.
 
-[#notes]
 == Notes
 
-Please create an issue on GitHub if you come across any problems.
+https://github.com/Apicurio/apicurio-registry-operator/issues/new[Create an issue] on GitHub if you find any problems.
 
-You can find more documentation in `./docs`.
+You can find more information on the https://www.apicur.io/registry/[Apicurio website].

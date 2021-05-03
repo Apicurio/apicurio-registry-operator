@@ -9,31 +9,15 @@ ifdef::apicurio-registry[]
 * *In-memory* - data is stored in RAM on each {registry} node.
 This is the easiest deployment to use, but is not recommended for production environment.
 endif::[]
-* *Infinispan* - data is stored in an embedded Infinispan cache.
-ifdef::apicurio-registry[]
-* *Apache Kafka* - data is stored using plain Apache Kafka.
-endif::[]
-* *Apache Kafka Steams* - data is stored using Apache Kafka Streams.
-This option is recommended for most production deployments.
-* *Java Persistence API* (PostgreSQL) - data is stored in a relational database, in this case PostgreSQL 12+.
+* *Apache Kafka* (Kafka + SQL) - data is stored using Apache Kafka, with the help of local SQL database
+on each node.
+* *SQL* (PostgreSQL) - data is stored in a relational database, in this case PostgreSQL 12+.
 
 .Storage requiring installation
 The following options require that the storage is already installed as a prerequisite:
 
-ifdef::apicurio-registry[]
 * *Apache Kafka*
-endif::[]
-* *Apache Kafka Streams*
-* *Java Persistence API* (PostgreSQL)
-
-ifdef::service-registry[]
-The following storage options are available as a https://access.redhat.com/support/offerings/techpreview[Technology Preview] feature:
-
-* *Java Persistence API* (PostgreSQL)
-* *Infinispan*
-
-Red Hat does not recommend using Technology Preview features in production.
-endif::[]
+* *SQL* (PostgreSQL)
 
 .Additional resources
 * xref:assembly-operator-installation.adoc[]

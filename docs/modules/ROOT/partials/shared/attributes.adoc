@@ -4,7 +4,7 @@
 
 // High-level Parameters:
 
-// :apicurio-registry-operator-downstream:
+:apicurio-registry-operator-downstream:
 //     - If set, downstream documentation is generated. (Inclusion parameter)
 
 :apicurio-registry-operator-dev:
@@ -31,8 +31,10 @@ ifdef::apicurio-registry-operator-dev[]
 :operator-version-tag: master
 endif::[]
 
-:kafka-streams: Strimzi
+:platform: Kubernetes
 :cli-client: kubectl
+
+:kafka-streams: Strimzi
 
 endif::[]
 
@@ -42,10 +44,14 @@ ifdef::apicurio-registry-operator-downstream[]
 :service-registry:
 :registry: Service Registry
 :operator: {registry} Operator
+
 :registry-version: 1.1
 :operator-version: 0.0.4.redhat
-:kafka-streams: AMQ Streams
+
+:platform: OpenShift
 :cli-client: oc
+
+:kafka-streams: AMQ Streams
 
 endif::[]
 

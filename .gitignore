@@ -26,3 +26,6 @@ testbin/*
 
 # custom
 bundle
+dist
+.notes
+*.tar.gz

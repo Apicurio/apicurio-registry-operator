@@ -6,11 +6,11 @@ The {operator} will deploy {registry} in this way if you do not provide any conf
 
 [source,yaml]
 ----
-include::example$in-memory_cr.yaml[]
+include::example$apicurioregistry_mem_cr.yaml[]
 ----
 
 .Prerequisites
-* You must have an OpenShift cluster with cluster administrator access.
+* You must have an Kubernetes cluster with cluster administrator access.
 * You must have already installed the {operator}.
 
 .Procedure
@@ -19,8 +19,9 @@ include::example$in-memory_cr.yaml[]
 +
 [source,bash,subs="attributes"]
 ----
-export REF="{operator-version-tag}" &&
-curl -sSL "https://raw.githubusercontent.com/Apicurio/apicurio-registry-operator/$REF/docs/modules/ROOT/examples/in-memory_cr.yaml" |
+export NAMESPACE="default"
+export REF="{operator-version-tag}"
+curl -sSL "https://raw.githubusercontent.com/Apicurio/apicurio-registry-operator/$REF/docs/modules/ROOT/examples/apicurioregistry_mem_cr.yaml" |
 kubectl apply -f - -n $NAMESPACE
 ----
 

@@ -3,17 +3,12 @@
 
 The resources managed by the {operator} when deploying {registry} are as follows:
 
+* `Deployment`
+* `Service`
 ifdef::apicurio-registry[]
-* `Deployment` (Kubernetes) or `DeploymentConfig` (OpenShift)
+* `Ingress`
 endif::[]
 ifdef::service-registry[]
-* `DeploymentConfig`
-endif::[]
-* Service
-ifdef::apicurio-registry[]
-* `Ingress` and `Route` (OpenShift)
-endif::[]
-ifdef::service-registry[]
-* `Ingress` and `Route`
+* `Ingress` (and `Route`)
 endif::[]
 * `PodDisruptionBudget`

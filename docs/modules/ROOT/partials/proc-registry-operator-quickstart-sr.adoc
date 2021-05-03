@@ -5,7 +5,7 @@ You can quickly deploy the {operator} on the command line, without the Operator 
 
 .Prerequisites
 
-* You must go to link:{LinkRedHatIntegrationDownloads}[{NameRedHatIntegrationDownloads}], select the product version, and download the {registry} CRDs `.zip` file.
+* You must go to link:{LinkRedHatIntegrationDownloads}[{NameRedHatIntegrationDownloads}], select the product version, and download the {registry} examples `.zip` file.
 
 .Procedure
 
@@ -13,14 +13,13 @@ You can quickly deploy the {operator} on the command line, without the Operator 
 +
 [source,bash]
 ----
-oc new-project service-registry
+NAMESPACE="service-registry"
+oc new-project "$NAMESPACE"
 ----
 
-. Set the namespace in `install/cluster_role_binding.yaml` by replacing `+{NAMESPACE}+` with `service-registry`.
-
-. Apply the files located in the `install/` folder:
+. Apply the file located in the `install/` folder:
 +
 [source,bash]
 ----
-oc apply -f install/ -n service-registry
+cat install/install.yaml | sed "s/apicurio-registry-operator-namespace/$NAMESPACE/g" | oc apply -f -
 ----
