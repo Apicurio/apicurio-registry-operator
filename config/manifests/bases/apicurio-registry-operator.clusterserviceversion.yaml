@@ -21,11 +21,6 @@ spec:
       displayName: Apicurio Registry
       kind: ApicurioRegistry
       name: apicurioregistries.registry.apicur.io
-      specDescriptors:
-      - displayName: Test
-        path: image.name
-        x-descriptors:
-        - urn:alm:descriptor:com.tectonic.ui:text
       version: v1
   description: |
     ## Apicurio Registry

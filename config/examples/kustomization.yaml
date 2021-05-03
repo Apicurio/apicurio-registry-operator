@@ -1,3 +1,5 @@
 resources:
-  - resources/registry_v1_apicurioregistry.yaml
+  - resources/apicurioregistry_mem_cr.yaml
+  - resources/apicurioregistry_sql_cr.yaml
+  - resources/apicurioregistry_kafkasql_cr.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples
