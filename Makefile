@@ -197,7 +197,7 @@ endif
 
 PACKAGE_MANIFESTS_OPTS ?= $(PACKAGE_FROM_VERSION) $(PACKAGE_CHANNELS) $(PACKAGE_IS_DEFAULT_CHANNEL)
 
-PACKAGE_VERSION = $(OPERATOR_VERSION)-$(LC_OPERAND_VERSION)
+PACKAGE_VERSION = $(OPERATOR_VERSION)-v$(LC_OPERAND_VERSION)
 
 .PHONY: packagemanifests
 packagemanifests: kustomize manifests ## Generate package manifests.
@@ -205,8 +205,12 @@ packagemanifests: kustomize manifests ## Generate package manifests.
 	cd config/manager && $(KUSTOMIZE) edit set image REGISTRY_OPERATOR_IMAGE=$(OPERATOR_IMAGE)
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate packagemanifests -q --version $(PACKAGE_VERSION) $(PACKAGE_MANIFESTS_OPTS)
 
-.PHONY: dist
+.PHONY: dist ## Generate a distribution directory (install files and examples)
 dist: kustomize
 	mkdir -p dist
+	cp -rt ./dist ./dist-base/*
+	cp -t ./dist ./LICENSE
+	cp -t ./dist/examples ./config/examples/resources/*
 	cd config/manager && $(KUSTOMIZE) edit set image REGISTRY_OPERATOR_IMAGE=$(OPERATOR_IMAGE)
 	$(KUSTOMIZE) build config/default/ > ./dist/default-install.yaml
+	tar -zcf apicurio-registry-operator-$(PACKAGE_VERSION).tar.gz -C ./dist .
