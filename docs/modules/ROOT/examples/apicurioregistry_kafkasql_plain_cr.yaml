@@ -6,4 +6,4 @@ spec:
   configuration:
     persistence: "kafkasql"
     kafkasql:
-      bootstrapServers: "my-cluster-kafka-bootstrap.registry-example-streams-plain.svc:9092"
+      bootstrapServers: "my-cluster-kafka-bootstrap.registry-example-kafkasql-plain.svc:9092"

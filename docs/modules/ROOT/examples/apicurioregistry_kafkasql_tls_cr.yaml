@@ -6,7 +6,7 @@ spec:
   configuration:
     persistence: "kafkasql"
     kafkasql:
-      bootstrapServers: "my-cluster-kafka-bootstrap.registry-example-streams-tls.svc:9093"
+      bootstrapServers: "my-cluster-kafka-bootstrap.registry-example-kafkasql-tls.svc:9093"
       security:
         tls:
           keystoreSecretName: my-user
