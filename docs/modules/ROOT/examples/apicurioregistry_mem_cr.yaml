@@ -5,4 +5,4 @@ metadata:
 spec:
   configuration:
     persistence: "mem" # Optional (default value)
-    # NOTE: No configuration required for *dev* deployment
+    # NOTE: No additional configuration required for *dev* deployment

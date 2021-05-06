@@ -16,32 +16,40 @@ You can configure the {kafka-streams} Operator and {operator} to use a default c
 +
 [source,yaml]
 ----
-apiVersion: kafka.strimzi.io/v1beta1
+apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
   name: my-cluster
-  namespace: registry-example-streams-plain
+  namespace: registry-example-kafkasql-plain
+  # Change or remove the explicit namespace
 spec:
   kafka:
-    version: 2.5.0
-    replicas: 3
-    listeners:
-      plain: {}
-      tls: {}
     config:
       offsets.topic.replication.factor: 3
       transaction.state.log.replication.factor: 3
       transaction.state.log.min.isr: 2
-      log.message.format.version: '2.5'
+      log.message.format.version: '2.7'
+      inter.broker.protocol.version: '2.7'
+    version: 2.7.0
     storage:
       type: ephemeral
-  zookeeper:
     replicas: 3
-    storage:
-      type: ephemeral
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
   entityOperator:
     topicOperator: {}
     userOperator: {}
+  zookeeper:
+    storage:
+      type: ephemeral
+    replicas: 3
 ----
 +
 NOTE: Your OpenShift project namespace might be different.
@@ -55,18 +63,19 @@ status:
     ...
   listeners:
     - addresses:
-        - host: my-cluster-kafka-bootstrap.registry-example-streams-plain.svc
+        - host: my-cluster-kafka-bootstrap.registry-example-kafkasql-plain.svc
           port: 9092
-      bootstrapServers: 'my-cluster-kafka-bootstrap.registry-example-streams-plain.svc:9092'
+      bootstrapServers: 'my-cluster-kafka-bootstrap.registry-example-kafkasql-plain.svc:9092'
       type: plain
   ...
 ----
-
-. The default Kafka topic name that {registry} uses to store data is `kafkasql-journal`.
++
+The default Kafka topic name that {registry} uses to store data is `kafkasql-journal`.
 This topic is created automatically by {registry}.
 You can override this behavior or the default topic name by setting the appropriate environment variables (default values):
- ** `REGISTRY_KAFKASQL_TOPIC_AUTO_CREATE=true` and
- ** `REGISTRY_KAFKASQL_TOPIC=kafkasql-journal`.
+
+ ** `REGISTRY_KAFKASQL_TOPIC_AUTO_CREATE=true`
+ ** `REGISTRY_KAFKASQL_TOPIC=kafkasql-journal`
 
 +
 If you decide not to create the Kafka topic manually, skip the next step.
@@ -81,7 +90,7 @@ metadata:
   name: kafkasql-journal
   labels:
     strimzi.io/cluster: my-cluster
-  namespace: registry-example-streams-plain
+  namespace: registry-example-kafkasql-plain
 spec:
   partitions: 2
   replicas: 1

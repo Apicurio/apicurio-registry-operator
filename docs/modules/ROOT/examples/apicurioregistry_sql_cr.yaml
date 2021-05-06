@@ -9,5 +9,4 @@ spec:
       dataSource:
         url: "jdbc:postgresql://<service name>.<namespace>.svc:5432/<database name>"
         userName: "postgres"
-        password: "<password>"
-        # ^ Optional
+        password: "<password>" # Optional
