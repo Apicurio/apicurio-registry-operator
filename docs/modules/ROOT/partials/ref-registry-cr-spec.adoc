@@ -46,7 +46,7 @@ spec:
 The following table describes each configuration option:
 
 .ApicurioRegistry CR spec configuration options
-[%header,cols="3,1,2,3"]
+[%header,cols="4,2,2,3"]
 |===
 | Configuration option | type | Default value | Description
 

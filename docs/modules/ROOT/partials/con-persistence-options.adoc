@@ -13,11 +13,17 @@ endif::[]
 on each node.
 * *SQL* (PostgreSQL) - data is stored in a relational database, in this case PostgreSQL 12+.
 
+ifdef::apicurio-registry[]
 .Storage requiring installation
 The following options require that the storage is already installed as a prerequisite:
 
 * *Apache Kafka*
 * *SQL* (PostgreSQL)
+endif::[]
+
+ifdef::service-registry[]
+These options require that the storage is already installed as a prerequisite.
+endif::[]
 
 .Additional resources
 * xref:assembly-operator-installation.adoc[]
