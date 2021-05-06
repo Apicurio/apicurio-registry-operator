@@ -67,7 +67,7 @@ minikube addons enable ingress
 +
 NOTE: Run `export CLIENT="oc"` if you are deploying to OpenShift.
 
-. Choose a namespace where the operator will be deployed:
+. Choose a namespace where the Operator will be deployed:
 +
 [source,bash]
 ----
