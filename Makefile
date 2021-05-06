@@ -144,11 +144,11 @@ undeploy: ## TODO
 	$(KUSTOMIZE) build config/build-namespaced | $(CLIENT) delete -f -
 
 .PHONY: docker-build
-docker-build: test ## Build operator image
+docker-build: test ## Build Operator image
 	docker build -t ${OPERATOR_IMAGE} .
 
 .PHONY: docker-push
-docker-push: ## Push operator image
+docker-push: ## Push Operator image
 ifeq ($(LATEST),true)
 	docker tag $(OPERATOR_IMAGE) $(OPERATOR_IMAGE_NAME):latest$(DASH_VERSION)
 	docker push $(OPERATOR_IMAGE_NAME):latest$(DASH_VERSION)
@@ -156,7 +156,7 @@ endif
 	docker push ${OPERATOR_IMAGE}
 
 .PHONY: build
-build: manager docker-build ## Build operator image
+build: manager docker-build ## Build Operator image
 
 .PHONY: bundle
 bundle: manifests install-kustomize ## Generate bundle manifests and metadata
