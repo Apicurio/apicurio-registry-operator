@@ -37,7 +37,7 @@ status:
 
 | `conditions`
 | -
-| List of conditions, that report the status of the {registry} or the operator with respect to that operand.
+| List of conditions that report the status of the {registry}, or the Operator with respect to that deployment.
 
 | `conditions/type`
 | string

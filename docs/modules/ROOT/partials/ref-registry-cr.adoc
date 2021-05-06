@@ -52,7 +52,7 @@ status:
 ----
 
 IMPORTANT: By default, the {operator} only watches its own project namespace. Therefore you must create the `ApicurioRegistry` CR in the same namespace, if you are deploying the operator manually.
-You can modify this behavior by updating `WATCH_NAMESPACE` environment variable in the operator `Deployment` resource.
+You can modify this behavior by updating `WATCH_NAMESPACE` environment variable in the Operator `Deployment` resource.
 
 ifdef::apicurio-registry[]
 NOTE: These configuration options may change or be renamed until {operator} leaves the alpha development stage.

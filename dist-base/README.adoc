@@ -1,14 +1,14 @@
 = Apicurio Registry Operator Distribution Bundle
 
 This directory contains installation files for the Apicurio Registry Operator, with example `ApicurioRegistry`
-custom resource files. In addition, full operator documentation and license information is also included.
-Docker images for the operator and the operand are distributed using a public registry.
+custom resource files. In addition, full Operator documentation and license information is also included.
+Docker images for the Operator and the Operand are distributed using a public registry.
 
 == Installation
 
 .Procedure
 
-. Choose a namespace where the operator will be deployed:
+. Choose a namespace where the Operator will be deployed:
 +
 [source,bash]
 ----
