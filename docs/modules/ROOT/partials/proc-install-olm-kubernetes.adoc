@@ -2,7 +2,7 @@
 = Installing {operator} using the OperatorHub on Kubernetes
 
 This chapter focuses on installation procedures for OpenShift using OperatorHub UI.
-If you are deploying to Kubernetes, you can use command line tools to install Operator Lifecycle Manager (OLM), and instruct it to deploy the {registry} or other operators.
+If you are deploying to Kubernetes, you can use command line tools to install Operator Lifecycle Manager (OLM), and instruct it to deploy the {registry} or other Operators.
 
 image::operator-hub-search-ar.png[]
 

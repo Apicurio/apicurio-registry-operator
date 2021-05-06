@@ -149,7 +149,7 @@ endif::[]
 | `configuration/logLevel`
 | string
 | `INFO`
-| {registry} operand log level. One of `INFO`, `DEBUG`
+| {registry} log level. One of `INFO`, `DEBUG`
 
 | `configuration/security`
 | -
@@ -184,7 +184,7 @@ endif::[]
 | `deployment`
 | -
 | -
-| Section for operand deployment settings
+| Section for {registry} deployment settings
 
 | `deployment/replicas`
 | positive integer
