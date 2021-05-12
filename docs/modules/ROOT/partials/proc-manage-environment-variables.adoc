@@ -1,7 +1,7 @@
 [#manage-registry-environment-variables]
 = Managing {registry} environment variables
 
-{operator} manages most common {registry} configuration, but there are some options that you can adjust manually. You can update these by setting an environment variable on the {registry} `DeploymentConfig` resource. If the specific configuration option is not available in the `ApicurioRegistry` CR, you can use an environment variable to adjust it.
+{operator} manages most common {registry} configuration, but there are some options that you can adjust manually. You can update these by setting an environment variable on the {registry} `Deployment` resource. If the specific configuration option is not available in the `ApicurioRegistry` CR, you can use an environment variable to adjust it.
 
 .Procedure
 
@@ -9,9 +9,9 @@ OpenShift web console::
 
 . Select the *Installed Operators* tab, and then the *Red Hat Integration - {operator}*.
 . On the *ApicurioRegistry* tab, click the `ApicurioRegistry` CR for your {registry} deployment.
-. On the main overview page, view the *Deployment Name* section, which contains the name of the `DeploymentConfig` managed by the Operator to deploy your {registry} instance.
-. Find that `DeploymentConfig` in the *Workloads* > *Deployment Configs* in the left menu.
-. Select the `DeploymentConfig` with the correct name, and select the *Environment* tab.
+. On the main overview page, view the *managedResources* section, which contains the name of the `Deployment` managed by the Operator to deploy your {registry} instance.
+. Find that `Deployment` in the *Workloads* > *Deployments* in the left menu.
+. Select the `Deployment` with the correct name, and select the *Environment* tab.
 . You can add or modify your environment variable to the *Single values (env)* section.
 . Click *Save* at the bottom.
 
@@ -20,6 +20,6 @@ OpenShift CLI::
 . Select the project where {registry} is installed.
 . Run `oc get apicurioregistry` to get the list of `ApicurioRegistry` CRs
 . Run `oc describe` on the CR representing the {registry} instance that you want to configure.
-. View *Deployment Name* in the *status* section.
-. Find that `DeploymentConfig` and enter `oc edit`.
+. View *managedResources* in the *status* section.
+. Find that `Deployment` and enter `oc edit`.
 . Add or modify the environment variable in the `spec.template.spec.containers[0].env` section.
