@@ -193,11 +193,17 @@ dist: install-kustomize docs
 	mkdir -p dist
 	cp -rt ./dist ./dist-base/*
 	cp -t ./dist ./LICENSE
+	# Examples
 	cp -t ./dist/examples ./config/examples/resources/*
+	cp -rt ./dist/examples ./docs/modules/ROOT/examples/*
+	#cp -t ./dist/examples/keycloak ./docs/modules/ROOT/examples/keycloak/*
+	# Docs
 	cp -rt ./dist ./docs/target/dist && mv ./dist/dist ./dist/docs
+	# Install
 	cd config/manager && $(KUSTOMIZE) edit set image REGISTRY_OPERATOR_IMAGE=$(OPERATOR_IMAGE)
 	$(KUSTOMIZE) build config/default/ > ./dist/install.yaml
 	$(KUSTOMIZE) build config/default/ > ./docs/resources/install.yaml # Deprecated!
+	# Archive
 	tar -zcf apicurio-registry-operator-$(PACKAGE_VERSION).tar.gz -C ./dist .
 
 .PHONY: clean ## Remove temporary and generated files

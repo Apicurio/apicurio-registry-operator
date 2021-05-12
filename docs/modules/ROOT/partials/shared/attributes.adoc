@@ -36,6 +36,8 @@ endif::[]
 
 :kafka-streams: Strimzi
 
+:keycloak: Keycloak
+
 endif::[]
 
 // Downstream
@@ -52,6 +54,8 @@ ifdef::apicurio-registry-operator-downstream[]
 :cli-client: oc
 
 :kafka-streams: AMQ Streams
+
+:keycloak: Red Hat Single Sign-On
 
 endif::[]
 

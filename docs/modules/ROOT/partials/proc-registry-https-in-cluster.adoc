@@ -32,7 +32,7 @@ keytool -genkey -trustcacerts -keyalg RSA -keystore registry-keystore.jks -store
 NOTE: If you encounter a `java.io.IOException: Invalid keystore format`, the upload of the binary file did not work properly.
 As an alternative, encode the file as a base64 string using `cat registry-keystore.jks | base64 -w0 > data.txt` and edit the *Secret* resource as yaml to manually add the encoded file.
 
-. Edit the *DeploymentConfig* resource of the {registry} instance.
+. Edit the *Deployment* resource of the {registry} instance.
 You can find the correct name in a status field of the {operator}.
 .. Add the keystore secret as a volume:
 +
