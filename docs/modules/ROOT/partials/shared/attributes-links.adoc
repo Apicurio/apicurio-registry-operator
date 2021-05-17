@@ -9,3 +9,6 @@
 
 :LinkOperatorHub: https://docs.openshift.com/container-platform/4.6/operators/understanding/olm-understanding-operatorhub.html
 :NameOperatorHub: OperatorHub
+
+:LinkManagingContentUsingRESTAPI: https://access.redhat.com/documentation/en-us/red_hat_integration/2021.q2/html/service_registry_user_guide/managing-registry-artifacts-api
+:NameManagingContentUsingRESTAPI: Managing Apicurio Registry content using the REST API

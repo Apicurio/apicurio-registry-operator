@@ -1,7 +1,7 @@
 [id="registry-security-keycloak"]
-= Securing {registry} API endpoints and web console using Keycloak
+= Securing {registry} API endpoints and web console using {keycloak}
 
-The following procedure shows how to configure {registry} deployment to be protected by Keycloak.
+The following procedure shows how to configure {registry} deployment to be protected by {keycloak}.
 
 IMPORTANT: The example configuration in this procedure is intended only for development and testing.
 In order to keep the procedure simple, it does not use HTTPS and other defenses recommended for a production environment.
