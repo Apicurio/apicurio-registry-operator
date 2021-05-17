@@ -4,6 +4,11 @@
 To quickly create a new {registry} deployment, use the in-memory storage option,
 which does not require an external storage to be configured as a prerequisite.
 
+ifdef::apicurio-registry-operator-dev[]
+NOTE: This procedure will deploy the latest released version of {operator}.
+If you want to deploy the development version, visit https://github.com/Apicurio/apicurio-registry-operator/[{operator} GitHub repository].
+endif::[]
+
 .Prerequisites
 * Ensure that the {operator} is already installed.
 
@@ -15,29 +20,14 @@ which does not require an external storage to be configured as a prerequisite.
 export NAMESPACE="default"
 ----
 
-. Use the `master` branch or a git tag to select the appropriate example `ApicurioRegistry` CR for the given {operator} version:
-+
-ifndef::apicurio-registry-operator-dev[]
-[source,bash]
-----
-export REF="master"
-----
-or
-+
-endif::[]
-[source,bash,subs="attributes"]
-----
-export REF="{operator-version-tag}"
-----
-
 . Create an `ApicurioRegistry` custom resource (CR):
 +
 [source,bash,subs="attributes"]
 ----
-kubectl apply -f https://raw.githubusercontent.com/Apicurio/apicurio-registry-operator/$REF/docs/modules/ROOT/examples/in-memory_cr.yaml -n $NAMESPACE
+kubectl apply -f https://raw.githubusercontent.com/Apicurio/apicurio-registry-operator/{operator-version-latest-release-tag}/docs/modules/ROOT/examples/apicurioregistry_mem_cr.yaml -n $NAMESPACE
 ----
-NOTE: The path to the example `ApicurioRegistry` CR has been changed since version `0.0.4`. If you are deploying an older release,
-use `+https://raw.githubusercontent.com/Apicurio/apicurio-registry-operator/$REF/docs/resources/example-cr/in-memory.yaml+`.
+NOTE: If you want to deploy an older release of the Operator, follow the documentation for that version. +
+If you are deploying to OpenShift, use `oc` with the same arguments.
 +
 .Example CR for in-memory storage
 [source,yaml]
