@@ -3,6 +3,11 @@
 
 You can quickly deploy the {operator} on the command line, without the Operator Lifecycle Manager, by executing a single command.
 
+ifdef::apicurio-registry-operator-dev[]
+NOTE: This procedure will deploy the latest released version of {operator}.
+If you want to deploy the development version, visit https://github.com/Apicurio/apicurio-registry-operator/[{operator} GitHub repository].
+endif::[]
+
 .Procedure
 . Choose the `$NAMESPACE` to use:
 +
@@ -11,31 +16,13 @@ You can quickly deploy the {operator} on the command line, without the Operator 
 export NAMESPACE="default"
 ----
 
-. Decide if you want to deploy the latest released version or choose a tag for a specific version:
-+
-ifndef::apicurio-registry-operator-dev[]
-[source,bash]
-----
-export REF="master"
-----
-or
-+
-endif::[]
-[source,bash,subs="attributes"]
-----
-export REF="{operator-version-tag}"
-----
-
 . Get the installation file and apply it to your cluster:
 +
-[source,bash]
+[source,bash,subs="attributes"]
 ----
-curl -sSL "https://raw.githubusercontent.com/Apicurio/apicurio-registry-operator/$REF/docs/resources/install.yaml" |
-sed "s/{NAMESPACE}/$NAMESPACE/g" | kubectl apply -f - -n $NAMESPACE
+curl -sSL "https://raw.githubusercontent.com/Apicurio/apicurio-registry-operator/{operator-version-latest-release-tag}/docs/resources/install.yaml" |
+sed "s/{curlyleft}NAMESPACE{curlyright}/$NAMESPACE/g" | kubectl apply -f - -n $NAMESPACE
 ----
 
-NOTE: You must always specify either `master` or a version tag when using the procedure above. +
+NOTE: If you want to deploy an older release of the Operator, follow the documentation for that version. +
 If you are deploying to OpenShift, use `oc` with the same arguments.
-
-//.Additional resources
-//xref:assembly-operator-installation.adoc[Installing using the OperatorHub].

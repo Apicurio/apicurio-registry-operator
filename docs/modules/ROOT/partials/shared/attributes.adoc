@@ -1,35 +1,28 @@
 // Standard document attributes to be used in the documentation.
-//
+
 // The following are shared by all documents:
 
-// High-level Parameters:
+// ===== High-level Parameters:
 
 //:apicurio-registry-operator-downstream:
 //     - If set, downstream documentation is generated. (Inclusion parameter)
 
 :apicurio-registry-operator-dev:
-//     - If set, documentation for the development version is generated.
+//     - If set, documentation for the upstream development version is generated.
 
-// Upstream
+// ===== Upstream
 ifndef::apicurio-registry-operator-downstream[]
 
 :apicurio-registry:
+
 :registry: Apicurio Registry
 :operator: {registry} Operator
 
 :registry-version: 2.0.x
 :operator-version: 1.0.0-dev
 
-// IMPORTANT: Operator version may be used as a tag when linking to content on GitHub.
-// Therefore, make sure (one of) the tags used is equal to the version being released.
-// Override with "master" for dev versions.
-ifndef::apicurio-registry-operator-dev[]
-:operator-version-tag: {operator-version}
-endif::[]
-
-ifdef::apicurio-registry-operator-dev[]
-:operator-version-tag: master
-endif::[]
+// IMPORTANT: This value may be used as a tag when linking to content on GitHub.
+:operator-version-latest-release-tag: v0.0.4
 
 :platform: Kubernetes
 :cli-client: kubectl
@@ -40,10 +33,11 @@ endif::[]
 
 endif::[]
 
-// Downstream
+// ===== Downstream
 ifdef::apicurio-registry-operator-downstream[]
 
 :service-registry:
+
 :registry: Service Registry
 :operator: {registry} Operator
 
@@ -59,7 +53,7 @@ ifdef::apicurio-registry-operator-downstream[]
 
 endif::[]
 
-// Common
+// ===== Common
 :registry-ocp-version: 4.6
 
 // Characters
@@ -71,6 +65,5 @@ endif::[]
 :reg: ®
 :trade: ™
 :star: *
-
-//Include attributes for deep linking
-//include::attributes-links.adoc[]
+:curlyleft: {
+:curlyright: }

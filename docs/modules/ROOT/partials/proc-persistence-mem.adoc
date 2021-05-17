@@ -14,15 +14,12 @@ include::example$apicurioregistry_mem_cr.yaml[]
 * You must have already installed the {operator}.
 
 .Procedure
-
 . Deploy the example CR using following commands:
 +
 [source,bash,subs="attributes"]
 ----
 export NAMESPACE="default"
-export REF="{operator-version-tag}"
-curl -sSL "https://raw.githubusercontent.com/Apicurio/apicurio-registry-operator/$REF/docs/modules/ROOT/examples/apicurioregistry_mem_cr.yaml" |
-kubectl apply -f - -n $NAMESPACE
+curl -sSL "https://raw.githubusercontent.com/Apicurio/apicurio-registry-operator/{operator-version-latest-release-tag}/docs/modules/ROOT/examples/apicurioregistry_mem_cr.yaml" | kubectl apply -f - -n $NAMESPACE
 ----
 
 IMPORTANT: This persistence option does not support data distribution across {registry} nodes.
