@@ -4,7 +4,7 @@
 
 // High-level Parameters:
 
-:apicurio-registry-operator-downstream:
+//:apicurio-registry-operator-downstream:
 //     - If set, downstream documentation is generated. (Inclusion parameter)
 
 :apicurio-registry-operator-dev:

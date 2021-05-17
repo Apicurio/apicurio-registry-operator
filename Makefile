@@ -183,13 +183,13 @@ packagemanifests: install-kustomize manifests ## Generate package manifests
 	cd config/manager && $(KUSTOMIZE) edit set image REGISTRY_OPERATOR_IMAGE=$(OPERATOR_IMAGE)
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate packagemanifests -q --version $(PACKAGE_VERSION) $(PACKAGE_MANIFESTS_OPTS)
 
-.PHONY: docs ## Build documentation
-docs:
+.PHONY: docs
+docs: ## Build documentation
 	cd ./docs && antora local-test-playbook.yml
 	echo "file:$(shell pwd)/docs/target/dist/"
 
-.PHONY: dist ## Generate distribution bundle
-dist: install-kustomize docs
+.PHONY: dist
+dist: install-kustomize docs ## Generate distribution bundle
 	mkdir -p dist
 	cp -rt ./dist ./dist-base/*
 	cp -t ./dist ./LICENSE
@@ -206,7 +206,7 @@ dist: install-kustomize docs
 	# Archive
 	tar -zcf apicurio-registry-operator-$(PACKAGE_VERSION).tar.gz -C ./dist .
 
-.PHONY: clean ## Remove temporary and generated files
-clean:
+.PHONY: clean
+clean: ## Remove temporary and generated files
 	rm apicurio-registry-operator-$(PACKAGE_VERSION).tar.gz cover.out
 	rm -r bin build bundle dist docs/target testbin
