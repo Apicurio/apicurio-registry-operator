@@ -15,4 +15,4 @@ generatorOptions:
 images:
 - name: REGISTRY_OPERATOR_IMAGE
   newName: quay.io/apicurio/apicurio-registry-operator
-  newTag: 1.0.0-dev
+  newTag: 1.0.0
