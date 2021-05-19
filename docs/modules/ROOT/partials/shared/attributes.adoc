@@ -7,7 +7,7 @@
 //:apicurio-registry-operator-downstream:
 //     - If set, downstream documentation is generated. (Inclusion parameter)
 
-:apicurio-registry-operator-dev:
+//:apicurio-registry-operator-dev:
 //     - If set, documentation for the upstream development version is generated.
 
 // ===== Upstream
@@ -22,7 +22,7 @@ ifndef::apicurio-registry-operator-downstream[]
 :operator-version: 1.0.0
 
 // IMPORTANT: This value may be used as a tag when linking to content on GitHub.
-:operator-version-latest-release-tag: v0.0.4
+:operator-version-latest-release-tag: v1.0.0
 
 :platform: Kubernetes
 :cli-client: kubectl
