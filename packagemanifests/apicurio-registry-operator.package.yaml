@@ -1,0 +1,5 @@
+channels:
+- currentCSV: apicurio-registry-operator.v1.0.0-v2.0.0.final
+  name: 2.x
+defaultChannel: 2.x
+packageName: apicurio-registry-operator
