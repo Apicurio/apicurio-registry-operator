@@ -7,7 +7,7 @@
 //:apicurio-registry-operator-downstream:
 //     - If set, downstream documentation is generated. (Inclusion parameter)
 
-//:apicurio-registry-operator-dev:
+:apicurio-registry-operator-dev:
 //     - If set, documentation for the upstream development version is generated.
 
 // ===== Upstream
