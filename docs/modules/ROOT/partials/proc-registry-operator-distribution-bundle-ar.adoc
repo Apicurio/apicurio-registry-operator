@@ -1,7 +1,7 @@
 [id="registry-operator-distribution-bundle"]
 = {operator} Distribution Bundle
 
-Since version `{operator-version}`, {operator} project is distributed with an additional archive file containing installation files for the operator, with example `ApicurioRegistry` custom resource files.
+Since version `1.0.0`, {operator} project is distributed with an additional archive file containing installation files for the operator, with example `ApicurioRegistry` custom resource files.
 In addition, full Operator documentation and license information is also included.
 Docker images for the Operator and the Operand are distributed using a public registry.
 
