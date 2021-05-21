@@ -177,11 +177,18 @@ ifeq ($(LATEST),true)
 endif
 	docker push $(BUNDLE_IMAGE)
 
+DATE=$(shell date -Idate)
 .PHONY: packagemanifests
 packagemanifests: install-kustomize manifests ## Generate package manifests
+	echo "⚠️ Warning: This command requires 'yq' version 4.x"
+	which yq
 	$(OPERATOR_SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image REGISTRY_OPERATOR_IMAGE=$(OPERATOR_IMAGE)
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate packagemanifests -q --version $(PACKAGE_VERSION) $(PACKAGE_MANIFESTS_OPTS)
+	yq e ".metadata.annotations.createdAt = \"$(DATE)\"" -i \
+		"packagemanifests/$(PACKAGE_VERSION)/apicurio-registry-operator.clusterserviceversion.yaml"
+	yq e ".metadata.annotations.containerImage = \"$(OPERATOR_IMAGE)\"" -i \
+		"packagemanifests/$(PACKAGE_VERSION)/apicurio-registry-operator.clusterserviceversion.yaml"
 
 .PHONY: docs
 docs: ## Build documentation
@@ -208,5 +215,5 @@ dist: install-kustomize docs ## Generate distribution bundle
 
 .PHONY: clean
 clean: ## Remove temporary and generated files
-	rm apicurio-registry-operator-$(PACKAGE_VERSION).tar.gz cover.out
-	rm -r bin build bundle dist docs/target testbin
+	rm apicurio-registry-operator-$(PACKAGE_VERSION).tar.gz cover.out || true
+	rm -r bin build bundle dist docs/target testbin || true
