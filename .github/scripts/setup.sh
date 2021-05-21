@@ -16,3 +16,9 @@ sudo apt-get clean
 echo "Install Antora"
 sudo npm i -g @antora/cli @antora/site-generator-default
 antora -v
+
+echo "Install 'yq' v4.x"
+export YQ_VERSION="v4.9.2"
+curl -fsSL "https://github.com/mikefarah/yq/releases/download/$YQ_VERSION/yq_linux_amd64" >yq
+chmod +x yq
+sudo mv yq /usr/local/bin/yq
