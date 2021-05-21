@@ -19,7 +19,7 @@ ifndef::apicurio-registry-operator-downstream[]
 :operator: {registry} Operator
 
 :registry-version: 2.0.0.Final
-:operator-version: 1.0.0
+:operator-version: 1.1.0-dev
 
 // IMPORTANT: This value may be used as a tag when linking to content on GitHub.
 :operator-version-latest-release-tag: v1.0.0
