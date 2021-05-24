@@ -9,6 +9,7 @@ OPERATOR_IMAGE="quay.io/apicurio/apicurio-registry-operator:$VERSION"
 OPERATOR_METADATA_IMAGE="quay.io/apicurio/apicurio-registry-operator-bundle:$VERSION"
 
 BUNDLE_URL=${PWD}/dist/install.yaml
+OPERATOR_PROJECT_DIR=${PWD}
 
 make dist
 
