@@ -15,7 +15,7 @@ endif::[]
 * xref:registry-operator-quickstart[]
 * xref:registry-quickstart[]
 
-NOTE: The recommended installation option for production environments is xref:assembly-operator-installation.adoc[]. The recommended storage option is SQL or Kafka.
+NOTE: The recommended installation option for production environments is using the OpenShift OperatorHub. The recommended storage option is SQL or Kafka.
 
 // INCLUDES
 ifdef::service-registry[]

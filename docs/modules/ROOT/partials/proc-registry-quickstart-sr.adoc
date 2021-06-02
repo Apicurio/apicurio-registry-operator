@@ -42,5 +42,7 @@ oc project "$NAMESPACE"
 oc apply -f ./examples/apicurioregistry_sql_cr.yaml
 ----
 
+ifdef::apicurio-registry[]
 .Additional resources
 * xref:assembly-registry-storage.adoc[]
+endif::[]

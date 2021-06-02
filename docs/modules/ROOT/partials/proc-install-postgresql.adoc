@@ -23,9 +23,11 @@ You can install your preferred PostgresQL Operator, but this section shows how t
 . Read the information about the Operator, and click *Install*. This displays the *Create Operator Subscription* page.
 
 . Select your subscription settings, for example:
-** *Installation Mode* > *A specific namespace on the cluster* > *my-project*
+** *Installation Mode*: Select one of the following: 
+*** *All namespaces on the cluster (default)*
+*** *A specific namespace on the cluster*  and then *my-project*
 ** *Update Channel* > *stable*
-** *Approval Strategy* > *Manual*
+** *Approval Strategy*: Select *Automatic* or *Manual*
 
 . Click *Subscribe*. This displays the *Operators* > *Installed Operators* page.
 
