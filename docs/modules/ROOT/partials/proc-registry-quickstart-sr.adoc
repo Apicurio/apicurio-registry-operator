@@ -9,32 +9,15 @@ This requires an external PostgreSQL storage to be configured as a prerequisite.
 * You have a PostgreSQL database reachable from your OpenShift cluster.
 
 .Procedure
-* Prepare connection information to the PostgreSQL database.
-* Create an `ApicurioRegistry` custom resource (CR) in the same namespace that the Operator is deployed, with your da:
-+
-[source,bash]
-----
-oc project "$NAMESPACE"
-oc apply -f ./examples/apicurioregistry_sql_cr.yaml
-----
+. Create an `ApicurioRegistry` custom resource (CR), with your database connection configured, for example:
 +
 .Example CR for SQL storage
 [source,yaml]
 ----
-include::example$apicurioregistry_sql_cr.yaml[]
+include::../examples/apicurioregistry_sql_cr.yaml[]
 ----
 
-.Procedure
-* Prepare connection information to the PostgreSQL database.
-* Prepare an `ApicurioRegistry` custom resource (CR), with your database connection configured, for example:
-+
-.Example CR for SQL storage
-[source,yaml]
-----
-include::example$apicurioregistry_sql_cr.yaml[]
-----
-
-* Create the `ApicurioRegistry` CR in the same namespace that the Operator is deployed
+. Create the `ApicurioRegistry` CR in the same namespace that the Operator is deployed
 +
 [source,bash]
 ----
