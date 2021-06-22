@@ -752,13 +752,13 @@ spec:
         - /manager
         env:
         - name: REGISTRY_VERSION
-          value: 2.0.0.Final
+          value: 2.0.1.Final
         - name: REGISTRY_IMAGE_MEM
-          value: quay.io/apicurio/apicurio-registry-mem:2.0.0.Final
+          value: quay.io/apicurio/apicurio-registry-mem:2.0.1.Final
         - name: REGISTRY_IMAGE_KAFKASQL
-          value: quay.io/apicurio/apicurio-registry-kafkasql:2.0.0.Final
+          value: quay.io/apicurio/apicurio-registry-kafkasql:2.0.1.Final
         - name: REGISTRY_IMAGE_SQL
-          value: quay.io/apicurio/apicurio-registry-sql:2.0.0.Final
+          value: quay.io/apicurio/apicurio-registry-sql:2.0.1.Final
         - name: WATCH_NAMESPACE
           valueFrom:
             fieldRef:

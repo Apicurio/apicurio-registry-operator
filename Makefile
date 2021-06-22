@@ -7,7 +7,7 @@ help:
 
 ########## Config
 
-OPERAND_VERSION ?= 2.0.0.Final
+OPERAND_VERSION ?= 2.0.1.Final
 LC_OPERAND_VERSION = $(shell echo $(OPERAND_VERSION) | tr A-Z a-z)
 
 OPERATOR_VERSION = $(shell sed -n 's/^.*Version.*=.*"\(.*\)".*$$/\1/p' ./version/version.go)
