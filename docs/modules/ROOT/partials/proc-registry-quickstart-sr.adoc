@@ -1,8 +1,7 @@
 [id="registry-quickstart"]
 = Quickstart {registry} deployment
 
-To create a new {registry} deployment, use the SQL storage option.
-This requires an external PostgreSQL storage to be configured as a prerequisite.
+To create a new {registry} deployment, use the SQL storage option. This requires external PostgreSQL storage to be configured as a prerequisite.
 
 .Prerequisites
 * Ensure that the {operator} is already installed.
@@ -14,7 +13,7 @@ This requires an external PostgreSQL storage to be configured as a prerequisite.
 .Example CR for SQL storage
 [source,yaml]
 ----
-include::../examples/apicurioregistry_sql_cr.yaml[]
+include::example$/apicurioregistry_sql_cr.yaml[]
 ----
 
 . Create the `ApicurioRegistry` CR in the same namespace that the Operator is deployed
