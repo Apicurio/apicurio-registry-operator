@@ -1,9 +1,17 @@
 [id="registry-security-keycloak"]
-= Securing the {registry} API and web console using {keycloak}
+= Securing {registry} using the {keycloak} Operator
 
-The following procedure shows how to configure a {registry} deployment to be protected by {keycloak}.
+The following procedure shows how to configure a {registry} REST API and web console to be protected by {keycloak}.
+ifdef::rh-service-registry[]
+The {keycloak} Operator is available as a Technology Preview feature.
 
-IMPORTANT: The example configuration in this procedure is intended for development and testing only. To keep the procedure simple, it does not use HTTPS and other defenses recommended for a production environment. For more details, see the {keycloak} documentation.
+[IMPORTANT]
+====
+Technology Preview features are not supported with Red Hat production service-level agreements (SLAs) and might not be functionally complete. Red Hat does not recommend implementing any Technology Preview features in production environments.
+
+This Technology Preview feature provides early access to upcoming product innovations, enabling you to test functionality and provide feedback during the development process. For more information about support scope, see link:https://access.redhat.com/support/offerings/techpreview/[Technology Preview Features Support Scope].
+====
+endif::[]
 
 {registry} supports the following user roles:
 
@@ -27,6 +35,9 @@ NOTE: There is a related configuration option in the `ApicurioRegistry` CRD that
 .Prerequisites
 * You must have already installed the {operator}.
 * You must install the {keycloak} Operator or have {keycloak} accessible from your OpenShift cluster.
+
+IMPORTANT: The example configuration in this procedure is intended for development and testing only. To keep the procedure simple, it does not use HTTPS and other defenses recommended for a production environment. For more details, see the {keycloak} documentation. 
+
 
 .Procedure
 . In the OpenShift web console, click *Installed Operators* and *{keycloak} Operator*, and then the *Keycloak* tab.
