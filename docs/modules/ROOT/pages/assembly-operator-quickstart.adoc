@@ -6,7 +6,7 @@ include::partial$shared/all-attributes.adoc[]
 This chapter explains how to quickly install {operator} on the command line.
 
 ifdef::service-registry[]
-This quickstart example deploys {registry} using the SQL storage option:
+This quickstart example deploys {registry} using the SQL database storage option:
 endif::[]
 ifdef::apicurio-registry[]
 This quickstart example deploys {registry} using the in-memory storage option:
