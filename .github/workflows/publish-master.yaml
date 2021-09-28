@@ -16,6 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.16.8'
+      - run: go version
+
       - name: Setup the environment
         run: ./.github/scripts/setup.sh
 
