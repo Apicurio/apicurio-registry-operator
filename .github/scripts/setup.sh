@@ -14,7 +14,7 @@ echo "Clean cache"
 sudo apt-get clean
 
 echo "Install Antora"
-sudo npm i -g @antora/cli @antora/site-generator-default
+sudo npm i -g @antora/cli @antora/site-generator
 antora -v
 
 echo "Install 'yq' v4.x"
