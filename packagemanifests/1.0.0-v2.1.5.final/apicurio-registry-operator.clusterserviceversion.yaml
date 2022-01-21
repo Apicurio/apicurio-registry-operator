@@ -61,7 +61,7 @@ metadata:
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/Apicurio/apicurio-registry-operator
     support: Apicurio
-  name: apicurio-registry-operator.v1.0.0-v2.0.0.final
+  name: apicurio-registry-operator.v1.0.0-v2.1.5.final
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -220,13 +220,13 @@ spec:
                 - /manager
                 env:
                 - name: REGISTRY_VERSION
-                  value: 2.0.0.Final
+                  value: 2.1.5.Final
                 - name: REGISTRY_IMAGE_MEM
-                  value: quay.io/apicurio/apicurio-registry-mem:2.0.0.Final
+                  value: quay.io/apicurio/apicurio-registry-mem:2.1.5.Final
                 - name: REGISTRY_IMAGE_KAFKASQL
-                  value: quay.io/apicurio/apicurio-registry-kafkasql:2.0.0.Final
+                  value: quay.io/apicurio/apicurio-registry-kafkasql:2.1.5.Final
                 - name: REGISTRY_IMAGE_SQL
-                  value: quay.io/apicurio/apicurio-registry-sql:2.0.0.Final
+                  value: quay.io/apicurio/apicurio-registry-sql:2.1.5.Final
                 - name: WATCH_NAMESPACE
                   valueFrom:
                     fieldRef:
@@ -324,4 +324,4 @@ spec:
   provider:
     name: Apicurio
   selector: {}
-  version: 1.0.0-v2.0.0.final
+  version: 1.0.0-v2.1.5.final
