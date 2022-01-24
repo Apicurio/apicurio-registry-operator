@@ -1,6 +1,7 @@
 package cf
 
 import (
+	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
@@ -21,12 +22,14 @@ type LabelsCF struct {
 
 	caLabels map[string]string
 
-	deploymentEntry     resources.ResourceCacheEntry
-	deploymentIsCached  bool
-	deploymentLabels    map[string]string
-	deploymentPodLabels map[string]string
-	updateDeployment    bool
-	updateDeploymentPod bool
+	deploymentEntry               resources.ResourceCacheEntry
+	deploymentIsCached            bool
+	deploymentLabels              map[string]string
+	deploymentPodLabels           map[string]string
+	additionalDeploymentPodLabels map[string]string
+	targetDeploymentPodLabels     map[string]string
+	updateDeployment              bool
+	updateDeploymentPod           bool
 
 	serviceEntry    resources.ResourceCacheEntry
 	serviceIsCached bool
@@ -65,6 +68,10 @@ func (this *LabelsCF) Sense() {
 		this.deploymentLabels = this.deploymentEntry.GetValue().(*apps.Deployment).Labels
 		this.deploymentPodLabels = this.deploymentEntry.GetValue().(*apps.Deployment).Spec.Template.Labels
 	}
+	// Get any additional Deployment Pod labels from the spec
+	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
+		this.additionalDeploymentPodLabels = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Metadata.Labels
+	}
 	// Observation #2
 	// Service
 	this.serviceEntry, this.serviceIsCached = this.svcResourceCache.Get(resources.RC_KEY_SERVICE)
@@ -88,7 +95,8 @@ func (this *LabelsCF) Sense() {
 func (this *LabelsCF) Compare() bool {
 	this.caLabels = this.GetCommonApplicationLabels()
 	this.updateDeployment = this.deploymentIsCached && !LabelsEqual(this.deploymentLabels, this.caLabels)
-	this.updateDeploymentPod = this.deploymentIsCached && !LabelsEqual(this.deploymentPodLabels, this.caLabels)
+	this.targetDeploymentPodLabels = this.GetTargetDeploymentPodLabels()
+	this.updateDeploymentPod = this.deploymentIsCached && !LabelsEqual(this.deploymentPodLabels, this.targetDeploymentPodLabels)
 	this.updateService = this.serviceIsCached && !LabelsEqual(this.serviceLabels, this.caLabels)
 	this.updateIngress = this.ingressIsCached && !LabelsEqual(this.ingressLabels, this.caLabels)
 	this.updatePdb = this.pdbIsCached && !LabelsEqual(this.pdbLabels, this.caLabels)
@@ -115,7 +123,7 @@ func (this *LabelsCF) Respond() {
 	if this.updateDeploymentPod {
 		this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 			deployment := value.(*apps.Deployment).DeepCopy()
-			LabelsUpdate(deployment.Spec.Template.Labels, this.caLabels)
+			LabelsUpdate(deployment.Spec.Template.Labels, this.targetDeploymentPodLabels)
 			return deployment
 		})
 	}
@@ -157,6 +165,13 @@ func (this *LabelsCF) Cleanup() bool {
 
 func (this *LabelsCF) GetCommonApplicationLabels() map[string]string {
 	return this.svcKubeFactory.GetLabels()
+}
+
+func (this *LabelsCF) GetTargetDeploymentPodLabels() map[string]string {
+	targetDeploymentPodLabels := make(map[string]string)
+	LabelsUpdate(targetDeploymentPodLabels, this.GetCommonApplicationLabels())
+	LabelsUpdate(targetDeploymentPodLabels, this.additionalDeploymentPodLabels)
+	return targetDeploymentPodLabels
 }
 
 // Return *true* if, for given source labels,

@@ -443,6 +443,20 @@ spec:
                     type: object
                   host:
                     type: string
+                  metadata:
+                    description: Metadata applied to the Deployment pod template.
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        description: Annotations added to the Deployment pod template.
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels added to the Deployment pod template.
+                        type: object
+                    type: object
                   replicas:
                     format: int32
                     type: integer
