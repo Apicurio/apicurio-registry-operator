@@ -2,6 +2,7 @@ package controllers
 
 import (
 	ctx "context"
+
 	"github.com/Apicurio/apicurio-registry-operator/controllers/cf/condition"
 
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
@@ -177,6 +178,7 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 	c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, loopServices))
 	c.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))
 	c.AddControlFunction(cf.NewTolerationCF(ctx))
+	c.AddControlFunction(cf.NewAnnotationsCF(ctx))
 
 	//deployment modifiers
 	c.AddControlFunction(cf.NewImageCF(ctx, loopServices))

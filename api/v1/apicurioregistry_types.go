@@ -85,11 +85,20 @@ type ApicurioRegistrySpecConfigurationSecurityKeycloak struct {
 	UiClientId  string `json:"uiClientId,omitempty"`
 }
 
+type ApicurioRegistrySpecDeploymentMetadata struct {
+	// Annotations added to the Deployment pod template.
+	Annotations map[string]string `json:"annotations,omitempty"`
+	// Labels added to the Deployment pod template.
+	Labels map[string]string `json:"labels,omitempty"`
+}
+
 type ApicurioRegistrySpecDeployment struct {
 	Replicas    int32               `json:"replicas,omitempty"`
 	Host        string              `json:"host,omitempty"`
 	Affinity    *corev1.Affinity    `json:"affinity,omitempty"`
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
+	// Metadata applied to the Deployment pod template.
+	Metadata ApicurioRegistrySpecDeploymentMetadata `json:"metadata,omitempty"`
 }
 
 // ### Status
