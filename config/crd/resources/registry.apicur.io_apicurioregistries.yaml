@@ -721,6 +721,11 @@ spec:
                     type: object
                   host:
                     type: string
+                  image:
+                    description: Image set in the Deployment pod template. Overrides
+                      the values in the REGISTRY_IMAGE_MEM, REGISTRY_IMAGE_KAFKASQL
+                      and REGISTRY_IMAGE_SQL operator environment variables.
+                    type: string
                   metadata:
                     description: Metadata applied to the Deployment pod template.
                     properties:
