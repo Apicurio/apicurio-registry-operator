@@ -99,6 +99,8 @@ type ApicurioRegistrySpecDeployment struct {
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 	// Metadata applied to the Deployment pod template.
 	Metadata ApicurioRegistrySpecDeploymentMetadata `json:"metadata,omitempty"`
+	// Image set in the Deployment pod template. Overrides the values in the REGISTRY_IMAGE_MEM, REGISTRY_IMAGE_KAFKASQL and REGISTRY_IMAGE_SQL operator environment variables.
+	Image string `json:"image,omitempty"`
 }
 
 // ### Status

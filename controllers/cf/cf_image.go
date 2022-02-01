@@ -1,8 +1,9 @@
 package cf
 
 import (
-	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
 	"os"
+
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
 
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
@@ -74,26 +75,29 @@ func (this *ImageCF) Sense() {
 	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry).Spec
 		this.persistence = spec.Configuration.Persistence
+		this.targetImage = spec.Deployment.Image
 	}
 
-	envImage := ""
-	this.persistenceError = false
-	switch this.persistence {
-	case "", "mem":
-		envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_MEM)
-	case "kafkasql":
-		envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_KAFKASQL)
-	case "sql":
-		envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_SQL)
-	}
-	if envImage != "" {
-		this.targetImage = envImage
-	} else {
-		this.persistenceError = true
-		this.ctx.GetLog().WithValues("type", "Warning").
-			Info("WARNING: The operand image is not selected. " +
-				"Set the 'spec.configuration.persistence' property in your 'apicurioregistry' resource " +
-				"to select the appropriate Service Registry image.")
+	if this.targetImage == "" {
+		envImage := ""
+		this.persistenceError = false
+		switch this.persistence {
+		case "", "mem":
+			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_MEM)
+		case "kafkasql":
+			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_KAFKASQL)
+		case "sql":
+			envImage = os.Getenv(ENV_OPERATOR_REGISTRY_IMAGE_SQL)
+		}
+		if envImage != "" {
+			this.targetImage = envImage
+		} else {
+			this.persistenceError = true
+			this.ctx.GetLog().WithValues("type", "Warning").
+				Info("WARNING: The operand image is not selected. " +
+					"Set the 'spec.configuration.persistence' property in your 'apicurioregistry' resource " +
+					"to select the appropriate Service Registry image.")
+		}
 	}
 
 	// Update state
