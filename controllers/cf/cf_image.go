@@ -96,7 +96,8 @@ func (this *ImageCF) Sense() {
 			this.ctx.GetLog().WithValues("type", "Warning").
 				Info("WARNING: The operand image is not selected. " +
 					"Set the 'spec.configuration.persistence' property in your 'apicurioregistry' resource " +
-					"to select the appropriate Service Registry image.")
+					"to select the appropriate Service Registry image, or set the 'spec.deployment.image' "+
+					"property to use a specific image.")
 		}
 	}
 
