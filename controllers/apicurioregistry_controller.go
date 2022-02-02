@@ -182,6 +182,9 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 
 	//deployment modifiers
 	c.AddControlFunction(cf.NewImageCF(ctx, loopServices))
+	c.AddControlFunction(cf.NewImagePullPolicyCF(ctx))
+	c.AddControlFunction(cf.NewImagePullSecretsCF(ctx))
+
 	c.AddControlFunction(cf.NewReplicasCF(ctx, loopServices))
 
 	//deployment env vars modifiers

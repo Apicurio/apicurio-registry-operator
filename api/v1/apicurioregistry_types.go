@@ -101,6 +101,8 @@ type ApicurioRegistrySpecDeployment struct {
 	Metadata ApicurioRegistrySpecDeploymentMetadata `json:"metadata,omitempty"`
 	// Image set in the Deployment pod template. Overrides the values in the REGISTRY_IMAGE_MEM, REGISTRY_IMAGE_KAFKASQL and REGISTRY_IMAGE_SQL operator environment variables.
 	Image string `json:"image,omitempty"`
+	// List of secrets in the same namespace to use for pulling the Deployment pod image.
+	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 }
 
 // ### Status
