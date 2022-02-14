@@ -105,7 +105,7 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 							},
 						},
 						LivenessProbe: &core.Probe{
-							Handler: core.Handler{
+							ProbeHandler: core.ProbeHandler{
 								HTTPGet: &core.HTTPGetAction{
 									Path: "/health/live",
 									Port: intstr.FromInt(8080),
@@ -118,7 +118,7 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 							FailureThreshold:    3,
 						},
 						ReadinessProbe: &core.Probe{
-							Handler: core.Handler{
+							ProbeHandler: core.ProbeHandler{
 								HTTPGet: &core.HTTPGetAction{
 									Path: "/health/ready",
 									Port: intstr.FromInt(8080),
