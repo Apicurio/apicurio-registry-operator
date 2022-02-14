@@ -5,7 +5,7 @@ echo "Set up golang"
 export GO111MODULE="on"
 
 echo "Install Operator SDK"
-export OPERATOR_SDK_VERSION="1.4.2"
+export OPERATOR_SDK_VERSION="1.17.0"
 curl -fsSL "https://github.com/operator-framework/operator-sdk/releases/download/v$OPERATOR_SDK_VERSION/operator-sdk_linux_amd64" >operator-sdk
 chmod +x operator-sdk
 sudo mv operator-sdk /usr/local/bin/operator-sdk

@@ -60,8 +60,8 @@ OPERATOR_IMAGE = $(OPERATOR_IMAGE_NAME):$(OPERATOR_VERSION)
 BUNDLE_IMAGE_NAME = $(OPERATOR_IMAGE_NAME)-bundle
 BUNDLE_IMAGE = $(BUNDLE_IMAGE_NAME):$(OPERATOR_VERSION)
 
-# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false" # TODO
+CATALOG_IMAGE_NAME = $(OPERATOR_IMAGE_NAME)-catalog
+CATALOG_IMAGE = $(CATALOG_IMAGE_NAME):$(OPERATOR_VERSION)
 
 NAMESPACE ?= "apicurio-registry-operator-namespace"
 
@@ -77,6 +77,13 @@ GOBIN=$(shell go env GOPATH)/bin
 else
 GOBIN=$(shell go env GOBIN)
 endif
+
+# Setting SHELL to bash allows bash commands to be executed by recipes.
+# This is a requirement for 'setup-envtest.sh' in the test target.
+# Options are set to exit when a recipe line exits non-zero or a piped command fails.
+SHELL = /usr/bin/env bash -o pipefail
+.SHELLFLAGS = -ec
+ all: build
 
 ########## Tools
 
@@ -97,7 +104,7 @@ endef
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 .PHONY: install-controller-gen
 install-controller-gen: ## Install controller-gen@v0.4.1
-	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1)
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0)
 
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 .PHONY: install-kustomize
@@ -124,14 +131,22 @@ manager: generate fmt vet ## Build manager binary
 
 .PHONY: manifests
 manifests: install-controller-gen ## Generate manifests e.g. CRD, RBAC etc.
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=apicurio-registry-operator-role paths="./..." output:crd:artifacts:config=config/crd/resources output:rbac:artifacts:config=config/rbac/resources
+	$(CONTROLLER_GEN) rbac:roleName=apicurio-registry-operator-role crd paths="./..." output:crd:artifacts:config=config/crd/resources output:rbac:artifacts:config=config/rbac/resources
 
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
+
+# ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
+ENVTEST_K8S_VERSION = 1.23
+
 .PHONY: test
 test: generate fmt vet manifests ## Run tests
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.7.0/hack/setup-envtest.sh
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
+
+ifndef ignore-not-found
+  ignore-not-found = false
+endif
 
 .PHONY: deploy
 deploy: manifests install-kustomize ## TODO
@@ -141,7 +156,7 @@ deploy: manifests install-kustomize ## TODO
 
 .PHONY: undeploy
 undeploy: ## TODO
-	$(KUSTOMIZE) build config/build-namespaced | $(CLIENT) delete -f -
+	$(KUSTOMIZE) build config/build-namespaced | $(CLIENT) delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: docker-build
 docker-build: test ## Build Operator image
@@ -217,3 +232,32 @@ dist: install-kustomize docs ## Generate distribution bundle
 clean: ## Remove temporary and generated files
 	rm apicurio-registry-operator-$(PACKAGE_VERSION).tar.gz cover.out || true
 	rm -r bin build bundle dist docs/target testbin || true
+
+OS = $(shell go env GOOS)
+ARCH = $(shell go env GOARCH)
+
+.PHONY: opm
+OPM = ./bin/opm
+opm:
+ifeq (,$(wildcard $(OPM)))
+ifeq (,$(shell which opm 2>/dev/null))
+	@{ \
+	set -e ;\
+	mkdir -p $(dir $(OPM)) ;\
+	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.19.1/$(OS)-$(ARCH)-opm ;\
+	chmod +x $(OPM) ;\
+	}
+else
+OPM = $(shell which opm)
+endif
+endif
+BUNDLE_IMGS ?= $(BUNDLE_IMAGE)
+CATALOG_IMG ?= $(BUNDLE_IMAGE_NAME)-catalog:v$(DASH_VERSION) ifneq ($(origin CATALOG_IMAGE_NAME), undefined) FROM_INDEX_OPT := --from-index $(CATALOG_IMAGE_NAME) endif
+
+.PHONY: catalog-build
+catalog-build: opm
+	$(OPM) index add --container-tool docker --mode semver --tag $(CATALOG_IMG) --bundles $(BUNDLE_IMGS) $(FROM_INDEX_OPT)
+
+.PHONY: catalog-push
+catalog-push: ## Push the catalog image.
+	docker push $(CATALOG_IMG)
