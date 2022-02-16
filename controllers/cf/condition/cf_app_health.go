@@ -49,14 +49,20 @@ func (this *AppHealthCF) Sense() {
 	this.requestReadinessOk = false
 	this.requestLivenessOk = false
 	if this.targetType == core.ServiceTypeClusterIP && this.targetIP != "" {
-		if res, err := http.Get("http://" + this.targetIP + ":8080/health/ready"); err == nil {
-			if res.StatusCode == 200 {
+		client := &http.Client{
+			// Do not follow redirects (for when TLS is enabled)
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
+		if res, err := client.Get("http://" + this.targetIP + ":8080/health/ready"); err == nil {
+			if res.StatusCode == 200 || res.StatusCode == 301 {
 				this.requestReadinessOk = true
 				this.initializing = false
 			}
 		}
-		if res, err := http.Get("http://" + this.targetIP + ":8080/health/live"); err == nil {
-			if res.StatusCode == 200 {
+		if res, err := client.Get("http://" + this.targetIP + ":8080/health/live"); err == nil {
+			if res.StatusCode == 200 || res.StatusCode == 301 {
 				this.requestLivenessOk = true
 			}
 		}

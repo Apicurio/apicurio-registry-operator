@@ -167,6 +167,7 @@ func (this *KubeFactory) CreateService() *core.Service {
 		Spec: core.ServiceSpec{
 			Ports: []core.ServicePort{
 				{
+					Name:       "http",
 					Protocol:   core.ProtocolTCP,
 					Port:       8080,
 					TargetPort: intstr.FromInt(8080),

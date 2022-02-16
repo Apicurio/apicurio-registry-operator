@@ -52,9 +52,15 @@ func (this *InitializingCF) Sense() {
 
 	this.requestOk = false
 	if this.targetType == core.ServiceTypeClusterIP && this.targetIP != "" {
-		res, err := http.Get("http://" + this.targetIP + ":8080")
+		client := &http.Client{
+			// Do not follow redirects (for when TLS is enabled)
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
+		res, err := client.Get("http://" + this.targetIP + ":8080")
 		if err == nil {
-			if res.StatusCode >= 200 && res.StatusCode < 300 {
+			if (res.StatusCode >= 200 && res.StatusCode < 300) || res.StatusCode == 301 {
 				this.requestOk = true
 			}
 		}

@@ -76,6 +76,8 @@ type ApicurioRegistrySpecConfigurationUI struct {
 
 type ApicurioRegistrySpecConfigurationSecurity struct {
 	Keycloak ApicurioRegistrySpecConfigurationSecurityKeycloak `json:"keycloak,omitempty"`
+	// TLS cert and key used to enable SSL access in the deployed application.
+	Tls ApicurioRegistrySpecConfigurationSecurityTls `json:"tls,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationSecurityKeycloak struct {
@@ -83,6 +85,15 @@ type ApicurioRegistrySpecConfigurationSecurityKeycloak struct {
 	Realm       string `json:"realm,omitempty"`
 	ApiClientId string `json:"apiClientId,omitempty"`
 	UiClientId  string `json:"uiClientId,omitempty"`
+}
+
+type ApicurioRegistrySpecConfigurationSecurityTls struct {
+	// The name of the Secret containing the TLS certificate and key
+	SecretName string `json:"secretName,omitempty"`
+	// The name of the certificate file in the Secret. Optional, defaults to 'tls.crt'
+	Certificate string `json:"certificate,omitempty"`
+	// The name of the private key file in the Secret. Optional, defaults to 'tls.key'
+	Key string `json:"key,omitempty"`
 }
 
 type ApicurioRegistrySpecDeploymentMetadata struct {
