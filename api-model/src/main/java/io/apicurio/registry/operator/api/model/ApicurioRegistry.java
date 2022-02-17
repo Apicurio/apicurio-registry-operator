@@ -2,28 +2,27 @@ package io.apicurio.registry.operator.api.model;
 
 
 import io.fabric8.kubernetes.api.model.Namespaced;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
 
-import java.util.List;
 import java.util.Objects;
 
-import static java.util.Collections.singletonList;
-import static java.util.Collections.unmodifiableList;
 
-@Version("v1")
-@Group("registry.apicur.io")
+@Buildable(
+        editableEnabled = false,
+        builderPackage = Constants.FABRIC8_KUBERNETES_API,
+        refs = {@BuildableReference(ObjectMeta.class)}
+)
+@Version(Constants.API_VERSION)
+@Group(Constants.RESOURCE_GROUP)
 public class ApicurioRegistry extends CustomResource<ApicurioRegistrySpec, ApicurioRegistryStatus> implements Namespaced {
-    public static final String RESOURCE_GROUP = "io.apicurio.registry";
-    public static final String RESOURCE_PLURAL = "apicurio-registries";
-    public static final String RESOURCE_SINGULAR = "apicurio-registry";
-    public static final String CRD_NAME = RESOURCE_PLURAL + "." + RESOURCE_GROUP;
-    public static final String SHORT_NAME = "ar";
-    public static final List<String> RESOURCE_SHORTNAMES = unmodifiableList(singletonList(SHORT_NAME));
-
-    private String apiVersion;
-    private String kind = "ApicurioRegistry";
+    private ObjectMeta metadata; // Leave these attributes for generator
+    private ApicurioRegistrySpec spec;
+    private ApicurioRegistryStatus status;
 
     @Override
     public String toString() {
@@ -51,4 +50,23 @@ public class ApicurioRegistry extends CustomResource<ApicurioRegistrySpec, Apicu
         return Objects.hash(getMetadata().getName(), spec );
     }
 
+    @Override
+    public ApicurioRegistrySpec getSpec() {
+        return this.spec;
+    }
+
+    @Override
+    public void setSpec(ApicurioRegistrySpec spec) {
+        this.spec = spec;
+    }
+
+    @Override
+    public ApicurioRegistryStatus getStatus() {
+        return this.status;
+    }
+
+    @Override
+    public void setStatus(ApicurioRegistryStatus status) {
+        this.status = status;
+    }
 }

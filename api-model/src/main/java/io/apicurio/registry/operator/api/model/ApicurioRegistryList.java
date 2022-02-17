@@ -2,6 +2,8 @@ package io.apicurio.registry.operator.api.model;
 
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.ListMeta;
+import io.sundr.builder.annotations.Buildable;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,7 +11,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-@Setter @Getter
+@Buildable(
+        editableEnabled = false,
+        builderPackage = Constants.FABRIC8_KUBERNETES_API
+)
+@EqualsAndHashCode
 public class ApicurioRegistryList implements KubernetesResourceList<ApicurioRegistry> {
     private String kind;
     private String apiVersion;
@@ -21,6 +27,14 @@ public class ApicurioRegistryList implements KubernetesResourceList<ApicurioRegi
     protected ApicurioRegistryList(final String kind, final String apiVersion) {
         this.kind = kind;
         this.apiVersion = apiVersion;
+    }
+
+    public String getKind() {
+        return kind;
+    }
+
+    public String getApiVersion() {
+        return apiVersion;
     }
 
     public void setItems(final Collection<ApicurioRegistry> items) {
@@ -44,5 +58,17 @@ public class ApicurioRegistryList implements KubernetesResourceList<ApicurioRegi
     public String toString() {
         return "{metadata=" + this.metadata + "," +
                 "items=" + this.items + "}";
+    }
+
+    public void setKind(String kind) {
+        this.kind = kind;
+    }
+
+    public void setApiVersion(String apiVersion) {
+        this.apiVersion = apiVersion;
+    }
+
+    public void setItems(List<ApicurioRegistry> items) {
+        this.items = items;
     }
 }
