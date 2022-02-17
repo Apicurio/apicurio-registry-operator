@@ -14,7 +14,27 @@
     <dependencies>
         <dependency>
             <groupId>io.fabric8</groupId>
-            <artifactId>openshift-client</artifactId>
+            <artifactId>kubernetes-client</artifactId>
+            <version>${version.fabric8}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-model-core</artifactId>
+            <version>${version.fabric8}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-model-networking</artifactId>
+            <version>${version.fabric8}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-model-common</artifactId>
+            <version>${version.fabric8}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-model-apiextensions</artifactId>
             <version>${version.fabric8}</version>
         </dependency>
         <dependency>

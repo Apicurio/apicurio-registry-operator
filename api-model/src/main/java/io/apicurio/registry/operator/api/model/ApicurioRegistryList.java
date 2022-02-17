@@ -1,6 +1,5 @@
 package io.apicurio.registry.operator.api.model;
 
-import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.ListMeta;
 import lombok.Getter;
@@ -11,7 +10,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Setter @Getter
-public class ApicurioRegistryList implements KubernetesResource, KubernetesResourceList<ApicurioRegistry> {
+public class ApicurioRegistryList implements KubernetesResourceList<ApicurioRegistry> {
     private String kind;
     private String apiVersion;
 
