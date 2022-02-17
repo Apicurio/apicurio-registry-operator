@@ -1,11 +1,10 @@
 package io.apicurio.registry.operator.api.model;
 
-import io.fabric8.kubernetes.api.model.KubernetesResource;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
-public class ApicurioRegistrySpecConfiguration implements KubernetesResource {
+public class ApicurioRegistrySpecConfiguration {
     private String persistence;
     private ApicurioRegistrySpecConfigurationSql sql;
     private ApicurioRegistrySpecConfigurationKafkasql kafkasql;
