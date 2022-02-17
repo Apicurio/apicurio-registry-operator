@@ -2,8 +2,6 @@ package io.apicurio.registry.operator.api.model;
 
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
 
 @Buildable(
         editableEnabled = false,
