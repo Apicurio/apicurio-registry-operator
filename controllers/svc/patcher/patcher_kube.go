@@ -3,8 +3,9 @@ package patcher
 import (
 	goctx "context"
 	"errors"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
 	"reflect"
+
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
 
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
@@ -214,6 +215,41 @@ func (this *KubePatcher) patchIngress() {
 	)
 }
 
+func (this *KubePatcher) reloadNetworkPolicy() {
+	if entry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_NETWORK_POLICY); exists {
+		r, e := this.clients.Kube().
+			GetIngress(this.ctx.GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
+		if e != nil {
+			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
+			this.ctx.GetResourceCache().Remove(resources.RC_KEY_NETWORK_POLICY)
+			this.ctx.SetRequeueNow()
+		} else {
+			this.ctx.GetResourceCache().Set(resources.RC_KEY_NETWORK_POLICY, resources.NewResourceCacheEntry(common.Name(r.Name), r))
+		}
+	}
+}
+
+func (this *KubePatcher) patchNetworkPolicy() {
+	patchGeneric(
+		this.ctx,
+		resources.RC_KEY_NETWORK_POLICY,
+		func(value interface{}) string {
+			return value.(*networking.NetworkPolicy).String()
+		},
+		&networking.NetworkPolicy{},
+		"networking.NetworkPolicy",
+		func(namespace common.Namespace, value interface{}) (interface{}, error) {
+			return this.clients.Kube().CreateNetworkPolicy(namespace, value.(*networking.NetworkPolicy))
+		},
+		func(namespace common.Namespace, name common.Name, data []byte) (interface{}, error) {
+			return this.clients.Kube().PatchNetworkPolicy(namespace, name, data)
+		},
+		func(value interface{}) common.Name {
+			return common.Name(value.(*networking.NetworkPolicy).GetName())
+		},
+	)
+}
+
 func (this *KubePatcher) reloadPodDisruptionBudget() {
 	if entry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_POD_DISRUPTION_BUDGET); exists {
 		r, e := this.clients.Kube().
@@ -257,6 +293,7 @@ func (this *KubePatcher) Reload() {
 	this.reloadDeployment()
 	this.reloadService()
 	this.reloadIngress()
+	this.reloadNetworkPolicy()
 	this.reloadPodDisruptionBudget()
 }
 
@@ -266,5 +303,6 @@ func (this *KubePatcher) Execute() {
 	this.patchDeployment()
 	this.patchService()
 	this.patchIngress()
+	this.patchNetworkPolicy()
 	this.patchPodDisruptionBudget()
 }
