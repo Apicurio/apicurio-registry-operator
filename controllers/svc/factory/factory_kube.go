@@ -222,6 +222,36 @@ func (this *KubeFactory) CreateIngress(serviceName string) *networking.Ingress {
 	return res
 }
 
+func (this *KubeFactory) CreateNetworkPolicy(serviceName string) *networking.NetworkPolicy {
+	metaData := this.createObjectMeta("networkpolicy")
+	protocolTCP := core.Protocol("TCP")
+	res := &networking.NetworkPolicy{
+		TypeMeta:   meta.TypeMeta{},
+		ObjectMeta: metaData,
+		Spec: networking.NetworkPolicySpec{
+			PodSelector: meta.LabelSelector{
+				MatchLabels: this.GetSelectorLabels()},
+			Ingress: []networking.NetworkPolicyIngressRule{
+				{
+					Ports: []networking.NetworkPolicyPort{
+						{
+							Protocol: &protocolTCP,
+							Port: &intstr.IntOrString{
+								Type:   0,
+								IntVal: 8080,
+								StrVal: "8080",
+							},
+						},
+					},
+				},
+			},
+			Egress:      []networking.NetworkPolicyEgressRule{},
+			PolicyTypes: []networking.PolicyType{"Ingress"},
+		},
+	}
+	return res
+}
+
 func (this *KubeFactory) CreatePodDisruptionBudget() *policy.PodDisruptionBudget {
 	podDisruptionBudget := &policy.PodDisruptionBudget{
 		ObjectMeta: this.createObjectMeta("pdb"),

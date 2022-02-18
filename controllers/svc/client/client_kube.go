@@ -3,6 +3,7 @@ package client
 import (
 	ctx "context"
 	"errors"
+
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	apps "k8s.io/api/apps/v1"
@@ -155,6 +156,49 @@ func (this *KubeClient) GetIngresses(namespace common.Namespace, options *meta.L
 
 func (this *KubeClient) DeleteIngress(value *networking.Ingress, options *meta.DeleteOptions) error {
 	return this.client.NetworkingV1().Ingresses(value.Namespace).Delete(ctx.TODO(), value.Name, *options)
+}
+
+// ===
+// Network Policy
+
+func (this *KubeClient) CreateNetworkPolicy(namespace common.Namespace, value *networking.NetworkPolicy) (*networking.NetworkPolicy, error) {
+	spec := getSpec(this.ctx)
+	if spec == nil {
+		return nil, errors.New("Could not find ApicurioRegistry. Retrying.")
+	}
+	if err := controllerutil.SetControllerReference(spec, value, this.ctx.GetScheme()); err != nil {
+		return nil, err
+	}
+	res, err := this.client.NetworkingV1().NetworkPolicies(namespace.Str()).
+		Create(ctx.TODO(), value, meta.CreateOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (this *KubeClient) GetNetworkPolicy(namespace common.Namespace, name common.Name, options *meta.GetOptions) (*networking.NetworkPolicy, error) {
+	return this.client.NetworkingV1().NetworkPolicies(namespace.Str()).
+		Get(ctx.TODO(), name.Str(), meta.GetOptions{})
+}
+
+func (this *KubeClient) UpdateNetworkPolicy(namespace common.Namespace, value *networking.NetworkPolicy) (*networking.NetworkPolicy, error) {
+	return this.client.NetworkingV1().NetworkPolicies(namespace.Str()).
+		Update(ctx.TODO(), value, meta.UpdateOptions{})
+}
+
+func (this *KubeClient) PatchNetworkPolicy(namespace common.Namespace, name common.Name, patchData []byte) (*networking.NetworkPolicy, error) {
+	return this.client.NetworkingV1().NetworkPolicies(namespace.Str()).
+		Patch(ctx.TODO(), name.Str(), types.StrategicMergePatchType, patchData, meta.PatchOptions{})
+}
+
+func (this *KubeClient) GetNetworkPolicies(namespace common.Namespace, options *meta.ListOptions) (*networking.NetworkPolicyList, error) {
+	return this.client.NetworkingV1().NetworkPolicies(namespace.Str()).
+		List(ctx.TODO(), *options)
+}
+
+func (this *KubeClient) DeleteNetworkPolicy(value *networking.NetworkPolicy, options *meta.DeleteOptions) error {
+	return this.client.NetworkingV1().NetworkPolicies(value.Namespace).Delete(ctx.TODO(), value.Name, *options)
 }
 
 // ===

@@ -1,11 +1,12 @@
 package status
 
 import (
+	"strconv"
+
 	api "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status/conditions"
-	"strconv"
 )
 
 // status
@@ -13,6 +14,7 @@ const CFG_STA_IMAGE = "CFG_STA_IMAGE"
 const CFG_STA_DEPLOYMENT_NAME = "CFG_STA_DEPLOYMENT_NAME"
 const CFG_STA_SERVICE_NAME = "CFG_STA_SERVICE_NAME"
 const CFG_STA_INGRESS_NAME = "CFG_STA_INGRESS_NAME"
+const CFG_STA_NETWORK_POLICY_NAME = "CFG_STA_NETWORK_POLICY_NAME"
 const CFG_STA_REPLICA_COUNT = "CFG_STA_REPLICA_COUNT"
 const CFG_STA_ROUTE = "CFG_STA_ROUTE"
 

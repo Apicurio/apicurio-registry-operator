@@ -70,6 +70,7 @@ func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog logr.Logger) (*A
 
 // Common
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=*
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=*
 // +kubebuilder:rbac:groups=policy,resources=poddisruptionbudgets,verbs=*
 // +kubebuilder:rbac:groups=apps,resources=deployments;daemonsets;replicasets;statefulsets,verbs=*
 // +kubebuilder:rbac:groups=core,resources=pods;services;endpoints;persistentvolumeclaims;configmaps;secrets;services/finalizers,verbs=*
@@ -205,6 +206,9 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNa
 
 	//ingress (depends on service)
 	c.AddControlFunction(cf.NewIngressCF(ctx, loopServices))
+
+	//network policy
+	c.AddControlFunction(cf.NewNetworkPolicyCF(ctx, loopServices))
 
 	//dependents of ingress
 	if isOCP {
