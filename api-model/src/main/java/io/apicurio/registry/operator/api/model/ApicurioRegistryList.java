@@ -1,13 +1,29 @@
+/*
+ * Copyright 2022 Red Hat
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package io.apicurio.registry.operator.api.model;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.ListMeta;
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 @Buildable(
         editableEnabled = false,
@@ -15,6 +31,7 @@ import java.util.List;
 )
 @EqualsAndHashCode
 public class ApicurioRegistryList implements KubernetesResourceList<ApicurioRegistry> {
+    private static final long serialVersionUID = -2979078702023320890L;
     private String kind;
     private String apiVersion;
 
@@ -39,6 +56,7 @@ public class ApicurioRegistryList implements KubernetesResourceList<ApicurioRegi
         this.items = new ArrayList<>(items);
     }
 
+    @Override
     public List<ApicurioRegistry> getItems() {
         return this.items;
     }
