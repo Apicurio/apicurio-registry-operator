@@ -17,6 +17,30 @@
         <url>https://www.redhat.com</url>
     </organization>
 
+    <developers>
+        <developer>
+            <name>Jakub Senko</name>
+            <id>JakubSenko</id>
+            <email>jsenko@redhat.com</email>
+            <organization>Red Hat</organization>
+            <roles>
+                <role>Project Lead</role>
+                <role>Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+        <developer>
+            <name>Eric Wittmann</name>
+            <id>EricWittmann</id>
+            <email>eric.wittmann@redhat.com</email>
+            <organization>Red Hat</organization>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <timezone>-5</timezone>
+        </developer>
+    </developers>
+
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -111,13 +135,6 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <additionalDependencies>
-                        <additionalDependency>
-                            <groupId>jakarta.annotation</groupId>
-                            <artifactId>jakarta.annotation-api</artifactId>
-                            <version>${annotation-api.version}</version>
-                        </additionalDependency>
-                    </additionalDependencies>
                     <failOnError>false</failOnError>
                     <failOnWarnings>false</failOnWarnings>
                     <source>${maven.compiler.source}</source>
