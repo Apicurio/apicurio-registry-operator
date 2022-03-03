@@ -71,9 +71,9 @@ jobs:
         run: |
           cd api-model
           # Retry 3 times before the steps actually fails
-          (echo "===== Maven Deploy Attempt: 1 ====" && ./mvnw --batch-mode -Prelease -DskipTests --settings /home/runner/.m2/settings.xml) || \
-          (echo "===== Maven Deploy Attempt: 2 ====" && ./mvnw --batch-mode -Prelease -DskipTests --settings /home/runner/.m2/settings.xml) || \
-          (echo "===== Maven Deploy Attempt: 3 ====" && ./mvnw --batch-mode -Prelease -DskipTests --settings /home/runner/.m2/settings.xml) || \
+          (echo "===== Maven Deploy Attempt: 1 ====" && ./mvnw deploy --batch-mode -Prelease -DskipTests --settings /home/runner/.m2/settings.xml) || \
+          (echo "===== Maven Deploy Attempt: 2 ====" && ./mvnw deploy --batch-mode -Prelease -DskipTests --settings /home/runner/.m2/settings.xml) || \
+          (echo "===== Maven Deploy Attempt: 3 ====" && ./mvnw deploy --batch-mode -Prelease -DskipTests --settings /home/runner/.m2/settings.xml) || \
           (echo "==== Maven Deploy Step Failed ====" && exit 1)
           
       - name: Commit Release Version Change
