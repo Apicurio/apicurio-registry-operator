@@ -1,4 +1,4 @@
-name: release api-model
+name: Release Api-Model
 on:
   workflow_dispatch:
     inputs:
@@ -41,6 +41,12 @@ jobs:
           echo "<settings><servers><server><id>${{ secrets.OSSRH_ID }}</id><username>${{ secrets.OSSRH_USERNAME }}</username><password>${{ secrets.OSSRH_TOKEN }}</password></server></servers><profiles><profile><id>${{ secrets.OSSRH_ID }}</id><activation><activeByDefault>true</activeByDefault></activation><properties><gpg.executable>gpg</gpg.executable><gpg.passphrase>${{ secrets.GPG_PASSPHRASE}}</gpg.passphrase></properties></profile></profiles></settings>" > /home/runner/.m2/settings.xml
           cat /home/runner/.m2/settings.xml
 
+      - name: Import GPG Key
+        uses: crazy-max/ghaction-import-gpg@v1
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
       - name: Configure Git
          run: |
           git config --global user.name "apicurio-ci"
@@ -56,34 +62,28 @@ jobs:
          run: ls -lrt
       
       - name: Update Release Version ${{ github.event.inputs.release-version}}
-        run: ./mvnw versions:set -DnewVersion=${{ github.event.inputs.release-version}} -DgenerateBackupPoms=false -DprocessAllModules=true
+        run: cd api-model && ./mvnw versions:set -DnewVersion=${{ github.event.inputs.release-version}} -DgenerateBackupPoms=false -DprocessAllModules=true
 
       - name: Build Project
-        run: ./mvnw clean install
-
-      - name: Commit Release Version Change
-        run: |
-          git add .
-          git commit -m "Automated update to Release Version:: ${{ github.event.inputs.release-version}}"
-          git push origin ${{github.event.inputs.branch}}
-
-      - name: Import GPG Key
-        uses: crazy-max/ghaction-import-gpg@v1
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: cd api-model && ./mvnw clean install
  
       - name: Maven Deploy
         run: |
+          cd api-model
           # Retry 3 times before the steps actually fails
           (echo "===== Maven Deploy Attempt: 1 ====" && ./mvnw --batch-mode -Prelease -DskipTests --settings /home/runner/.m2/settings.xml) || \
           (echo "===== Maven Deploy Attempt: 2 ====" && ./mvnw --batch-mode -Prelease -DskipTests --settings /home/runner/.m2/settings.xml) || \
           (echo "===== Maven Deploy Attempt: 3 ====" && ./mvnw --batch-mode -Prelease -DskipTests --settings /home/runner/.m2/settings.xml) || \
           (echo "==== Maven Deploy Step Failed ====" && exit 1)
           
+      - name: Commit Release Version Change
+        run: |
+          git add .
+          git commit -m "Automated update to Release Version:: ${{ github.event.inputs.release-version}}"
+          git push origin ${{github.event.inputs.branch}}
 
       - name: Update Snapshot Version ${{ github.event.inputs.snapshot-version}}
-        run: ./mvnw versions:set -DnewVersion=${{ github.event.inputs.snapshot-version}} -DgenerateBackupPoms=false -DprocessAllModules=true
+        run: cd api-model && ./mvnw versions:set -DnewVersion=${{ github.event.inputs.snapshot-version}} -DgenerateBackupPoms=false -DprocessAllModules=true
 
       - name: Commit Snapshot Version ${{ github.event.inputs.snapshot-version}}
         run: |
