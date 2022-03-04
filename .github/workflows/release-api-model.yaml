@@ -48,18 +48,18 @@ jobs:
           PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Configure Git
-         run: |
+        run: |
           git config --global user.name "apicurio-ci"
           git config --global user.email "apicurio.ci@gmail.com"
           
-       - name: Checkout Code with Branch ${{github.event.inputs.branch}}
-         uses: actions/checkout@v2
-         with:
+      - name: Checkout Code with Branch ${{github.event.inputs.branch}}
+        uses: actions/checkout@v2
+        with:
            ref: ${{github.event.inputs.branch}}
            token: ${{ secrets.ACCESS_TOKEN }}
            
-       - name: list files
-         run: ls -lrt
+      - name: list files
+        run: ls -lrt
       
       - name: Update Release Version ${{ github.event.inputs.release-version}}
         run: cd api-model && ./mvnw versions:set -DnewVersion=${{ github.event.inputs.release-version}} -DgenerateBackupPoms=false -DprocessAllModules=true
