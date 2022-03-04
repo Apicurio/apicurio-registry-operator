@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-18.04
     if: github.repository_owner == 'Apicurio'
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        
       - name: Check if api-model was updated
         uses: dorny/paths-filter@v2
         id: filter
@@ -24,10 +27,6 @@ jobs:
           version: 11
           architecture: x64
 
-      - name: Checkout Code
-        if: steps.filter.outputs.backend == 'true'
-        uses: actions/checkout@v2
-
       - name: Build Project
-        if: steps.filter.outputs.backend == 'true'
+        if: steps.filter.outputs.api-model == 'true'
         run: cd api-model && ./mvnw clean install
