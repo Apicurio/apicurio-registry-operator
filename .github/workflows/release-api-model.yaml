@@ -1,0 +1,100 @@
+name: Release Api-Model
+on:
+  workflow_dispatch:
+    inputs:
+      release-version:
+        description: 'Version being released'
+        required: true
+      snapshot-version:
+        description: 'Next snapshot version'
+        required: true
+      branch:
+        description: 'Branch to release from'
+        required: true
+        default: 'main'
+jobs:
+  release-api-model:
+    runs-on: ubuntu-18.04
+    if: github.repository_owner == 'Apicurio'
+    steps:
+      - name: Log Metadata
+        run: |
+          echo "==========================================================================================================="
+          echo "Release Module: apicurio-registry-operator-api-model"
+          echo "Release Version: ${{ github.event.inputs.release-version }}"
+          echo "Release Branch: ${{ github.event.inputs.branch }}"
+          echo "Release Actor: ${{ env.GITHUB_ACTOR }}"
+          echo "Next Snapshot Version: ${{ github.event.inputs.snapshot-version }}"
+          echo "==========================================================================================================="
+      
+      - name: Set up JDK 11
+        uses: AdoptOpenJDK/install-jdk@v1
+        with:
+          version: '11'
+          architecture: x64
+
+      - name: Set up settings.xml
+        run: |
+          pwd
+          mkdir -p /home/runner/.m2
+          chmod 755 /home/runner/.m2
+          echo "<settings><servers><server><id>${{ secrets.OSSRH_ID }}</id><username>${{ secrets.OSSRH_USERNAME }}</username><password>${{ secrets.OSSRH_TOKEN }}</password></server></servers><profiles><profile><id>${{ secrets.OSSRH_ID }}</id><activation><activeByDefault>true</activeByDefault></activation><properties><gpg.executable>gpg</gpg.executable><gpg.passphrase>${{ secrets.GPG_PASSPHRASE}}</gpg.passphrase></properties></profile></profiles></settings>" > /home/runner/.m2/settings.xml
+          cat /home/runner/.m2/settings.xml
+
+      - name: Import GPG Key
+        uses: crazy-max/ghaction-import-gpg@v1
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "apicurio-ci"
+          git config --global user.email "apicurio.ci@gmail.com"
+          
+      - name: Checkout Code with Branch ${{github.event.inputs.branch}}
+        uses: actions/checkout@v2
+        with:
+           ref: ${{github.event.inputs.branch}}
+           token: ${{ secrets.ACCESS_TOKEN }}
+           
+      - name: list files
+        run: ls -lrt
+      
+      - name: Update Release Version ${{ github.event.inputs.release-version}}
+        run: cd api-model && ./mvnw versions:set -DnewVersion=${{ github.event.inputs.release-version}} -DgenerateBackupPoms=false -DprocessAllModules=true
+
+      - name: Build Project
+        run: cd api-model && ./mvnw clean install
+ 
+      - name: Maven Deploy
+        run: |
+          cd api-model
+          # Retry 3 times before the steps actually fails
+          (echo "===== Maven Deploy Attempt: 1 ====" && ./mvnw deploy --batch-mode -Prelease -DskipTests --settings /home/runner/.m2/settings.xml) || \
+          (echo "===== Maven Deploy Attempt: 2 ====" && ./mvnw deploy --batch-mode -Prelease -DskipTests --settings /home/runner/.m2/settings.xml) || \
+          (echo "===== Maven Deploy Attempt: 3 ====" && ./mvnw deploy --batch-mode -Prelease -DskipTests --settings /home/runner/.m2/settings.xml) || \
+          (echo "==== Maven Deploy Step Failed ====" && exit 1)
+          
+      - name: Commit Release Version Change
+        run: |
+          git add .
+          git commit -m "Automated update to Release Version:: ${{ github.event.inputs.release-version}}"
+          git push origin ${{github.event.inputs.branch}}
+
+      - name: Update Snapshot Version ${{ github.event.inputs.snapshot-version}}
+        run: cd api-model && ./mvnw versions:set -DnewVersion=${{ github.event.inputs.snapshot-version}} -DgenerateBackupPoms=false -DprocessAllModules=true
+
+      - name: Commit Snapshot Version ${{ github.event.inputs.snapshot-version}}
+        run: |
+          git add .
+          git commit -m "Automated update to next Snapshot Version: ${{ github.event.inputs.snapshot-version}}"
+          git push origin ${{github.event.inputs.branch}}
+
+      - name: Google Chat Notification
+        if: ${{ failure() }}
+        uses: Co-qn/google-chat-notification@releases/v1
+        with:
+          name: ${{ github.job }}
+          url: ${{ secrets.GOOGLE_CHAT_WEBHOOK }}
+          status: ${{ job.status }}

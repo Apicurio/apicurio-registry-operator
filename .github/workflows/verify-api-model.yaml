@@ -1,0 +1,32 @@
+name: verify api-model
+on:
+  push:
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-project:
+    runs-on: ubuntu-18.04
+    if: github.repository_owner == 'Apicurio'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        
+      - name: Check if api-model was updated
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            api-model:
+              - 'api-model/**'
+            
+      - name: Set up JDK 11
+        if: steps.filter.outputs.api-model == 'true'
+        uses: AdoptOpenJDK/install-jdk@v1
+        with:
+          version: 11
+          architecture: x64
+
+      - name: Build Project
+        if: steps.filter.outputs.api-model == 'true'
+        run: cd api-model && ./mvnw clean install
