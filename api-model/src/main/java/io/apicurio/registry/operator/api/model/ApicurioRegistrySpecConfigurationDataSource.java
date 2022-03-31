@@ -26,7 +26,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode
 public class ApicurioRegistrySpecConfigurationDataSource {
     private String url;
-    private String username;
+    private String userName;
     private String password;
 
     public String getUrl() {
@@ -37,12 +37,12 @@ public class ApicurioRegistrySpecConfigurationDataSource {
         this.url = url;
     }
 
-    public String getUsername() {
-        return username;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public String getPassword() {
