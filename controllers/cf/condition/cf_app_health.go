@@ -50,12 +50,14 @@ func (this *AppHealthCF) Sense() {
 	this.requestLivenessOk = false
 	if this.targetType == core.ServiceTypeClusterIP && this.targetIP != "" {
 		if res, err := http.Get("http://" + this.targetIP + ":8080/health/ready"); err == nil {
+			defer res.Body.Close()
 			if res.StatusCode == 200 {
 				this.requestReadinessOk = true
 				this.initializing = false
 			}
 		}
 		if res, err := http.Get("http://" + this.targetIP + ":8080/health/live"); err == nil {
+			defer res.Body.Close()
 			if res.StatusCode == 200 {
 				this.requestLivenessOk = true
 			}
