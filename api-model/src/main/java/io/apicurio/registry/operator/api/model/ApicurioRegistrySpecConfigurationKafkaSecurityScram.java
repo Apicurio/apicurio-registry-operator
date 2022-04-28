@@ -25,17 +25,17 @@ import lombok.EqualsAndHashCode;
 )
 @EqualsAndHashCode
 public class ApicurioRegistrySpecConfigurationKafkaSecurityScram {
-    String trustedSecretName;
+    String truststoreSecretName;
     String user;
     String passwordSecretName;
     String mechanism;
 
-    public String getTrustedSecretName() {
-        return trustedSecretName;
+    public String getTruststoreSecretName() {
+        return truststoreSecretName;
     }
 
-    public void setTrustedSecretName(String trustedSecretName) {
-        this.trustedSecretName = trustedSecretName;
+    public void setTruststoreSecretName(String truststoreSecretName) {
+        this.truststoreSecretName = truststoreSecretName;
     }
 
     public String getUser() {
