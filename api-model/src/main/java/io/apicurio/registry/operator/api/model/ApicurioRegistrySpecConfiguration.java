@@ -30,7 +30,7 @@ public class ApicurioRegistrySpecConfiguration {
     private ApicurioRegistrySpecConfigurationKafkasql kafkasql;
     private ApicurioRegistrySpecConfigurationUI ui;
     private String logLevel;
-    private ApicurioRegistrySpecConfigurationKafkaSecurity security;
+    private ApicurioRegistrySpecConfigurationSecurity security;
 
     public String getPersistence() {
         return persistence;
@@ -72,11 +72,11 @@ public class ApicurioRegistrySpecConfiguration {
         this.logLevel = logLevel;
     }
 
-    public ApicurioRegistrySpecConfigurationKafkaSecurity getSecurity() {
+    public ApicurioRegistrySpecConfigurationSecurity getSecurity() {
         return security;
     }
 
-    public void setSecurity(ApicurioRegistrySpecConfigurationKafkaSecurity security) {
+    public void setSecurity(ApicurioRegistrySpecConfigurationSecurity security) {
         this.security = security;
     }
 }
