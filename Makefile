@@ -108,8 +108,8 @@ install-controller-gen: ## Install controller-gen@v0.4.1
 
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 .PHONY: install-kustomize
-install-kustomize: ## Install kustomize@v3.8.7
-	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
+install-kustomize: ## Install kustomize@v4.5.5
+	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4@v4.5.5)
 
 ########## Targets
 
