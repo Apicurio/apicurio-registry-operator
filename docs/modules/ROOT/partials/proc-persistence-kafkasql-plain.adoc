@@ -95,8 +95,7 @@ spec:
   partitions: 2
   replicas: 1
   config:
-    retention.ms: 604800000
-    segment.bytes: 1073741824
+    cleanup.policy: compact
 ----
 
 . Select the *{operator}*, and in the *ApicurioRegistry* tab, click *Create ApicurioRegistry*, using the following example, but replace your value in the `bootstrapServers` field.

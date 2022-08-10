@@ -82,8 +82,7 @@ spec:
   partitions: 2
   replicas: 1
   config:
-    retention.ms: 604800000
-    segment.bytes: 1073741824
+    cleanup.policy: compact
 ----
 
 . Create a *Kafka User* resource to configure authentication and authorization for the {registry} user. You can specify a user name in the `metadata` section or use the default `my-user`.
