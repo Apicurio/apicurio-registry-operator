@@ -69,8 +69,7 @@ spec:
   partitions: 2
   replicas: 1
   config:
-    retention.ms: 604800000
-    segment.bytes: 1073741824
+    cleanup.policy: compact
 ----
 
 . Change the topic name to `global-id-topic`, and optionally decrease the partition and replica count to minimum, which is sufficient for an example deployment.
