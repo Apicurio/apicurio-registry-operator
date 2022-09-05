@@ -68,7 +68,8 @@
         <maven.compiler.target>11</maven.compiler.target>
 
         <version.fabric8>5.12.1</version.fabric8>
-        <sundrio.version>0.40.1</sundrio.version>
+        <version.fabric8-java-gen>6.1.1</version.fabric8-java-gen>
+        <sundrio.version>0.92.1</sundrio.version>
 
         <!-- Plugins -->
         <version.maven-javadoc-plugin>3.3.1</version.maven-javadoc-plugin>
@@ -85,26 +86,6 @@
             <version>${version.fabric8}</version>
         </dependency>
         <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-model-core</artifactId>
-            <version>${version.fabric8}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-model-networking</artifactId>
-            <version>${version.fabric8}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-model-common</artifactId>
-            <version>${version.fabric8}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-model-apiextensions</artifactId>
-            <version>${version.fabric8}</version>
-        </dependency>
-        <dependency>
             <groupId>io.sundr</groupId>
             <artifactId>builder-annotations</artifactId>
             <version>${sundrio.version}</version>
@@ -115,10 +96,33 @@
             <artifactId>lombok</artifactId>
             <version>1.18.22</version>
         </dependency>
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>2.0.1.Final</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>java-generator-maven-plugin</artifactId>
+                <version>${version.fabric8-java-gen}</version>
+                <executions>
+                  <execution>
+                    <goals>
+                      <goal>generate</goal>
+                    </goals>
+                  </execution>
+                </executions>
+                <configuration>
+                  <source>${project.base}/../../config/crd/resources/registry.apicur.io_apicurioregistries.yaml</source>
+                  <extraAnnotations>true</extraAnnotations>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
