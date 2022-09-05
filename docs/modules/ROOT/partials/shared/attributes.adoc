@@ -38,6 +38,8 @@ ifdef::apicurio-registry-operator-downstream[]
 
 :service-registry:
 
+:org-name: Red Hat
+:prodnamefull: {org-name} Integration
 :registry: Service Registry
 :operator: {registry} Operator
 
@@ -49,7 +51,7 @@ ifdef::apicurio-registry-operator-downstream[]
 
 :kafka-streams: AMQ Streams
 
-:keycloak: Red Hat Single Sign-On
+:keycloak: {org-name} Single Sign-On
 
 endif::[]
 
