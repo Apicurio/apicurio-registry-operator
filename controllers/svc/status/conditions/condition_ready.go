@@ -22,6 +22,8 @@ func (this *ReadyCondition) IsActive() bool {
 }
 
 // Transitions in decreasing order of priority
+// Conditions have to be set in each loop, otherwise they will be reset automatically
+// If more than one are set, the priority (see the if statements here) takes effect
 
 func (this *ReadyCondition) TransitionError() {
 	this.data.Status = metav1.ConditionFalse
@@ -34,6 +36,7 @@ func (this *ReadyCondition) TransitionInitializing() {
 
 		this.data.Status = metav1.ConditionFalse
 		this.data.Reason = string(READY_CONDITION_REASON_INITIALIZING)
+		this.data.Message = ""
 	}
 }
 
@@ -43,6 +46,7 @@ func (this *ReadyCondition) TransitionReconciling() {
 
 		this.data.Status = metav1.ConditionFalse
 		this.data.Reason = string(READY_CONDITION_REASON_RECONCILING)
+		this.data.Message = ""
 	}
 }
 
@@ -53,5 +57,6 @@ func (this *ReadyCondition) TransitionReconciled() {
 
 		this.data.Status = metav1.ConditionTrue
 		this.data.Reason = string(READY_CONDITION_REASON_RECONCILED)
+		this.data.Message = ""
 	}
 }

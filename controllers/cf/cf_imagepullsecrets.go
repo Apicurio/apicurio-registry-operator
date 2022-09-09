@@ -15,7 +15,7 @@ import (
 var _ loop.ControlFunction = &ImagePullSecretsCF{}
 
 type ImagePullSecretsCF struct {
-	ctx                      *context.LoopContext
+	ctx                      context.LoopContext
 	svcResourceCache         resources.ResourceCache
 	deploymentEntry          resources.ResourceCacheEntry
 	deploymentEntryExists    bool
@@ -23,7 +23,7 @@ type ImagePullSecretsCF struct {
 	targetImagePullSecrets   []core.LocalObjectReference
 }
 
-func NewImagePullSecretsCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewImagePullSecretsCF(ctx context.LoopContext) loop.ControlFunction {
 	return &ImagePullSecretsCF{
 		ctx:                      ctx,
 		svcResourceCache:         ctx.GetResourceCache(),

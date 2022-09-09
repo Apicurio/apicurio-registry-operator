@@ -1,33 +1,26 @@
 package controllers
 
 import (
-	ctx "context"
-
-	"github.com/Apicurio/apicurio-registry-operator/controllers/cf/condition"
-
-	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
-	"github.com/go-logr/logr"
-	ocp_apps "github.com/openshift/api/apps/v1"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	ctrl "sigs.k8s.io/controller-runtime"
-
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	apps "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	networking "k8s.io/api/networking/v1"
-	policy "k8s.io/api/policy/v1beta1"
-
+	go_ctx "context"
+	"errors"
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/cf"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/cf/condition"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/cf/kafkasql"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/client"
+	c "github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
-	loop_context "github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/impl"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
-	api_errors "k8s.io/apimachinery/pkg/api/errors"
-	sigs_client "sigs.k8s.io/controller-runtime/pkg/client"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
+	"github.com/go-logr/logr"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	apps "k8s.io/api/apps/v1"
+	core "k8s.io/api/core/v1"
+	networking "k8s.io/api/networking/v1"
+	policy "k8s.io/api/policy/v1beta1"
+	cr "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -37,26 +30,74 @@ import (
 var _ reconcile.Reconciler = &ApicurioRegistryReconciler{}
 
 type ApicurioRegistryReconciler struct {
-	client sigs_client.Client
-	scheme *runtime.Scheme
-	//controller controller.Controller
-	loops map[string]loop.ControlLoop
-	log   logr.Logger
+	log     logr.Logger
+	clients *client.Clients
+	testing *c.TestSupport
+	loops   map[string]loop.ControlLoop
 }
 
-func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog logr.Logger) (*ApicurioRegistryReconciler, error) {
+func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog logr.Logger, testing *c.TestSupport) (*ApicurioRegistryReconciler, error) {
 
-	r := &ApicurioRegistryReconciler{
-		client: mgr.GetClient(),
-		scheme: mgr.GetScheme(),
-		loops:  make(map[string]loop.ControlLoop),
-		log:    rootLog.WithName("controllers").WithValues("controller", "ApicurioRegistry"),
+	clients := client.NewClients(
+		rootLog.WithName("clients"),
+		mgr.GetScheme(), mgr.GetConfig())
+
+	isOCP, err := clients.Discovery().IsOCP()
+	if err != nil {
+		return nil, errors.New("could not determine cluster type")
 	}
-	if err := r.setupWithManager(mgr); err != nil {
+	if isOCP {
+		rootLog.V(c.V_NORMAL).Info("This operator is running on OpenShift")
+	} else {
+		rootLog.V(c.V_NORMAL).Info("This operator is running on Kubernetes")
+	}
+
+	result := &ApicurioRegistryReconciler{
+		log:     rootLog.WithName("controller"),
+		clients: clients,
+		testing: testing,
+		loops:   make(map[string]loop.ControlLoop),
+	}
+
+	if err := result.setupWithManager(mgr); err != nil {
 		return nil, err
 	}
 
-	return r, nil
+	return result, nil
+}
+
+func (this *ApicurioRegistryReconciler) setupWithManager(mgr cr.Manager) error {
+
+	builder := cr.NewControllerManagedBy(mgr)
+
+	builder.For(&ar.ApicurioRegistry{})
+
+	builder.WithEventFilter(predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			if e.ObjectOld.GetObjectKind().GroupVersionKind().Kind == "ApicurioRegistry" {
+				// Ignore updates to the ApicurioRegistry status, in which case metadata.Generation does not change.
+				return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
+			}
+			return true
+		},
+	})
+
+	builder.Owns(&apps.Deployment{})
+	builder.Owns(&core.Service{})
+	builder.Owns(&networking.Ingress{})
+	builder.Owns(&policy.PodDisruptionBudget{})
+
+	isMonitoring, err := this.clients.Discovery().IsMonitoringInstalled()
+	if err != nil {
+		return err
+	}
+	if isMonitoring {
+		builder.Owns(&monitoring.ServiceMonitor{})
+	} else {
+		this.log.V(c.V_IMPORTANT).Info("Install prometheus-operator in your cluster to create ServiceMonitor objects, restart apicurio-registry operator after installing prometheus-operator")
+	}
+
+	return builder.Complete(this)
 }
 
 // Apicurio Registry CR
@@ -66,7 +107,6 @@ func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog logr.Logger) (*A
 
 // OpenShift
 // +kubebuilder:rbac:groups=route.openshift.io,resources=routes;routes/custom-host,verbs=*
-// +kubebuilder:rbac:groups=apps.openshift.io,resources=deploymentconfigs,verbs=*
 
 // Common
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=*
@@ -82,37 +122,45 @@ func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog logr.Logger) (*A
 // Cluster Info (k8s vs. OCP)
 // +kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get
 
-func (this *ApicurioRegistryReconciler) Reconcile(reconcileCtx ctx.Context /* TODO or context.TODO()*/, request reconcile.Request) (reconcile.Result, error) {
-	appName := common.Name(request.Name)
-	appNamespace := common.Namespace(request.Namespace)
+func (this *ApicurioRegistryReconciler) Reconcile(_ go_ctx.Context, request reconcile.Request) (reconcile.Result, error) {
+	if this.testing.IsEnabled() {
+		this.testing.ResetTimer()
+	}
 
-	this.log.Info("Reconciler executing.")
+	appName := c.Name(request.Name)
+	appNamespace := c.Namespace(request.Namespace)
+
+	this.log.V(c.V_NORMAL).Info("reconciler executing")
 
 	// Find the spec
-	spec, err := this.getApicurioRegistryResource(appNamespace, appName)
+	spec, err := this.clients.CRD().GetApicurioRegistry(appNamespace, appName)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// Get the target control loop
-	key := appNamespace.Str() + "/" + appName.Str()
+	key := appNamespace.Str() + "/" + appName.Str() // TODO Use types.NamespacedName ?
 	controlLoop, exists := this.loops[key]
 	if exists {
 		// If control loop exists, but spec is not found, do a cleanup
 		if spec == nil {
 			controlLoop.Cleanup()
 			delete(this.loops, key)
-			controlLoop.GetContext().GetLog().Info("Context was deleted.")
+			controlLoop.GetContext().GetLog().V(c.V_NORMAL).Info("context was deleted")
 			return reconcile.Result{}, nil
-		} // else OK, run
+		} else {
+			// Run and reload spec into the cache
+			controlLoop.GetContext().GetResourceCache().Set(resources.RC_KEY_SPEC, resources.NewResourceCacheEntry(appName, spec))
+		}
 	} else {
 		if spec == nil {
 			// Error
 			return reconcile.Result{}, nil
 		} else {
-			// Create new loop, and run
+			// Create new loop, and requeue
 			controlLoop = this.createNewLoop(appName, appNamespace)
 			this.loops[key] = controlLoop
+			return reconcile.Result{Requeue: true}, nil
 		}
 	}
 
@@ -124,142 +172,72 @@ func (this *ApicurioRegistryReconciler) Reconcile(reconcileCtx ctx.Context /* TO
 	return reconcile.Result{Requeue: requeue, RequeueAfter: delay}, nil
 }
 
-//func (this *ApicurioRegistryReconciler) setController(c controller.Controller) {
-//	this.controller = c
-//}
+func (this *ApicurioRegistryReconciler) createNewLoop(appName c.Name, appNamespace c.Namespace) loop.ControlLoop {
 
-// Returns nil if the resource is not found, but request was OK
-func (this *ApicurioRegistryReconciler) getApicurioRegistryResource(appNamespace common.Namespace, appName common.Name) (*ar.ApicurioRegistry, error) {
-	specList := &ar.ApicurioRegistryList{}
-	listOps := sigs_client.ListOptions{Namespace: appNamespace.Str()}
-	err := this.client.List(ctx.TODO(), specList, &listOps)
-	if err != nil {
-		if api_errors.IsNotFound(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
+	loopKey := appNamespace.Str() + "/" + appName.Str()
+	log := this.log.WithValues("contextId", loopKey)
+	log.V(c.V_NORMAL).Info("creating a new context")
 
-	var spec *ar.ApicurioRegistry = nil
-
-	for i, specItem := range specList.Items {
-		if common.Name(specItem.Name) == appName && common.Namespace(specItem.Namespace) == appNamespace {
-			spec = &specList.Items[i]
-		}
-	}
-
-	return spec, nil
-}
-
-func (this *ApicurioRegistryReconciler) createNewLoop(appName common.Name, appNamespace common.Namespace) loop.ControlLoop {
-
-	this.log.Info("Creating new context")
-	ctx := loop_context.NewLoopContext(appName, appNamespace, this.log, this.scheme, this.client)
+	ctx := context.NewLoopContext(appName, appNamespace, log, this.clients, this.testing)
 	loopServices := services.NewLoopServices(ctx)
-	c := impl.NewControlLoopImpl(ctx, loopServices)
-
-	isOCP, _ := client.IsOCP()
-	if isOCP {
-		this.log.Info("This operator is running on OpenShift")
-	} else {
-		this.log.Info("This operator is running on Kubernetes")
-	}
+	result := impl.NewControlLoopImpl(ctx, loopServices)
 
 	//functions ordered so execution is optimized
 
 	// Initialization, executed only once (or only for a short time)
-	c.AddControlFunction(condition.NewInitializingCF(ctx, loopServices))
-	c.AddControlFunction(cf.NewHostInitCF(ctx))
+	result.AddControlFunction(condition.NewInitializingCF(ctx, loopServices))
+	result.AddControlFunction(cf.NewHostInitCF(ctx))
 
 	//deployment
-	c.AddControlFunction(cf.NewDeploymentCF(ctx, loopServices))
+	result.AddControlFunction(cf.NewDeploymentCF(ctx, loopServices))
 
 	//dependents of deployment
-	c.AddControlFunction(cf.NewAffinityCF(ctx))
-	c.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, loopServices))
-	c.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))
-	c.AddControlFunction(cf.NewTolerationCF(ctx))
-	c.AddControlFunction(cf.NewAnnotationsCF(ctx))
+	result.AddControlFunction(cf.NewAffinityCF(ctx))
+	result.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, loopServices))
+	result.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))
+	result.AddControlFunction(cf.NewTolerationCF(ctx))
+	result.AddControlFunction(cf.NewAnnotationsCF(ctx))
 
 	//deployment modifiers
-	c.AddControlFunction(cf.NewImageCF(ctx, loopServices))
-	c.AddControlFunction(cf.NewImagePullPolicyCF(ctx))
-	c.AddControlFunction(cf.NewImagePullSecretsCF(ctx))
+	result.AddControlFunction(cf.NewImageCF(ctx, loopServices))
+	result.AddControlFunction(cf.NewImagePullPolicyCF(ctx))
+	result.AddControlFunction(cf.NewImagePullSecretsCF(ctx))
 
-	c.AddControlFunction(cf.NewReplicasCF(ctx, loopServices))
+	result.AddControlFunction(cf.NewReplicasCF(ctx, loopServices))
 
 	//deployment env vars modifiers
-	c.AddControlFunction(cf.NewSqlCF(ctx))
-	c.AddControlFunction(kafkasql.NewKafkasqlCF(ctx))
-	c.AddControlFunction(kafkasql.NewKafkasqlSecurityScramCF(ctx))
-	c.AddControlFunction(kafkasql.NewKafkasqlSecurityTLSCF(ctx))
-	c.AddControlFunction(cf.NewLogLevelCF(ctx))
-	c.AddControlFunction(cf.NewProfileCF(ctx))
-	c.AddControlFunction(cf.NewUICF(ctx))
-	c.AddControlFunction(cf.NewKeycloakCF(ctx))
+	result.AddControlFunction(cf.NewSqlCF(ctx))
+	result.AddControlFunction(kafkasql.NewKafkasqlCF(ctx))
+	result.AddControlFunction(kafkasql.NewKafkasqlSecurityScramCF(ctx))
+	result.AddControlFunction(kafkasql.NewKafkasqlSecurityTLSCF(ctx))
+	result.AddControlFunction(cf.NewLogLevelCF(ctx))
+	result.AddControlFunction(cf.NewProfileCF(ctx))
+	result.AddControlFunction(cf.NewUICF(ctx))
+	result.AddControlFunction(cf.NewKeycloakCF(ctx))
 
+	//env vars from CR
+	result.AddControlFunction(cf.NewEnvCF(ctx))
 	//env vars applier
-	c.AddControlFunction(cf.NewEnvCF(ctx))
+	result.AddControlFunction(cf.NewEnvApplyCF(ctx))
 
 	//service
-	c.AddControlFunction(cf.NewServiceCF(ctx, loopServices))
+	result.AddControlFunction(cf.NewServiceCF(ctx, loopServices))
 
 	//ingress (depends on service)
-	c.AddControlFunction(cf.NewIngressCF(ctx, loopServices))
+	result.AddControlFunction(cf.NewIngressCF(ctx, loopServices))
 
 	//network policy
-	c.AddControlFunction(cf.NewNetworkPolicyCF(ctx, loopServices))
+	result.AddControlFunction(cf.NewNetworkPolicyCF(ctx, loopServices))
 
 	//dependents of ingress
-	if isOCP {
-		c.AddControlFunction(cf.NewHostInitRouteOcpCF(ctx))
+	if isOCP, _ := this.clients.Discovery().IsOCP(); isOCP {
+		result.AddControlFunction(cf.NewHostInitRouteOcpCF(ctx))
 	}
-	c.AddControlFunction(cf.NewHostCF(ctx, loopServices))
+	result.AddControlFunction(cf.NewHostCF(ctx, loopServices))
 
 	// Other / Dependent on everything :)
-	c.AddControlFunction(cf.NewLabelsCF(ctx, loopServices))
-	c.AddControlFunction(condition.NewAppHealthCF(ctx, loopServices))
+	result.AddControlFunction(cf.NewLabelsCF(ctx, loopServices))
+	result.AddControlFunction(condition.NewAppHealthCF(ctx, loopServices))
 
-	return c
-}
-
-// ######################################
-
-func (this *ApicurioRegistryReconciler) setupWithManager(mgr ctrl.Manager) error {
-
-	builder := ctrl.NewControllerManagedBy(mgr).
-		Named("ApicurioRegistry-controller")
-
-	builder.For(&ar.ApicurioRegistry{}).WithEventFilter(predicate.Funcs{
-		UpdateFunc: func(e event.UpdateEvent) bool {
-			// Ignore updates to the ApicurioRegistry status in which case metadata.Generation does not change
-			return e.ObjectOld.GetGeneration() != e.ObjectNew.GetGeneration()
-		},
-	})
-
-	isOCP, err := client.IsOCP()
-	if err != nil {
-		return err
-	}
-	if isOCP {
-		builder.Owns(&ocp_apps.DeploymentConfig{})
-	} else {
-		builder.Owns(&apps.Deployment{})
-	}
-
-	builder.Owns(&corev1.Service{})
-	builder.Owns(&networking.Ingress{})
-	builder.Owns(&policy.PodDisruptionBudget{})
-
-	isMonitoring, err := client.IsMonitoringInstalled()
-	if err != nil {
-		return err
-	}
-	if isMonitoring {
-		builder.Owns(&monitoring.ServiceMonitor{})
-	} else {
-		this.log.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects, restart apicurio-registry operator after installing prometheus-operator")
-	}
-
-	return builder.Complete(this)
+	return result
 }

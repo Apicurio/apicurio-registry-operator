@@ -16,7 +16,7 @@ import (
 var _ loop.ControlFunction = &LabelsCF{}
 
 type LabelsCF struct {
-	ctx              *context.LoopContext
+	ctx              context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcKubeFactory   *factory.KubeFactory
 
@@ -48,7 +48,7 @@ type LabelsCF struct {
 }
 
 // Update labels on some managed resources
-func NewLabelsCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
+func NewLabelsCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
 	return &LabelsCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),

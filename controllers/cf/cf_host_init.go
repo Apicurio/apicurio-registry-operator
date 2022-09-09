@@ -10,7 +10,7 @@ import (
 var _ loop.ControlFunction = &HostInitCF{}
 
 type HostInitCF struct {
-	ctx              *context.LoopContext
+	ctx              context.LoopContext
 	svcResourceCache resources.ResourceCache
 	isFirstRun       bool
 	targetHost       string
@@ -20,7 +20,7 @@ type HostInitCF struct {
 // This CF makes sure number of host is aligned
 // If there is some other way of determining the number of host needed outside of CR,
 // modify the Sense stage so this CF knows about it
-func NewHostInitCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewHostInitCF(ctx context.LoopContext) loop.ControlFunction {
 	return &HostInitCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),

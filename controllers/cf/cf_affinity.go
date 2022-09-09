@@ -15,7 +15,7 @@ import (
 var _ loop.ControlFunction = &AffinityCF{}
 
 type AffinityCF struct {
-	ctx                   *context.LoopContext
+	ctx                   context.LoopContext
 	svcResourceCache      resources.ResourceCache
 	deploymentEntry       resources.ResourceCacheEntry
 	deploymentEntryExists bool
@@ -23,7 +23,7 @@ type AffinityCF struct {
 	targetAffinity        *corev1.Affinity
 }
 
-func NewAffinityCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewAffinityCF(ctx context.LoopContext) loop.ControlFunction {
 	return &AffinityCF{
 		ctx:                   ctx,
 		svcResourceCache:      ctx.GetResourceCache(),

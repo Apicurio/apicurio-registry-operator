@@ -4,7 +4,6 @@ import (
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	ocp_apps "github.com/openshift/api/apps/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,14 +12,12 @@ import (
 type DeploymentOCPUF = func(spec *ocp_apps.DeploymentConfig)
 
 type OCPPatcher struct {
-	ctx     *context.LoopContext
-	clients *client.Clients
+	ctx context.LoopContext
 }
 
-func NewOCPPatcher(ctx *context.LoopContext, clients *client.Clients) *OCPPatcher {
+func NewOCPPatcher(ctx context.LoopContext) *OCPPatcher {
 	return &OCPPatcher{
-		ctx:     ctx,
-		clients: clients,
+		ctx,
 	}
 }
 
@@ -28,7 +25,7 @@ func NewOCPPatcher(ctx *context.LoopContext, clients *client.Clients) *OCPPatche
 
 func (this *OCPPatcher) reloadRoute() {
 	if entry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_ROUTE_OCP); exists {
-		r, e := this.clients.OCP().
+		r, e := this.ctx.GetClients().OCP().
 			GetRoute(this.ctx.GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
 		if e != nil {
 			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
@@ -39,7 +36,7 @@ func (this *OCPPatcher) reloadRoute() {
 		}
 	} else {
 		// Load route here, TODO move to separate CF?
-		rs, e := this.clients.OCP().
+		rs, e := this.ctx.GetClients().OCP().
 			GetRoutes(this.ctx.GetAppNamespace(), &meta.ListOptions{
 				LabelSelector: "app=" + this.ctx.GetAppName().Str(),
 			})

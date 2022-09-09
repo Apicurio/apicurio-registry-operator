@@ -22,7 +22,7 @@ const (
 )
 
 type KeycloakCF struct {
-	ctx              *context.LoopContext
+	ctx              context.LoopContext
 	svcResourceCache resources.ResourceCache
 	specEntry        resources.ResourceCacheEntry
 	svcEnvCache      env.EnvCache
@@ -43,7 +43,7 @@ type KeycloakCF struct {
 	applyDefaultUi  bool
 }
 
-func NewKeycloakCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewKeycloakCF(ctx context.LoopContext) loop.ControlFunction {
 	return &KeycloakCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
@@ -115,11 +115,11 @@ func (this *KeycloakCF) Compare() bool {
 func (this *KeycloakCF) Respond() {
 	// Response #1
 	// Just set the value(s)!
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_AUTH_ENABLED, "true"))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KEYCLOAK_URL, this.keycloakUrl))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KEYCLOAK_REALM, this.keycloakRealm))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KEYCLOAK_API_CLIENT_ID, this.keycloakApiClientId))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KEYCLOAK_UI_CLIENT_ID, this.keycloakUiClientId))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_AUTH_ENABLED, "true").Build())
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_KEYCLOAK_URL, this.keycloakUrl).Build())
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_KEYCLOAK_REALM, this.keycloakRealm).Build())
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_KEYCLOAK_API_CLIENT_ID, this.keycloakApiClientId).Build())
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_KEYCLOAK_UI_CLIENT_ID, this.keycloakUiClientId).Build())
 
 	// Response #1
 	// Update defaults

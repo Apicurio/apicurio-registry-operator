@@ -14,7 +14,7 @@ import (
 var _ loop.ControlFunction = &AnnotationsCF{}
 
 type AnnotationsCF struct {
-	ctx                   *context.LoopContext
+	ctx                   context.LoopContext
 	svcResourceCache      resources.ResourceCache
 	deploymentEntry       resources.ResourceCacheEntry
 	deploymentEntryExists bool
@@ -22,7 +22,7 @@ type AnnotationsCF struct {
 	targetAnnotations     map[string]string
 }
 
-func NewAnnotationsCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewAnnotationsCF(ctx context.LoopContext) loop.ControlFunction {
 	return &AnnotationsCF{
 		ctx:                   ctx,
 		svcResourceCache:      ctx.GetResourceCache(),

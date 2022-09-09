@@ -2,14 +2,14 @@ package patcher
 
 import (
 	"encoding/json"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
-
-	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
+	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
+	c "github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
-	"k8s.io/apimachinery/pkg/util/strategicpatch"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
+	jsonpatch "github.com/evanphx/json-patch"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Patchers struct {
@@ -17,10 +17,10 @@ type Patchers struct {
 	ocpPatcher  *OCPPatcher
 }
 
-func NewPatchers(ctx *context.LoopContext, clients *client.Clients, factoryKube *factory.KubeFactory, status *status.Status) *Patchers {
+func NewPatchers(ctx context.LoopContext, factoryKube *factory.KubeFactory, status *status.Status) *Patchers {
 	this := &Patchers{}
-	this.kubePatcher = NewKubePatcher(ctx, clients, factoryKube, status)
-	this.ocpPatcher = NewOCPPatcher(ctx, clients)
+	this.kubePatcher = NewKubePatcher(ctx, factoryKube, status)
+	this.ocpPatcher = NewOCPPatcher(ctx)
 	return this
 }
 
@@ -47,20 +47,30 @@ func createPatch(old, new, datastruct interface{}) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return strategicpatch.CreateTwoWayMergePatch(o, n, datastruct)
+	return jsonpatch.CreateMergePatch(o, n)
 }
 
 // Kind-of generic patching function to avoid repeating the code for each resource type
 // TODO improve, there are better ways to patch objects, sigs_client.Client is preferrable to the rest client being used
 func patchGeneric(
-	ctx *context.LoopContext,
+	ctx context.LoopContext,
 	key string, // Resource cache key for the given resource
 	genericToString func(interface{}) string, // Function to convert the resource to string (logging)
 	genericType interface{}, // Empty instance of the resource struct
 	typeString string, // A string representing the resource type (mostly, logging, see below)
-	genericCreate func(common.Namespace, interface{}) (interface{}, error), // Function to create the resource using Kubernetes API
-	genericPatch func(common.Namespace, common.Name, []byte) (interface{}, error), // Function to patch the resource using Kubernetes API
-	genericGetName func(interface{}) common.Name) { // Function to get the resource name within k8s
+	genericCreate func(meta.Object, c.Namespace, interface{}) (interface{}, error), // Function to create the resource using Kubernetes API
+	genericPatch func(c.Namespace, c.Name, []byte) (interface{}, error), // Function to patch the resource using Kubernetes API
+	genericGetName func(interface{}) c.Name) { // Function to get the resource name within k8s
+
+	owner, exists := ctx.GetResourceCache().Get(resources.RC_KEY_SPEC)
+	if !exists {
+		ctx.GetLog().
+			V(c.V_IMPORTANT).
+			WithValues("resource", typeString).
+			Info("Could not patch a resource. No ApicurioRegistry exists to set as the owner. Retrying.")
+		ctx.SetRequeueNow()
+		return
+	}
 
 	if entry, exists := ctx.GetResourceCache().Get(key); exists {
 
@@ -70,13 +80,11 @@ func patchGeneric(
 		// original := entry.GetOriginalValue() TODO
 
 		// if exists
-		if name != resources.RC_EMPTY_NAME {
+		if name != resources.RC_NOT_CREATED_NAME_EMPTY {
 			// Skip actually if there are no PFs
-			if !entry.IsPatched() {
+			if !entry.HasChanged() {
 				return
 			}
-
-			ctx.GetLog().WithValues("resource", typeString, "name", name).Info("Patching.")
 
 			actualValue := entry.GetOriginalValue()
 			patchData, err := createPatch(actualValue, value, genericType)
@@ -92,6 +100,20 @@ func patchGeneric(
 				ctx.SetRequeueNow()
 				return
 			}
+
+			// Optimization: Check if the patch is empty
+			var patchJson map[string]interface{}
+			if err := json.Unmarshal(patchData, &patchJson); err != nil {
+				panic(err) // TODO
+			}
+			if patchJson == nil || len(patchJson) == 0 {
+				ctx.GetLog().WithValues("resource", typeString, "name", name, "patch", string(patchData)).
+					Info("skipping empty patch")
+				entry.ResetHasChanged()
+				return
+			}
+
+			ctx.GetLog().WithValues("resource", typeString, "name", name).Info("patching")
 			patched, err := genericPatch(namespace, name, patchData)
 			if err != nil {
 				// Could not apply patch. Maybe it was modified by external source.
@@ -111,7 +133,7 @@ func patchGeneric(
 		} else {
 			ctx.GetLog().WithValues("resource", typeString).Info("Creating.")
 			// Create it
-			created, err := genericCreate(namespace, value)
+			created, err := genericCreate(owner.GetValue().(*ar.ApicurioRegistry), namespace, value)
 			if err != nil {
 				// Could not create.
 				// Delete the value from cache so it can be tried again

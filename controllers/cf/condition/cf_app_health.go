@@ -1,20 +1,23 @@
 package condition
 
 import (
+	c "github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	core "k8s.io/api/core/v1"
 	"net/http"
+	"os"
+	"time"
 )
 
 var _ loop.ControlFunction = &AppHealthCF{}
 
 type AppHealthCF struct {
-	ctx      *context.LoopContext
-	services *services.LoopServices
-
+	ctx          context.LoopContext
+	services     services.LoopServices
+	httpClient   http.Client
 	initializing bool
 
 	targetType core.ServiceType
@@ -24,11 +27,13 @@ type AppHealthCF struct {
 	requestLivenessOk  bool
 }
 
-func NewAppHealthCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
+func NewAppHealthCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
 	return &AppHealthCF{
 		ctx:      ctx,
 		services: services,
-
+		httpClient: http.Client{
+			Timeout: 3 * time.Second,
+		},
 		initializing:       true,
 		requestReadinessOk: false,
 		requestLivenessOk:  false,
@@ -40,6 +45,10 @@ func (this *AppHealthCF) Describe() string {
 }
 
 func (this *AppHealthCF) Sense() {
+	// Improve speed by avoiding unnecessary HTTP requests
+	if this.ctx.GetAttempts() > 0 {
+		return
+	}
 
 	if serviceEntry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_SERVICE); exists {
 		this.targetType = serviceEntry.GetValue().(*core.Service).Spec.Type
@@ -49,23 +58,51 @@ func (this *AppHealthCF) Sense() {
 	this.requestReadinessOk = false
 	this.requestLivenessOk = false
 	if this.targetType == core.ServiceTypeClusterIP && this.targetIP != "" {
-		if res, err := http.Get("http://" + this.targetIP + ":8080/health/ready"); err == nil {
+		url := "http://" + this.targetIP + ":8080/health/ready"
+		res, err := this.httpClient.Get(url)
+		if err == nil {
+			// TODO Unify this with InitializingCF?
 			defer res.Body.Close()
 			if res.StatusCode == 200 {
 				this.requestReadinessOk = true
 				this.initializing = false
+			} else {
+				this.ctx.GetLog().V(c.V_IMPORTANT).Info("request has failed with a status", "url", url, "status", res.StatusCode)
 			}
+		} else if os.IsTimeout(err) {
+			this.ctx.GetLog().V(c.V_IMPORTANT).Info("request has timed out", "url", url, "timeout", this.httpClient.Timeout)
+		} else {
+			this.ctx.GetLog().V(c.V_IMPORTANT).Info("request has failed", "url", url, "error", err.Error())
 		}
-		if res, err := http.Get("http://" + this.targetIP + ":8080/health/live"); err == nil {
+		url = "http://" + this.targetIP + ":8080/health/live"
+		res, err = this.httpClient.Get(url)
+		if err == nil {
 			defer res.Body.Close()
 			if res.StatusCode == 200 {
 				this.requestLivenessOk = true
+			} else {
+				this.ctx.GetLog().V(c.V_IMPORTANT).Info("request has failed with a status", "url", url, "status", res.StatusCode)
 			}
+		} else if os.IsTimeout(err) {
+			this.ctx.GetLog().V(c.V_IMPORTANT).Info("request has timed out", "url", url, "timeout", this.httpClient.Timeout)
+		} else {
+			this.ctx.GetLog().V(c.V_IMPORTANT).Info("request has failed", "url", url, "error", err.Error())
 		}
+	}
+
+	if this.ctx.GetTestingSupport().IsEnabled() {
+		if this.ctx.GetTestingSupport().GetMockCanMakeHTTPRequestToOperand() {
+			this.initializing = false
+		}
+		this.requestLivenessOk = this.ctx.GetTestingSupport().GetMockOperandMetricsReportReady()
+		this.requestReadinessOk = this.ctx.GetTestingSupport().GetMockOperandMetricsReportReady()
 	}
 }
 
 func (this *AppHealthCF) Compare() bool {
+	// Executing AFTER initialization,
+	// that part is handled by InitializingCF
+	// Prevent loop from getting stable by only executing once
 	return !this.initializing && this.ctx.GetAttempts() == 0
 }
 
@@ -74,15 +111,18 @@ func (this *AppHealthCF) Respond() {
 		this.services.GetConditionManager().GetApplicationNotHealthyCondition().TransitionNotReady()
 		this.services.GetConditionManager().GetReadyCondition().TransitionError()
 		this.ctx.SetRequeueDelaySoon()
-		this.initializing = false
 	}
 	if !this.requestLivenessOk {
 		this.services.GetConditionManager().GetApplicationNotHealthyCondition().TransitionNotLive()
 		this.services.GetConditionManager().GetReadyCondition().TransitionError()
 		this.ctx.SetRequeueDelaySoon()
-		this.initializing = false
 	}
+
 	this.ctx.SetRequeueDelaySec(3 * 60) // 3 min
+
+	if this.ctx.GetTestingSupport().IsEnabled() && !this.ctx.GetTestingSupport().GetMockOperandMetricsReportReady() {
+		this.ctx.SetRequeueNow() // Ensure the reconciler is executed again very soon
+	}
 }
 
 func (this *AppHealthCF) Cleanup() bool {

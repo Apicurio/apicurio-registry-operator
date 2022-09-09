@@ -7,7 +7,7 @@ type ControlLoop interface {
 
 	GetControlFunctions() []ControlFunction
 
-	GetContext() *context.LoopContext
+	GetContext() context.LoopContext
 
 	Run()
 

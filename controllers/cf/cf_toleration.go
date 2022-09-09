@@ -15,7 +15,7 @@ import (
 var _ loop.ControlFunction = &TolerationCF{}
 
 type TolerationCF struct {
-	ctx                   *context.LoopContext
+	ctx                   context.LoopContext
 	svcResourceCache      resources.ResourceCache
 	deploymentEntry       resources.ResourceCacheEntry
 	deploymentEntryExists bool
@@ -23,7 +23,7 @@ type TolerationCF struct {
 	targetTolerations     []corev1.Toleration
 }
 
-func NewTolerationCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewTolerationCF(ctx context.LoopContext) loop.ControlFunction {
 	return &TolerationCF{
 		ctx:                   ctx,
 		svcResourceCache:      ctx.GetResourceCache(),

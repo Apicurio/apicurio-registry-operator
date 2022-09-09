@@ -11,12 +11,12 @@ import (
 var _ loop.ControlLoop = &controlLoopImpl{}
 
 type controlLoopImpl struct {
-	ctx              *context.LoopContext
-	services         *services.LoopServices
+	ctx              context.LoopContext
+	services         services.LoopServices
 	controlFunctions []loop.ControlFunction
 }
 
-func NewControlLoopImpl(ctx *context.LoopContext, services *services.LoopServices) loop.ControlLoop {
+func NewControlLoopImpl(ctx context.LoopContext, services services.LoopServices) loop.ControlLoop {
 	return &controlLoopImpl{
 		ctx:              ctx,
 		services:         services,
@@ -46,7 +46,9 @@ func (this *controlLoopImpl) Run() {
 		// i.e. no action was taken by any CF
 		stabilized := true
 		for _, cf := range this.GetControlFunctions() {
+			//this.ctx.GetLog().Info("Sense " + cf.Describe())
 			cf.Sense()
+			//this.ctx.GetLog().Info("Compare " + cf.Describe())
 			discrepancy := cf.Compare()
 			if discrepancy {
 				this.ctx.GetLog().WithValues("cf", cf.Describe()).Info("Control function responding.")
@@ -59,6 +61,7 @@ func (this *controlLoopImpl) Run() {
 			this.ctx.GetLog().Info("Control loop is stable.")
 			break
 		}
+		//this.ctx.GetLog().Info("Looping")
 	}
 	if attempt == maxAttempts {
 		panic("Control loop stabilization limit exceeded.")
@@ -93,6 +96,6 @@ func (this *controlLoopImpl) Cleanup() {
 	}
 }
 
-func (this *controlLoopImpl) GetContext() *context.LoopContext {
+func (this *controlLoopImpl) GetContext() context.LoopContext {
 	return this.ctx
 }

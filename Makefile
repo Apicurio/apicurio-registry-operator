@@ -139,10 +139,14 @@ ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 ENVTEST_K8S_VERSION = 1.23
 
 .PHONY: test
-test: generate fmt vet manifests ## Run tests
+test: generate fmt vet ## Run unit tests
+	go test ./controllers/...
+
+.PHONY: envtest
+envtest: generate fmt vet manifests ## Run integration tests using envtest
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.7.0/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
+	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./test/envtest/... -coverprofile cover.out
 
 ifndef ignore-not-found
   ignore-not-found = false
@@ -171,7 +175,7 @@ endif
 	docker push ${OPERATOR_IMAGE}
 
 .PHONY: build
-build: manager docker-build ## Build Operator image
+build: test envtest manager docker-build ## Build Operator image
 
 .PHONY: bundle
 bundle: manifests install-kustomize ## Generate bundle manifests and metadata

@@ -14,12 +14,12 @@ import (
 )
 
 type KubeFactory struct {
-	ctx *context.LoopContext
+	ctx context.LoopContext
 }
 
-func NewKubeFactory(ctx *context.LoopContext) *KubeFactory {
+func NewKubeFactory(ctx context.LoopContext) *KubeFactory {
 	return &KubeFactory{
-		ctx: ctx,
+		ctx,
 	}
 }
 

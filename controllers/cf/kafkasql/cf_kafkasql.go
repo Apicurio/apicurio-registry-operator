@@ -16,7 +16,7 @@ const (
 )
 
 type KafkasqlCF struct {
-	ctx                 *context.LoopContext
+	ctx                 context.LoopContext
 	svcResourceCache    resources.ResourceCache
 	svcEnvCache         env.EnvCache
 	persistence         string
@@ -25,7 +25,7 @@ type KafkasqlCF struct {
 	envBootstrapServers string
 }
 
-func NewKafkasqlCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewKafkasqlCF(ctx context.LoopContext) loop.ControlFunction {
 	return &KafkasqlCF{
 		ctx:                 ctx,
 		svcResourceCache:    ctx.GetResourceCache(),
@@ -75,7 +75,7 @@ func (this *KafkasqlCF) Compare() bool {
 func (this *KafkasqlCF) Respond() {
 	// Response #1
 	// Just set the value(s)!
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_KAFKA_BOOTSTRAP_SERVERS, this.bootstrapServers))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_KAFKA_BOOTSTRAP_SERVERS, this.bootstrapServers).Build())
 }
 
 func (this *KafkasqlCF) Cleanup() bool {

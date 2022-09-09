@@ -1,11 +1,11 @@
 package cf
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/controllers/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
@@ -17,7 +17,7 @@ import (
 var _ loop.ControlFunction = &ServiceCF{}
 
 type ServiceCF struct {
-	ctx              *context.LoopContext
+	ctx              context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcClients       *client.Clients
 	svcStatus        *status.Status
@@ -27,17 +27,17 @@ type ServiceCF struct {
 	serviceName      string
 }
 
-func NewServiceCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
+func NewServiceCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
 
 	return &ServiceCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
-		svcClients:       services.GetClients(),
+		svcClients:       ctx.GetClients(),
 		svcStatus:        services.GetStatus(),
 		svcKubeFactory:   services.GetKubeFactory(),
 		isCached:         false,
 		services:         make([]core.Service, 0),
-		serviceName:      resources.RC_EMPTY_NAME,
+		serviceName:      resources.RC_NOT_CREATED_NAME_EMPTY,
 	}
 }
 
@@ -53,7 +53,7 @@ func (this *ServiceCF) Sense() {
 	if serviceExists {
 		this.serviceName = serviceEntry.GetName().Str()
 	} else {
-		this.serviceName = resources.RC_EMPTY_NAME
+		this.serviceName = resources.RC_NOT_CREATED_NAME_EMPTY
 	}
 	this.isCached = serviceExists
 
@@ -86,7 +86,7 @@ func (this *ServiceCF) Compare() bool {
 func (this *ServiceCF) Respond() {
 	// Response #1
 	// We already know about a service (name), and it is in the list
-	if this.serviceName != resources.RC_EMPTY_NAME {
+	if this.serviceName != resources.RC_NOT_CREATED_NAME_EMPTY {
 		contains := false
 		for _, val := range this.services {
 			if val.Name == this.serviceName {
@@ -96,22 +96,22 @@ func (this *ServiceCF) Respond() {
 			}
 		}
 		if !contains {
-			this.serviceName = resources.RC_EMPTY_NAME
+			this.serviceName = resources.RC_NOT_CREATED_NAME_EMPTY
 		}
 	}
 	// Response #2
 	// Can follow #1, but there must be a single service available
-	if this.serviceName == resources.RC_EMPTY_NAME && len(this.services) == 1 {
+	if this.serviceName == resources.RC_NOT_CREATED_NAME_EMPTY && len(this.services) == 1 {
 		service := this.services[0]
 		this.serviceName = service.Name
 		this.svcResourceCache.Set(resources.RC_KEY_SERVICE, resources.NewResourceCacheEntry(common.Name(service.Name), &service))
 	}
 	// Response #3 (and #4)
 	// If there is no service available (or there are more than 1), just create a new one
-	if this.serviceName == resources.RC_EMPTY_NAME && len(this.services) != 1 {
+	if this.serviceName == resources.RC_NOT_CREATED_NAME_EMPTY && len(this.services) != 1 {
 		service := this.svcKubeFactory.CreateService()
 		// leave the creation itself to patcher+creator so other CFs can update
-		this.svcResourceCache.Set(resources.RC_KEY_SERVICE, resources.NewResourceCacheEntry(resources.RC_EMPTY_NAME, service))
+		this.svcResourceCache.Set(resources.RC_KEY_SERVICE, resources.NewResourceCacheEntry(resources.RC_NOT_CREATED_NAME_EMPTY, service))
 	}
 }
 

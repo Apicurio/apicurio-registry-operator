@@ -23,7 +23,7 @@ const ENV_REGISTRY_KAFKA_COMMON_SASL_JAAS_CONFIG = "REGISTRY_KAFKA_COMMON_SASL_J
 const SCRAM_TRUSTSTORE_SECRET_VOLUME_NAME = "registry-kafkasql-scram-truststore"
 
 type KafkasqlSecurityScramCF struct {
-	ctx                          *context.LoopContext
+	ctx                          context.LoopContext
 	svcResourceCache             resources.ResourceCache
 	svcEnvCache                  env.EnvCache
 	persistence                  string
@@ -41,7 +41,7 @@ type KafkasqlSecurityScramCF struct {
 	foundScramMechanism          string
 }
 
-func NewKafkasqlSecurityScramCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewKafkasqlSecurityScramCF(ctx context.LoopContext) loop.ControlFunction {
 	return &KafkasqlSecurityScramCF{
 		ctx:                          ctx,
 		svcResourceCache:             ctx.GetResourceCache(),
@@ -141,10 +141,10 @@ func (this *KafkasqlSecurityScramCF) Respond() {
 func (this *KafkasqlSecurityScramCF) AddEnv(truststoreSecretName string, truststoreSecretVolumeName string,
 	scramUser string, scramPasswordSecretName string, scramMechanism string) {
 
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_PROPERTIES_PREFIX, "REGISTRY_"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_PROPERTIES_PREFIX, "REGISTRY_").Build())
 
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKASQL_SCRAM_USER, scramUser))
-	this.svcEnvCache.Set(env.NewEnvCacheEntry(&core.EnvVar{
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_KAFKASQL_SCRAM_USER, scramUser).Build())
+	this.svcEnvCache.Set(env.NewEnvCacheEntryBuilder(&core.EnvVar{
 		Name: ENV_REGISTRY_KAFKASQL_SCRAM_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
@@ -154,23 +154,22 @@ func (this *KafkasqlSecurityScramCF) AddEnv(truststoreSecretName string, trustst
 				Key: "password",
 			},
 		},
-	}))
+	}).Build())
 
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKA_COMMON_SASL_MECHANISM, scramMechanism))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_KAFKA_COMMON_SASL_MECHANISM, scramMechanism).Build())
 
 	jaasConfig := "org.apache.kafka.common.security.scram.ScramLoginModule required username='$(" + ENV_REGISTRY_KAFKASQL_SCRAM_USER +
 		")' password='$(" + ENV_REGISTRY_KAFKASQL_SCRAM_PASSWORD + ")';"
 
-	jaasconfigEntry := env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKA_COMMON_SASL_JAAS_CONFIG, jaasConfig)
-	jaasconfigEntry.SetInterpolationDependency(ENV_REGISTRY_KAFKASQL_SCRAM_USER)
-	jaasconfigEntry.SetInterpolationDependency(ENV_REGISTRY_KAFKASQL_SCRAM_PASSWORD)
-	this.svcEnvCache.Set(jaasconfigEntry)
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_KAFKA_COMMON_SASL_JAAS_CONFIG, jaasConfig).
+		SetDependency(ENV_REGISTRY_KAFKASQL_SCRAM_USER).
+		SetDependency(ENV_REGISTRY_KAFKASQL_SCRAM_PASSWORD).Build())
 
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKA_COMMON_SECURITY_PROTOCOL, "SASL_SSL"))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKA_COMMON_SSL_TRUSTSTORE_TYPE, "PKCS12"))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKA_COMMON_SSL_TRUSTSTORE_LOCATION,
-		"/etc/"+truststoreSecretVolumeName+"/ca.p12"))
-	this.svcEnvCache.Set(env.NewEnvCacheEntry(&core.EnvVar{
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_KAFKA_COMMON_SECURITY_PROTOCOL, "SASL_SSL").Build())
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_KAFKA_COMMON_SSL_TRUSTSTORE_TYPE, "PKCS12").Build())
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_KAFKA_COMMON_SSL_TRUSTSTORE_LOCATION,
+		"/etc/"+truststoreSecretVolumeName+"/ca.p12").Build())
+	this.svcEnvCache.Set(env.NewEnvCacheEntryBuilder(&core.EnvVar{
 		Name: ENV_REGISTRY_KAFKA_COMMON_SSL_TRUSTSTORE_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
@@ -180,7 +179,7 @@ func (this *KafkasqlSecurityScramCF) AddEnv(truststoreSecretName string, trustst
 				Key: "ca.password",
 			},
 		},
-	}))
+	}).Build())
 
 }
 

@@ -8,14 +8,14 @@ import (
 )
 
 type MonitoringFactory struct {
-	ctx         *context.LoopContext
+	ctx         context.LoopContext
 	kubeFactory *KubeFactory
 }
 
-func NewMonitoringFactory(ctx *context.LoopContext, kubeFactory *KubeFactory) *MonitoringFactory {
+func NewMonitoringFactory(ctx context.LoopContext, kubeFactory *KubeFactory) *MonitoringFactory {
 	return &MonitoringFactory{
-		ctx:         ctx,
-		kubeFactory: kubeFactory,
+		ctx,
+		kubeFactory,
 	}
 }
 
