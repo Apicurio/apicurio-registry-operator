@@ -14,51 +14,38 @@
  * limitations under the License.
  */
 
-package io.apicurio.registry.operator.api.model;
+package io.apicurio.registry.operator.api.v1.model;
 
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Buildable(
         editableEnabled = false,
         builderPackage = Constants.FABRIC8_KUBERNETES_API
 )
 @EqualsAndHashCode
-public class ApicurioRegistrySpecConfigurationSecurityKeycloak {
-    private String url;
-    private String realm;
-    private String apiClientId;
-    private String uiClientId;
+@ToString
+// NOTE: We can not use Lombok @Getter and @Setter because it does not work with fabric8 generator.
+public class ApicurioRegistrySpecConfigurationKafkasql {
 
-    public String getUrl() {
-        return url;
+    private String bootstrapServers;
+
+    ApicurioRegistrySpecConfigurationKafkaSecurity security;
+
+    public String getBootstrapServers() {
+        return bootstrapServers;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setBootstrapServers(String bootstrapServers) {
+        this.bootstrapServers = bootstrapServers;
     }
 
-    public String getRealm() {
-        return realm;
+    public ApicurioRegistrySpecConfigurationKafkaSecurity getSecurity() {
+        return security;
     }
 
-    public void setRealm(String realm) {
-        this.realm = realm;
-    }
-
-    public String getApiClientId() {
-        return apiClientId;
-    }
-
-    public void setApiClientId(String apiClientId) {
-        this.apiClientId = apiClientId;
-    }
-
-    public String getUiClientId() {
-        return uiClientId;
-    }
-
-    public void setUiClientId(String uiClientId) {
-        this.uiClientId = uiClientId;
+    public void setSecurity(ApicurioRegistrySpecConfigurationKafkaSecurity security) {
+        this.security = security;
     }
 }

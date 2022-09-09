@@ -1,0 +1,14 @@
+apiVersion: registry.apicur.io/v1
+kind: ApicurioRegistries
+items:
+  - apiVersion: registry.apicur.io/v1
+    kind: ApicurioRegistry
+    metadata:
+      name: test
+      namespace: test-namespace
+    spec:
+      configuration:
+        persistence: mem
+        env:
+          - name: VAR_1_NAME
+            value: VAR_1_VALUE

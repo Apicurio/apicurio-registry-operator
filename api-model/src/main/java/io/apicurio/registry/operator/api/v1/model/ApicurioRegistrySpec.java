@@ -14,33 +14,38 @@
  * limitations under the License.
  */
 
-package io.apicurio.registry.operator.api.model;
+package io.apicurio.registry.operator.api.v1.model;
 
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Buildable(
         editableEnabled = false,
         builderPackage = Constants.FABRIC8_KUBERNETES_API
 )
 @EqualsAndHashCode
-public class ApicurioRegistrySpecConfigurationKafkasql {
-    private String bootstrapServers;
-    ApicurioRegistrySpecConfigurationKafkaSecurity security;
+@ToString
+// NOTE: We can not use Lombok @Getter and @Setter because it does not work with fabric8 generator.
+public class ApicurioRegistrySpec {
 
-    public String getBootstrapServers() {
-        return bootstrapServers;
+    private ApicurioRegistrySpecConfiguration configuration;
+
+    private ApicurioRegistrySpecDeployment deployment;
+
+    public ApicurioRegistrySpecConfiguration getConfiguration() {
+        return configuration;
     }
 
-    public void setBootstrapServers(String bootstrapServers) {
-        this.bootstrapServers = bootstrapServers;
+    public void setConfiguration(ApicurioRegistrySpecConfiguration configuration) {
+        this.configuration = configuration;
     }
 
-    public ApicurioRegistrySpecConfigurationKafkaSecurity getSecurity() {
-        return security;
+    public ApicurioRegistrySpecDeployment getDeployment() {
+        return deployment;
     }
 
-    public void setSecurity(ApicurioRegistrySpecConfigurationKafkaSecurity security) {
-        this.security = security;
+    public void setDeployment(ApicurioRegistrySpecDeployment deployment) {
+        this.deployment = deployment;
     }
 }

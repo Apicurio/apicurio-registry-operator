@@ -14,37 +14,43 @@
  * limitations under the License.
  */
 
-package io.apicurio.registry.operator.api.model;
-
-import java.util.ArrayList;
+package io.apicurio.registry.operator.api.v1.model;
 
 import io.fabric8.kubernetes.api.model.Condition;
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
+import java.util.List;
 
 @Buildable(
         editableEnabled = false,
         builderPackage = Constants.FABRIC8_KUBERNETES_API
 )
 @EqualsAndHashCode
+@ToString
+// NOTE: We can not use Lombok @Getter and @Setter because it does not work with fabric8 generator.
 public class ApicurioRegistryStatus {
-    private ArrayList<Condition> conditions;
-    private ArrayList<ApicurioRegistryStatusManagedResource> managedResources;
+
+    private List<Condition> conditions;
+
+    private List<ApicurioRegistryStatusManagedResource> managedResources;
+
     private ApicurioRegistryStatusInfo info;
 
-    public ArrayList<Condition> getConditions() {
+    public List<Condition> getConditions() {
         return conditions;
     }
 
-    public void setConditions(ArrayList<Condition> conditions) {
+    public void setConditions(List<Condition> conditions) {
         this.conditions = conditions;
     }
 
-    public ArrayList<ApicurioRegistryStatusManagedResource> getManagedResources() {
+    public List<ApicurioRegistryStatusManagedResource> getManagedResources() {
         return managedResources;
     }
 
-    public void setManagedResources(ArrayList<ApicurioRegistryStatusManagedResource> managedResources) {
+    public void setManagedResources(List<ApicurioRegistryStatusManagedResource> managedResources) {
         this.managedResources = managedResources;
     }
 

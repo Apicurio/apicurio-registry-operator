@@ -14,19 +14,28 @@
  * limitations under the License.
  */
 
-package io.apicurio.registry.operator.api.model;
+package io.apicurio.registry.operator.api.v1.model;
 
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Buildable(
         editableEnabled = false,
         builderPackage = Constants.FABRIC8_KUBERNETES_API
 )
 @EqualsAndHashCode
-public class ApicurioRegistrySpecConfigurationKafkaSecurityTls {
-    private String truststoreSecretName;
-    private String keystoreSecretName;
+@ToString
+// NOTE: We can not use Lombok @Getter and @Setter because it does not work with fabric8 generator.
+public class ApicurioRegistrySpecConfigurationKafkaSecurityScram {
+
+    String truststoreSecretName;
+
+    String user;
+
+    String passwordSecretName;
+
+    String mechanism;
 
     public String getTruststoreSecretName() {
         return truststoreSecretName;
@@ -36,11 +45,27 @@ public class ApicurioRegistrySpecConfigurationKafkaSecurityTls {
         this.truststoreSecretName = truststoreSecretName;
     }
 
-    public String getKeystoreSecretName() {
-        return keystoreSecretName;
+    public String getUser() {
+        return user;
     }
 
-    public void setKeystoreSecretName(String keystoreSecretName) {
-        this.keystoreSecretName = keystoreSecretName;
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public String getPasswordSecretName() {
+        return passwordSecretName;
+    }
+
+    public void setPasswordSecretName(String passwordSecretName) {
+        this.passwordSecretName = passwordSecretName;
+    }
+
+    public String getMechanism() {
+        return mechanism;
+    }
+
+    public void setMechanism(String mechanism) {
+        this.mechanism = mechanism;
     }
 }

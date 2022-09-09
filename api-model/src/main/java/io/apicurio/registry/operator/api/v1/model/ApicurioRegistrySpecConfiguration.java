@@ -14,23 +14,37 @@
  * limitations under the License.
  */
 
-package io.apicurio.registry.operator.api.model;
+package io.apicurio.registry.operator.api.v1.model;
 
+import io.fabric8.kubernetes.api.model.EnvVar;
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
+import java.util.List;
 
 @Buildable(
         editableEnabled = false,
         builderPackage = Constants.FABRIC8_KUBERNETES_API
 )
 @EqualsAndHashCode
+@ToString
+// NOTE: We can not use Lombok @Getter and @Setter because it does not work with fabric8 generator.
 public class ApicurioRegistrySpecConfiguration {
+
     private String persistence;
+
     private ApicurioRegistrySpecConfigurationSql sql;
+
     private ApicurioRegistrySpecConfigurationKafkasql kafkasql;
+
     private ApicurioRegistrySpecConfigurationUI ui;
+
     private String logLevel;
+
     private ApicurioRegistrySpecConfigurationSecurity security;
+
+    private List<EnvVar> env;
 
     public String getPersistence() {
         return persistence;
@@ -78,5 +92,13 @@ public class ApicurioRegistrySpecConfiguration {
 
     public void setSecurity(ApicurioRegistrySpecConfigurationSecurity security) {
         this.security = security;
+    }
+
+    public List<EnvVar> getEnv() {
+        return env;
+    }
+
+    public void setEnv(List<EnvVar> env) {
+        this.env = env;
     }
 }

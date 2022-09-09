@@ -14,10 +14,16 @@
  * limitations under the License.
  */
 
-package io.apicurio.registry.operator.api.model;
+package io.apicurio.registry.operator.api.v1.model;
 
-public class Constants {
+public final class Constants {
+
+    private Constants() {
+    }
+
     public static final String FABRIC8_KUBERNETES_API = "io.fabric8.kubernetes.api.builder";
+
     public static final String RESOURCE_GROUP = "registry.apicur.io";
+
     public static final String API_VERSION = "v1";
 }
