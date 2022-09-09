@@ -14,24 +14,48 @@
  * limitations under the License.
  */
 
-package io.apicurio.registry.operator.api.model;
+package io.apicurio.registry.operator.api.v1.model;
 
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Buildable(
         editableEnabled = false,
         builderPackage = Constants.FABRIC8_KUBERNETES_API
 )
 @EqualsAndHashCode
-public class ApicurioRegistrySpecConfigurationUI {
-    boolean readOnly;
+@ToString
+// NOTE: We can not use Lombok @Getter and @Setter because it does not work with fabric8 generator.
+public class ApicurioRegistryStatusManagedResource {
 
-    public boolean isReadOnly() {
-        return readOnly;
+    private String kind;
+
+    private String name;
+
+    private String namespace;
+
+    public String getKind() {
+        return kind;
     }
 
-    public void setReadOnly(boolean readOnly) {
-        this.readOnly = readOnly;
+    public void setKind(String kind) {
+        this.kind = kind;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
     }
 }

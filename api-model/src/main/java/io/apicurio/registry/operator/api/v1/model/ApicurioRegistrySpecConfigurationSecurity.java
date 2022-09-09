@@ -14,25 +14,28 @@
  * limitations under the License.
  */
 
-package io.apicurio.registry.operator.api.model;
+package io.apicurio.registry.operator.api.v1.model;
 
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Buildable(
         editableEnabled = false,
         builderPackage = Constants.FABRIC8_KUBERNETES_API
 )
-
 @EqualsAndHashCode
-public class ApicurioRegistryStatusInfo  {
-    private String host;
+@ToString
+// NOTE: We can not use Lombok @Getter and @Setter because it does not work with fabric8 generator.
+public class ApicurioRegistrySpecConfigurationSecurity {
 
-    public String getHost() {
-        return host;
+    private ApicurioRegistrySpecConfigurationSecurityKeycloak keycloak;
+
+    public ApicurioRegistrySpecConfigurationSecurityKeycloak getKeycloak() {
+        return keycloak;
     }
 
-    public void setHost(String host) {
-        this.host = host;
+    public void setKeycloak(ApicurioRegistrySpecConfigurationSecurityKeycloak keycloak) {
+        this.keycloak = keycloak;
     }
 }

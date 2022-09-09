@@ -14,29 +14,39 @@
  * limitations under the License.
  */
 
-package io.apicurio.registry.operator.api.model;
-
-import java.util.ArrayList;
+package io.apicurio.registry.operator.api.v1.model;
 
 import io.fabric8.kubernetes.api.model.Affinity;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Toleration;
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
+import java.util.List;
 
 @Buildable(
         editableEnabled = false,
         builderPackage = Constants.FABRIC8_KUBERNETES_API
 )
 @EqualsAndHashCode
+@ToString
+// NOTE: We can not use Lombok @Getter and @Setter because it does not work with fabric8 generator.
 public class ApicurioRegistrySpecDeployment {
+
     private Integer replicas;
+
     private String host;
+
     private Affinity affinity;
-    private ArrayList<Toleration> tolerations;
+
+    private List<Toleration> tolerations;
+
     private ApicurioRegistrySpecDeploymentMetadata metadata;
+
     private String image;
-    private ArrayList<LocalObjectReference> imagePullSecrets;
+
+    private List<LocalObjectReference> imagePullSecrets;
 
     public Integer getReplicas() {
         return replicas;
@@ -62,11 +72,11 @@ public class ApicurioRegistrySpecDeployment {
         this.affinity = affinity;
     }
 
-    public ArrayList<Toleration> getTolerations() {
+    public List<Toleration> getTolerations() {
         return tolerations;
     }
 
-    public void setTolerations(ArrayList<Toleration> tolerations) {
+    public void setTolerations(List<Toleration> tolerations) {
         this.tolerations = tolerations;
     }
 
@@ -86,11 +96,11 @@ public class ApicurioRegistrySpecDeployment {
         this.image = image;
     }
 
-    public ArrayList<LocalObjectReference> getImagePullSecrets() {
+    public List<LocalObjectReference> getImagePullSecrets() {
         return imagePullSecrets;
     }
 
-    public void setImagePullSecrets(ArrayList<LocalObjectReference> imagePullSecrets) {
+    public void setImagePullSecrets(List<LocalObjectReference> imagePullSecrets) {
         this.imagePullSecrets = imagePullSecrets;
     }
 }

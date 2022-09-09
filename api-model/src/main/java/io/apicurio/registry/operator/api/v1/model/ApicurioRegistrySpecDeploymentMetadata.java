@@ -14,43 +14,40 @@
  * limitations under the License.
  */
 
-package io.apicurio.registry.operator.api.model;
+package io.apicurio.registry.operator.api.v1.model;
 
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
+import java.util.Map;
 
 @Buildable(
         editableEnabled = false,
         builderPackage = Constants.FABRIC8_KUBERNETES_API
 )
-
 @EqualsAndHashCode
-public class ApicurioRegistryStatusManagedResource {
-    private String kind;
-    private String name;
-    private String namespace;
+@ToString
+// NOTE: We can not use Lombok @Getter and @Setter because it does not work with fabric8 generator.
+public class ApicurioRegistrySpecDeploymentMetadata {
 
-    public String getKind() {
-        return kind;
+    Map<String, String> annotations;
+
+    Map<String, String> labels;
+
+    public Map<String, String> getAnnotations() {
+        return annotations;
     }
 
-    public void setKind(String kind) {
-        this.kind = kind;
+    public void setAnnotations(Map<String, String> annotations) {
+        this.annotations = annotations;
     }
 
-    public String getName() {
-        return name;
+    public Map<String, String> getLabels() {
+        return labels;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
+    public void setLabels(Map<String, String> labels) {
+        this.labels = labels;
     }
 }
