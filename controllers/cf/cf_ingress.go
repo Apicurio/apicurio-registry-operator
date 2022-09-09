@@ -2,11 +2,11 @@ package cf
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
@@ -18,7 +18,7 @@ import (
 var _ loop.ControlFunction = &IngressCF{}
 
 type IngressCF struct {
-	ctx               *context.LoopContext
+	ctx               context.LoopContext
 	svcResourceCache  resources.ResourceCache
 	svcClients        *client.Clients
 	svcStatus         *status.Status
@@ -30,18 +30,18 @@ type IngressCF struct {
 	targetHostIsEmpty bool
 }
 
-func NewIngressCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
+func NewIngressCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
 
 	return &IngressCF{
 		ctx:               ctx,
 		svcResourceCache:  ctx.GetResourceCache(),
-		svcClients:        services.GetClients(),
+		svcClients:        ctx.GetClients(),
 		svcStatus:         services.GetStatus(),
 		svcKubeFactory:    services.GetKubeFactory(),
 		isCached:          false,
 		ingresses:         make([]networking.Ingress, 0),
-		ingressName:       resources.RC_EMPTY_NAME,
-		serviceName:       resources.RC_EMPTY_NAME,
+		ingressName:       resources.RC_NOT_CREATED_NAME_EMPTY,
+		serviceName:       resources.RC_NOT_CREATED_NAME_EMPTY,
 		targetHostIsEmpty: true,
 	}
 }
@@ -58,7 +58,7 @@ func (this *IngressCF) Sense() {
 	if ingressExists {
 		this.ingressName = ingressEntry.GetName().Str()
 	} else {
-		this.ingressName = resources.RC_EMPTY_NAME
+		this.ingressName = resources.RC_NOT_CREATED_NAME_EMPTY
 	}
 	this.isCached = ingressExists
 
@@ -84,7 +84,7 @@ func (this *IngressCF) Sense() {
 	if serviceExists {
 		this.serviceName = serviceEntry.GetName().Str()
 	} else {
-		this.serviceName = resources.RC_EMPTY_NAME
+		this.serviceName = resources.RC_NOT_CREATED_NAME_EMPTY
 	}
 
 	// Observation #4
@@ -106,14 +106,14 @@ func (this *IngressCF) Compare() bool {
 	// Condition #3
 	// We will create a new ingress only if the host is not empty
 	return !this.isCached &&
-		this.serviceName != resources.RC_EMPTY_NAME &&
+		this.serviceName != resources.RC_NOT_CREATED_NAME_EMPTY &&
 		!this.targetHostIsEmpty
 }
 
 func (this *IngressCF) Respond() {
 	// Response #1
 	// We already know about a ingress (name), and it is in the list
-	if this.ingressName != resources.RC_EMPTY_NAME {
+	if this.ingressName != resources.RC_NOT_CREATED_NAME_EMPTY {
 		contains := false
 		for _, val := range this.ingresses {
 			if val.Name == this.ingressName {
@@ -123,22 +123,22 @@ func (this *IngressCF) Respond() {
 			}
 		}
 		if !contains {
-			this.ingressName = resources.RC_EMPTY_NAME
+			this.ingressName = resources.RC_NOT_CREATED_NAME_EMPTY
 		}
 	}
 	// Response #2
 	// Can follow #1, but there must be a single ingress available
-	if this.ingressName == resources.RC_EMPTY_NAME && len(this.ingresses) == 1 {
+	if this.ingressName == resources.RC_NOT_CREATED_NAME_EMPTY && len(this.ingresses) == 1 {
 		ingress := this.ingresses[0]
 		this.ingressName = ingress.Name
 		this.svcResourceCache.Set(resources.RC_KEY_INGRESS, resources.NewResourceCacheEntry(common.Name(ingress.Name), &ingress))
 	}
 	// Response #3 (and #4)
 	// If there is no ingress available (or there are more than 1), just create a new one
-	if this.ingressName == resources.RC_EMPTY_NAME && len(this.ingresses) != 1 {
+	if this.ingressName == resources.RC_NOT_CREATED_NAME_EMPTY && len(this.ingresses) != 1 {
 		ingress := this.svcKubeFactory.CreateIngress(this.serviceName)
 		// leave the creation itself to patcher+creator so other CFs can update
-		this.svcResourceCache.Set(resources.RC_KEY_INGRESS, resources.NewResourceCacheEntry(resources.RC_EMPTY_NAME, ingress))
+		this.svcResourceCache.Set(resources.RC_KEY_INGRESS, resources.NewResourceCacheEntry(resources.RC_NOT_CREATED_NAME_EMPTY, ingress))
 	}
 }
 

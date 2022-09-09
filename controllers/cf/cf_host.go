@@ -13,7 +13,7 @@ import (
 var _ loop.ControlFunction = &HostCF{}
 
 type HostCF struct {
-	ctx              *context.LoopContext
+	ctx              context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcStatus        *status.Status
 	ingressEntry     resources.ResourceCacheEntry
@@ -26,14 +26,14 @@ type HostCF struct {
 // This CF makes sure number of host is aligned
 // If there is some other way of determining the number of host needed outside of CR,
 // modify the Sense stage so this CF knows about it
-func NewHostCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
+func NewHostCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
 	return &HostCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
 		svcStatus:        services.GetStatus(),
 		ingressEntry:     nil,
 		ingressExists:    false,
-		serviceName:      resources.RC_EMPTY_NAME,
+		serviceName:      resources.RC_NOT_CREATED_NAME_EMPTY,
 		existingHost:     "",
 		targetHost:       "",
 	}
@@ -57,13 +57,13 @@ func (this *HostCF) Sense() {
 	if serviceExists {
 		this.serviceName = serviceEntry.GetName().Str() // TODO this may still end up empty, refactor?
 	} else {
-		this.serviceName = resources.RC_EMPTY_NAME
+		this.serviceName = resources.RC_NOT_CREATED_NAME_EMPTY
 	}
 
 	// Observation #3
 	// Get the existing host (if present)
-	this.existingHost = resources.RC_EMPTY_NAME
-	if this.ingressExists && this.serviceName != resources.RC_EMPTY_NAME {
+	this.existingHost = resources.RC_NOT_CREATED_NAME_EMPTY
+	if this.ingressExists && this.serviceName != resources.RC_NOT_CREATED_NAME_EMPTY {
 		this.existingHost = readHost(this.serviceName, this.ingressEntry.GetValue().(*networking.Ingress))
 	}
 
@@ -87,7 +87,7 @@ func (this *HostCF) Compare() bool {
 	// Condition #4
 	// Host must not be empty
 	return this.ingressEntry != nil &&
-		this.serviceName != resources.RC_EMPTY_NAME &&
+		this.serviceName != resources.RC_NOT_CREATED_NAME_EMPTY &&
 		this.existingHost != this.targetHost &&
 		this.targetHost != ""
 }
@@ -115,7 +115,7 @@ func readHost(serviceName string, ingress *networking.Ingress) string {
 			}
 		}
 	}
-	return resources.RC_EMPTY_NAME
+	return resources.RC_NOT_CREATED_NAME_EMPTY
 }
 
 func writeHost(serviceName string, ingress *networking.Ingress, host string) {

@@ -13,7 +13,7 @@ var _ loop.ControlFunction = &UICF{}
 const ENV_UI_READ_ONLY = "REGISTRY_UI_FEATURES_READONLY"
 
 type UICF struct {
-	ctx              *context.LoopContext
+	ctx              context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcEnvCache      env.EnvCache
 	UIReadOnly       bool
@@ -21,7 +21,7 @@ type UICF struct {
 	envUIReadOnly    string
 }
 
-func NewUICF(ctx *context.LoopContext) loop.ControlFunction {
+func NewUICF(ctx context.LoopContext) loop.ControlFunction {
 	return &UICF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
@@ -69,7 +69,7 @@ func (this *UICF) Respond() {
 	if this.UIReadOnly {
 		val = "true"
 	}
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_UI_READ_ONLY, val))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_UI_READ_ONLY, val).Build())
 }
 
 func (this *UICF) Cleanup() bool {

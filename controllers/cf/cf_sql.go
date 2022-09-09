@@ -15,7 +15,7 @@ const ENV_REGISTRY_DATASOURCE_USERNAME = "REGISTRY_DATASOURCE_USERNAME"
 const ENV_REGISTRY_DATASOURCE_PASSWORD = "REGISTRY_DATASOURCE_PASSWORD"
 
 type SqlCF struct {
-	ctx              *context.LoopContext
+	ctx              context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcEnvCache      env.EnvCache
 	persistence      string
@@ -28,7 +28,7 @@ type SqlCF struct {
 	envPassword      string
 }
 
-func NewSqlCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewSqlCF(ctx context.LoopContext) loop.ControlFunction {
 	return &SqlCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
@@ -93,9 +93,9 @@ func (this *SqlCF) Compare() bool {
 func (this *SqlCF) Respond() {
 	// Response #1
 	// Just set the value(s)!
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_DATASOURCE_URL, this.url))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_DATASOURCE_USERNAME, this.user))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_DATASOURCE_PASSWORD, this.password))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_DATASOURCE_URL, this.url).Build())
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_DATASOURCE_USERNAME, this.user).Build())
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_DATASOURCE_PASSWORD, this.password).Build())
 
 }
 

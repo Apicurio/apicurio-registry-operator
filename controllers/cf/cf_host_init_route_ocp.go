@@ -13,7 +13,7 @@ import (
 var _ loop.ControlFunction = &HostInitRouteOcpCF{}
 
 type HostInitRouteOcpCF struct {
-	ctx                             *context.LoopContext
+	ctx                             context.LoopContext
 	svcResourceCache                resources.ResourceCache
 	isFirstRespond                  bool
 	existingHost                    string
@@ -22,7 +22,7 @@ type HostInitRouteOcpCF struct {
 	routeEntry                      resources.ResourceCacheEntry
 }
 
-func NewHostInitRouteOcpCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewHostInitRouteOcpCF(ctx context.LoopContext) loop.ControlFunction {
 	return &HostInitRouteOcpCF{
 		ctx:                             ctx,
 		svcResourceCache:                ctx.GetResourceCache(),

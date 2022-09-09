@@ -47,12 +47,12 @@ func (this *condition) Reset() {
 
 type conditionManager struct {
 	conditionMap map[ConditionType]Condition
-	ctx          *context.LoopContext
+	ctx          context.LoopContext
 }
 
 var _ ConditionManager = &conditionManager{}
 
-func NewConditionManager(ctx *context.LoopContext) ConditionManager {
+func NewConditionManager(ctx context.LoopContext) ConditionManager {
 	this := &conditionManager{
 		conditionMap: make(map[ConditionType]Condition, 3),
 		ctx:          ctx,
@@ -78,16 +78,19 @@ func (this *conditionManager) GetApplicationNotHealthyCondition() *ApplicationNo
 // Mark the status as `Reconciling` if there was a CF execution, (and reschedule) otherwise
 // mask as `Reconciled`
 func (this *conditionManager) AfterLoop() {
-	// TODO Make this not `ReadyCondition` specific (down one level)
-	this.GetReadyCondition().TransitionReconciled()
+	// Error & Initializing conditions have a higher priority
 	if this.ctx.GetAttempts() > 1 { // Must be 1 because some CFs always execute (AppHealthCF)
 		this.GetReadyCondition().TransitionReconciling()
+		// Requeue so we can try to reset the status to `Reconciled`
 		this.ctx.SetRequeueDelaySoon()
+	} else {
+		this.GetReadyCondition().TransitionReconciled()
 	}
 }
 
 func (this *conditionManager) Execute() []metav1.Condition {
 	res := make([]metav1.Condition, 0)
+	// TODO Would consistent ordering help performance?
 	for _, v := range this.conditionMap {
 		if v.IsActive() {
 			previousData := v.GetPreviousData()

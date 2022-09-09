@@ -11,7 +11,7 @@ const RC_KEY_NETWORK_POLICY = "NETWORK_POLICY"
 const RC_KEY_ROUTE_OCP = "ROUTE_OCP"
 const RC_KEY_POD_DISRUPTION_BUDGET = "POD_DISRUPTION_BUDGET"
 
-const RC_EMPTY_NAME = ""
+const RC_NOT_CREATED_NAME_EMPTY = ""
 
 // ===
 
@@ -32,8 +32,8 @@ type ResourceCacheEntry interface {
 
 	ApplyPatch(pf PatchFunction)
 
-	IsPatched() bool
-	ResetPatched()
+	HasChanged() bool
+	ResetHasChanged()
 	// TODO:
 	// IsSingleValue() bool
 	// GetValues() []ResourceCacheEntry
@@ -43,7 +43,7 @@ type resourceCacheEntry struct {
 	name          common.Name
 	value         interface{}
 	originalValue interface{}
-	isPatched     bool
+	hasChanged    bool
 }
 
 var _ ResourceCacheEntry = &resourceCacheEntry{}
@@ -53,7 +53,7 @@ func NewResourceCacheEntry(name common.Name, value interface{}) ResourceCacheEnt
 	this.name = name
 	this.value = value
 	this.originalValue = value
-	this.isPatched = false
+	this.hasChanged = false
 	return this
 }
 
@@ -71,15 +71,15 @@ func (this *resourceCacheEntry) GetOriginalValue() interface{} {
 
 func (this *resourceCacheEntry) ApplyPatch(pf PatchFunction) {
 	this.value = pf(this.value)
-	this.isPatched = true
+	this.hasChanged = true
 }
 
-func (this *resourceCacheEntry) IsPatched() bool {
-	return this.isPatched
+func (this *resourceCacheEntry) HasChanged() bool {
+	return this.hasChanged
 }
 
-func (this *resourceCacheEntry) ResetPatched() {
-	this.isPatched = false
+func (this *resourceCacheEntry) ResetHasChanged() {
+	this.hasChanged = false
 }
 
 // ===

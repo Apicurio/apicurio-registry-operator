@@ -21,19 +21,19 @@ const ENV_OPERATOR_REGISTRY_IMAGE_SQL = "REGISTRY_IMAGE_SQL"
 
 // This CF takes care of keeping the "image" section of the CRD applied.
 type ImageCF struct {
-	ctx              *context.LoopContext
+	ctx              context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcStatus        *status.Status
 	deploymentEntry  resources.ResourceCacheEntry
 	deploymentExists bool
 	existingImage    string
 	targetImage      string
-	services         *services.LoopServices
+	services         services.LoopServices
 	persistence      string
 	persistenceError bool
 }
 
-func NewImageCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
+func NewImageCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
 	return &ImageCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),

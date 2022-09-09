@@ -1,23 +1,23 @@
 package cf
 
 import (
+	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ loop.ControlFunction = &ServiceMonitorCF{}
 
 type ServiceMonitorCF struct {
-	ctx                        *context.LoopContext
+	ctx                        context.LoopContext
 	svcResourceCache           resources.ResourceCache
 	svcClients                 *client.Clients
 	monitoringFactory          *factory.MonitoringFactory
@@ -27,12 +27,12 @@ type ServiceMonitorCF struct {
 }
 
 // TODO service monitor should be using resource cache
-func NewServiceMonitorCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
+func NewServiceMonitorCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
 
 	return &ServiceMonitorCF{
 		ctx:                        ctx,
 		svcResourceCache:           ctx.GetResourceCache(),
-		svcClients:                 services.GetClients(),
+		svcClients:                 ctx.GetClients(),
 		monitoringFactory:          services.GetMonitoringFactory(),
 		isServiceMonitorRegistered: false,
 		serviceMonitor:             nil,
@@ -50,7 +50,7 @@ func (this *ServiceMonitorCF) Sense() {
 
 	// Observation #1
 	// Is ServiceMonitor registered?
-	isServiceMonitorRegistered, err := client.IsMonitoringInstalled()
+	isServiceMonitorRegistered, err := this.svcClients.Discovery().IsMonitoringInstalled() // TODO Panic, this should've been checked
 	if err != nil {
 		this.ctx.GetLog().Error(err, "Could not check ServiceMonitor is registered")
 		return
@@ -99,7 +99,12 @@ func (this *ServiceMonitorCF) Respond() {
 	namespace := this.ctx.GetAppNamespace()
 	serviceMonitor := this.monitoringFactory.NewServiceMonitor(this.service)
 
-	_, err := monitoringClient.CreateServiceMonitor(namespace, serviceMonitor)
+	// TODO FIX Should be using resource cache
+	entry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC)
+	if !exists {
+		return
+	}
+	_, err := monitoringClient.CreateServiceMonitor(entry.GetValue().(*ar.ApicurioRegistry), namespace, serviceMonitor)
 	if err != nil {
 		this.ctx.GetLog().Error(err, "Could not create ServiceMonitor object")
 	}
@@ -108,11 +113,11 @@ func (this *ServiceMonitorCF) Respond() {
 func (this *ServiceMonitorCF) Cleanup() bool {
 	// SM should not have any deletion dependencies
 	monitoringClient := this.svcClients.Monitoring()
-	if isServiceMonitorRegistered, _ := client.IsMonitoringInstalled(); isServiceMonitorRegistered {
+	if isServiceMonitorRegistered, _ := this.svcClients.Discovery().IsMonitoringInstalled(); isServiceMonitorRegistered {
 		namespace := this.ctx.GetAppNamespace()
 		name := this.ctx.GetAppName()
 		if serviceMonitor, err := monitoringClient.GetServiceMonitor(namespace, name); err == nil {
-			if err := monitoringClient.DeleteServiceMonitor(serviceMonitor, &meta.DeleteOptions{}); err != nil && !api_errors.IsNotFound(err) /* Should not normally happen */ {
+			if err := monitoringClient.DeleteServiceMonitor(serviceMonitor); err != nil && !api_errors.IsNotFound(err) /* Should not normally happen */ {
 				this.ctx.GetLog().Error(err, "Could not delete ServiceMonitor during cleanup.")
 				return false
 			} else {

@@ -13,7 +13,7 @@ import (
 var _ loop.ControlFunction = &ReplicasCF{}
 
 type ReplicasCF struct {
-	ctx              *context.LoopContext
+	ctx              context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcStatus        *status.Status
 	deploymentEntry  resources.ResourceCacheEntry
@@ -25,7 +25,7 @@ type ReplicasCF struct {
 // This CF makes sure number of replicas is aligned
 // If there is some other way of determining the number of replicas needed outside of CR,
 // modify the Sense stage so this CF knows about it
-func NewReplicasCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
+func NewReplicasCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
 	return &ReplicasCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),

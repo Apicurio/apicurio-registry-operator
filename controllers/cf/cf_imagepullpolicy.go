@@ -16,7 +16,7 @@ var _ loop.ControlFunction = &ImagePullPolicyCF{}
 const ENV_OPERATOR_REGISTRY_IMAGE_PULL_POLICY = "REGISTRY_IMAGE_PULL_POLICY"
 
 type ImagePullPolicyCF struct {
-	ctx                     *context.LoopContext
+	ctx                     context.LoopContext
 	svcResourceCache        resources.ResourceCache
 	deploymentEntry         resources.ResourceCacheEntry
 	deploymentEntryExists   bool
@@ -24,7 +24,7 @@ type ImagePullPolicyCF struct {
 	targetImagePullPolicy   core.PullPolicy
 }
 
-func NewImagePullPolicyCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewImagePullPolicyCF(ctx context.LoopContext) loop.ControlFunction {
 	return &ImagePullPolicyCF{
 		ctx:                     ctx,
 		svcResourceCache:        ctx.GetResourceCache(),

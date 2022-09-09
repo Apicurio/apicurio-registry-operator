@@ -34,7 +34,7 @@ const KEYSTORE_SECRET_VOLUME_NAME = "registry-kafkasql-tls-keystore"
 const TRUSTSTORE_SECRET_VOLUME_NAME = "registry-kafkasql-tls-truststore"
 
 type KafkasqlSecurityTLSCF struct {
-	ctx                       *context.LoopContext
+	ctx                       context.LoopContext
 	svcResourceCache          resources.ResourceCache
 	svcEnvCache               env.EnvCache
 	persistence               string
@@ -48,7 +48,7 @@ type KafkasqlSecurityTLSCF struct {
 	deploymentEntry           resources.ResourceCacheEntry
 }
 
-func NewKafkasqlSecurityTLSCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewKafkasqlSecurityTLSCF(ctx context.LoopContext) loop.ControlFunction {
 	return &KafkasqlSecurityTLSCF{
 		ctx:                       ctx,
 		svcResourceCache:          ctx.GetResourceCache(),
@@ -127,13 +127,13 @@ func (this *KafkasqlSecurityTLSCF) Respond() {
 func (this *KafkasqlSecurityTLSCF) AddEnv(keystoreSecretName string, keystoreSecretVolumeName string,
 	truststoreSecretName string, truststoreSecretVolumeName string) {
 
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_PROPERTIES_PREFIX, "REGISTRY_"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_PROPERTIES_PREFIX, "REGISTRY_").Build())
 
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKA_COMMON_SECURITY_PROTOCOL, "SSL"))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKA_COMMON_SSL_KEYSTORE_TYPE, "PKCS12"))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKA_COMMON_SSL_KEYSTORE_LOCATION,
-		"/etc/"+keystoreSecretVolumeName+"/user.p12"))
-	this.svcEnvCache.Set(env.NewEnvCacheEntry(&core.EnvVar{
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_KAFKA_COMMON_SECURITY_PROTOCOL, "SSL").Build())
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_KAFKA_COMMON_SSL_KEYSTORE_TYPE, "PKCS12").Build())
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_KAFKA_COMMON_SSL_KEYSTORE_LOCATION,
+		"/etc/"+keystoreSecretVolumeName+"/user.p12").Build())
+	this.svcEnvCache.Set(env.NewEnvCacheEntryBuilder(&core.EnvVar{
 		Name: ENV_REGISTRY_KAFKA_COMMON_SSL_KEYSTORE_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
@@ -143,11 +143,11 @@ func (this *KafkasqlSecurityTLSCF) AddEnv(keystoreSecretName string, keystoreSec
 				Key: "user.password",
 			},
 		},
-	}))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKA_COMMON_SSL_TRUSTSTORE_TYPE, "PKCS12"))
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_KAFKA_COMMON_SSL_TRUSTSTORE_LOCATION,
-		"/etc/"+truststoreSecretVolumeName+"/ca.p12"))
-	this.svcEnvCache.Set(env.NewEnvCacheEntry(&core.EnvVar{
+	}).Build())
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_KAFKA_COMMON_SSL_TRUSTSTORE_TYPE, "PKCS12").Build())
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_KAFKA_COMMON_SSL_TRUSTSTORE_LOCATION,
+		"/etc/"+truststoreSecretVolumeName+"/ca.p12").Build())
+	this.svcEnvCache.Set(env.NewEnvCacheEntryBuilder(&core.EnvVar{
 		Name: ENV_REGISTRY_KAFKA_COMMON_SSL_TRUSTSTORE_PASSWORD,
 		ValueFrom: &core.EnvVarSource{
 			SecretKeyRef: &core.SecretKeySelector{
@@ -157,7 +157,7 @@ func (this *KafkasqlSecurityTLSCF) AddEnv(keystoreSecretName string, keystoreSec
 				Key: "ca.password",
 			},
 		},
-	}))
+	}).Build())
 
 }
 

@@ -1,11 +1,11 @@
 package cf
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/controllers/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	policy "k8s.io/api/policy/v1beta1"
@@ -16,7 +16,7 @@ import (
 var _ loop.ControlFunction = &PodDisruptionBudgetCF{}
 
 type PodDisruptionBudgetCF struct {
-	ctx                     *context.LoopContext
+	ctx                     context.LoopContext
 	svcResourceCache        resources.ResourceCache
 	svcClients              *client.Clients
 	svcKubeFactory          *factory.KubeFactory
@@ -25,16 +25,16 @@ type PodDisruptionBudgetCF struct {
 	podDisruptionBudgetName string
 }
 
-func NewPodDisruptionBudgetCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
+func NewPodDisruptionBudgetCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
 
 	return &PodDisruptionBudgetCF{
 		ctx:                     ctx,
 		svcResourceCache:        ctx.GetResourceCache(),
-		svcClients:              services.GetClients(),
+		svcClients:              ctx.GetClients(),
 		svcKubeFactory:          services.GetKubeFactory(),
 		isCached:                false,
 		podDisruptionBudgets:    make([]policy.PodDisruptionBudget, 0),
-		podDisruptionBudgetName: resources.RC_EMPTY_NAME,
+		podDisruptionBudgetName: resources.RC_NOT_CREATED_NAME_EMPTY,
 	}
 }
 
@@ -50,7 +50,7 @@ func (this *PodDisruptionBudgetCF) Sense() {
 	if pdbExists {
 		this.podDisruptionBudgetName = pdbEntry.GetName().Str()
 	} else {
-		this.podDisruptionBudgetName = resources.RC_EMPTY_NAME
+		this.podDisruptionBudgetName = resources.RC_NOT_CREATED_NAME_EMPTY
 	}
 	this.isCached = pdbExists
 
@@ -80,7 +80,7 @@ func (this *PodDisruptionBudgetCF) Compare() bool {
 func (this *PodDisruptionBudgetCF) Respond() {
 	// Response #1
 	// We already know about a PodDisruptionBudget (name), and it is in the list
-	if this.podDisruptionBudgetName != resources.RC_EMPTY_NAME {
+	if this.podDisruptionBudgetName != resources.RC_NOT_CREATED_NAME_EMPTY {
 		contains := false
 		for _, val := range this.podDisruptionBudgets {
 			if val.Name == this.podDisruptionBudgetName {
@@ -90,22 +90,22 @@ func (this *PodDisruptionBudgetCF) Respond() {
 			}
 		}
 		if !contains {
-			this.podDisruptionBudgetName = resources.RC_EMPTY_NAME
+			this.podDisruptionBudgetName = resources.RC_NOT_CREATED_NAME_EMPTY
 		}
 	}
 	// Response #2
 	// Can follow #1, but there must be a single PodDisruptionBudget available
-	if this.podDisruptionBudgetName == resources.RC_EMPTY_NAME && len(this.podDisruptionBudgets) == 1 {
+	if this.podDisruptionBudgetName == resources.RC_NOT_CREATED_NAME_EMPTY && len(this.podDisruptionBudgets) == 1 {
 		podDisruptionBudget := this.podDisruptionBudgets[0]
 		this.podDisruptionBudgetName = podDisruptionBudget.Name
 		this.svcResourceCache.Set(resources.RC_KEY_POD_DISRUPTION_BUDGET, resources.NewResourceCacheEntry(common.Name(podDisruptionBudget.Name), &podDisruptionBudget))
 	}
 	// Response #3 (and #4)
 	// If there is no service PodDisruptionBudget (or there are more than 1), just create a new one
-	if this.podDisruptionBudgetName == resources.RC_EMPTY_NAME && len(this.podDisruptionBudgets) != 1 {
+	if this.podDisruptionBudgetName == resources.RC_NOT_CREATED_NAME_EMPTY && len(this.podDisruptionBudgets) != 1 {
 		podDisruptionBudget := this.svcKubeFactory.CreatePodDisruptionBudget()
 		// leave the creation itself to patcher+creator so other CFs can update
-		this.svcResourceCache.Set(resources.RC_KEY_POD_DISRUPTION_BUDGET, resources.NewResourceCacheEntry(resources.RC_EMPTY_NAME, podDisruptionBudget))
+		this.svcResourceCache.Set(resources.RC_KEY_POD_DISRUPTION_BUDGET, resources.NewResourceCacheEntry(resources.RC_NOT_CREATED_NAME_EMPTY, podDisruptionBudget))
 	}
 }
 

@@ -24,8 +24,10 @@ type Condition interface {
 	// References an internal state. Make a copy before using the data unless intended.
 	GetData() *metav1.Condition
 
+	// Display the condition in status
 	IsActive() bool
 
+	// Clear the condition status and remember previous
 	Reset()
 }
 
@@ -71,8 +73,10 @@ type ConditionManager interface {
 
 	GetApplicationNotHealthyCondition() *ApplicationNotHealthyCondition
 
-	// Run after the control loop
+	// Runs after the control loop is stable
 	AfterLoop()
 
+	// Compute the latest conditions
+	// Runs after the control loop is stable as well, after AfterLoop(). TODO refactor!
 	Execute() []metav1.Condition
 }

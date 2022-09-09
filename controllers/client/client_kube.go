@@ -3,14 +3,14 @@ package client
 import (
 	ctx "context"
 	"errors"
-
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
+	"github.com/go-logr/logr"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	policy "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -20,26 +20,27 @@ import (
 // =====
 
 type KubeClient struct {
-	ctx    *context.LoopContext
+	log    logr.Logger
 	client kubernetes.Interface
+	scheme *runtime.Scheme
 }
 
-func NewKubeClient(ctx *context.LoopContext, config *rest.Config) *KubeClient {
+func NewKubeClient(log logr.Logger, scheme *runtime.Scheme, config *rest.Config) *KubeClient {
 	return &KubeClient{
 		client: kubernetes.NewForConfigOrDie(config),
-		ctx:    ctx,
+		log:    log,
+		scheme: scheme,
 	}
 }
 
 // ===
 // Deployment
 
-func (this *KubeClient) CreateDeployment(namespace common.Namespace, value *apps.Deployment) (*apps.Deployment, error) {
-	spec := getSpec(this.ctx)
-	if spec == nil {
+func (this *KubeClient) CreateDeployment(owner meta.Object, namespace common.Namespace, value *apps.Deployment) (*apps.Deployment, error) {
+	if owner == nil {
 		return nil, errors.New("Could not find ApicurioRegistry. Retrying.")
 	}
-	if err := controllerutil.SetControllerReference(spec, value, this.ctx.GetScheme()); err != nil {
+	if err := controllerutil.SetControllerReference(owner, value, this.scheme); err != nil {
 		return nil, err
 	}
 	res, err := this.client.AppsV1().Deployments(namespace.Str()).Create(ctx.TODO(), value, meta.CreateOptions{})
@@ -61,7 +62,7 @@ func (this *KubeClient) UpdateDeployment(namespace common.Namespace, value *apps
 
 func (this *KubeClient) PatchDeployment(namespace common.Namespace, name common.Name, patchData []byte) (*apps.Deployment, error) {
 	return this.client.AppsV1().Deployments(namespace.Str()).
-		Patch(ctx.TODO(), name.Str(), types.StrategicMergePatchType, patchData, meta.PatchOptions{})
+		Patch(ctx.TODO(), name.Str(), types.MergePatchType, patchData, meta.PatchOptions{})
 }
 
 func (this *KubeClient) GetDeployments(namespace common.Namespace, options *meta.ListOptions) (*apps.DeploymentList, error) {
@@ -76,12 +77,11 @@ func (this *KubeClient) DeleteDeployment(value *apps.Deployment, options *meta.D
 // ===
 // Service
 
-func (this *KubeClient) CreateService(namespace common.Namespace, value *core.Service) (*core.Service, error) {
-	spec := getSpec(this.ctx)
-	if spec == nil {
+func (this *KubeClient) CreateService(owner meta.Object, namespace common.Namespace, value *core.Service) (*core.Service, error) {
+	if owner == nil {
 		return nil, errors.New("Could not find ApicurioRegistry. Retrying.")
 	}
-	if err := controllerutil.SetControllerReference(spec, value, this.ctx.GetScheme()); err != nil {
+	if err := controllerutil.SetControllerReference(owner, value, this.scheme); err != nil {
 		return nil, err
 	}
 	res, err := this.client.CoreV1().Services(namespace.Str()).Create(ctx.TODO(), value, meta.CreateOptions{})
@@ -103,7 +103,7 @@ func (this *KubeClient) UpdateService(namespace common.Namespace, value *core.Se
 
 func (this *KubeClient) PatchService(namespace common.Namespace, name common.Name, patchData []byte) (*core.Service, error) {
 	return this.client.CoreV1().Services(namespace.Str()).
-		Patch(ctx.TODO(), name.Str(), types.StrategicMergePatchType, patchData, meta.PatchOptions{})
+		Patch(ctx.TODO(), name.Str(), types.MergePatchType, patchData, meta.PatchOptions{})
 }
 
 func (this *KubeClient) GetServices(namespace common.Namespace, options *meta.ListOptions) (*core.ServiceList, error) {
@@ -118,12 +118,11 @@ func (this *KubeClient) DeleteService(value *core.Service, options *meta.DeleteO
 // ===
 // Ingress
 
-func (this *KubeClient) CreateIngress(namespace common.Namespace, value *networking.Ingress) (*networking.Ingress, error) {
-	spec := getSpec(this.ctx)
-	if spec == nil {
+func (this *KubeClient) CreateIngress(owner meta.Object, namespace common.Namespace, value *networking.Ingress) (*networking.Ingress, error) {
+	if owner == nil {
 		return nil, errors.New("Could not find ApicurioRegistry. Retrying.")
 	}
-	if err := controllerutil.SetControllerReference(spec, value, this.ctx.GetScheme()); err != nil {
+	if err := controllerutil.SetControllerReference(owner, value, this.scheme); err != nil {
 		return nil, err
 	}
 	res, err := this.client.NetworkingV1().Ingresses(namespace.Str()).
@@ -146,7 +145,7 @@ func (this *KubeClient) UpdateIngress(namespace common.Namespace, value *network
 
 func (this *KubeClient) PatchIngress(namespace common.Namespace, name common.Name, patchData []byte) (*networking.Ingress, error) {
 	return this.client.NetworkingV1().Ingresses(namespace.Str()).
-		Patch(ctx.TODO(), name.Str(), types.StrategicMergePatchType, patchData, meta.PatchOptions{})
+		Patch(ctx.TODO(), name.Str(), types.MergePatchType, patchData, meta.PatchOptions{})
 }
 
 func (this *KubeClient) GetIngresses(namespace common.Namespace, options *meta.ListOptions) (*networking.IngressList, error) {
@@ -161,12 +160,11 @@ func (this *KubeClient) DeleteIngress(value *networking.Ingress, options *meta.D
 // ===
 // Network Policy
 
-func (this *KubeClient) CreateNetworkPolicy(namespace common.Namespace, value *networking.NetworkPolicy) (*networking.NetworkPolicy, error) {
-	spec := getSpec(this.ctx)
-	if spec == nil {
+func (this *KubeClient) CreateNetworkPolicy(owner meta.Object, namespace common.Namespace, value *networking.NetworkPolicy) (*networking.NetworkPolicy, error) {
+	if owner == nil {
 		return nil, errors.New("Could not find ApicurioRegistry. Retrying.")
 	}
-	if err := controllerutil.SetControllerReference(spec, value, this.ctx.GetScheme()); err != nil {
+	if err := controllerutil.SetControllerReference(owner, value, this.scheme); err != nil {
 		return nil, err
 	}
 	res, err := this.client.NetworkingV1().NetworkPolicies(namespace.Str()).
@@ -189,7 +187,7 @@ func (this *KubeClient) UpdateNetworkPolicy(namespace common.Namespace, value *n
 
 func (this *KubeClient) PatchNetworkPolicy(namespace common.Namespace, name common.Name, patchData []byte) (*networking.NetworkPolicy, error) {
 	return this.client.NetworkingV1().NetworkPolicies(namespace.Str()).
-		Patch(ctx.TODO(), name.Str(), types.StrategicMergePatchType, patchData, meta.PatchOptions{})
+		Patch(ctx.TODO(), name.Str(), types.MergePatchType, patchData, meta.PatchOptions{})
 }
 
 func (this *KubeClient) GetNetworkPolicies(namespace common.Namespace, options *meta.ListOptions) (*networking.NetworkPolicyList, error) {
@@ -204,12 +202,11 @@ func (this *KubeClient) DeleteNetworkPolicy(value *networking.NetworkPolicy, opt
 // ===
 // PodDisruptionBudget
 
-func (this *KubeClient) CreatePodDisruptionBudget(namespace common.Namespace, value *policy.PodDisruptionBudget) (*policy.PodDisruptionBudget, error) {
-	spec := getSpec(this.ctx)
-	if spec == nil {
+func (this *KubeClient) CreatePodDisruptionBudget(owner meta.Object, namespace common.Namespace, value *policy.PodDisruptionBudget) (*policy.PodDisruptionBudget, error) {
+	if owner == nil {
 		return nil, errors.New("Could not find ApicurioRegistry. Retrying.")
 	}
-	if err := controllerutil.SetControllerReference(spec, value, this.ctx.GetScheme()); err != nil {
+	if err := controllerutil.SetControllerReference(owner, value, this.scheme); err != nil {
 		return nil, err
 	}
 	res, err := this.client.PolicyV1beta1().PodDisruptionBudgets(namespace.Str()).Create(ctx.TODO(), value, meta.CreateOptions{})
@@ -231,7 +228,7 @@ func (this *KubeClient) UpdatePodDisruptionBudget(namespace common.Namespace, va
 
 func (this *KubeClient) PatchPodDisruptionBudget(namespace common.Namespace, name common.Name, patchData []byte) (*policy.PodDisruptionBudget, error) {
 	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace.Str()).
-		Patch(ctx.TODO(), name.Str(), types.StrategicMergePatchType, patchData, meta.PatchOptions{})
+		Patch(ctx.TODO(), name.Str(), types.MergePatchType, patchData, meta.PatchOptions{})
 }
 
 func (this *KubeClient) GetPodDisruptionBudgets(namespace common.Namespace, options *meta.ListOptions) (*policy.PodDisruptionBudgetList, error) {

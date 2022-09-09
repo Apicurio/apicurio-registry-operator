@@ -36,12 +36,13 @@ type ApicurioRegistrySpecConfiguration struct {
 	UI          ApicurioRegistrySpecConfigurationUI       `json:"ui,omitempty"`
 	LogLevel    string                                    `json:"logLevel,omitempty"`
 	Security    ApicurioRegistrySpecConfigurationSecurity `json:"security,omitempty"`
+	Env         []corev1.EnvVar                           `json:"env,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationDataSource struct {
 	Url      string `json:"url,omitempty"`
 	UserName string `json:"userName,omitempty"`
-	Password string `json:"password,omitempty"`
+	Password string `json:"password,omitempty"` // TODO Password secret
 }
 
 type ApicurioRegistrySpecConfigurationSql struct {

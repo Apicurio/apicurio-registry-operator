@@ -19,33 +19,25 @@ package main
 import (
 	"errors"
 	"flag"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"os"
-	"strings"
-	"time"
-
-	"go.uber.org/zap/zapcore"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"strings"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
+	"github.com/Apicurio/apicurio-registry-operator/controllers"
+	ocp_apps "github.com/openshift/api/apps/v1"
+	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
-	"github.com/go-logr/logr"
-	zaplogfmt "github.com/sykesm/zap-logfmt"
-	uzap "go.uber.org/zap"
-
-	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
-	"github.com/Apicurio/apicurio-registry-operator/controllers"
-	ocp_apps "github.com/openshift/api/apps/v1"
-	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -64,7 +56,7 @@ func init() {
 
 func initControllers(mgr manager.Manager) error {
 
-	if _, err := controllers.NewApicurioRegistryReconciler(mgr, ctrl.Log); err != nil {
+	if _, err := controllers.NewApicurioRegistryReconciler(mgr, ctrl.Log, common.NewTestSupport(ctrl.Log, false)); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ApicurioRegistry")
 		return errors.New("unable to create ApicurioRegistry controller")
 	}
@@ -82,7 +74,7 @@ func main() {
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
 
-	logger := builldLogger()
+	logger := common.BuildLogger(true)
 	ctrl.SetLogger(logger)
 
 	namespaces, err := getWatchNamespace()
@@ -140,14 +132,4 @@ func getWatchNamespace() (string, error) {
 		return "", errors.New("environment variable WATCH_NAMESPACE required")
 	}
 	return ns, nil
-}
-
-func builldLogger() logr.Logger {
-	configLog := uzap.NewProductionEncoderConfig()
-	configLog.EncodeTime = func(ts time.Time, encoder zapcore.PrimitiveArrayEncoder) {
-		encoder.AppendString(ts.UTC().Format(time.RFC3339Nano))
-	}
-	logfmtEncoder := zaplogfmt.NewEncoder(configLog)
-	logger := zap.New(zap.UseDevMode(true), zap.WriteTo(os.Stdout), zap.Encoder(logfmtEncoder))
-	return logger
 }

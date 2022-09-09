@@ -11,13 +11,13 @@ var _ loop.ControlFunction = &ProfileCF{}
 const ENV_QUARKUS_PROFILE = "QUARKUS_PROFILE"
 
 type ProfileCF struct {
-	ctx         *context.LoopContext
+	ctx         context.LoopContext
 	svcEnvCache env.EnvCache
 	profileSet  bool
 }
 
 // Is responsible for managing environment variables from the env cache
-func NewProfileCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewProfileCF(ctx context.LoopContext) loop.ControlFunction {
 	return &ProfileCF{
 		ctx:         ctx,
 		svcEnvCache: ctx.GetEnvCache(),
@@ -46,7 +46,7 @@ func (this *ProfileCF) Compare() bool {
 func (this *ProfileCF) Respond() {
 	// Response #1
 	// Just set the value(s)!
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_QUARKUS_PROFILE, "prod"))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_QUARKUS_PROFILE, "prod").Build())
 
 }
 

@@ -20,11 +20,11 @@ const CFG_STA_ROUTE = "CFG_STA_ROUTE"
 
 type Status struct {
 	config     map[string]string
-	ctx        *context.LoopContext
+	ctx        context.LoopContext
 	conditions conditions.ConditionManager
 }
 
-func NewStatus(ctx *context.LoopContext, conditions conditions.ConditionManager) *Status {
+func NewStatus(ctx context.LoopContext, conditions conditions.ConditionManager) *Status {
 
 	this := &Status{
 		config:     make(map[string]string),
@@ -86,10 +86,12 @@ func (this *Status) GetConfigInt32P(key string) *int32 {
 }
 
 func (this *Status) ComputeStatus() {
+	// TODO Only if changed?
 	entry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_STATUS)
 	if exists {
+		// TODO Avoid patching when not necessary
 		entry.ApplyPatch(func(value interface{}) interface{} {
-			status := value.(*api.ApicurioRegistryStatus)
+			status := value.(*api.ApicurioRegistryStatus).DeepCopy()
 
 			// Info
 			status.Info.Host = this.GetConfig(CFG_STA_ROUTE)

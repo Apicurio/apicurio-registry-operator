@@ -13,7 +13,7 @@ var _ loop.ControlFunction = &LogLevelCF{}
 const ENV_REGISTRY_LOG_LEVEL = "LOG_LEVEL"
 
 type LogLevelCF struct {
-	ctx              *context.LoopContext
+	ctx              context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcEnvCache      env.EnvCache
 	logLevel         string
@@ -21,7 +21,7 @@ type LogLevelCF struct {
 	envLogLevel      string
 }
 
-func NewLogLevelCF(ctx *context.LoopContext) loop.ControlFunction {
+func NewLogLevelCF(ctx context.LoopContext) loop.ControlFunction {
 	return &LogLevelCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
@@ -66,7 +66,7 @@ func (this *LogLevelCF) Compare() bool {
 func (this *LogLevelCF) Respond() {
 	// Response #1
 	// Just set the value(s)!
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntry(ENV_REGISTRY_LOG_LEVEL, this.logLevel))
+	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_LOG_LEVEL, this.logLevel).Build())
 }
 
 func (this *LogLevelCF) Cleanup() bool {

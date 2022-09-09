@@ -1,11 +1,11 @@
 package cf
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/controllers/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
@@ -17,7 +17,7 @@ import (
 var _ loop.ControlFunction = &DeploymentCF{}
 
 type DeploymentCF struct {
-	ctx              *context.LoopContext
+	ctx              context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcClients       *client.Clients
 	svcStatus        *status.Status
@@ -27,16 +27,16 @@ type DeploymentCF struct {
 	deploymentName   string
 }
 
-func NewDeploymentCF(ctx *context.LoopContext, services *services.LoopServices) loop.ControlFunction {
+func NewDeploymentCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
 	return &DeploymentCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
-		svcClients:       services.GetClients(),
+		svcClients:       ctx.GetClients(),
 		svcStatus:        services.GetStatus(),
 		svcKubeFactory:   services.GetKubeFactory(),
 		isCached:         false,
 		deployments:      make([]apps.Deployment, 0),
-		deploymentName:   resources.RC_EMPTY_NAME,
+		deploymentName:   resources.RC_NOT_CREATED_NAME_EMPTY,
 	}
 }
 
@@ -52,7 +52,7 @@ func (this *DeploymentCF) Sense() {
 	if deploymentExists {
 		this.deploymentName = deploymentEntry.GetName().Str()
 	} else {
-		this.deploymentName = resources.RC_EMPTY_NAME
+		this.deploymentName = resources.RC_NOT_CREATED_NAME_EMPTY
 	}
 	this.isCached = deploymentExists
 
@@ -85,7 +85,7 @@ func (this *DeploymentCF) Compare() bool {
 func (this *DeploymentCF) Respond() {
 	// Response #1
 	// We already know about a deployment (name), and it is in the list
-	if this.deploymentName != resources.RC_EMPTY_NAME {
+	if this.deploymentName != resources.RC_NOT_CREATED_NAME_EMPTY {
 		contains := false
 		for _, val := range this.deployments {
 			if val.Name == this.deploymentName {
@@ -95,22 +95,22 @@ func (this *DeploymentCF) Respond() {
 			}
 		}
 		if !contains {
-			this.deploymentName = resources.RC_EMPTY_NAME
+			this.deploymentName = resources.RC_NOT_CREATED_NAME_EMPTY
 		}
 	}
 	// Response #2
 	// Can follow #1, but there must be a single deployment available
-	if this.deploymentName == resources.RC_EMPTY_NAME && len(this.deployments) == 1 {
+	if this.deploymentName == resources.RC_NOT_CREATED_NAME_EMPTY && len(this.deployments) == 1 {
 		deployment := this.deployments[0]
 		this.deploymentName = deployment.Name
 		this.svcResourceCache.Set(resources.RC_KEY_DEPLOYMENT, resources.NewResourceCacheEntry(common.Name(deployment.Name), &deployment))
 	}
 	// Response #3 (and #4)
 	// If there is no deployment available (or there are more than 1), just create a new one
-	if this.deploymentName == resources.RC_EMPTY_NAME && len(this.deployments) != 1 {
+	if this.deploymentName == resources.RC_NOT_CREATED_NAME_EMPTY && len(this.deployments) != 1 {
 		deployment := this.svcKubeFactory.CreateDeployment()
 		// leave the creation itself to patcher+creator so other CFs can update
-		this.svcResourceCache.Set(resources.RC_KEY_DEPLOYMENT, resources.NewResourceCacheEntry(resources.RC_EMPTY_NAME, deployment))
+		this.svcResourceCache.Set(resources.RC_KEY_DEPLOYMENT, resources.NewResourceCacheEntry(resources.RC_NOT_CREATED_NAME_EMPTY, deployment))
 	}
 }
 
