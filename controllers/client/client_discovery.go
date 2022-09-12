@@ -1,11 +1,18 @@
 package client
 
 import (
+	"errors"
 	"github.com/go-logr/logr"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/rest"
 )
+
+type APIGroupInfo struct {
+	Group            string
+	PreferredVersion string
+	Versions         []string
+}
 
 type DiscoveryClient struct {
 	log    logr.Logger
@@ -20,53 +27,47 @@ func NewDiscoveryClient(log logr.Logger, clientConfig *rest.Config) *DiscoveryCl
 	return this
 }
 
-var isOpenshift *bool
-var isMonitoringInstalled *bool
-
 func (this *DiscoveryClient) IsOCP() (bool, error) {
-	if isOpenshift == nil {
-		is, err := this.detectOpenshift()
-		if err != nil {
-			return is, err
+	_, err := this.client.ServerResourcesForGroupVersion("route.openshift.io/v1")
+	if err != nil {
+		if api_errors.IsNotFound(err) {
+			return false, nil
+		} else {
+			return false, err
 		}
-		isOpenshift = &is
 	}
-	return *isOpenshift, nil
+	return true, nil
 }
 
 func (this *DiscoveryClient) IsMonitoringInstalled() (bool, error) {
-	if isMonitoringInstalled == nil {
-		is, err := this.detectServiceMonitoring()
-		if err != nil {
-			return is, err
-		}
-		isMonitoringInstalled = &is
-	}
-	return *isMonitoringInstalled, nil
+	return this.resourceExists("monitoring.coreos.com/v1", "ServiceMonitor")
 }
 
-func (this *DiscoveryClient) detectServiceMonitoring() (bool, error) {
-
-	_, err := this.client.ServerResourcesForGroupVersion("monitoring.coreos.com/v1")
-
-	if err != nil && api_errors.IsNotFound(err) {
-		return false, nil
-	} else if err != nil {
-		return false, err
+// Get information about the given API group.
+// Returns an error if the API Group does not exist or the info could not be determined.
+func (this *DiscoveryClient) GetVersionInfoForAPIGroup(apiGroup string) (*APIGroupInfo, error) {
+	apiGroupList, err := this.client.ServerGroups()
+	if err != nil {
+		return nil, err
 	}
-
-	serviceMonitorRegistered, err := this.resourceExists("monitoring.coreos.com/v1", "ServiceMonitor")
-
-	if err != nil && api_errors.IsNotFound(err) {
-		return false, nil
-	} else if err != nil {
-		return false, err
+	res := &APIGroupInfo{
+		Group:            apiGroup,
+		PreferredVersion: "",
+		Versions:         make([]string, 0),
 	}
-	return serviceMonitorRegistered, nil
+	for _, g := range apiGroupList.Groups {
+		if g.Name == apiGroup {
+			for _, v := range g.Versions {
+				res.Versions = append(res.Versions, v.Version)
+			}
+			res.PreferredVersion = g.PreferredVersion.Version
+			return res, nil
+		}
+	}
+	return nil, errors.New("API group '" + apiGroup + "' not found")
 }
 
 func (this *DiscoveryClient) resourceExists(apiGroupVersion, kind string) (bool, error) {
-
 	_, apiLists, err := this.client.ServerGroupsAndResources()
 	if err != nil {
 		return false, err
@@ -81,15 +82,4 @@ func (this *DiscoveryClient) resourceExists(apiGroupVersion, kind string) (bool,
 		}
 	}
 	return false, nil
-}
-
-func (this *DiscoveryClient) detectOpenshift() (bool, error) {
-	_, err := this.client.ServerResourcesForGroupVersion("route.openshift.io/v1")
-
-	if err != nil && api_errors.IsNotFound(err) {
-		return false, nil
-	} else if err != nil {
-		return false, err
-	}
-	return true, nil
 }

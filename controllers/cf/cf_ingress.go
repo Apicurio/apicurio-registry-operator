@@ -67,7 +67,7 @@ func (this *IngressCF) Sense() {
 	this.ingresses = make([]networking.Ingress, 0)
 	ingresses, err := this.svcClients.Kube().GetIngresses(
 		this.ctx.GetAppNamespace(),
-		&meta.ListOptions{
+		meta.ListOptions{
 			LabelSelector: "app=" + this.ctx.GetAppName().Str(),
 		})
 	if err == nil {
@@ -145,7 +145,7 @@ func (this *IngressCF) Respond() {
 func (this *IngressCF) Cleanup() bool {
 	// Ingress should not have any deletion dependencies
 	if ingressEntry, ingressExists := this.svcResourceCache.Get(resources.RC_KEY_INGRESS); ingressExists {
-		if err := this.svcClients.Kube().DeleteIngress(ingressEntry.GetValue().(*networking.Ingress), &meta.DeleteOptions{}); err != nil && !api_errors.IsNotFound(err) {
+		if err := this.svcClients.Kube().DeleteIngress(ingressEntry.GetValue().(*networking.Ingress)); err != nil && !api_errors.IsNotFound(err) {
 			this.ctx.GetLog().Error(err, "Could not delete ingress during cleanup.")
 			return false
 		} else {

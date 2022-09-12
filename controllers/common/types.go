@@ -17,3 +17,11 @@ func (s Name) Str() string {
 //	namespace Namespace
 //	name Name
 //}
+
+type SupportedFeatures struct {
+	IsOCP               bool
+	SupportsPDBv1       bool
+	SupportsPDBv1beta1  bool
+	PreferredPDBVersion string
+	SupportsMonitoring bool
+}

@@ -17,26 +17,24 @@ import (
 var _ loop.ControlFunction = &ServiceMonitorCF{}
 
 type ServiceMonitorCF struct {
-	ctx                        context.LoopContext
-	svcResourceCache           resources.ResourceCache
-	svcClients                 *client.Clients
-	monitoringFactory          *factory.MonitoringFactory
-	isServiceMonitorRegistered bool
-	serviceMonitor             *monitoring.ServiceMonitor
-	service                    *core.Service
+	ctx               context.LoopContext
+	svcResourceCache  resources.ResourceCache
+	svcClients        *client.Clients
+	monitoringFactory *factory.MonitoringFactory
+	serviceMonitor    *monitoring.ServiceMonitor
+	service           *core.Service
 }
 
 // TODO service monitor should be using resource cache
 func NewServiceMonitorCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
 
 	return &ServiceMonitorCF{
-		ctx:                        ctx,
-		svcResourceCache:           ctx.GetResourceCache(),
-		svcClients:                 ctx.GetClients(),
-		monitoringFactory:          services.GetMonitoringFactory(),
-		isServiceMonitorRegistered: false,
-		serviceMonitor:             nil,
-		service:                    nil,
+		ctx:               ctx,
+		svcResourceCache:  ctx.GetResourceCache(),
+		svcClients:        ctx.GetClients(),
+		monitoringFactory: services.GetMonitoringFactory(),
+		serviceMonitor:    nil,
+		service:           nil,
 	}
 }
 
@@ -48,19 +46,6 @@ func (this *ServiceMonitorCF) Sense() {
 
 	monitoringClient := this.svcClients.Monitoring()
 
-	// Observation #1
-	// Is ServiceMonitor registered?
-	isServiceMonitorRegistered, err := this.svcClients.Discovery().IsMonitoringInstalled() // TODO Panic, this should've been checked
-	if err != nil {
-		this.ctx.GetLog().Error(err, "Could not check ServiceMonitor is registered")
-		return
-	}
-	this.isServiceMonitorRegistered = isServiceMonitorRegistered
-
-	if !isServiceMonitorRegistered {
-		return
-	}
-
 	// Observation #2
 	// Get Service
 	serviceEntry, serviceExists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE)
@@ -68,7 +53,7 @@ func (this *ServiceMonitorCF) Sense() {
 		this.service = serviceEntry.GetValue().(*core.Service)
 	}
 
-	if isServiceMonitorRegistered && serviceExists {
+	if serviceExists {
 		// Observation #3
 		// Get ServiceMonitor
 		namespace := this.ctx.GetAppNamespace()
@@ -91,7 +76,7 @@ func (this *ServiceMonitorCF) Compare() bool {
 	// Service has been created
 	// Condition #3
 	// ServiceMonitor has not been created
-	return this.isServiceMonitorRegistered && this.service != nil && this.serviceMonitor == nil
+	return this.service != nil && this.serviceMonitor == nil
 }
 
 func (this *ServiceMonitorCF) Respond() {
@@ -113,17 +98,16 @@ func (this *ServiceMonitorCF) Respond() {
 func (this *ServiceMonitorCF) Cleanup() bool {
 	// SM should not have any deletion dependencies
 	monitoringClient := this.svcClients.Monitoring()
-	if isServiceMonitorRegistered, _ := this.svcClients.Discovery().IsMonitoringInstalled(); isServiceMonitorRegistered {
-		namespace := this.ctx.GetAppNamespace()
-		name := this.ctx.GetAppName()
-		if serviceMonitor, err := monitoringClient.GetServiceMonitor(namespace, name); err == nil {
-			if err := monitoringClient.DeleteServiceMonitor(serviceMonitor); err != nil && !api_errors.IsNotFound(err) /* Should not normally happen */ {
-				this.ctx.GetLog().Error(err, "Could not delete ServiceMonitor during cleanup.")
-				return false
-			} else {
-				this.ctx.GetLog().Info("ServiceMonitor has been deleted.")
-			}
+	namespace := this.ctx.GetAppNamespace()
+	name := this.ctx.GetAppName()
+	if serviceMonitor, err := monitoringClient.GetServiceMonitor(namespace, name); err == nil {
+		if err := monitoringClient.DeleteServiceMonitor(serviceMonitor); err != nil && !api_errors.IsNotFound(err) /* Should not normally happen */ {
+			this.ctx.GetLog().Error(err, "Could not delete ServiceMonitor during cleanup.")
+			return false
+		} else {
+			this.ctx.GetLog().Info("ServiceMonitor has been deleted.")
 		}
 	}
+
 	return true
 }

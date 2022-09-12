@@ -61,7 +61,7 @@ func (this *DeploymentCF) Sense() {
 	this.deployments = make([]apps.Deployment, 0)
 	deployments, err := this.svcClients.Kube().GetDeployments(
 		this.ctx.GetAppNamespace(),
-		&meta.ListOptions{
+		meta.ListOptions{
 			LabelSelector: "app=" + this.ctx.GetAppName().Str(),
 		})
 	if err == nil {
@@ -121,7 +121,7 @@ func (this *DeploymentCF) Cleanup() bool {
 		return false
 	}
 	if deploymentEntry, deploymentExists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT); deploymentExists {
-		if err := this.svcClients.Kube().DeleteDeployment(deploymentEntry.GetValue().(*apps.Deployment), &meta.DeleteOptions{}); err != nil && !api_errors.IsNotFound(err) {
+		if err := this.svcClients.Kube().DeleteDeployment(deploymentEntry.GetValue().(*apps.Deployment)); err != nil && !api_errors.IsNotFound(err) {
 			this.ctx.GetLog().Error(err, "Could not delete deployment during cleanup.")
 			return false
 		} else {

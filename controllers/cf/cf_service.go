@@ -62,7 +62,7 @@ func (this *ServiceCF) Sense() {
 	this.services = make([]core.Service, 0)
 	services, err := this.svcClients.Kube().GetServices(
 		this.ctx.GetAppNamespace(),
-		&meta.ListOptions{
+		meta.ListOptions{
 			LabelSelector: "app=" + this.ctx.GetAppName().Str(),
 		})
 	if err == nil {
@@ -128,7 +128,7 @@ func (this *ServiceCF) Cleanup() bool {
 		return false
 	}
 	if serviceEntry, serviceExists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE); serviceExists {
-		if err := this.svcClients.Kube().DeleteService(serviceEntry.GetValue().(*core.Service), &meta.DeleteOptions{}); err != nil && !api_errors.IsNotFound(err) {
+		if err := this.svcClients.Kube().DeleteService(serviceEntry.GetValue().(*core.Service)); err != nil && !api_errors.IsNotFound(err) {
 			this.ctx.GetLog().Error(err, "Could not delete service during cleanup")
 			return false
 		} else {
