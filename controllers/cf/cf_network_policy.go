@@ -67,7 +67,7 @@ func (this *NetworkPolicyCF) Sense() {
 	this.networkPolicies = make([]networking.NetworkPolicy, 0)
 	networkPolicies, err := this.svcClients.Kube().GetNetworkPolicies(
 		this.ctx.GetAppNamespace(),
-		&meta.ListOptions{
+		meta.ListOptions{
 			LabelSelector: "app=" + this.ctx.GetAppName().Str(),
 		})
 	if err == nil {
@@ -145,7 +145,7 @@ func (this *NetworkPolicyCF) Respond() {
 func (this *NetworkPolicyCF) Cleanup() bool {
 	// Network Policy should not have any deletion dependencies
 	if networkPolicyEntry, networkPolicyExists := this.svcResourceCache.Get(resources.RC_KEY_NETWORK_POLICY); networkPolicyExists {
-		if err := this.svcClients.Kube().DeleteNetworkPolicy(networkPolicyEntry.GetValue().(*networking.NetworkPolicy), &meta.DeleteOptions{}); err != nil && !api_errors.IsNotFound(err) {
+		if err := this.svcClients.Kube().DeleteNetworkPolicy(networkPolicyEntry.GetValue().(*networking.NetworkPolicy)); err != nil && !api_errors.IsNotFound(err) {
 			this.ctx.GetLog().Error(err, "Could not delete networkPolicy during cleanup.")
 			return false
 		} else {

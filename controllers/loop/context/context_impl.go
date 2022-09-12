@@ -2,7 +2,7 @@ package context
 
 import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/client"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
+	c "github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"github.com/go-logr/logr"
@@ -13,23 +13,21 @@ var _ LoopContext = &loopContext{}
 
 // A long-lived singleton container for shared, data only, 0 dependencies, components
 type loopContext struct {
-	appName      common.Name
-	appNamespace common.Namespace
-	log          logr.Logger
-	requeue      bool
-	requeueDelay time.Duration
-
+	appName       c.Name
+	appNamespace  c.Namespace
+	log           logr.Logger
+	requeue       bool
+	requeueDelay  time.Duration
 	resourceCache resources.ResourceCache
 	envCache      env.EnvCache
-
-	attempts int
-	clients  *client.Clients
-
-	testing *common.TestSupport
+	attempts      int
+	clients       *client.Clients
+	testing       *c.TestSupport
+	features      *c.SupportedFeatures
 }
 
 // Create a new context when the operator is deployed, provide mostly static data
-func NewLoopContext(appName common.Name, appNamespace common.Namespace, log logr.Logger, clients *client.Clients, testing *common.TestSupport) LoopContext {
+func NewLoopContext(appName c.Name, appNamespace c.Namespace, log logr.Logger, clients *client.Clients, testing *c.TestSupport, features *c.SupportedFeatures) LoopContext {
 	this := &loopContext{
 		appName:      appName,
 		appNamespace: appNamespace,
@@ -38,13 +36,10 @@ func NewLoopContext(appName common.Name, appNamespace common.Namespace, log logr
 		clients:      clients,
 		testing:      testing,
 		log:          log,
+		features:     features,
 	}
-	//this.log = log.WithValues("app", appName.Str(), "namespace", appNamespace.Str())
-
 	this.resourceCache = resources.NewResourceCache()
-
 	this.envCache = env.NewEnvCache(log)
-
 	return this
 }
 
@@ -52,11 +47,11 @@ func (this *loopContext) GetLog() logr.Logger {
 	return this.log
 }
 
-func (this *loopContext) GetAppName() common.Name {
+func (this *loopContext) GetAppName() c.Name {
 	return this.appName
 }
 
-func (this *loopContext) GetAppNamespace() common.Namespace {
+func (this *loopContext) GetAppNamespace() c.Namespace {
 	return this.appNamespace
 }
 
@@ -104,6 +99,10 @@ func (this *loopContext) GetAttempts() int {
 	return this.attempts
 }
 
-func (this *loopContext) GetTestingSupport() *common.TestSupport {
+func (this *loopContext) GetTestingSupport() *c.TestSupport {
 	return this.testing
+}
+
+func (this *loopContext) GetSupportedFeatures() *c.SupportedFeatures {
+	return this.features
 }

@@ -12,7 +12,8 @@ import (
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
-	policy "k8s.io/api/policy/v1beta1"
+	policy_v1 "k8s.io/api/policy/v1"
+	policy_v1beta1 "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -150,7 +151,7 @@ func (this *KubePatcher) patchApicurioRegistryStatus() {
 
 func (this *KubePatcher) reloadDeployment() {
 	if entry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_DEPLOYMENT); exists {
-		r, e := this.ctx.GetClients().Kube().GetDeployment(this.ctx.GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
+		r, e := this.ctx.GetClients().Kube().GetDeployment(this.ctx.GetAppNamespace(), entry.GetName())
 		if e != nil {
 			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
 			this.ctx.GetResourceCache().Remove(resources.RC_KEY_DEPLOYMENT)
@@ -185,7 +186,7 @@ func (this *KubePatcher) patchDeployment() {
 func (this *KubePatcher) reloadService() {
 	if entry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_SERVICE); exists {
 		r, e := this.ctx.GetClients().Kube().
-			GetService(this.ctx.GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
+			GetService(this.ctx.GetAppNamespace(), entry.GetName())
 		if e != nil {
 			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
 			this.ctx.GetResourceCache().Remove(resources.RC_KEY_SERVICE)
@@ -287,37 +288,72 @@ func (this *KubePatcher) patchNetworkPolicy() {
 	)
 }
 
-func (this *KubePatcher) reloadPodDisruptionBudget() {
-	if entry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_POD_DISRUPTION_BUDGET); exists {
+func (this *KubePatcher) reloadPodDisruptionBudgetV1beta1() {
+	if entry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1BETA1); exists {
 		r, e := this.ctx.GetClients().Kube().
-			GetPodDisruptionBudget(this.ctx.GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
+			GetPodDisruptionBudgetV1beta1(this.ctx.GetAppNamespace(), entry.GetName())
 		if e != nil {
 			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
-			this.ctx.GetResourceCache().Remove(resources.RC_KEY_POD_DISRUPTION_BUDGET)
+			this.ctx.GetResourceCache().Remove(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1BETA1)
 			this.ctx.SetRequeueNow()
 		} else {
-			this.ctx.GetResourceCache().Set(resources.RC_KEY_POD_DISRUPTION_BUDGET, resources.NewResourceCacheEntry(c.Name(r.Name), r))
+			this.ctx.GetResourceCache().Set(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1BETA1, resources.NewResourceCacheEntry(c.Name(r.Name), r))
 		}
 	}
 }
 
-func (this *KubePatcher) patchPodDisruptionBudget() {
+func (this *KubePatcher) patchPodDisruptionBudgetV1beta1() {
 	patchGeneric(
 		this.ctx,
-		resources.RC_KEY_POD_DISRUPTION_BUDGET,
+		resources.RC_KEY_POD_DISRUPTION_BUDGET_V1BETA1,
 		func(value interface{}) string {
-			return value.(*policy.PodDisruptionBudget).String()
+			return value.(*policy_v1beta1.PodDisruptionBudget).String()
 		},
-		&policy.PodDisruptionBudget{},
+		&policy_v1beta1.PodDisruptionBudget{},
 		"policy.PodDisruptionBudget",
 		func(owner meta.Object, namespace c.Namespace, value interface{}) (interface{}, error) {
-			return this.ctx.GetClients().Kube().CreatePodDisruptionBudget(owner, namespace, value.(*policy.PodDisruptionBudget))
+			return this.ctx.GetClients().Kube().CreatePodDisruptionBudgetV1beta1(owner, namespace, value.(*policy_v1beta1.PodDisruptionBudget))
 		},
 		func(namespace c.Namespace, name c.Name, data []byte) (interface{}, error) {
-			return this.ctx.GetClients().Kube().PatchPodDisruptionBudget(namespace, name, data)
+			return this.ctx.GetClients().Kube().PatchPodDisruptionBudgetV1beta1(namespace, name, data)
 		},
 		func(value interface{}) c.Name {
-			return c.Name(value.(*policy.PodDisruptionBudget).GetName())
+			return c.Name(value.(*policy_v1beta1.PodDisruptionBudget).GetName())
+		},
+	)
+}
+
+func (this *KubePatcher) reloadPodDisruptionBudgetV1() {
+	if entry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1); exists {
+		r, e := this.ctx.GetClients().Kube().
+			GetPodDisruptionBudgetV1(this.ctx.GetAppNamespace(), entry.GetName())
+		if e != nil {
+			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
+			this.ctx.GetResourceCache().Remove(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1)
+			this.ctx.SetRequeueNow()
+		} else {
+			this.ctx.GetResourceCache().Set(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1, resources.NewResourceCacheEntry(c.Name(r.Name), r))
+		}
+	}
+}
+
+func (this *KubePatcher) patchPodDisruptionBudgetV1() {
+	patchGeneric(
+		this.ctx,
+		resources.RC_KEY_POD_DISRUPTION_BUDGET_V1,
+		func(value interface{}) string {
+			return value.(*policy_v1.PodDisruptionBudget).String()
+		},
+		&policy_v1.PodDisruptionBudget{},
+		"policy.PodDisruptionBudget",
+		func(owner meta.Object, namespace c.Namespace, value interface{}) (interface{}, error) {
+			return this.ctx.GetClients().Kube().CreatePodDisruptionBudgetV1(owner, namespace, value.(*policy_v1.PodDisruptionBudget))
+		},
+		func(namespace c.Namespace, name c.Name, data []byte) (interface{}, error) {
+			return this.ctx.GetClients().Kube().PatchPodDisruptionBudgetV1(namespace, name, data)
+		},
+		func(value interface{}) c.Name {
+			return c.Name(value.(*policy_v1.PodDisruptionBudget).GetName())
 		},
 	)
 }
@@ -331,7 +367,8 @@ func (this *KubePatcher) Reload() {
 	this.reloadService()
 	this.reloadIngress()
 	this.reloadNetworkPolicy()
-	this.reloadPodDisruptionBudget()
+	this.reloadPodDisruptionBudgetV1beta1()
+	this.reloadPodDisruptionBudgetV1()
 }
 
 func (this *KubePatcher) Execute() {
@@ -341,5 +378,6 @@ func (this *KubePatcher) Execute() {
 	this.patchService()
 	this.patchIngress()
 	this.patchNetworkPolicy()
-	this.patchPodDisruptionBudget()
+	this.patchPodDisruptionBudgetV1beta1()
+	this.patchPodDisruptionBudgetV1()
 }

@@ -19,7 +19,8 @@ import (
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
-	policy "k8s.io/api/policy/v1beta1"
+	policy_v1 "k8s.io/api/policy/v1"
+	policy_v1beta1 "k8s.io/api/policy/v1beta1"
 	cr "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -30,10 +31,11 @@ import (
 var _ reconcile.Reconciler = &ApicurioRegistryReconciler{}
 
 type ApicurioRegistryReconciler struct {
-	log     logr.Logger
-	clients *client.Clients
-	testing *c.TestSupport
-	loops   map[string]loop.ControlLoop
+	log      logr.Logger
+	clients  *client.Clients
+	testing  *c.TestSupport
+	loops    map[string]loop.ControlLoop
+	features *c.SupportedFeatures
 }
 
 func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog logr.Logger, testing *c.TestSupport) (*ApicurioRegistryReconciler, error) {
@@ -42,21 +44,51 @@ func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog logr.Logger, tes
 		rootLog.WithName("clients"),
 		mgr.GetScheme(), mgr.GetConfig())
 
+	features := &c.SupportedFeatures{}
+
 	isOCP, err := clients.Discovery().IsOCP()
 	if err != nil {
 		return nil, errors.New("could not determine cluster type")
 	}
+	features.IsOCP = isOCP
 	if isOCP {
 		rootLog.V(c.V_NORMAL).Info("This operator is running on OpenShift")
 	} else {
 		rootLog.V(c.V_NORMAL).Info("This operator is running on Kubernetes")
 	}
 
+	agi, err := clients.Discovery().GetVersionInfoForAPIGroup("policy")
+	if err != nil {
+		rootLog.V(c.V_IMPORTANT).Error(err, "could not determine supported API group versions for PodDisruptionBudget resource")
+		return nil, err
+	}
+	if _, found := c.FindString(agi.Versions, "v1"); found {
+		features.SupportsPDBv1 = true
+		rootLog.Info("API server supports PodDisruptionBudget v1")
+	}
+	if _, found := c.FindString(agi.Versions, "v1beta1"); found {
+		features.SupportsPDBv1beta1 = true
+		rootLog.Info("API server supports PodDisruptionBudget v1beta1")
+	}
+	features.PreferredPDBVersion = agi.PreferredVersion
+	rootLog.Info("Preferred version of PodDisruptionBudget is " + agi.PreferredVersion)
+
+	isMonitoring, err := clients.Discovery().IsMonitoringInstalled()
+	if err != nil {
+		rootLog.V(c.V_IMPORTANT).Error(err, "could not determine if monitoring resource is installed")
+		return nil, err
+	}
+	if !isMonitoring {
+		rootLog.V(c.V_IMPORTANT).Info("Install prometheus-operator in your cluster to create ServiceMonitor objects, restart apicurio-registry operator after installing prometheus-operator")
+	}
+	features.SupportsMonitoring = isMonitoring
+
 	result := &ApicurioRegistryReconciler{
-		log:     rootLog.WithName("controller"),
-		clients: clients,
-		testing: testing,
-		loops:   make(map[string]loop.ControlLoop),
+		log:      rootLog.WithName("controller"),
+		clients:  clients,
+		testing:  testing,
+		loops:    make(map[string]loop.ControlLoop),
+		features: features,
 	}
 
 	if err := result.setupWithManager(mgr); err != nil {
@@ -85,16 +117,14 @@ func (this *ApicurioRegistryReconciler) setupWithManager(mgr cr.Manager) error {
 	builder.Owns(&apps.Deployment{})
 	builder.Owns(&core.Service{})
 	builder.Owns(&networking.Ingress{})
-	builder.Owns(&policy.PodDisruptionBudget{})
-
-	isMonitoring, err := this.clients.Discovery().IsMonitoringInstalled()
-	if err != nil {
-		return err
+	if this.features.SupportsPDBv1beta1 {
+		builder.Owns(&policy_v1beta1.PodDisruptionBudget{})
 	}
-	if isMonitoring {
+	if this.features.SupportsPDBv1 {
+		builder.Owns(&policy_v1.PodDisruptionBudget{})
+	}
+	if this.features.SupportsMonitoring {
 		builder.Owns(&monitoring.ServiceMonitor{})
-	} else {
-		this.log.V(c.V_IMPORTANT).Info("Install prometheus-operator in your cluster to create ServiceMonitor objects, restart apicurio-registry operator after installing prometheus-operator")
 	}
 
 	return builder.Complete(this)
@@ -158,7 +188,7 @@ func (this *ApicurioRegistryReconciler) Reconcile(_ go_ctx.Context, request reco
 			return reconcile.Result{}, nil
 		} else {
 			// Create new loop, and requeue
-			controlLoop = this.createNewLoop(appName, appNamespace)
+			controlLoop = this.createNewLoop(appName, appNamespace, this.features)
 			this.loops[key] = controlLoop
 			return reconcile.Result{Requeue: true}, nil
 		}
@@ -172,13 +202,13 @@ func (this *ApicurioRegistryReconciler) Reconcile(_ go_ctx.Context, request reco
 	return reconcile.Result{Requeue: requeue, RequeueAfter: delay}, nil
 }
 
-func (this *ApicurioRegistryReconciler) createNewLoop(appName c.Name, appNamespace c.Namespace) loop.ControlLoop {
+func (this *ApicurioRegistryReconciler) createNewLoop(appName c.Name, appNamespace c.Namespace, features *c.SupportedFeatures) loop.ControlLoop {
 
 	loopKey := appNamespace.Str() + "/" + appName.Str()
 	log := this.log.WithValues("contextId", loopKey)
 	log.V(c.V_NORMAL).Info("creating a new context")
 
-	ctx := context.NewLoopContext(appName, appNamespace, log, this.clients, this.testing)
+	ctx := context.NewLoopContext(appName, appNamespace, log, this.clients, this.testing, features)
 	loopServices := services.NewLoopServices(ctx)
 	result := impl.NewControlLoopImpl(ctx, loopServices)
 
@@ -191,18 +221,21 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName c.Name, appNamespa
 	//deployment
 	result.AddControlFunction(cf.NewDeploymentCF(ctx, loopServices))
 
-	//dependents of deployment
-	result.AddControlFunction(cf.NewAffinityCF(ctx))
-	result.AddControlFunction(cf.NewPodDisruptionBudgetCF(ctx, loopServices))
-	result.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))
-	result.AddControlFunction(cf.NewTolerationCF(ctx))
-	result.AddControlFunction(cf.NewAnnotationsCF(ctx))
+	//depends on deployment
+	if features.SupportsPDBv1beta1 {
+		result.AddControlFunction(cf.NewPodDisruptionBudgetV1beta1CF(ctx, loopServices))
+	}
+	if features.SupportsPDBv1 {
+		result.AddControlFunction(cf.NewPodDisruptionBudgetV1CF(ctx, loopServices))
+	}
 
 	//deployment modifiers
+	result.AddControlFunction(cf.NewAffinityCF(ctx))
+	result.AddControlFunction(cf.NewTolerationCF(ctx))
+	result.AddControlFunction(cf.NewAnnotationsCF(ctx))
 	result.AddControlFunction(cf.NewImageCF(ctx, loopServices))
 	result.AddControlFunction(cf.NewImagePullPolicyCF(ctx))
 	result.AddControlFunction(cf.NewImagePullSecretsCF(ctx))
-
 	result.AddControlFunction(cf.NewReplicasCF(ctx, loopServices))
 
 	//deployment env vars modifiers
@@ -223,14 +256,19 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName c.Name, appNamespa
 	//service
 	result.AddControlFunction(cf.NewServiceCF(ctx, loopServices))
 
-	//ingress (depends on service)
+	// depends on service
+	if features.SupportsMonitoring {
+		result.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))
+	}
+
+	// ingress
 	result.AddControlFunction(cf.NewIngressCF(ctx, loopServices))
 
 	//network policy
 	result.AddControlFunction(cf.NewNetworkPolicyCF(ctx, loopServices))
 
 	//dependents of ingress
-	if isOCP, _ := this.clients.Discovery().IsOCP(); isOCP {
+	if features.IsOCP {
 		result.AddControlFunction(cf.NewHostInitRouteOcpCF(ctx))
 	}
 	result.AddControlFunction(cf.NewHostCF(ctx, loopServices))

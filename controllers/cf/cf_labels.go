@@ -10,7 +10,8 @@ import (
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
-	policy "k8s.io/api/policy/v1beta1"
+	policy_v1 "k8s.io/api/policy/v1"
+	policy_v1beta1 "k8s.io/api/policy/v1beta1"
 )
 
 var _ loop.ControlFunction = &LabelsCF{}
@@ -41,10 +42,15 @@ type LabelsCF struct {
 	ingressLabels   map[string]string
 	updateIngress   bool
 
-	pdbEntry    resources.ResourceCacheEntry
-	pdbIsCached bool
-	pdbLabels   map[string]string
-	updatePdb   bool
+	pdbV1beta1Entry    resources.ResourceCacheEntry
+	pdbV1beta1IsCached bool
+	pdbV1beta1Labels   map[string]string
+	updatePdbV1beta1   bool
+
+	pdbV1Entry    resources.ResourceCacheEntry
+	pdbV1IsCached bool
+	pdbV1Labels   map[string]string
+	updatePdbV1   bool
 }
 
 // Update labels on some managed resources
@@ -86,10 +92,15 @@ func (this *LabelsCF) Sense() {
 	}
 	// Observation #4
 	// PodDisruptionBudget
-	this.pdbEntry, this.pdbIsCached = this.svcResourceCache.Get(resources.RC_KEY_POD_DISRUPTION_BUDGET)
-	if this.pdbIsCached {
-		this.pdbLabels = this.pdbEntry.GetValue().(*policy.PodDisruptionBudget).Labels
+	this.pdbV1beta1Entry, this.pdbV1beta1IsCached = this.svcResourceCache.Get(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1BETA1)
+	if this.pdbV1beta1IsCached {
+		this.pdbV1beta1Labels = this.pdbV1beta1Entry.GetValue().(*policy_v1beta1.PodDisruptionBudget).Labels
 	}
+	this.pdbV1Entry, this.pdbV1IsCached = this.svcResourceCache.Get(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1)
+	if this.pdbV1IsCached {
+		this.pdbV1Labels = this.pdbV1Entry.GetValue().(*policy_v1.PodDisruptionBudget).Labels
+	}
+	// TODO Network policy, Service Monitor?
 }
 
 func (this *LabelsCF) Compare() bool {
@@ -99,13 +110,15 @@ func (this *LabelsCF) Compare() bool {
 	this.updateDeploymentPod = this.deploymentIsCached && !LabelsEqual(this.deploymentPodLabels, this.targetDeploymentPodLabels)
 	this.updateService = this.serviceIsCached && !LabelsEqual(this.serviceLabels, this.caLabels)
 	this.updateIngress = this.ingressIsCached && !LabelsEqual(this.ingressLabels, this.caLabels)
-	this.updatePdb = this.pdbIsCached && !LabelsEqual(this.pdbLabels, this.caLabels)
+	this.updatePdbV1beta1 = this.pdbV1beta1IsCached && !LabelsEqual(this.pdbV1beta1Labels, this.caLabels)
+	this.updatePdbV1 = this.pdbV1IsCached && !LabelsEqual(this.pdbV1Labels, this.caLabels)
 
 	return (this.updateDeployment ||
 		this.updateDeploymentPod ||
 		this.updateService ||
 		this.updateIngress ||
-		this.updatePdb)
+		this.updatePdbV1beta1 ||
+		this.updatePdbV1)
 }
 
 func (this *LabelsCF) Respond() {
@@ -147,9 +160,16 @@ func (this *LabelsCF) Respond() {
 	}
 	// Response #5
 	// PodDisruptionBudget
-	if this.updatePdb {
-		this.pdbEntry.ApplyPatch(func(value interface{}) interface{} {
-			pdb := value.(*policy.PodDisruptionBudget).DeepCopy()
+	if this.updatePdbV1beta1 {
+		this.pdbV1beta1Entry.ApplyPatch(func(value interface{}) interface{} {
+			pdb := value.(*policy_v1beta1.PodDisruptionBudget).DeepCopy()
+			LabelsUpdate(pdb.Labels, this.caLabels)
+			return pdb
+		})
+	}
+	if this.updatePdbV1 {
+		this.pdbV1Entry.ApplyPatch(func(value interface{}) interface{} {
+			pdb := value.(*policy_v1.PodDisruptionBudget).DeepCopy()
 			LabelsUpdate(pdb.Labels, this.caLabels)
 			return pdb
 		})

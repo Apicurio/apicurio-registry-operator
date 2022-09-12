@@ -2,7 +2,7 @@ package context
 
 import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/client"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
+	c "github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"github.com/go-logr/logr"
@@ -12,8 +12,8 @@ import (
 var _ LoopContext = &LoopContextMock{}
 
 type LoopContextMock struct {
-	appName       common.Name
-	appNamespace  common.Namespace
+	appName       c.Name
+	appNamespace  c.Namespace
 	log           logr.Logger
 	resourceCache resources.ResourceCache
 	envCache      env.EnvCache
@@ -22,10 +22,10 @@ type LoopContextMock struct {
 
 func NewLoopContextMock() *LoopContextMock {
 	res := &LoopContextMock{
-		appName:      common.Name("mock"),
-		appNamespace: common.Namespace("mock"),
+		appName:      c.Name("mock"),
+		appNamespace: c.Namespace("mock"),
 	}
-	res.log = common.BuildLogger(true)
+	res.log = c.BuildLogger(true)
 	res.resourceCache = resources.NewResourceCache()
 	res.envCache = env.NewEnvCache(res.log)
 	return res
@@ -35,11 +35,11 @@ func (this *LoopContextMock) GetLog() logr.Logger {
 	return this.log
 }
 
-func (this *LoopContextMock) GetAppName() common.Name {
+func (this *LoopContextMock) GetAppName() c.Name {
 	return this.appName
 }
 
-func (this *LoopContextMock) GetAppNamespace() common.Namespace {
+func (this *LoopContextMock) GetAppNamespace() c.Namespace {
 	return this.appNamespace
 }
 
@@ -79,6 +79,10 @@ func (this *LoopContextMock) GetAttempts() int {
 	return this.attempts
 }
 
-func (this *LoopContextMock) GetTestingSupport() *common.TestSupport {
+func (this *LoopContextMock) GetTestingSupport() *c.TestSupport {
+	panic("Not implemented")
+}
+
+func (this *LoopContextMock) GetSupportedFeatures() *c.SupportedFeatures {
 	panic("Not implemented")
 }

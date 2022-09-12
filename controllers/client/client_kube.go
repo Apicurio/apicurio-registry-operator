@@ -8,7 +8,8 @@ import (
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
-	policy "k8s.io/api/policy/v1beta1"
+	policy_v1 "k8s.io/api/policy/v1"
+	policy_v1beta1 "k8s.io/api/policy/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -50,9 +51,9 @@ func (this *KubeClient) CreateDeployment(owner meta.Object, namespace common.Nam
 	return res, nil
 }
 
-func (this *KubeClient) GetDeployment(namespace common.Namespace, name common.Name, options *meta.GetOptions) (*apps.Deployment, error) {
+func (this *KubeClient) GetDeployment(namespace common.Namespace, name common.Name) (*apps.Deployment, error) {
 	return this.client.AppsV1().Deployments(namespace.Str()).
-		Get(ctx.TODO(), name.Str(), *options)
+		Get(ctx.TODO(), name.Str(), meta.GetOptions{})
 }
 
 func (this *KubeClient) UpdateDeployment(namespace common.Namespace, value *apps.Deployment) (*apps.Deployment, error) {
@@ -65,13 +66,13 @@ func (this *KubeClient) PatchDeployment(namespace common.Namespace, name common.
 		Patch(ctx.TODO(), name.Str(), types.MergePatchType, patchData, meta.PatchOptions{})
 }
 
-func (this *KubeClient) GetDeployments(namespace common.Namespace, options *meta.ListOptions) (*apps.DeploymentList, error) {
+func (this *KubeClient) GetDeployments(namespace common.Namespace, options meta.ListOptions) (*apps.DeploymentList, error) {
 	return this.client.AppsV1().Deployments(namespace.Str()).
-		List(ctx.TODO(), *options)
+		List(ctx.TODO(), options)
 }
 
-func (this *KubeClient) DeleteDeployment(value *apps.Deployment, options *meta.DeleteOptions) error {
-	return this.client.AppsV1().Deployments(value.Namespace).Delete(ctx.TODO(), value.Name, *options)
+func (this *KubeClient) DeleteDeployment(value *apps.Deployment) error {
+	return this.client.AppsV1().Deployments(value.Namespace).Delete(ctx.TODO(), value.Name, meta.DeleteOptions{})
 }
 
 // ===
@@ -91,7 +92,7 @@ func (this *KubeClient) CreateService(owner meta.Object, namespace common.Namesp
 	return res, nil
 }
 
-func (this *KubeClient) GetService(namespace common.Namespace, name common.Name, options *meta.GetOptions) (*core.Service, error) {
+func (this *KubeClient) GetService(namespace common.Namespace, name common.Name) (*core.Service, error) {
 	return this.client.CoreV1().Services(namespace.Str()).
 		Get(ctx.TODO(), name.Str(), meta.GetOptions{})
 }
@@ -106,13 +107,13 @@ func (this *KubeClient) PatchService(namespace common.Namespace, name common.Nam
 		Patch(ctx.TODO(), name.Str(), types.MergePatchType, patchData, meta.PatchOptions{})
 }
 
-func (this *KubeClient) GetServices(namespace common.Namespace, options *meta.ListOptions) (*core.ServiceList, error) {
+func (this *KubeClient) GetServices(namespace common.Namespace, options meta.ListOptions) (*core.ServiceList, error) {
 	return this.client.CoreV1().Services(namespace.Str()).
-		List(ctx.TODO(), *options)
+		List(ctx.TODO(), options)
 }
 
-func (this *KubeClient) DeleteService(value *core.Service, options *meta.DeleteOptions) error {
-	return this.client.CoreV1().Services(value.Namespace).Delete(ctx.TODO(), value.Name, *options)
+func (this *KubeClient) DeleteService(value *core.Service) error {
+	return this.client.CoreV1().Services(value.Namespace).Delete(ctx.TODO(), value.Name, meta.DeleteOptions{})
 }
 
 // ===
@@ -148,13 +149,13 @@ func (this *KubeClient) PatchIngress(namespace common.Namespace, name common.Nam
 		Patch(ctx.TODO(), name.Str(), types.MergePatchType, patchData, meta.PatchOptions{})
 }
 
-func (this *KubeClient) GetIngresses(namespace common.Namespace, options *meta.ListOptions) (*networking.IngressList, error) {
+func (this *KubeClient) GetIngresses(namespace common.Namespace, options meta.ListOptions) (*networking.IngressList, error) {
 	return this.client.NetworkingV1().Ingresses(namespace.Str()).
-		List(ctx.TODO(), *options)
+		List(ctx.TODO(), options)
 }
 
-func (this *KubeClient) DeleteIngress(value *networking.Ingress, options *meta.DeleteOptions) error {
-	return this.client.NetworkingV1().Ingresses(value.Namespace).Delete(ctx.TODO(), value.Name, *options)
+func (this *KubeClient) DeleteIngress(value *networking.Ingress) error {
+	return this.client.NetworkingV1().Ingresses(value.Namespace).Delete(ctx.TODO(), value.Name, meta.DeleteOptions{})
 }
 
 // ===
@@ -190,19 +191,19 @@ func (this *KubeClient) PatchNetworkPolicy(namespace common.Namespace, name comm
 		Patch(ctx.TODO(), name.Str(), types.MergePatchType, patchData, meta.PatchOptions{})
 }
 
-func (this *KubeClient) GetNetworkPolicies(namespace common.Namespace, options *meta.ListOptions) (*networking.NetworkPolicyList, error) {
+func (this *KubeClient) GetNetworkPolicies(namespace common.Namespace, options meta.ListOptions) (*networking.NetworkPolicyList, error) {
 	return this.client.NetworkingV1().NetworkPolicies(namespace.Str()).
-		List(ctx.TODO(), *options)
+		List(ctx.TODO(), options)
 }
 
-func (this *KubeClient) DeleteNetworkPolicy(value *networking.NetworkPolicy, options *meta.DeleteOptions) error {
-	return this.client.NetworkingV1().NetworkPolicies(value.Namespace).Delete(ctx.TODO(), value.Name, *options)
+func (this *KubeClient) DeleteNetworkPolicy(value *networking.NetworkPolicy) error {
+	return this.client.NetworkingV1().NetworkPolicies(value.Namespace).Delete(ctx.TODO(), value.Name, meta.DeleteOptions{})
 }
 
 // ===
-// PodDisruptionBudget
+// PodDisruptionBudget v1beta1
 
-func (this *KubeClient) CreatePodDisruptionBudget(owner meta.Object, namespace common.Namespace, value *policy.PodDisruptionBudget) (*policy.PodDisruptionBudget, error) {
+func (this *KubeClient) CreatePodDisruptionBudgetV1beta1(owner meta.Object, namespace common.Namespace, value *policy_v1beta1.PodDisruptionBudget) (*policy_v1beta1.PodDisruptionBudget, error) {
 	if owner == nil {
 		return nil, errors.New("Could not find ApicurioRegistry. Retrying.")
 	}
@@ -216,34 +217,75 @@ func (this *KubeClient) CreatePodDisruptionBudget(owner meta.Object, namespace c
 	return res, nil
 }
 
-func (this *KubeClient) GetPodDisruptionBudget(namespace common.Namespace, name common.Name, options *meta.GetOptions) (*policy.PodDisruptionBudget, error) {
+func (this *KubeClient) GetPodDisruptionBudgetV1beta1(namespace common.Namespace, name common.Name) (*policy_v1beta1.PodDisruptionBudget, error) {
 	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace.Str()).
 		Get(ctx.TODO(), name.Str(), meta.GetOptions{})
 }
 
-func (this *KubeClient) UpdatePodDisruptionBudget(namespace common.Namespace, value *policy.PodDisruptionBudget) (*policy.PodDisruptionBudget, error) {
+func (this *KubeClient) UpdatePodDisruptionBudgetV1beta1(namespace common.Namespace, value *policy_v1beta1.PodDisruptionBudget) (*policy_v1beta1.PodDisruptionBudget, error) {
 	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace.Str()).
 		Update(ctx.TODO(), value, meta.UpdateOptions{})
 }
 
-func (this *KubeClient) PatchPodDisruptionBudget(namespace common.Namespace, name common.Name, patchData []byte) (*policy.PodDisruptionBudget, error) {
+func (this *KubeClient) PatchPodDisruptionBudgetV1beta1(namespace common.Namespace, name common.Name, patchData []byte) (*policy_v1beta1.PodDisruptionBudget, error) {
 	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace.Str()).
 		Patch(ctx.TODO(), name.Str(), types.MergePatchType, patchData, meta.PatchOptions{})
 }
 
-func (this *KubeClient) GetPodDisruptionBudgets(namespace common.Namespace, options *meta.ListOptions) (*policy.PodDisruptionBudgetList, error) {
+func (this *KubeClient) GetPodDisruptionBudgetsV1beta1(namespace common.Namespace, options meta.ListOptions) (*policy_v1beta1.PodDisruptionBudgetList, error) {
 	return this.client.PolicyV1beta1().PodDisruptionBudgets(namespace.Str()).
-		List(ctx.TODO(), *options)
+		List(ctx.TODO(), options)
 }
 
-func (this *KubeClient) DeletePodDisruptionBudget(value *policy.PodDisruptionBudget, options *meta.DeleteOptions) error {
-	return this.client.PolicyV1beta1().PodDisruptionBudgets(value.Namespace).Delete(ctx.TODO(), value.Name, *options)
+func (this *KubeClient) DeletePodDisruptionBudgetV1beta1(value *policy_v1beta1.PodDisruptionBudget) error {
+	return this.client.PolicyV1beta1().PodDisruptionBudgets(value.Namespace).Delete(ctx.TODO(), value.Name, meta.DeleteOptions{})
+}
+
+// ===
+// PodDisruptionBudget v1
+
+func (this *KubeClient) CreatePodDisruptionBudgetV1(owner meta.Object, namespace common.Namespace, value *policy_v1.PodDisruptionBudget) (*policy_v1.PodDisruptionBudget, error) {
+	if owner == nil {
+		return nil, errors.New("Could not find ApicurioRegistry. Retrying.")
+	}
+	if err := controllerutil.SetControllerReference(owner, value, this.scheme); err != nil {
+		return nil, err
+	}
+	res, err := this.client.PolicyV1().PodDisruptionBudgets(namespace.Str()).Create(ctx.TODO(), value, meta.CreateOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (this *KubeClient) GetPodDisruptionBudgetV1(namespace common.Namespace, name common.Name) (*policy_v1.PodDisruptionBudget, error) {
+	return this.client.PolicyV1().PodDisruptionBudgets(namespace.Str()).
+		Get(ctx.TODO(), name.Str(), meta.GetOptions{})
+}
+
+func (this *KubeClient) UpdatePodDisruptionBudgetV1(namespace common.Namespace, value *policy_v1.PodDisruptionBudget) (*policy_v1.PodDisruptionBudget, error) {
+	return this.client.PolicyV1().PodDisruptionBudgets(namespace.Str()).
+		Update(ctx.TODO(), value, meta.UpdateOptions{})
+}
+
+func (this *KubeClient) PatchPodDisruptionBudgetV1(namespace common.Namespace, name common.Name, patchData []byte) (*policy_v1.PodDisruptionBudget, error) {
+	return this.client.PolicyV1().PodDisruptionBudgets(namespace.Str()).
+		Patch(ctx.TODO(), name.Str(), types.MergePatchType, patchData, meta.PatchOptions{})
+}
+
+func (this *KubeClient) GetPodDisruptionBudgetsV1(namespace common.Namespace, options meta.ListOptions) (*policy_v1.PodDisruptionBudgetList, error) {
+	return this.client.PolicyV1().PodDisruptionBudgets(namespace.Str()).
+		List(ctx.TODO(), options)
+}
+
+func (this *KubeClient) DeletePodDisruptionBudgetV1(value *policy_v1.PodDisruptionBudget) error {
+	return this.client.PolicyV1().PodDisruptionBudgets(value.Namespace).Delete(ctx.TODO(), value.Name, meta.DeleteOptions{})
 }
 
 // ===
 // Pod
 
-func (this *KubeClient) GetPod(namespace common.Namespace, name common.Name, options *meta.GetOptions) (*core.Pod, error) {
+func (this *KubeClient) GetPod(namespace common.Namespace, name common.Name) (*core.Pod, error) {
 	return this.client.CoreV1().Pods(namespace.Str()).
-		Get(ctx.TODO(), name.Str(), *options)
+		Get(ctx.TODO(), name.Str(), meta.GetOptions{})
 }
