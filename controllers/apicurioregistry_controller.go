@@ -82,6 +82,7 @@ func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog logr.Logger, tes
 		rootLog.V(c.V_IMPORTANT).Info("Install prometheus-operator in your cluster to create ServiceMonitor objects, restart apicurio-registry operator after installing prometheus-operator")
 	}
 	features.SupportsMonitoring = isMonitoring
+	testing.SetSupportedFeatures(features)
 
 	result := &ApicurioRegistryReconciler{
 		log:      rootLog.WithName("controller"),

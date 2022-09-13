@@ -10,6 +10,8 @@ import (
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
+	policy_v1 "k8s.io/api/policy/v1"
+	policy_v1beta1 "k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -23,6 +25,8 @@ var _ = Describe("operator processing a simple spec", Ordered, func() {
 	var deploymentKey types.NamespacedName
 	var serviceKey types.NamespacedName
 	var ingressKey types.NamespacedName
+	var pdbKey types.NamespacedName
+	var npKey types.NamespacedName
 
 	BeforeAll(func() {
 		// Consistency in case the specs are reordered
@@ -53,6 +57,24 @@ var _ = Describe("operator processing a simple spec", Ordered, func() {
 		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
 	})
 
+	It("should create a PDB", func() {
+		if testSupport.GetSupportedFeatures().PreferredPDBVersion == "v1beta1" {
+			pdb := &policy_v1beta1.PodDisruptionBudget{}
+			pdbKey = types.NamespacedName{Namespace: registry.Namespace, Name: registry.Name + "-pdb"}
+			Eventually(func() error {
+				return s.k8sClient.Get(s.ctx, pdbKey, pdb)
+			}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
+		} else if testSupport.GetSupportedFeatures().PreferredPDBVersion == "v1" {
+			pdb := &policy_v1.PodDisruptionBudget{}
+			pdbKey = types.NamespacedName{Namespace: registry.Namespace, Name: registry.Name + "-pdb"}
+			Eventually(func() error {
+				return s.k8sClient.Get(s.ctx, pdbKey, pdb)
+			}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
+		} else {
+			Fail("Unexpected preferred PDB version: " + testSupport.GetSupportedFeatures().PreferredPDBVersion)
+		}
+	})
+
 	It("should create a service", func() {
 		service := &core.Service{}
 		serviceKey = types.NamespacedName{Namespace: registry.Namespace, Name: registry.Name + "-service"}
@@ -66,6 +88,14 @@ var _ = Describe("operator processing a simple spec", Ordered, func() {
 		ingressKey = types.NamespacedName{Namespace: registry.Namespace, Name: registry.Name + "-ingress"}
 		Eventually(func() error {
 			return s.k8sClient.Get(s.ctx, ingressKey, ingress)
+		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
+	})
+
+	It("should create an network policy", func() {
+		np := &networking.NetworkPolicy{}
+		npKey = types.NamespacedName{Namespace: registry.Namespace, Name: registry.Name + "-networkpolicy"}
+		Eventually(func() error {
+			return s.k8sClient.Get(s.ctx, npKey, np)
 		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
 	})
 
@@ -163,9 +193,18 @@ var _ = Describe("operator processing a simple spec", Ordered, func() {
 	It("should delete created resources during cleanup", func() {
 		Expect(s.k8sClient.Delete(s.ctx, registry)).To(Succeed())
 		Eventually(func() bool {
+			pdb := false
+			if testSupport.GetSupportedFeatures().PreferredPDBVersion == "v1beta1" {
+				pdb = errors.IsNotFound(s.k8sClient.Get(s.ctx, pdbKey, &policy_v1beta1.PodDisruptionBudget{}))
+			}
+			if testSupport.GetSupportedFeatures().PreferredPDBVersion == "v1" {
+				pdb = errors.IsNotFound(s.k8sClient.Get(s.ctx, pdbKey, &policy_v1.PodDisruptionBudget{}))
+			}
 			return errors.IsNotFound(s.k8sClient.Get(s.ctx, deploymentKey, &apps.Deployment{})) &&
 				errors.IsNotFound(s.k8sClient.Get(s.ctx, serviceKey, &core.Service{})) &&
-				errors.IsNotFound(s.k8sClient.Get(s.ctx, ingressKey, &networking.Ingress{}))
+				errors.IsNotFound(s.k8sClient.Get(s.ctx, ingressKey, &networking.Ingress{})) &&
+				pdb &&
+				errors.IsNotFound(s.k8sClient.Get(s.ctx, npKey, &networking.NetworkPolicy{}))
 		}, 20*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(BeTrue())
 	})
 })
