@@ -11,7 +11,7 @@ type TestSupport struct {
 	operandMetricsReportReady   bool
 	loopTick                    time.Time
 	log                         logr.Logger
-	features *SupportedFeatures
+	features                    *SupportedFeatures
 }
 
 func NewTestSupport(rootLog logr.Logger, enabled bool) *TestSupport {
