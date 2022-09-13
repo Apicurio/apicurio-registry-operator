@@ -23,5 +23,5 @@ type SupportedFeatures struct {
 	SupportsPDBv1       bool
 	SupportsPDBv1beta1  bool
 	PreferredPDBVersion string
-	SupportsMonitoring bool
+	SupportsMonitoring  bool
 }
