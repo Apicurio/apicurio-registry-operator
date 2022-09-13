@@ -11,6 +11,7 @@ type TestSupport struct {
 	operandMetricsReportReady   bool
 	loopTick                    time.Time
 	log                         logr.Logger
+	features *SupportedFeatures
 }
 
 func NewTestSupport(rootLog logr.Logger, enabled bool) *TestSupport {
@@ -65,4 +66,12 @@ func (this *TestSupport) ResetTimer() {
 func (this *TestSupport) TimerDuration() time.Duration {
 	this.panicIfNotTesting()
 	return time.Now().Sub(this.loopTick)
+}
+
+func (this *TestSupport) SetSupportedFeatures(features *SupportedFeatures) {
+	this.features = features
+}
+
+func (this *TestSupport) GetSupportedFeatures() *SupportedFeatures {
+	return this.features
 }
