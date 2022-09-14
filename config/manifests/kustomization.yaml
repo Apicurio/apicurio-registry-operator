@@ -2,3 +2,4 @@ resources:
   - ../default
   - ../examples
   - ../scorecard
+  - resources/apicurio-registry-operator.clusterserviceversion.yaml

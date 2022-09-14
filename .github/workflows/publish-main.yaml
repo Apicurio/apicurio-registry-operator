@@ -30,13 +30,17 @@ jobs:
 
       - name: Build
         id: build
-        run: make build bundle-build
+        run: make all
+
+      - name: Test Before
+        id: test
+        run: CI_BUILD=true ./.github/scripts/test_operator.sh
 
       - name: Publish
         id: publish
-        run: LATEST=true make docker-push bundle-push
+        run: make all-push
 
-      - name: Test
+      - name: Test After
         id: test
         run: ./.github/scripts/test_operator.sh
 

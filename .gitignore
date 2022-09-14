@@ -3,3 +3,6 @@
 bin
 testbin
 *.out
+bundle
+bundle_tmp*
+dist

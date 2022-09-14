@@ -71,7 +71,7 @@ NOTE: Run `export CLIENT="oc"` if you are deploying to OpenShift.
 +
 [source,bash]
 ----
-export NAMESPACE="apicurio-registry-operator-namespace"
+export NAMESPACE="apicurio-registry-operator"
 kubectl create namespace "$NAMESPACE"
 ----
 
@@ -82,7 +82,7 @@ kubectl create namespace "$NAMESPACE"
 export OPERATOR_IMAGE_REPOSITORY="quay.io/foo"
 ----
 
-. The following command will build the operator image, push it into your registry, and deploy it the selected namespace in your cluster.
+. The following command will build the operator image, push it into your registry, and deploy it to the selected namespace in your cluster.
 +
 [source,bash]
 ----
