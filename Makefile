@@ -294,13 +294,14 @@ envtest: generate go-fmt go-vet manifests ## Run integration tests using envtest
 .PHONY: deploy
 deploy: manifests install-kustomize ## Deploy the Operator to a cluster using $CLIENT (kubectl)
 	cd config/manager && $(KUSTOMIZE) edit set image REGISTRY_OPERATOR_IMAGE=${OPERATOR_IMAGE}
-	cd config/default && $(KUSTOMIZE) edit set namespace ${NAMESPACE}
-	$(KUSTOMIZE) build config/default | $(CLIENT) apply -f - -n ${NAMESPACE}
+	cd config/default && $(KUSTOMIZE) edit set namespace $(NAMESPACE)
+	$(CLIENT) create namespace $(NAMESPACE) || true
+	$(KUSTOMIZE) build config/default | $(CLIENT) apply -f - -n $(NAMESPACE)
 
 
 .PHONY: undeploy
 undeploy: install-kustomize ## Un-deploy the Operator from a cluster using $CLIENT (kubectl)
-	$(KUSTOMIZE) build config/build-namespaced | $(CLIENT) delete --ignore-not-found=true -f -
+	$(KUSTOMIZE) build config/default | $(CLIENT) delete --ignore-not-found=true -f -
 
 
 .PHONY: docker-build

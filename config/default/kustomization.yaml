@@ -6,7 +6,7 @@ commonLabels:
   apicur.io/type: operator
   apicur.io/version: 1.1.0-dev
 
-namespace: apicurio-registry-operator-namespace
+namespace: apicurio-registry-operator
 
 resources:
 - ../crd

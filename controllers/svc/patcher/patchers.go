@@ -107,8 +107,8 @@ func patchGeneric(
 				panic(err) // TODO
 			}
 			if patchJson == nil || len(patchJson) == 0 {
-				ctx.GetLog().WithValues("resource", typeString, "name", name, "patch", string(patchData)).
-					Info("skipping empty patch")
+				//ctx.GetLog().WithValues("resource", typeString, "name", name, "patch", string(patchData)).
+				//	Info("skipping empty patch")
 				entry.ResetHasChanged()
 				return
 			}
