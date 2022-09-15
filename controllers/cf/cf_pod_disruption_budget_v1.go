@@ -80,7 +80,7 @@ func (this *PodDisruptionBudgetV1CF) Compare() bool {
 	// Condition #2
 	// If the v1 version is not preferred, we will try to remove it if it exists,
 	// so the other CF can create a v1beta1 version instead
-	return !this.isCached || (!this.isPreferred && len(this.podDisruptionBudgets) > 0)
+	return (this.isPreferred && !this.isCached) || (!this.isPreferred && len(this.podDisruptionBudgets) > 0)
 }
 
 func (this *PodDisruptionBudgetV1CF) Respond() {

@@ -67,7 +67,16 @@ func (this *PodDisruptionBudgetV1beta1CF) Sense() {
 		})
 	if err == nil {
 		for _, podDisruptionBudget := range podDisruptionBudgets.Items {
-			if podDisruptionBudget.GetObjectMeta().GetDeletionTimestamp() == nil {
+			// The client will also list v1 resources, and we cannot determine the APIVersion.
+			// See https://stackoverflow.com/questions/66757003/list-kubernetes-resources-by-clinet-go-how-can-i-get-the-kind-and-apiversion
+			// and https://github.com/kubernetes/client-go/issues/861 .
+			// Therefore, as a hack, we will ignore any resources that can also be retrieved using v1 API.
+			_, err := this.svcClients.Kube().GetPodDisruptionBudgetV1(
+				common.Namespace(podDisruptionBudget.Namespace),
+				common.Name(podDisruptionBudget.Name))
+
+			if podDisruptionBudget.GetObjectMeta().GetDeletionTimestamp() == nil &&
+				err != nil {
 				this.podDisruptionBudgets = append(this.podDisruptionBudgets, podDisruptionBudget)
 			}
 		}
@@ -80,7 +89,7 @@ func (this *PodDisruptionBudgetV1beta1CF) Compare() bool {
 	// Condition #2
 	// If the v1beta1 version is not preferred, we will try to remove it if it exists,
 	// so the other CF can create a v1 version instead
-	return !this.isCached || (!this.isPreferred && len(this.podDisruptionBudgets) > 0)
+	return (this.isPreferred && !this.isCached) || (!this.isPreferred && len(this.podDisruptionBudgets) > 0)
 }
 
 func (this *PodDisruptionBudgetV1beta1CF) Respond() {
