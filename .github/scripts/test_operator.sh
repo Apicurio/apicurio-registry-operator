@@ -2,7 +2,7 @@
 set -e -a
 
 VERSION=$(sed -n 's/^.*Version.*=.*"\(.*\)".*$/\1/p' ./version/version.go)
-DASH_VERSION = $(shell echo "$(VERSION)" | sed -n 's/^[0-9\.]*-\([^-+]*\).*$$/-\1/p')
+DASH_VERSION=$(echo "$VERSION" | sed -n 's/^[0-9\.]*-\([^-+]*\).*$/-\1/p')
 
 echo $VERSION
 echo $DASH_VERSION
