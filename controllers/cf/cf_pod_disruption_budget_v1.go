@@ -121,7 +121,7 @@ func (this *PodDisruptionBudgetV1CF) Respond() {
 	// Response #3 (and #4)
 	// If there is no service PodDisruptionBudget (or there are more than 1), just create a new one
 	if this.podDisruptionBudgetName == resources.RC_NOT_CREATED_NAME_EMPTY && len(this.podDisruptionBudgets) != 1 {
-		podDisruptionBudget := this.svcKubeFactory.CreatePodDisruptionBudget()
+		podDisruptionBudget := this.svcKubeFactory.CreatePodDisruptionBudgetV1()
 		// leave the creation itself to patcher+creator so other CFs can update
 		this.svcResourceCache.Set(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1, resources.NewResourceCacheEntry(resources.RC_NOT_CREATED_NAME_EMPTY, podDisruptionBudget))
 	}

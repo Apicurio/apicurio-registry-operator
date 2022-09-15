@@ -7,7 +7,8 @@ import (
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
-	policy "k8s.io/api/policy/v1beta1"
+	policy_v1 "k8s.io/api/policy/v1"
+	policy_v1beta1 "k8s.io/api/policy/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -252,10 +253,25 @@ func (this *KubeFactory) CreateNetworkPolicy(serviceName string) *networking.Net
 	return res
 }
 
-func (this *KubeFactory) CreatePodDisruptionBudget() *policy.PodDisruptionBudget {
-	podDisruptionBudget := &policy.PodDisruptionBudget{
+func (this *KubeFactory) CreatePodDisruptionBudgetV1() *policy_v1.PodDisruptionBudget {
+	podDisruptionBudget := &policy_v1.PodDisruptionBudget{
 		ObjectMeta: this.createObjectMeta("pdb"),
-		Spec: policy.PodDisruptionBudgetSpec{
+		Spec: policy_v1.PodDisruptionBudgetSpec{
+			Selector: &meta.LabelSelector{
+				MatchLabels: this.GetSelectorLabels(),
+			},
+			MaxUnavailable: &intstr.IntOrString{
+				IntVal: 1,
+			},
+		},
+	}
+	return podDisruptionBudget
+}
+
+func (this *KubeFactory) CreatePodDisruptionBudgetV1beta1() *policy_v1beta1.PodDisruptionBudget {
+	podDisruptionBudget := &policy_v1beta1.PodDisruptionBudget{
+		ObjectMeta: this.createObjectMeta("pdb"),
+		Spec: policy_v1beta1.PodDisruptionBudgetSpec{
 			Selector: &meta.LabelSelector{
 				MatchLabels: this.GetSelectorLabels(),
 			},
