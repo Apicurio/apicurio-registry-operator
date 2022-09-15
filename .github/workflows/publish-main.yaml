@@ -32,15 +32,11 @@ jobs:
         id: build
         run: make all
 
-      - name: Test Before
-        id: test
-        run: CI_BUILD=true ./.github/scripts/test_operator.sh
-
       - name: Publish
         id: publish
         run: make all-push
 
-      - name: Test After
+      - name: Test
         id: test
         run: ./.github/scripts/test_operator.sh
 
