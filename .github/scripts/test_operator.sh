@@ -8,8 +8,9 @@ echo $VERSION
 echo $DASH_VERSION
 
 OPERATOR_IMAGE="quay.io/apicurio/apicurio-registry-operator:$VERSION"
-OPERATOR_METADATA_IMAGE="quay.io/apicurio/apicurio-registry-operator-bundle:$VERSION"
-OLM_CSV=apicurio-registry-operator.v1.1.0-dev-v2.x
+CSV_VERSION=v1.1.0-dev-v2.x
+OPERATOR_METADATA_IMAGE="quay.io/apicurio/apicurio-registry-operator-bundle:$CSV_VERSION"
+OLM_CSV="apicurio-registry-operator.v$CSV_VERSION"
 CATALOG_SOURCE_IMAGE="quay.io/apicurio/apicurio-registry-operator-catalog:latest$DASH_VERSION"
 
 BUNDLE_URL=${PWD}/dist/install.yaml
