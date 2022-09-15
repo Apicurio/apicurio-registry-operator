@@ -17,7 +17,7 @@ OPERATOR_IMAGE ?= $(OPERATOR_IMAGE_NAME):$(OPERATOR_VERSION)
 
 ADD_LATEST_TAG ?= true
 
-NAMESPACE ?= "apicurio-registry-operator"
+NAMESPACE ?= "apicurio-registry-operator-namespace"
 CLIENT ?= kubectl
 
 ### Package Manifests
