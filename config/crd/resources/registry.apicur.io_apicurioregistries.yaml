@@ -178,6 +178,17 @@ spec:
                     type: string
                   security:
                     properties:
+                      https:
+                        properties:
+                          certificate:
+                            type: string
+                          enabled:
+                            type: boolean
+                          key:
+                            type: string
+                          secretName:
+                            type: string
+                        type: object
                       keycloak:
                         properties:
                           apiClientId:

@@ -257,6 +257,8 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName c.Name, appNamespa
 	//service
 	result.AddControlFunction(cf.NewServiceCF(ctx, loopServices))
 
+	result.AddControlFunction(cf.NewHttpsCF(ctx, loopServices))
+
 	// depends on service
 	if features.SupportsMonitoring {
 		result.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))

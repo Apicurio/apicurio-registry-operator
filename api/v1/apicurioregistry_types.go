@@ -77,6 +77,14 @@ type ApicurioRegistrySpecConfigurationUI struct {
 
 type ApicurioRegistrySpecConfigurationSecurity struct {
 	Keycloak ApicurioRegistrySpecConfigurationSecurityKeycloak `json:"keycloak,omitempty"`
+	Https    ApicurioRegistrySpecConfigurationSecurityHttps    `json:"https,omitempty"`
+}
+
+type ApicurioRegistrySpecConfigurationSecurityHttps struct {
+	Enabled     bool   `json:"enabled,omitempty"`
+	SecretName  string `json:"secretName,omitempty"`
+	Certificate string `json:"certificate,omitempty"`
+	Key         string `json:"key,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationSecurityKeycloak struct {

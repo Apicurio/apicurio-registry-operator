@@ -1,6 +1,7 @@
 package condition
 
 import (
+	"crypto/tls"
 	c "github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
@@ -33,6 +34,10 @@ func NewAppHealthCF(ctx context.LoopContext, services services.LoopServices) loo
 		services: services,
 		httpClient: http.Client{
 			Timeout: 3 * time.Second,
+			Transport: &http.Transport{
+				// ignore expired SSL certificates for health checks
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
 		},
 		initializing:       true,
 		requestReadinessOk: false,
@@ -50,15 +55,23 @@ func (this *AppHealthCF) Sense() {
 		return
 	}
 
+	var port string = "8080"
+	var scheme string = "http://"
 	if serviceEntry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_SERVICE); exists {
 		this.targetType = serviceEntry.GetValue().(*core.Service).Spec.Type
 		this.targetIP = serviceEntry.GetValue().(*core.Service).Spec.ClusterIP
+
+		if c.HasPort("https", serviceEntry.GetValue().(*core.Service).Spec.Ports) {
+			port = "8443"
+			scheme = "https://"
+		}
+
 	}
 
 	this.requestReadinessOk = false
 	this.requestLivenessOk = false
 	if this.targetType == core.ServiceTypeClusterIP && this.targetIP != "" {
-		url := "http://" + this.targetIP + ":8080/health/ready"
+		url := scheme + this.targetIP + ":" + port + "/health/ready"
 		res, err := this.httpClient.Get(url)
 		if err == nil {
 			// TODO Unify this with InitializingCF?
@@ -74,7 +87,7 @@ func (this *AppHealthCF) Sense() {
 		} else {
 			this.ctx.GetLog().V(c.V_IMPORTANT).Info("request has failed", "url", url, "error", err.Error())
 		}
-		url = "http://" + this.targetIP + ":8080/health/live"
+		url = scheme + this.targetIP + ":" + port + "/health/live"
 		res, err = this.httpClient.Get(url)
 		if err == nil {
 			defer res.Body.Close()
