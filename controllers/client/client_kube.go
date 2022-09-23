@@ -289,3 +289,27 @@ func (this *KubeClient) GetPod(namespace common.Namespace, name common.Name) (*c
 	return this.client.CoreV1().Pods(namespace.Str()).
 		Get(ctx.TODO(), name.Str(), meta.GetOptions{})
 }
+
+func (this *KubeClient) CreateSecret(owner meta.Object, namespace common.Namespace, value *core.Secret) (*core.Secret, error) {
+	if owner == nil {
+		return nil, errors.New("Could not find ApicurioRegistry. Retrying.")
+	}
+	if err := controllerutil.SetControllerReference(owner, value, this.scheme); err != nil {
+		return nil, err
+	}
+	res, err := this.client.CoreV1().Secrets(namespace.Str()).Create(ctx.TODO(), value, meta.CreateOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (this *KubeClient) GetSecret(namespace common.Namespace, name common.Name, options *meta.GetOptions) (*core.Secret, error) {
+	return this.client.CoreV1().Secrets(namespace.Str()).
+		Get(ctx.TODO(), name.Str(), *options)
+}
+
+func (this *KubeClient) DeleteSecret(value *core.Secret, options *meta.DeleteOptions) error {
+	return this.client.CoreV1().Secrets(value.Namespace).
+		Delete(ctx.TODO(), value.Name, *options)
+}

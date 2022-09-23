@@ -1,6 +1,7 @@
 package condition
 
 import (
+	"crypto/tls"
 	c "github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
@@ -32,6 +33,10 @@ func NewInitializingCF(ctx context.LoopContext, services services.LoopServices) 
 		services: services,
 		httpClient: http.Client{
 			Timeout: 3 * time.Second,
+			Transport: &http.Transport{
+				// ignore expired SSL certificates for health checks
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
 		},
 		initializing: true,
 		requestOk:    false,
@@ -52,14 +57,22 @@ func (this *InitializingCF) Sense() {
 	// The application is initialized if we can make an HTTP request to the app via the Service
 	// (as Ingress/Route might not work on some systems, or without additional config).
 
+	var port string = "8080"
+	var scheme string = "http://"
 	if serviceEntry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_SERVICE); exists {
 		this.targetType = serviceEntry.GetValue().(*core.Service).Spec.Type
 		this.targetIP = serviceEntry.GetValue().(*core.Service).Spec.ClusterIP
+
+		if c.HasPort("https", serviceEntry.GetValue().(*core.Service).Spec.Ports) {
+			port = "8443"
+			scheme = "https://"
+		}
+
 	}
 
 	this.requestOk = false
 	if this.targetType == core.ServiceTypeClusterIP && this.targetIP != "" {
-		url := "http://" + this.targetIP + ":8080"
+		url := scheme + this.targetIP + ":" + port
 		res, err := this.httpClient.Get(url)
 		if err == nil {
 			defer res.Body.Close()
