@@ -323,8 +323,11 @@ build: test envtest manager docker-build ## Build Operator image
 
 
 .PHONY: bundle
-bundle: manifests install-operator-sdk  ## Generate bundle manifests and metadata
+bundle: manifests install-operator-sdk install-yq ## Generate bundle manifests and metadata
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(PACKAGE_VERSION) $(BUNDLE_METADATA_OPTS)
+	# Workaround for https://github.com/operator-framework/operator-lifecycle-manager/issues/1608
+	# See https://github.com/operator-framework/operator-lifecycle-manager/issues/952#issuecomment-639657949
+	$(YQ) e ".spec.install.spec.deployments[0].name = .spec.install.spec.deployments[0].name + \"-v$(OPERATOR_VERSION)\"" -i "bundle/manifests/apicurio-registry-operator.clusterserviceversion.yaml"
 	$(OPERATOR_SDK) bundle validate ./bundle
 
 
@@ -343,8 +346,11 @@ endif
 
 
 .PHONY: packagemanifests
-packagemanifests: manifests install-operator-sdk ## Generate package manifests
+packagemanifests: manifests install-operator-sdk install-yq ## Generate package manifests
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate packagemanifests -q --version $(PACKAGE_VERSION) $(PACKAGE_MANIFESTS_OPTS)
+	# Workaround for https://github.com/operator-framework/operator-lifecycle-manager/issues/1608
+	# See https://github.com/operator-framework/operator-lifecycle-manager/issues/952#issuecomment-639657949
+	$(YQ) e ".spec.install.spec.deployments[0].name = .spec.install.spec.deployments[0].name + \"-v$(OPERATOR_VERSION)\"" -i "packagemanifests/$(PACKAGE_VERSION)/apicurio-registry-operator.clusterserviceversion.yaml"
 
 
 .PHONY: docs
