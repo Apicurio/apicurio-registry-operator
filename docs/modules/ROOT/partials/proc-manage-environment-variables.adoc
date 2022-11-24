@@ -7,7 +7,12 @@
 
 OpenShift web console::
 
-. Select the *Installed Operators* tab, and then the *{prodnamefull} - {operator}*.
+ifdef::apicurio-registry[]
+. Select the *Installed Operators* tab, and then *{registry} Operator*.
+endif::[]
+ifdef::rh-service-registry[]
+. Select the *Installed Operators* tab, and then *Red Hat Integration - Service Registry Operator*.
+endif::[]
 . On the *Apicurio Registry* tab, click the `ApicurioRegistry` CR for your {registry} deployment.
 . On the main overview page, view the `managedResources` section, which contains the name of the `Deployment` managed by the Operator to deploy your {registry} instance.
 . Find that `Deployment` in the *Workloads* > *Deployments* in the left menu.
