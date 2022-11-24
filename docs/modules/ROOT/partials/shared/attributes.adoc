@@ -40,6 +40,7 @@ ifdef::apicurio-registry-operator-downstream[]
 
 :org-name: Red Hat
 :prodnamefull: {org-name} Integration
+:registry-name-full: {prodnamefull} - Service Registry
 :registry: Service Registry
 :operator: {registry} Operator
 
@@ -48,10 +49,14 @@ ifdef::apicurio-registry-operator-downstream[]
 
 :platform: OpenShift
 :cli-client: oc
-
 :kafka-streams: AMQ Streams
-
 :keycloak: {org-name} Single Sign-On
+
+ifdef::RHAF[]
+:prodnamefull: {org-name} Application Foundations
+:registry-name-full:{org-name} build of Apicurio Registry
+:registry: Apicurio Registry
+endif::[]
 
 endif::[]
 

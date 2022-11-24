@@ -8,8 +8,8 @@ This chapter provides detailed information on the custom resource used to config
 * xref:apicurio-registry-custom-resource[]
 * xref:spec[]
 * xref:status[]
-* xref:registry-labels[]
 * xref:managed-resources[]
+* xref:registry-labels[]
 
 // INCLUDES
 include::partial$ref-registry-cr.adoc[leveloffset=+1]

@@ -9,11 +9,11 @@ You can quickly deploy the {operator} on the command line, without the Operator 
 
 .Procedure
 
-. Create a project for the installation, for example, `service-registry`:
+. Create a project for the installation, for example, `apicurio-registry`:
 +
 [source,bash]
 ----
-NAMESPACE="service-registry"
+NAMESPACE="apicurio-registry"
 oc new-project "$NAMESPACE"
 ----
 
