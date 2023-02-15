@@ -8,12 +8,12 @@ To create a new {registry} deployment,use the SQL database storage option to con
 * You have a PostgreSQL database that is reachable from your OpenShift cluster.  
 
 .Procedure
-. Edit the `./examples/apicurioregistry_sql_cr.yaml` file, which contains the `ApicurioRegistry` custom resource (CR):
+. Edit the `../examples/apicurioregistry_sql_cr.yaml` file, which contains the `ApicurioRegistry` custom resource (CR):
 +
 .Example CR for SQL storage
 [source,yaml]
 ----
-include::../examples/apicurioregistry_sql_cr.yaml[]
+include::example$/apicurioregistry_sql_cr.yaml[]
 ----
 
 . In the `dataSource` section, replace the example settings with your database connection details. For example:
