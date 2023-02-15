@@ -10,5 +10,8 @@
 :LinkOperatorHub: https://docs.openshift.com/container-platform/4.11/operators/understanding/olm-understanding-operatorhub.html
 :NameOperatorHub: OperatorHub
 
+:LinkOCPCLIDocs: https://docs.openshift.com/container-platform/4.11/cli_reference/openshift_cli/getting-started-cli.html
+:NameOCPCLIDocs: OpenShift CLI documentation
+
 :LinkManagingContentUsingRESTAPI: https://access.redhat.com/documentation/en-us/red_hat_integration/2022.q3/html/service_registry_user_guide/managing-registry-artifacts-api_registry
 :NameManagingContentUsingRESTAPI: Managing {registry} content using the REST API

@@ -1,7 +1,7 @@
 apiVersion: registry.apicur.io/v1
 kind: ApicurioRegistry
 metadata:
-  name: example-apicurioregistry-kafkasql
+  name: example-apicurioregistry-kafkasql-scram
 spec:
   configuration:
     persistence: "kafkasql"
