@@ -44,7 +44,7 @@ ifdef::apicurio-registry-operator-downstream[]
 :registry: Service Registry
 :operator: {registry} Operator
 
-:registry-version: 2.0
+:registry-version: 2.3
 :operator-version: 1.0.0.redhat.x
 
 :platform: OpenShift
@@ -61,7 +61,7 @@ endif::[]
 endif::[]
 
 // ===== Common
-:registry-ocp-version: 4.6
+:registry-ocp-version: 4.12
 
 // Characters
 :copy: ©

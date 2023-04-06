@@ -5,11 +5,12 @@ include::partial$shared/all-attributes.adoc[]
 
 You can quickly install the {operator} on the command line by using Custom Resource Definitions (CRDs).
 
+The quickstart example deploys your {registry} instance with 
 ifdef::service-registry[]
-The quickstart example deploys {registry} with storage in an SQL database:
+storage in an SQL database:
 endif::[]
 ifdef::apicurio-registry[]
-The quickstart example deploys {registry} with in-memory storage:
+in-memory storage:
 endif::[]
 
 * xref:registry-operator-quickstart[]
