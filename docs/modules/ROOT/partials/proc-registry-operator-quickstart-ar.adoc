@@ -4,8 +4,7 @@
 You can quickly deploy the {operator} on the command line, without the Operator Lifecycle Manager, by executing a single command.
 
 ifdef::apicurio-registry-operator-dev[]
-NOTE: This procedure will deploy the latest released version of {operator}.
-If you want to deploy the development version, visit https://github.com/Apicurio/apicurio-registry-operator/[{operator} GitHub repository].
+NOTE: This procedure deploys the latest {operator} release version. To deploy the development version, see https://github.com/Apicurio/apicurio-registry-operator/[{operator} GitHub repository].
 endif::[]
 
 .Procedure
@@ -23,6 +22,5 @@ export NAMESPACE="default"
 curl -sSL "https://raw.githubusercontent.com/Apicurio/apicurio-registry-operator/{operator-version-latest-release-tag}/docs/resources/install.yaml" |
 sed "s/{curlyleft}NAMESPACE{curlyright}/$NAMESPACE/g" | kubectl apply -f - -n $NAMESPACE
 ----
-
-NOTE: If you want to deploy an older release of the Operator, follow the documentation for that version. +
-If you are deploying to OpenShift, use `oc` with the same arguments.
++
+NOTE: To deploy an older release of {operator}, follow the documentation for that version. If you are deploying on OpenShift, use the `oc` command with the same arguments.

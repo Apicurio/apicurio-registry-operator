@@ -1,11 +1,11 @@
 [id="registry-operator-quickstart"]
 = Quickstart {operator} installation
 
-You can quickly deploy the {operator} on the command line, without the Operator Lifecycle Manager, by using a downloaded set of installation files and example Custom Resource Definitions (CRDs). 
+You can quickly install and deploy the {operator} on the command line, without the Operator Lifecycle Manager, by using a downloaded set of installation files and example CRDs. 
 
 .Prerequisites
 
-* You are logged into an OpenShift cluster with administrator access.
+* You are logged in to an OpenShift cluster with administrator access.
 * You have the OpenShift `oc` command-line client installed. For more details, see the {LinkOCPCLIDocs}[{NameOCPCLIDocs}].
 
 .Procedure
@@ -14,17 +14,25 @@ You can quickly deploy the {operator} on the command line, without the Operator 
 
 . Extract the downloaded CRDs `.zip` file and change to the `apicurio-registry-install-examples` directory.
 
-. Create an OpenShift project for the {registry} installation, for example:
+. Create an OpenShift project for the {operator} installation, for example:
 +
 [source,bash]
 ----
-NAMESPACE="apicurio-registry"
+export NAMESPACE="apicurio-registry"
 oc new-project "$NAMESPACE"
 ----
 
-. Apply the example CRD specified in the `/install/install.yaml` file:
+. Enter the following command to apply the example CRD in the `install/install.yaml` file:
 +
 [source,bash]
 ----
 cat install/install.yaml | sed "s/apicurio-registry-operator-namespace/$NAMESPACE/g" | oc apply -f -
+----
+
+. Enter `oc get deployment` to check the readiness of the {operator}. For example, the output should be as follows:
++
+[source,bash]
+----
+NAME                     	READY   UP-TO-DATE  AVAILABLE   AGE
+apicurio-registry-operator  1/1 	1        	1       	XmYs
 ----
