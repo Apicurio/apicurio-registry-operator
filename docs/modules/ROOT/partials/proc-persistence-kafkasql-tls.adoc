@@ -57,9 +57,7 @@ spec:
     replicas: 3
 ----
 +
-The default Kafka topic name that {registry} uses to store data is `kafkasql-journal`.
-This topic is created automatically by {registry}.
-You can override this behavior or the default topic name by setting the appropriate environment variables (default values):
+The default Kafka topic name automatically created by {registry} to store data is `kafkasql-journal`. You can override this behavior or the default topic name by setting environment variables. The default values are as follows:
 
 ** `REGISTRY_KAFKASQL_TOPIC_AUTO_CREATE=true`
 ** `REGISTRY_KAFKASQL_TOPIC=kafkasql-journal`
@@ -124,7 +122,31 @@ spec:
     type: simple
 ----
 +
-NOTE: You must configure the authorization specifically for the topics and resources that the {registry} requires. This is a simple permissive example.
+NOTE: This simple example assumes admin permissions and creates the Kafka topic automatically. You must configure the `authorization` section specifically for the topics and resources that the {registry} requires. 
++
+The following example shows the minimum configuration required when the Kafka topic is created manually:
++
+[source,yaml]
+----
+ ...
+  authorization:
+    acls:
+    - operations: 
+        - Read
+        - Write
+      resource:
+        name: kafkasql-journal
+        patternType: literal
+        type: topic
+    - operations: 
+        - Read
+        - Write
+      resource:
+        name: apicurio-registry-
+        patternType: prefix
+        type: group
+    type: simple
+----
 
 . Click *Workloads* and then *Secrets* to find two secrets that {kafka-streams} creates for {registry} to connect to the Kafka cluster:
 +
