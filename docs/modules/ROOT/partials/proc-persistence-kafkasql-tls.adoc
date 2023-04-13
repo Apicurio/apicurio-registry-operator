@@ -5,8 +5,8 @@ You can configure the {kafka-streams} Operator and {operator} to use an encrypte
 
 .Prerequisites
 
-* You must install the {operator} using the OperatorHub or command line.
-* You must install the {kafka-streams} Operator or have Kafka accessible from your OpenShift cluster.
+* You have installed the {operator} using the OperatorHub or command line.
+* You have installed the {kafka-streams} Operator or have Kafka accessible from your OpenShift cluster.
 
 NOTE: This section assumes that the {kafka-streams} Operator is available, however you can use any Kafka deployment.
 In that case, you must manually create the Openshift secrets that the {operator} expects.

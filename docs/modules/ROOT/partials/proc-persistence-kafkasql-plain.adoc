@@ -5,8 +5,8 @@ You can configure the {kafka-streams} Operator and {operator} to use a default c
 
 .Prerequisites
 
-* You must install the {operator} using the OperatorHub or command line.
-* You must install the {kafka-streams} Operator or have Kafka accessible from your OpenShift cluster.
+* You have installed the {operator} using the OperatorHub or command line.
+* You have installed the {kafka-streams} Operator or have Kafka accessible from your OpenShift cluster.
 
 .Procedure 
 
@@ -74,6 +74,7 @@ The default Kafka topic name automatically created by {registry} to store data i
 
  ** `REGISTRY_KAFKASQL_TOPIC_AUTO_CREATE=true`
  ** `REGISTRY_KAFKASQL_TOPIC=kafkasql-journal`
+
 +
 If you decide not to create the Kafka topic manually, skip the next step.
 
