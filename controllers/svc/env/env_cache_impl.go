@@ -2,7 +2,7 @@ package env
 
 import (
 	c "github.com/Apicurio/apicurio-registry-operator/controllers/common"
-	"github.com/go-logr/logr"
+	"go.uber.org/zap"
 	core "k8s.io/api/core/v1"
 	"reflect"
 	"strings"
@@ -88,14 +88,14 @@ type envCache struct {
 	sorted  []EnvCacheEntry
 	deleted map[string]bool
 	changed bool
-	log     logr.Logger
+	log     *zap.Logger
 }
 
 var _ EnvCache = &envCache{}
 
 // The cache tries to preserve the order of addition.
 // When sorting, it only reorders so far that it satisfies dependency relation
-func NewEnvCache(log logr.Logger) EnvCache {
+func NewEnvCache(log *zap.Logger) EnvCache {
 	return &envCache{
 		cache:   make(map[string]EnvCacheEntry, 0),
 		sorted:  make([]EnvCacheEntry, 0),
@@ -201,7 +201,7 @@ func (this *envCache) processWithDependencies(depth int, processed map[string]bo
 			if d, exists := this.Get(dependencyName); exists {
 				this.processWithDependencies(depth+1, processed, d)
 			} else {
-				this.log.Info("Dependency for an entry not found", "entryName", val.GetName(), "dependencyName", dependencyName)
+				this.log.Sugar().Infow("Dependency for an entry not found", "entryName", val.GetName(), "dependencyName", dependencyName)
 			}
 		}
 		this.sorted = append(this.sorted, val)

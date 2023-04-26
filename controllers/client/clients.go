@@ -2,14 +2,13 @@
 package client
 
 import (
-	c "github.com/Apicurio/apicurio-registry-operator/controllers/common"
-	"github.com/go-logr/logr"
+	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 )
 
 type Clients struct {
-	log logr.Logger
+	log *zap.Logger
 	//ctx context.LoopContext
 	//config           *rest.Config
 	kubeClient       *KubeClient
@@ -20,7 +19,7 @@ type Clients struct {
 	scheme           *runtime.Scheme
 }
 
-func NewClients(log logr.Logger, scheme *runtime.Scheme, config *rest.Config) *Clients {
+func NewClients(log *zap.Logger, scheme *runtime.Scheme, config *rest.Config) *Clients {
 	this := &Clients{
 		scheme: scheme,
 		log:    log,
@@ -31,7 +30,7 @@ func NewClients(log logr.Logger, scheme *runtime.Scheme, config *rest.Config) *C
 	//}
 	//this.config = config
 	//config := ctx.GetClientConfig()
-	log.V(c.V_DEBUG).Info("Client config values", "config", config)
+	log.Sugar().Debugw("client config values", "config", config)
 
 	this.kubeClient = NewKubeClient(log, scheme, config)
 

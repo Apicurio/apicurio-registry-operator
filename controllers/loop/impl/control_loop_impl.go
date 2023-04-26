@@ -39,19 +39,20 @@ func (this *controlLoopImpl) Run() {
 	maxAttempts := len(this.GetControlFunctions()) * 2
 	attempt := 0
 	for ; attempt < maxAttempts; attempt++ {
-		this.ctx.GetLog().WithValues("attempt", strconv.Itoa(attempt), "maxAttempts", strconv.Itoa(maxAttempts)).
-			Info("Control loop executing.")
+		this.ctx.GetLog().Sugar().Infow("control loop executing",
+			"attempt", strconv.Itoa(attempt), "maxAttempts", strconv.Itoa(maxAttempts))
 		this.ctx.SetAttempts(attempt)
 		// Run the CFs until we exceed the limit or the state has stabilized,
 		// i.e. no action was taken by any CF
 		stabilized := true
 		for _, cf := range this.GetControlFunctions() {
-			//this.ctx.GetLog().Info("Sense " + cf.Describe())
+			l := this.ctx.GetLog().Sugar().With("cf", cf.Describe())
+			l.Debugw("control function sense")
 			cf.Sense()
-			//this.ctx.GetLog().Info("Compare " + cf.Describe())
+			l.Debugw("control function compare")
 			discrepancy := cf.Compare()
 			if discrepancy {
-				this.ctx.GetLog().WithValues("cf", cf.Describe()).Info("Control function responding.")
+				l.Infow("control function respond")
 				cf.Respond()
 				stabilized = false
 			}
@@ -73,7 +74,8 @@ func (this *controlLoopImpl) Run() {
 func (this *controlLoopImpl) Cleanup() {
 	// Perform resource cleanup
 
-	this.ctx.GetLog().WithValues("app", this.ctx.GetAppName()).Info("ApicurioRegistry CR has been removed. Starting resource cleanup.")
+	this.ctx.GetLog().Sugar().Infow("ApicurioRegistry CR has been removed. Starting resource cleanup.",
+		"app", this.ctx.GetAppName())
 	maxAttempts := len(this.GetControlFunctions()) * 2
 	attempt := 0
 	for ; attempt < maxAttempts; attempt++ {
@@ -81,18 +83,21 @@ func (this *controlLoopImpl) Cleanup() {
 		for _, cf := range this.GetControlFunctions() {
 			success := cf.Cleanup()
 			if !success {
-				this.ctx.GetLog().WithValues("cf", cf.Describe()).Info("Control function requested cleanup retry.")
+				this.ctx.GetLog().Sugar().Infow("Control function requested cleanup retry.",
+					"cf", cf.Describe())
 			}
 			finished = finished && success
 		}
 		if finished {
-			this.ctx.GetLog().WithValues("app", this.ctx.GetAppName()).Info("Cleanup finished successfully.")
+			this.ctx.GetLog().Sugar().Infow("Cleanup finished successfully.",
+				"app", this.ctx.GetAppName())
 			break
 		}
 	}
 	if attempt == maxAttempts {
-		this.ctx.GetLog().WithValues("app", this.ctx.GetAppName(), "type", "Warning").
-			Info("WARNING: Cleanup did not finish successfully. You may need to delete some of the resources manually.")
+		this.ctx.GetLog().Sugar().
+			Warnw("Cleanup did not finish successfully. You may need to delete some of the resources manually.",
+				"app", this.ctx.GetAppName())
 	}
 }
 

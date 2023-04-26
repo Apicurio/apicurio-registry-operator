@@ -1,6 +1,7 @@
 package cf
 
 import (
+	"go.uber.org/zap"
 	"os"
 
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
@@ -22,6 +23,7 @@ const ENV_OPERATOR_REGISTRY_IMAGE_SQL = "REGISTRY_IMAGE_SQL"
 // This CF takes care of keeping the "image" section of the CRD applied.
 type ImageCF struct {
 	ctx              context.LoopContext
+	log              *zap.SugaredLogger
 	svcResourceCache resources.ResourceCache
 	svcStatus        *status.Status
 	deploymentEntry  resources.ResourceCacheEntry
@@ -34,7 +36,7 @@ type ImageCF struct {
 }
 
 func NewImageCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
-	return &ImageCF{
+	res := &ImageCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
 		svcStatus:        services.GetStatus(),
@@ -45,6 +47,8 @@ func NewImageCF(ctx context.LoopContext, services services.LoopServices) loop.Co
 		targetImage:      "",
 		persistence:      "",
 	}
+	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
+	return res
 }
 
 func (this *ImageCF) Describe() string {
@@ -93,8 +97,8 @@ func (this *ImageCF) Sense() {
 			this.targetImage = envImage
 		} else {
 			this.persistenceError = true
-			this.ctx.GetLog().WithValues("type", "Warning").
-				Info("WARNING: The operand image is not selected. " +
+			this.log.Warnw(
+				"The operand image is not selected. " +
 					"Set the 'spec.configuration.persistence' property in your 'apicurioregistry' resource " +
 					"to select the appropriate Service Registry image, or set the 'spec.deployment.image' " +
 					"property to use a specific image.")

@@ -9,6 +9,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
+	"go.uber.org/zap"
 	core "k8s.io/api/core/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,6 +19,7 @@ var _ loop.ControlFunction = &ServiceCF{}
 
 type ServiceCF struct {
 	ctx              context.LoopContext
+	log              *zap.SugaredLogger
 	svcResourceCache resources.ResourceCache
 	svcClients       *client.Clients
 	svcStatus        *status.Status
@@ -28,8 +30,7 @@ type ServiceCF struct {
 }
 
 func NewServiceCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
-
-	return &ServiceCF{
+	res := &ServiceCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
 		svcClients:       ctx.GetClients(),
@@ -39,6 +40,8 @@ func NewServiceCF(ctx context.LoopContext, services services.LoopServices) loop.
 		services:         make([]core.Service, 0),
 		serviceName:      resources.RC_NOT_CREATED_NAME_EMPTY,
 	}
+	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
+	return res
 }
 
 func (this *ServiceCF) Describe() string {
@@ -129,7 +132,7 @@ func (this *ServiceCF) Cleanup() bool {
 	}
 	if serviceEntry, serviceExists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE); serviceExists {
 		if err := this.svcClients.Kube().DeleteService(serviceEntry.GetValue().(*core.Service)); err != nil && !api_errors.IsNotFound(err) {
-			this.ctx.GetLog().Error(err, "Could not delete service during cleanup")
+			this.log.Errorw("could not delete service during cleanup", "error", err)
 			return false
 		} else {
 			this.svcResourceCache.Remove(resources.RC_KEY_SERVICE)

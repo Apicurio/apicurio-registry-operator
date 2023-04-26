@@ -12,6 +12,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
+	"go.uber.org/zap"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,6 +29,7 @@ const HttpPort = 8080
 
 type HttpsCF struct {
 	ctx              context.LoopContext
+	log              *zap.SugaredLogger
 	svcResourceCache resources.ResourceCache
 	svcClients       *client.Clients
 	svcStatus        *status.Status
@@ -52,7 +54,7 @@ type HttpsCF struct {
 }
 
 func NewHttpsCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
-	return &HttpsCF{
+	res := &HttpsCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
 		svcClients:       ctx.GetClients(),
@@ -64,6 +66,8 @@ func NewHttpsCF(ctx context.LoopContext, services services.LoopServices) loop.Co
 		httpsEnabled:     false,
 		needsReconcile:   false,
 	}
+	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
+	return res
 }
 
 func (this *HttpsCF) Describe() string {
@@ -133,12 +137,12 @@ func (this *HttpsCF) Sense() {
 			// Validate provided secret contains both 'tls.crt' and 'tls.key'
 			if !common.SecretHasTLSFields(secret) {
 				// Log error and cancel current reconciliation and wait for 10 seconds
-				this.ctx.GetLog().Error(errors.New(fmt.Sprintf("Invalid secret: %s", this.secretName)), "Both tls.crt and tls.key must be present.")
+				this.log.Errorw("both tls.crt and tls.key must be present", "error", errors.New(fmt.Sprintf("Invalid secret: %s", this.secretName)))
 				this.cancelCurrentReconcileAndWait(10)
 				return
 			}
 		} else {
-			this.ctx.GetLog().Error(errors.New(fmt.Sprintf("Secret '%s' is missing, error: %s", this.secretName, err)), "Secret referenced in Apicurio Registry CR is missing.")
+			this.log.Errorw("secret referenced in Apicurio Registry CR is missing.", "error", errors.New(fmt.Sprintf("Secret '%s' is missing, error: %s", this.secretName, err)))
 			// Log error and cancel current reconciliation and wait for 10 seconds
 			this.cancelCurrentReconcileAndWait(10)
 			return

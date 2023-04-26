@@ -31,6 +31,8 @@ import (
 
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers"
+	c "github.com/Apicurio/apicurio-registry-operator/controllers/common"
+	"github.com/go-logr/zapr"
 	ocp_apps "github.com/openshift/api/apps/v1"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -56,7 +58,8 @@ func init() {
 
 func initControllers(mgr manager.Manager) error {
 
-	if _, err := controllers.NewApicurioRegistryReconciler(mgr, ctrl.Log, common.NewTestSupport(ctrl.Log, false)); err != nil {
+	rootLog := c.GetRootLogger(false)
+	if _, err := controllers.NewApicurioRegistryReconciler(mgr, rootLog, common.NewTestSupport(rootLog, false)); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "ApicurioRegistry")
 		return errors.New("unable to create ApicurioRegistry controller")
 	}
@@ -74,8 +77,8 @@ func main() {
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
 
-	logger := common.BuildLogger(true)
-	ctrl.SetLogger(logger)
+	logger := common.GetRootLogger(false)
+	ctrl.SetLogger(zapr.NewLogger(logger))
 
 	namespaces, err := getWatchNamespace()
 	if err != nil {

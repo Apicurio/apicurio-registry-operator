@@ -5,7 +5,7 @@ import (
 	c "github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
-	"github.com/go-logr/logr"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -15,7 +15,7 @@ var _ LoopContext = &loopContext{}
 type loopContext struct {
 	appName       c.Name
 	appNamespace  c.Namespace
-	log           logr.Logger
+	log           *zap.Logger
 	requeue       bool
 	requeueDelay  time.Duration
 	resourceCache resources.ResourceCache
@@ -27,7 +27,7 @@ type loopContext struct {
 }
 
 // Create a new context when the operator is deployed, provide mostly static data
-func NewLoopContext(appName c.Name, appNamespace c.Namespace, log logr.Logger, clients *client.Clients, testing *c.TestSupport, features *c.SupportedFeatures) LoopContext {
+func NewLoopContext(appName c.Name, appNamespace c.Namespace, log *zap.Logger, clients *client.Clients, testing *c.TestSupport, features *c.SupportedFeatures) LoopContext {
 	this := &loopContext{
 		appName:      appName,
 		appNamespace: appNamespace,
@@ -43,7 +43,7 @@ func NewLoopContext(appName c.Name, appNamespace c.Namespace, log logr.Logger, c
 	return this
 }
 
-func (this *loopContext) GetLog() logr.Logger {
+func (this *loopContext) GetLog() *zap.Logger {
 	return this.log
 }
 

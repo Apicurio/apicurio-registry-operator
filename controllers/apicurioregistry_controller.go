@@ -14,8 +14,8 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/impl"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
-	"github.com/go-logr/logr"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"go.uber.org/zap"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
@@ -31,17 +31,17 @@ import (
 var _ reconcile.Reconciler = &ApicurioRegistryReconciler{}
 
 type ApicurioRegistryReconciler struct {
-	log      logr.Logger
+	log      *zap.Logger
 	clients  *client.Clients
 	testing  *c.TestSupport
 	loops    map[string]loop.ControlLoop
 	features *c.SupportedFeatures
 }
 
-func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog logr.Logger, testing *c.TestSupport) (*ApicurioRegistryReconciler, error) {
+func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog *zap.Logger, testing *c.TestSupport) (*ApicurioRegistryReconciler, error) {
 
 	clients := client.NewClients(
-		rootLog.WithName("clients"),
+		rootLog.Named("clients"),
 		mgr.GetScheme(), mgr.GetConfig())
 
 	features := &c.SupportedFeatures{}
@@ -52,14 +52,14 @@ func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog logr.Logger, tes
 	}
 	features.IsOCP = isOCP
 	if isOCP {
-		rootLog.V(c.V_NORMAL).Info("This operator is running on OpenShift")
+		rootLog.Sugar().Infow("This operator is running on OpenShift")
 	} else {
-		rootLog.V(c.V_NORMAL).Info("This operator is running on Kubernetes")
+		rootLog.Sugar().Infow("This operator is running on Kubernetes")
 	}
 
 	agi, err := clients.Discovery().GetVersionInfoForAPIGroup("policy")
 	if err != nil {
-		rootLog.V(c.V_IMPORTANT).Error(err, "could not determine supported API group versions for PodDisruptionBudget resource")
+		rootLog.Sugar().Errorw("could not determine supported API group versions for PodDisruptionBudget resource", "error", err)
 		return nil, err
 	}
 	if _, found := c.FindString(agi.Versions, "v1"); found {
@@ -75,17 +75,17 @@ func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog logr.Logger, tes
 
 	isMonitoring, err := clients.Discovery().IsMonitoringInstalled()
 	if err != nil {
-		rootLog.V(c.V_IMPORTANT).Error(err, "could not determine if monitoring resource is installed")
+		rootLog.Sugar().Errorw("could not determine if monitoring resource is installed", "error", err)
 		return nil, err
 	}
 	if !isMonitoring {
-		rootLog.V(c.V_IMPORTANT).Info("Install prometheus-operator in your cluster to create ServiceMonitor objects, restart apicurio-registry operator after installing prometheus-operator")
+		rootLog.Sugar().Infow("Install prometheus-operator in your cluster to create ServiceMonitor objects, restart apicurio-registry operator after installing prometheus-operator")
 	}
 	features.SupportsMonitoring = isMonitoring
 	testing.SetSupportedFeatures(features)
 
 	result := &ApicurioRegistryReconciler{
-		log:      rootLog.WithName("controller"),
+		log:      rootLog.Named("controller"),
 		clients:  clients,
 		testing:  testing,
 		loops:    make(map[string]loop.ControlLoop),
@@ -161,7 +161,7 @@ func (this *ApicurioRegistryReconciler) Reconcile(_ go_ctx.Context, request reco
 	appName := c.Name(request.Name)
 	appNamespace := c.Namespace(request.Namespace)
 
-	this.log.V(c.V_NORMAL).Info("reconciler executing")
+	this.log.Sugar().Infow("reconciler executing")
 
 	// Find the spec
 	spec, err := this.clients.CRD().GetApicurioRegistry(appNamespace, appName)
@@ -177,7 +177,7 @@ func (this *ApicurioRegistryReconciler) Reconcile(_ go_ctx.Context, request reco
 		if spec == nil {
 			controlLoop.Cleanup()
 			delete(this.loops, key)
-			controlLoop.GetContext().GetLog().V(c.V_NORMAL).Info("context was deleted")
+			controlLoop.GetContext().GetLog().Sugar().Info("context was deleted")
 			return reconcile.Result{}, nil
 		} else {
 			// Run and reload spec into the cache
@@ -206,10 +206,10 @@ func (this *ApicurioRegistryReconciler) Reconcile(_ go_ctx.Context, request reco
 func (this *ApicurioRegistryReconciler) createNewLoop(appName c.Name, appNamespace c.Namespace, features *c.SupportedFeatures) loop.ControlLoop {
 
 	loopKey := appNamespace.Str() + "/" + appName.Str()
-	log := this.log.WithValues("contextId", loopKey)
-	log.V(c.V_NORMAL).Info("creating a new context")
+	log := this.log.Sugar().With("contextId", loopKey)
+	log.Infow("creating a new context")
 
-	ctx := context.NewLoopContext(appName, appNamespace, log, this.clients, this.testing, features)
+	ctx := context.NewLoopContext(appName, appNamespace, log.Desugar(), this.clients, this.testing, features)
 	loopServices := services.NewLoopServices(ctx)
 	result := impl.NewControlLoopImpl(ctx, loopServices)
 

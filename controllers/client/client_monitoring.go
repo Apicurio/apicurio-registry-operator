@@ -4,9 +4,9 @@ import (
 	ctx "context"
 	"errors"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
-	"github.com/go-logr/logr"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monclientv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	"go.uber.org/zap"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -17,14 +17,14 @@ import (
 
 type MonitoringClient struct {
 	//ctx             context.LoopContext
-	log    logr.Logger
+	log    *zap.Logger
 	client *monclientv1.MonitoringV1Client
 	scheme *runtime.Scheme
 
 	//discoveryClient *discovery.DiscoveryClient
 }
 
-func NewMonitoringClient(log logr.Logger, scheme *runtime.Scheme, config *rest.Config) *MonitoringClient {
+func NewMonitoringClient(log *zap.Logger, scheme *runtime.Scheme, config *rest.Config) *MonitoringClient {
 	return &MonitoringClient{
 		log:    log,
 		client: monclientv1.NewForConfigOrDie(config),

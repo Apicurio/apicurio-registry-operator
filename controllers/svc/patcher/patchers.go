@@ -64,10 +64,9 @@ func patchGeneric(
 
 	owner, exists := ctx.GetResourceCache().Get(resources.RC_KEY_SPEC)
 	if !exists {
-		ctx.GetLog().
-			V(c.V_IMPORTANT).
-			WithValues("resource", typeString).
-			Info("Could not patch a resource. No ApicurioRegistry exists to set as the owner. Retrying.")
+		ctx.GetLog().Sugar().
+			Infow("Could not patch a resource. No ApicurioRegistry exists to set as the owner. Retrying.",
+				"resource", typeString)
 		ctx.SetRequeueNow()
 		return
 	}
@@ -90,10 +89,9 @@ func patchGeneric(
 			patchData, err := createPatch(actualValue, value, genericType)
 
 			if err != nil {
-				ctx.GetLog().
-					WithValues("type", "Warning", "resource", typeString, "error", err,
-						"name", name, "original", genericToString(actualValue), "target", genericToString(value)).
-					Info("Could not create patch data.")
+				ctx.GetLog().Sugar().
+					Warnw("could not create patch data", "resource", typeString, "error", err,
+						"name", name, "original", genericToString(actualValue), "target", genericToString(value))
 				// Remove patch changes...
 				// ctx.GetResourceCache().Set(key, NewResourceCacheEntry(genericGetName(original), original)) TODO
 				ctx.GetResourceCache().Remove(key)
@@ -113,15 +111,14 @@ func patchGeneric(
 				return
 			}
 
-			ctx.GetLog().WithValues("resource", typeString, "name", name).Info("patching")
+			ctx.GetLog().Sugar().Infow("patching", "resource", typeString, "name", name)
 			patched, err := genericPatch(namespace, name, patchData)
 			if err != nil {
 				// Could not apply patch. Maybe it was modified by external source.
-				ctx.GetLog().
-					WithValues("type", "Warning", "resource", typeString, "error", err,
+				ctx.GetLog().Sugar().
+					Warnw("could not submit patch", "resource", typeString, "error", err,
 						"name", name, "original", genericToString(actualValue), "target", genericToString(value),
-						"patch", string(patchData)).
-					Info("Could not submit patch.")
+						"patch", string(patchData))
 				// Remove patch changes
 				// ctx.GetResourceCache().Set(key, NewResourceCacheEntry(genericGetName(original), original)) TODO
 				ctx.GetResourceCache().Remove(key)
@@ -131,16 +128,15 @@ func patchGeneric(
 			// Reset PF after patching
 			ctx.GetResourceCache().Set(key, resources.NewResourceCacheEntry(genericGetName(patched), patched))
 		} else {
-			ctx.GetLog().WithValues("resource", typeString).Info("Creating.")
+			ctx.GetLog().Sugar().Infow("creating", "resource", typeString)
 			// Create it
 			created, err := genericCreate(owner.GetValue().(*ar.ApicurioRegistry), namespace, value)
 			if err != nil {
 				// Could not create.
 				// Delete the value from cache so it can be tried again
-				ctx.GetLog().
-					WithValues("type", "Warning", "resource", typeString, "error", err,
-						"target", genericToString(value)).
-					Info("Could not create new resource.")
+				ctx.GetLog().Sugar().
+					Infow("Could not create new resource.", "resource", typeString, "error", err,
+						"target", genericToString(value))
 				ctx.GetResourceCache().Remove(key)
 				return
 			}

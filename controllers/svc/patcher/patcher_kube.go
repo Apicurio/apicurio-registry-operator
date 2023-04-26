@@ -73,8 +73,9 @@ func (this *KubePatcher) reloadApicurioRegistryStatus() {
 	// No need to check if the entry exists
 	specEntry, specExists := this.ctx.GetResourceCache().Get(resources.RC_KEY_SPEC)
 	if !specExists {
-		this.ctx.GetLog().WithValues("name", this.ctx.GetAppName()).
-			Error(errors.New("Could not reload ApicurioRegistryStatus. ApicurioRegistry resource not found."), "Resource not found. (May have been deleted).")
+		this.ctx.GetLog().Sugar().Warnw("Resource not found. (May have been deleted).",
+			"name", this.ctx.GetAppName(),
+			"error", errors.New("Could not reload ApicurioRegistryStatus. ApicurioRegistry resource not found."))
 		this.ctx.GetResourceCache().Remove(resources.RC_KEY_SPEC)
 		this.ctx.GetResourceCache().Remove(resources.RC_KEY_STATUS)
 		this.ctx.SetRequeueNow() // TODO Maybe unnecessary
@@ -153,7 +154,8 @@ func (this *KubePatcher) reloadDeployment() {
 	if entry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_DEPLOYMENT); exists {
 		r, e := this.ctx.GetClients().Kube().GetDeployment(this.ctx.GetAppNamespace(), entry.GetName())
 		if e != nil {
-			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
+			this.ctx.GetLog().Sugar().Warnw("Resource not found. (May have been deleted).",
+				"name", entry.GetName(), "error", e)
 			this.ctx.GetResourceCache().Remove(resources.RC_KEY_DEPLOYMENT)
 			this.ctx.SetRequeueNow()
 		} else {
@@ -188,7 +190,8 @@ func (this *KubePatcher) reloadService() {
 		r, e := this.ctx.GetClients().Kube().
 			GetService(this.ctx.GetAppNamespace(), entry.GetName())
 		if e != nil {
-			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
+			this.ctx.GetLog().Sugar().Warnw("Resource not found. (May have been deleted).",
+				"name", entry.GetName(), "error", e)
 			this.ctx.GetResourceCache().Remove(resources.RC_KEY_SERVICE)
 			this.ctx.SetRequeueNow()
 		} else {
@@ -223,7 +226,8 @@ func (this *KubePatcher) reloadIngress() {
 		r, e := this.ctx.GetClients().Kube().
 			GetIngress(this.ctx.GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
 		if e != nil {
-			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
+			this.ctx.GetLog().Sugar().Warnw("Resource not found. (May have been deleted).",
+				"name", entry.GetName(), "error", e)
 			this.ctx.GetResourceCache().Remove(resources.RC_KEY_INGRESS)
 			this.ctx.SetRequeueNow()
 		} else {
@@ -258,7 +262,8 @@ func (this *KubePatcher) reloadNetworkPolicy() {
 		r, e := this.ctx.GetClients().Kube().
 			GetNetworkPolicy(this.ctx.GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
 		if e != nil {
-			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
+			this.ctx.GetLog().Sugar().Warnw("Resource not found. (May have been deleted).",
+				"name", entry.GetName(), "error", e)
 			this.ctx.GetResourceCache().Remove(resources.RC_KEY_NETWORK_POLICY)
 			this.ctx.SetRequeueNow()
 		} else {
@@ -293,7 +298,8 @@ func (this *KubePatcher) reloadPodDisruptionBudgetV1beta1() {
 		r, e := this.ctx.GetClients().Kube().
 			GetPodDisruptionBudgetV1beta1(this.ctx.GetAppNamespace(), entry.GetName())
 		if e != nil {
-			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
+			this.ctx.GetLog().Sugar().Warnw("Resource not found. (May have been deleted).",
+				"name", entry.GetName(), "error", e)
 			this.ctx.GetResourceCache().Remove(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1BETA1)
 			this.ctx.SetRequeueNow()
 		} else {
@@ -328,7 +334,8 @@ func (this *KubePatcher) reloadPodDisruptionBudgetV1() {
 		r, e := this.ctx.GetClients().Kube().
 			GetPodDisruptionBudgetV1(this.ctx.GetAppNamespace(), entry.GetName())
 		if e != nil {
-			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
+			this.ctx.GetLog().Sugar().Warnw("Resource not found. (May have been deleted).",
+				"name", entry.GetName(), "error", e)
 			this.ctx.GetResourceCache().Remove(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1)
 			this.ctx.SetRequeueNow()
 		} else {

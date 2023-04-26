@@ -2,30 +2,20 @@ package common
 
 import (
 	"errors"
-	"github.com/go-logr/logr"
 	zaplogfmt "github.com/sykesm/zap-logfmt"
-	uzap "go.uber.org/zap"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	"os"
 	"reflect"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	kzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"strings"
 	"testing"
 	"time"
 )
 
-const (
-	V_IMPORTANT = 0
-	V_NORMAL    = 1
-	V_DEBUG     = 2
-	V_TRACE     = 3
-)
-
-func Fatal(log logr.Logger, err error, msg string) {
-	log.Error(err, msg)
-	panic("Fatal error, the operator can't recover.")
-}
+var rootLog *zap.Logger = nil
 
 func FindString(haystack []string, needle string) (int, bool) {
 	for i, v := range haystack {
@@ -36,24 +26,44 @@ func FindString(haystack []string, needle string) (int, bool) {
 	return -1, false
 }
 
-// TODO unnecessary
-func FindStringKey(haystack map[string]bool, needle string) bool {
-	for k, _ := range haystack {
-		if needle == k {
-			return true
-		}
+func GetRootLogger(devMode bool) *zap.Logger {
+	if rootLog != nil {
+		return rootLog
 	}
-	return false
-}
+	level := os.Getenv("LOG_LEVEL")
+	var zapLevel zapcore.Level
+	switch strings.ToLower(level) {
+	case "debug":
+		zapLevel = zapcore.DebugLevel
+	case "info":
+		zapLevel = zapcore.InfoLevel
+	case "warn", "warning":
+		zapLevel = zapcore.WarnLevel
+	case "error":
+		zapLevel = zapcore.ErrorLevel
+	default:
+		if len(level) > 0 {
+			_, _ = os.Stdout.WriteString("Invalid log level value '" + level + "'\n")
+		}
+		if devMode {
+			zapLevel = zapcore.DebugLevel
+		} else {
+			zapLevel = zapcore.InfoLevel
+		}
+		_, _ = os.Stdout.WriteString("Setting log level to a default value '" + zapLevel.String() + "'\n")
 
-func BuildLogger(devMode bool) logr.Logger {
-	configLog := uzap.NewProductionEncoderConfig()
-	configLog.EncodeTime = func(ts time.Time, encoder zapcore.PrimitiveArrayEncoder) {
+	}
+	encoderConfig := zap.NewProductionEncoderConfig()
+	encoderConfig.EncodeTime = func(ts time.Time, encoder zapcore.PrimitiveArrayEncoder) {
 		encoder.AppendString(ts.UTC().Format(time.RFC3339Nano))
 	}
-	logfmtEncoder := zaplogfmt.NewEncoder(configLog)
-	logger := zap.New(zap.UseDevMode(devMode), zap.WriteTo(os.Stdout), zap.Encoder(logfmtEncoder))
-	return logger
+	encoder := zaplogfmt.NewEncoder(encoderConfig)
+	rootLog = kzap.NewRaw(
+		kzap.UseDevMode(devMode),
+		kzap.WriteTo(os.Stdout),
+		kzap.Encoder(encoder),
+		kzap.Level(zapLevel))
+	return rootLog
 }
 
 func AssertEquals(t *testing.T, expected interface{}, actual interface{}) {

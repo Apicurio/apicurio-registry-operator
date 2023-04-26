@@ -5,12 +5,12 @@ import (
 	c "github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
-	"github.com/go-logr/logr"
+	"go.uber.org/zap"
 	"time"
 )
 
 type LoopContext interface {
-	GetLog() logr.Logger
+	GetLog() *zap.Logger
 	GetAppName() c.Name
 	GetAppNamespace() c.Namespace
 	SetRequeueNow()

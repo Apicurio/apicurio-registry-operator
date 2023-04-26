@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
-	"github.com/go-logr/logr"
+	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -18,13 +18,13 @@ import (
 
 type CRDClient struct {
 	//ctx context.LoopContext
-	log logr.Logger
+	log *zap.Logger
 	//ctx.client should be used instead of this rest client
 	client *rest.RESTClient
 	codec  runtime.ParameterCodec
 }
 
-func NewCRDClient(log logr.Logger, scheme *runtime.Scheme, config *rest.Config) *CRDClient {
+func NewCRDClient(log *zap.Logger, scheme *runtime.Scheme, config *rest.Config) *CRDClient {
 
 	scheme.AddKnownTypes(ar.GroupVersion, &ar.ApicurioRegistry{}, &ar.ApicurioRegistryList{})
 	meta.AddToGroupVersion(scheme, ar.GroupVersion)

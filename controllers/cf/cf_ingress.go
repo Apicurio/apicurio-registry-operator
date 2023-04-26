@@ -10,6 +10,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
+	"go.uber.org/zap"
 	networking "k8s.io/api/networking/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,6 +20,7 @@ var _ loop.ControlFunction = &IngressCF{}
 
 type IngressCF struct {
 	ctx               context.LoopContext
+	log               *zap.SugaredLogger
 	svcResourceCache  resources.ResourceCache
 	svcClients        *client.Clients
 	svcStatus         *status.Status
@@ -31,8 +33,7 @@ type IngressCF struct {
 }
 
 func NewIngressCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
-
-	return &IngressCF{
+	res := &IngressCF{
 		ctx:               ctx,
 		svcResourceCache:  ctx.GetResourceCache(),
 		svcClients:        ctx.GetClients(),
@@ -44,6 +45,8 @@ func NewIngressCF(ctx context.LoopContext, services services.LoopServices) loop.
 		serviceName:       resources.RC_NOT_CREATED_NAME_EMPTY,
 		targetHostIsEmpty: true,
 	}
+	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
+	return res
 }
 
 func (this *IngressCF) Describe() string {
@@ -146,7 +149,7 @@ func (this *IngressCF) Cleanup() bool {
 	// Ingress should not have any deletion dependencies
 	if ingressEntry, ingressExists := this.svcResourceCache.Get(resources.RC_KEY_INGRESS); ingressExists {
 		if err := this.svcClients.Kube().DeleteIngress(ingressEntry.GetValue().(*networking.Ingress)); err != nil && !api_errors.IsNotFound(err) {
-			this.ctx.GetLog().Error(err, "Could not delete ingress during cleanup.")
+			this.log.Errorw("could not delete ingress during cleanup", "error", err)
 			return false
 		} else {
 			this.svcResourceCache.Remove(resources.RC_KEY_INGRESS)
