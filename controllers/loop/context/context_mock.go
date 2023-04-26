@@ -5,7 +5,7 @@ import (
 	c "github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
-	"github.com/go-logr/logr"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -14,7 +14,7 @@ var _ LoopContext = &LoopContextMock{}
 type LoopContextMock struct {
 	appName       c.Name
 	appNamespace  c.Namespace
-	log           logr.Logger
+	log           *zap.Logger
 	resourceCache resources.ResourceCache
 	envCache      env.EnvCache
 	attempts      int
@@ -25,13 +25,13 @@ func NewLoopContextMock() *LoopContextMock {
 		appName:      c.Name("mock"),
 		appNamespace: c.Namespace("mock"),
 	}
-	res.log = c.BuildLogger(true)
+	res.log = c.GetRootLogger(true)
 	res.resourceCache = resources.NewResourceCache()
 	res.envCache = env.NewEnvCache(res.log)
 	return res
 }
 
-func (this *LoopContextMock) GetLog() logr.Logger {
+func (this *LoopContextMock) GetLog() *zap.Logger {
 	return this.log
 }
 

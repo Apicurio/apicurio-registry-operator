@@ -5,13 +5,16 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
+	"go.uber.org/zap"
 	apps "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ loop.ControlFunction = &EnvApplyCF{}
 
 type EnvApplyCF struct {
 	ctx                context.LoopContext
+	log                *zap.SugaredLogger
 	svcResourceCache   resources.ResourceCache
 	svcEnvCache        env.EnvCache
 	deploymentExists   bool
@@ -19,11 +22,13 @@ type EnvApplyCF struct {
 	deploymentName     string
 	envCacheUpdated    bool
 	lastDeploymentName string
+	deploymentUID      types.UID
+	lastDeploymentUID  types.UID
 }
 
 // Is responsible for managing environment variables from the env cache
 func NewEnvApplyCF(ctx context.LoopContext) loop.ControlFunction {
-	return &EnvApplyCF{
+	res := &EnvApplyCF{
 		ctx:                ctx,
 		svcResourceCache:   ctx.GetResourceCache(),
 		svcEnvCache:        ctx.GetEnvCache(),
@@ -33,6 +38,8 @@ func NewEnvApplyCF(ctx context.LoopContext) loop.ControlFunction {
 		lastDeploymentName: resources.RC_NOT_CREATED_NAME_EMPTY,
 		envCacheUpdated:    false,
 	}
+	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
+	return res
 }
 
 func (this *EnvApplyCF) Describe() string {
@@ -52,6 +59,7 @@ func (this *EnvApplyCF) Sense() {
 		// keeping the original ordering.
 		// The operator overwrites user defined ones only when necessary.
 		deployment := this.deploymentEntry.GetValue().(*apps.Deployment)
+
 		for i, c := range deployment.Spec.Template.Spec.Containers {
 			if c.Name == this.ctx.GetAppName().Str() {
 				prevName := "" // To maintain ordering in case of interpolation

@@ -9,6 +9,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	monitoring "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"go.uber.org/zap"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
@@ -18,6 +19,7 @@ var _ loop.ControlFunction = &ServiceMonitorCF{}
 
 type ServiceMonitorCF struct {
 	ctx               context.LoopContext
+	log               *zap.SugaredLogger
 	svcResourceCache  resources.ResourceCache
 	svcClients        *client.Clients
 	monitoringFactory *factory.MonitoringFactory
@@ -27,8 +29,7 @@ type ServiceMonitorCF struct {
 
 // TODO service monitor should be using resource cache
 func NewServiceMonitorCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
-
-	return &ServiceMonitorCF{
+	res := &ServiceMonitorCF{
 		ctx:               ctx,
 		svcResourceCache:  ctx.GetResourceCache(),
 		svcClients:        ctx.GetClients(),
@@ -36,6 +37,8 @@ func NewServiceMonitorCF(ctx context.LoopContext, services services.LoopServices
 		serviceMonitor:    nil,
 		service:           nil,
 	}
+	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
+	return res
 }
 
 func (this *ServiceMonitorCF) Describe() string {
@@ -61,7 +64,7 @@ func (this *ServiceMonitorCF) Sense() {
 		serviceMonitor, err := monitoringClient.GetServiceMonitor(namespace, name)
 		if err != nil {
 			if !errors.IsNotFound(err) {
-				this.ctx.GetLog().Error(err, "Could not get ServiceMonitor")
+				this.log.Errorw("could not get ServiceMonitor", "error", err)
 			}
 			return
 		}
@@ -91,7 +94,7 @@ func (this *ServiceMonitorCF) Respond() {
 	}
 	_, err := monitoringClient.CreateServiceMonitor(entry.GetValue().(*ar.ApicurioRegistry), namespace, serviceMonitor)
 	if err != nil {
-		this.ctx.GetLog().Error(err, "Could not create ServiceMonitor object")
+		this.log.Errorw("could not create ServiceMonitor object", "error", err)
 	}
 }
 
@@ -102,7 +105,7 @@ func (this *ServiceMonitorCF) Cleanup() bool {
 	name := this.ctx.GetAppName()
 	if serviceMonitor, err := monitoringClient.GetServiceMonitor(namespace, name); err == nil {
 		if err := monitoringClient.DeleteServiceMonitor(serviceMonitor); err != nil && !api_errors.IsNotFound(err) /* Should not normally happen */ {
-			this.ctx.GetLog().Error(err, "Could not delete ServiceMonitor during cleanup.")
+			this.log.Errorw("could not delete ServiceMonitor during cleanup", "error", err)
 			return false
 		} else {
 			this.ctx.GetLog().Info("ServiceMonitor has been deleted.")

@@ -28,7 +28,8 @@ func (this *OCPPatcher) reloadRoute() {
 		r, e := this.ctx.GetClients().OCP().
 			GetRoute(this.ctx.GetAppNamespace(), entry.GetName(), &meta.GetOptions{})
 		if e != nil {
-			this.ctx.GetLog().WithValues("name", entry.GetName()).Error(e, "Resource not found. (May have been deleted).")
+			this.ctx.GetLog().Sugar().Warnw("Resource not found. (May have been deleted).",
+				"name", entry.GetName(), "error", e)
 			this.ctx.GetResourceCache().Remove(resources.RC_KEY_ROUTE_OCP)
 			this.ctx.SetRequeueNow()
 		} else {

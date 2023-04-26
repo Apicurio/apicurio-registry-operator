@@ -7,6 +7,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
+	"go.uber.org/zap"
 	core "k8s.io/api/core/v1"
 	"net/http"
 	"os"
@@ -17,6 +18,7 @@ var _ loop.ControlFunction = &InitializingCF{}
 
 type InitializingCF struct {
 	ctx          context.LoopContext
+	log          *zap.SugaredLogger
 	services     services.LoopServices
 	httpClient   http.Client
 	initializing bool
@@ -28,7 +30,7 @@ type InitializingCF struct {
 }
 
 func NewInitializingCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
-	return &InitializingCF{
+	res := &InitializingCF{
 		ctx:      ctx,
 		services: services,
 		httpClient: http.Client{
@@ -41,6 +43,8 @@ func NewInitializingCF(ctx context.LoopContext, services services.LoopServices) 
 		initializing: true,
 		requestOk:    false,
 	}
+	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
+	return res
 }
 
 func (this *InitializingCF) Describe() string {
@@ -79,12 +83,12 @@ func (this *InitializingCF) Sense() {
 			if res.StatusCode >= 200 && res.StatusCode < 300 {
 				this.requestOk = true
 			} else {
-				this.ctx.GetLog().V(c.V_IMPORTANT).Info("request has failed with a status", "url", url, "status", res.StatusCode)
+				this.log.Warnw("request to check that Apicurio Registry instance is available has failed with a status", "url", url, "status", res.StatusCode)
 			}
 		} else if os.IsTimeout(err) {
-			this.ctx.GetLog().V(c.V_IMPORTANT).Info("request has timed out", "url", url, "timeout", this.httpClient.Timeout)
+			this.log.Warnw("request to check that Apicurio Registry instance is available has timed out", "url", url, "timeout", this.httpClient.Timeout)
 		} else {
-			this.ctx.GetLog().V(c.V_IMPORTANT).Info("request has failed", "url", url, "error", err.Error())
+			this.log.Warnw("request to check that Apicurio Registry instance is available has failed", "url", url)
 		}
 	}
 

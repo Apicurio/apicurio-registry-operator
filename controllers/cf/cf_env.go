@@ -6,6 +6,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
+	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"reflect"
 )
@@ -14,6 +15,7 @@ var _ loop.ControlFunction = &EnvCF{}
 
 type EnvCF struct {
 	ctx              context.LoopContext
+	log              *zap.SugaredLogger
 	svcResourceCache resources.ResourceCache
 	svcEnvCache      env.EnvCache
 	// To know which were deleted, we need to compare with previous ones
@@ -27,7 +29,7 @@ type EnvCF struct {
 // This control function is responsible for reading custom environment variables from the spec,
 // and saving them into the environment cache.
 func NewEnvCF(ctx context.LoopContext) loop.ControlFunction {
-	return &EnvCF{
+	res := &EnvCF{
 		ctx:               ctx,
 		svcResourceCache:  ctx.GetResourceCache(),
 		svcEnvCache:       ctx.GetEnvCache(),
@@ -36,6 +38,8 @@ func NewEnvCF(ctx context.LoopContext) loop.ControlFunction {
 		remove:            make(map[string]corev1.EnvVar),
 		update:            false,
 	}
+	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
+	return res
 }
 
 func (this *EnvCF) Describe() string {

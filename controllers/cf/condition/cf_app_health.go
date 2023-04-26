@@ -7,6 +7,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
+	"go.uber.org/zap"
 	core "k8s.io/api/core/v1"
 	"net/http"
 	"os"
@@ -17,6 +18,7 @@ var _ loop.ControlFunction = &AppHealthCF{}
 
 type AppHealthCF struct {
 	ctx          context.LoopContext
+	log          *zap.SugaredLogger
 	services     services.LoopServices
 	httpClient   http.Client
 	initializing bool
@@ -29,7 +31,7 @@ type AppHealthCF struct {
 }
 
 func NewAppHealthCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
-	return &AppHealthCF{
+	res := &AppHealthCF{
 		ctx:      ctx,
 		services: services,
 		httpClient: http.Client{
@@ -43,6 +45,8 @@ func NewAppHealthCF(ctx context.LoopContext, services services.LoopServices) loo
 		requestReadinessOk: false,
 		requestLivenessOk:  false,
 	}
+	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
+	return res
 }
 
 func (this *AppHealthCF) Describe() string {
@@ -80,12 +84,12 @@ func (this *AppHealthCF) Sense() {
 				this.requestReadinessOk = true
 				this.initializing = false
 			} else {
-				this.ctx.GetLog().V(c.V_IMPORTANT).Info("request has failed with a status", "url", url, "status", res.StatusCode)
+				this.log.Warnw("request to check Apicurio Registry instance readiness has failed with a status", "url", url, "status", res.StatusCode)
 			}
 		} else if os.IsTimeout(err) {
-			this.ctx.GetLog().V(c.V_IMPORTANT).Info("request has timed out", "url", url, "timeout", this.httpClient.Timeout)
+			this.log.Warnw("request to check Apicurio Registry instance readiness has timed out", "url", url, "timeout", this.httpClient.Timeout)
 		} else {
-			this.ctx.GetLog().V(c.V_IMPORTANT).Info("request has failed", "url", url, "error", err.Error())
+			this.log.Warnw("request to check Apicurio Registry instance readiness has failed", "url", url)
 		}
 		url = scheme + this.targetIP + ":" + port + "/health/live"
 		res, err = this.httpClient.Get(url)
@@ -94,12 +98,12 @@ func (this *AppHealthCF) Sense() {
 			if res.StatusCode == 200 {
 				this.requestLivenessOk = true
 			} else {
-				this.ctx.GetLog().V(c.V_IMPORTANT).Info("request has failed with a status", "url", url, "status", res.StatusCode)
+				this.log.Warnw("request to check Apicurio Registry instance liveness has failed with a status", "url", url, "status", res.StatusCode)
 			}
 		} else if os.IsTimeout(err) {
-			this.ctx.GetLog().V(c.V_IMPORTANT).Info("request has timed out", "url", url, "timeout", this.httpClient.Timeout)
+			this.log.Warnw("request to check Apicurio Registry instance liveness has timed out", "url", url, "timeout", this.httpClient.Timeout)
 		} else {
-			this.ctx.GetLog().V(c.V_IMPORTANT).Info("request has failed", "url", url, "error", err.Error())
+			this.log.Warnw("request to check Apicurio Registry instance liveness has failed", "url", url)
 		}
 	}
 

@@ -2,7 +2,7 @@ package envtest
 
 import (
 	"context"
-	"github.com/go-logr/logr"
+	"go.uber.org/zap"
 	core "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
@@ -12,7 +12,7 @@ const T_SCALE = 2
 const EVENTUALLY_CHECK_PERIOD = 500 * time.Millisecond
 
 type SuiteState struct {
-	log       logr.Logger
+	log       *zap.Logger
 	ctx       context.Context
 	k8sClient client.Client
 }

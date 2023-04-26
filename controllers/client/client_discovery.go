@@ -2,7 +2,7 @@ package client
 
 import (
 	"errors"
-	"github.com/go-logr/logr"
+	"go.uber.org/zap"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/rest"
@@ -15,11 +15,11 @@ type APIGroupInfo struct {
 }
 
 type DiscoveryClient struct {
-	log    logr.Logger
+	log    *zap.Logger
 	client *discovery.DiscoveryClient
 }
 
-func NewDiscoveryClient(log logr.Logger, clientConfig *rest.Config) *DiscoveryClient {
+func NewDiscoveryClient(log *zap.Logger, clientConfig *rest.Config) *DiscoveryClient {
 	this := &DiscoveryClient{
 		log:    log,
 		client: discovery.NewDiscoveryClientForConfigOrDie(clientConfig),

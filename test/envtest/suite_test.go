@@ -5,6 +5,7 @@ import (
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers"
 	c "github.com/Apicurio/apicurio-registry-operator/controllers/common"
+	"github.com/go-logr/zapr"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -13,7 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	cr_log "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	kzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"testing"
 	"time"
 )
@@ -31,18 +32,19 @@ func TestAPIs(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 
-	cr_log.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
+	log := kzap.NewRaw(kzap.WriteTo(GinkgoWriter), kzap.UseDevMode(true))
+	cr_log.SetLogger(zapr.NewLogger(log))
 	GinkgoWriter.TeeTo(os.Stdout)
 
 	s = &SuiteState{
-		log: cr_log.Log,
+		log: log,
 	}
 
 	pwd, err := os.Getwd()
 	Expect(err).To(BeNil())
 	root := pwd + "/../.."
 
-	s.log.Info("path", "root", root)
+	s.log.Sugar().Infow("path", "root", root)
 
 	Expect(os.Setenv("TEST_ASSET_KUBE_APISERVER", root+"/testbin/bin/kube-apiserver")).To(Succeed())
 	Expect(os.Setenv("TEST_ASSET_ETCD", root+"/testbin/bin/etcd")).To(Succeed())

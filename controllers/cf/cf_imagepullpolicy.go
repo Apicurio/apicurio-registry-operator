@@ -1,6 +1,7 @@
 package cf
 
 import (
+	"go.uber.org/zap"
 	"os"
 
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
@@ -17,6 +18,7 @@ const ENV_OPERATOR_REGISTRY_IMAGE_PULL_POLICY = "REGISTRY_IMAGE_PULL_POLICY"
 
 type ImagePullPolicyCF struct {
 	ctx                     context.LoopContext
+	log                     *zap.SugaredLogger
 	svcResourceCache        resources.ResourceCache
 	deploymentEntry         resources.ResourceCacheEntry
 	deploymentEntryExists   bool
@@ -25,7 +27,7 @@ type ImagePullPolicyCF struct {
 }
 
 func NewImagePullPolicyCF(ctx context.LoopContext) loop.ControlFunction {
-	return &ImagePullPolicyCF{
+	res := &ImagePullPolicyCF{
 		ctx:                     ctx,
 		svcResourceCache:        ctx.GetResourceCache(),
 		deploymentEntry:         nil,
@@ -33,6 +35,8 @@ func NewImagePullPolicyCF(ctx context.LoopContext) loop.ControlFunction {
 		existingImagePullPolicy: "",
 		targetImagePullPolicy:   "",
 	}
+	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
+	return res
 }
 
 func (this *ImagePullPolicyCF) Describe() string {
@@ -66,9 +70,8 @@ func (this *ImagePullPolicyCF) Sense() {
 		}
 
 		if envImagePullPolicy != "" && this.targetImagePullPolicy == "" {
-			this.ctx.GetLog().WithValues("type", "Warning").
-				Info("WARNING: " + envImagePullPolicy + " is not a valid value for " + ENV_OPERATOR_REGISTRY_IMAGE_PULL_POLICY + ". " +
-					ENV_OPERATOR_REGISTRY_IMAGE_PULL_POLICY + " can have one of the following values: Always, IfNotPresent, Never.")
+			this.log.Warnw(envImagePullPolicy + " is not a valid value for " + ENV_OPERATOR_REGISTRY_IMAGE_PULL_POLICY + ". " +
+				ENV_OPERATOR_REGISTRY_IMAGE_PULL_POLICY + " can have one of the following values: Always, IfNotPresent, Never.")
 		}
 	}
 }

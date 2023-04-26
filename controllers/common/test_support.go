@@ -1,7 +1,7 @@
 package common
 
 import (
-	"github.com/go-logr/logr"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -10,14 +10,14 @@ type TestSupport struct {
 	canMakeHTTPRequestToOperand bool
 	operandMetricsReportReady   bool
 	loopTick                    time.Time
-	log                         logr.Logger
+	log                         *zap.Logger
 	features                    *SupportedFeatures
 }
 
-func NewTestSupport(rootLog logr.Logger, enabled bool) *TestSupport {
-	log := rootLog.WithName("testing")
+func NewTestSupport(rootLog *zap.Logger, enabled bool) *TestSupport {
+	log := rootLog.Named("testing")
 	if enabled {
-		log.V(V_IMPORTANT).Info("TESTING SUPPORT IS ENABLED. YOU SHOULD NOT SEE THIS MESSAGE IN PRODUCTION.")
+		log.Sugar().Warnw("TESTING SUPPORT IS ENABLED. YOU SHOULD NOT SEE THIS MESSAGE IN PRODUCTION.")
 	}
 	return &TestSupport{
 		enabled:                     enabled,

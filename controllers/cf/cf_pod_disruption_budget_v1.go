@@ -8,6 +8,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
+	"go.uber.org/zap"
 	policy_v1 "k8s.io/api/policy/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,6 +18,7 @@ var _ loop.ControlFunction = &PodDisruptionBudgetV1CF{}
 
 type PodDisruptionBudgetV1CF struct {
 	ctx                     context.LoopContext
+	log                     *zap.SugaredLogger
 	svcResourceCache        resources.ResourceCache
 	svcClients              *client.Clients
 	svcKubeFactory          *factory.KubeFactory
@@ -27,8 +29,7 @@ type PodDisruptionBudgetV1CF struct {
 }
 
 func NewPodDisruptionBudgetV1CF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
-
-	return &PodDisruptionBudgetV1CF{
+	res := &PodDisruptionBudgetV1CF{
 		ctx:                     ctx,
 		svcResourceCache:        ctx.GetResourceCache(),
 		svcClients:              ctx.GetClients(),
@@ -38,6 +39,8 @@ func NewPodDisruptionBudgetV1CF(ctx context.LoopContext, services services.LoopS
 		podDisruptionBudgetName: resources.RC_NOT_CREATED_NAME_EMPTY,
 		isPreferred:             false,
 	}
+	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
+	return res
 }
 
 func (this *PodDisruptionBudgetV1CF) Describe() string {
@@ -112,7 +115,7 @@ func (this *PodDisruptionBudgetV1CF) Respond() {
 		this.svcResourceCache.Remove(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1)
 		for _, v := range this.podDisruptionBudgets {
 			if err := this.svcClients.Kube().DeletePodDisruptionBudgetV1(&v); err != nil && !api_errors.IsNotFound(err) {
-				this.ctx.GetLog().Error(err, "could not delete PodDisruptionBudget", "name", v.Name)
+				this.log.Errorw("could not delete PodDisruptionBudget", "name", v.Name, "error", err)
 			}
 		}
 		return
@@ -131,7 +134,7 @@ func (this *PodDisruptionBudgetV1CF) Cleanup() bool {
 	// PDB should not have any deletion dependencies
 	if pdbEntry, pdbExists := this.svcResourceCache.Get(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1); pdbExists {
 		if err := this.svcClients.Kube().DeletePodDisruptionBudgetV1(pdbEntry.GetValue().(*policy_v1.PodDisruptionBudget)); err != nil && !api_errors.IsNotFound(err) {
-			this.ctx.GetLog().Error(err, "Could not delete PodDisruptionBudget during cleanup")
+			this.log.Errorw("could not delete PodDisruptionBudget during cleanup", "error", err)
 			return false
 		} else {
 			this.svcResourceCache.Remove(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1)

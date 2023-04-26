@@ -4,11 +4,11 @@ import (
 	ctx "context"
 	"errors"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
-	"github.com/go-logr/logr"
 	ocp_apps "github.com/openshift/api/apps/v1"
 	ocp_route "github.com/openshift/api/route/v1"
 	ocp_apps_client "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
 	ocp_route_client "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
+	"go.uber.org/zap"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -17,13 +17,13 @@ import (
 )
 
 type OCPClient struct {
-	log            logr.Logger
+	log            *zap.Logger
 	ocpAppsClient  *ocp_apps_client.AppsV1Client
 	ocpRouteClient *ocp_route_client.RouteV1Client
 	scheme         *runtime.Scheme
 }
 
-func NewOCPClient(log logr.Logger, scheme *runtime.Scheme, clientConfig *rest.Config) *OCPClient {
+func NewOCPClient(log *zap.Logger, scheme *runtime.Scheme, clientConfig *rest.Config) *OCPClient {
 	this := &OCPClient{
 		log:            log,
 		scheme:         scheme,

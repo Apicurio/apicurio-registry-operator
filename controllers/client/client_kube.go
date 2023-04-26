@@ -4,7 +4,7 @@ import (
 	ctx "context"
 	"errors"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
-	"github.com/go-logr/logr"
+	"go.uber.org/zap"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
@@ -21,12 +21,12 @@ import (
 // =====
 
 type KubeClient struct {
-	log    logr.Logger
+	log    *zap.Logger
 	client kubernetes.Interface
 	scheme *runtime.Scheme
 }
 
-func NewKubeClient(log logr.Logger, scheme *runtime.Scheme, config *rest.Config) *KubeClient {
+func NewKubeClient(log *zap.Logger, scheme *runtime.Scheme, config *rest.Config) *KubeClient {
 	return &KubeClient{
 		client: kubernetes.NewForConfigOrDie(config),
 		log:    log,
