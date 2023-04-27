@@ -47,30 +47,32 @@ func (this *EnvCF) Describe() string {
 }
 
 func (this *EnvCF) Sense() {
-
+	this.log.Debugw("env cache before", "value", this.svcEnvCache.GetSorted())
 	this.update = false
 	this.remove = make(map[string]corev1.EnvVar)
+
+	this.targetEnv = make([]corev1.EnvVar, 0)
 
 	// Spec resource must be available
 	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		envConfig := specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Configuration.Env
 
-		// Prepare a list of removed env. variables,
-		// and a target list of current variables
-		this.remove = make(map[string]corev1.EnvVar, len(this.previousTargetEnv))
-		for _, v := range this.previousTargetEnv {
-			cached, e := this.svcEnvCache.Get(v.Name)
-			if !e || cached.GetPriority() == env.PRIORITY_SPEC {
-				this.remove[v.Name] = v
+		for _, v := range envConfig {
+			this.targetEnv = append(this.targetEnv, v)
+			if _, e := this.svcEnvCache.Get(v.Name); !e {
+				// Add to cache
+				this.update = true
 			}
 		}
 
-		this.targetEnv = make([]corev1.EnvVar, 0)
-		for _, v := range envConfig {
-			// Copy the values, preserve order
-			this.targetEnv = append(this.targetEnv, v)
-			// Delete until only removed are left
-			delete(this.remove, v.Name)
+		this.remove = make(map[string]corev1.EnvVar, 0)
+		for _, v := range this.svcEnvCache.GetSorted() { // TODO Iterate directly?
+			cached, _ := this.svcEnvCache.Get(v.Name)
+			// Iterate over cached
+			if !found(envConfig, v.Name) && cached.GetPriority() == env.PRIORITY_SPEC {
+				// Element is in the cache, but not in spec
+				this.remove[v.Name] = v
+			}
 		}
 
 		// Update even when the env. variables have been reordered.
@@ -89,11 +91,11 @@ func (this *EnvCF) Sense() {
 }
 
 func (this *EnvCF) Compare() bool {
+	this.log.Debugw("conditions", "this.update", "len(this.remove)", len(this.remove))
 	return this.update || len(this.remove) > 0
 }
 
 func (this *EnvCF) Respond() {
-
 	// Response #1
 	// Remove first
 	for _, v := range this.remove {
@@ -116,9 +118,19 @@ func (this *EnvCF) Respond() {
 	}
 
 	this.previousTargetEnv = this.targetEnv
+	this.log.Debugw("env cache after", "value", this.svcEnvCache.GetSorted())
 }
 
 func (this *EnvCF) Cleanup() bool {
 	// No cleanup
 	return true
+}
+
+func found(haystack []corev1.EnvVar, needle string) bool {
+	for _, v := range haystack {
+		if v.Name == needle {
+			return true
+		}
+	}
+	return false
 }
