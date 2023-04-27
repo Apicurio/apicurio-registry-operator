@@ -91,7 +91,7 @@ func (this *EnvCF) Sense() {
 }
 
 func (this *EnvCF) Compare() bool {
-	this.log.Debugw("conditions", "this.update", "len(this.remove)", len(this.remove))
+	this.log.Debugw("conditions", "this.update", this.update, "len(this.remove)", len(this.remove))
 	return this.update || len(this.remove) > 0
 }
 

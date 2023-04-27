@@ -52,7 +52,7 @@ func (this *controlLoopImpl) Run() {
 			l.Debugw("control function compare")
 			discrepancy := cf.Compare()
 			if discrepancy {
-				l.Infow("control function respond")
+				l.Info("control function respond")
 				cf.Respond()
 				stabilized = false
 			}
@@ -62,7 +62,6 @@ func (this *controlLoopImpl) Run() {
 			this.ctx.GetLog().Info("Control loop is stable.")
 			break
 		}
-		//this.ctx.GetLog().Info("Looping")
 	}
 	if attempt == maxAttempts {
 		panic("Control loop stabilization limit exceeded.")
