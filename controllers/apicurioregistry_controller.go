@@ -52,9 +52,9 @@ func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog *zap.Logger, tes
 	}
 	features.IsOCP = isOCP
 	if isOCP {
-		rootLog.Sugar().Infow("This operator is running on OpenShift")
+		rootLog.Sugar().Info("This operator is running on OpenShift")
 	} else {
-		rootLog.Sugar().Infow("This operator is running on Kubernetes")
+		rootLog.Sugar().Info("This operator is running on Kubernetes")
 	}
 
 	agi, err := clients.Discovery().GetVersionInfoForAPIGroup("policy")
@@ -79,7 +79,7 @@ func NewApicurioRegistryReconciler(mgr manager.Manager, rootLog *zap.Logger, tes
 		return nil, err
 	}
 	if !isMonitoring {
-		rootLog.Sugar().Infow("Install prometheus-operator in your cluster to create ServiceMonitor objects, restart apicurio-registry operator after installing prometheus-operator")
+		rootLog.Sugar().Info("Install prometheus-operator in your cluster to create ServiceMonitor objects, restart apicurio-registry operator after installing prometheus-operator")
 	}
 	features.SupportsMonitoring = isMonitoring
 	testing.SetSupportedFeatures(features)
@@ -161,7 +161,7 @@ func (this *ApicurioRegistryReconciler) Reconcile(_ go_ctx.Context, request reco
 	appName := c.Name(request.Name)
 	appNamespace := c.Namespace(request.Namespace)
 
-	this.log.Sugar().Infow("reconciler executing")
+	this.log.Sugar().Info("reconciler executing")
 
 	// Find the spec
 	spec, err := this.clients.CRD().GetApicurioRegistry(appNamespace, appName)
@@ -207,7 +207,7 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName c.Name, appNamespa
 
 	loopKey := appNamespace.Str() + "/" + appName.Str()
 	log := this.log.Sugar().With("contextId", loopKey)
-	log.Infow("creating a new context")
+	log.Info("creating a new context")
 
 	ctx := context.NewLoopContext(appName, appNamespace, log.Desugar(), this.clients, this.testing, features)
 	loopServices := services.NewLoopServices(ctx)
