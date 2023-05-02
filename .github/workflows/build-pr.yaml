@@ -11,7 +11,7 @@ jobs:
     name: Build and test a pull request
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
 
       - uses: actions/setup-go@v2
         with:
