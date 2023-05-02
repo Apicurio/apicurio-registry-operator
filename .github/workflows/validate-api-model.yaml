@@ -1,12 +1,12 @@
-name: verify api-model
+name: Validate API Model
 on:
   push:
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
   build-project:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     if: github.repository_owner == 'Apicurio'
     steps:
       - name: Checkout Code

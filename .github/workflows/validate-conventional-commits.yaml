@@ -1,0 +1,10 @@
+name: Validate Conventional Commits
+on: [ pull_request ]
+
+jobs:
+  validate-conventional-commits:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: wagoid/commitlint-github-action@v5
