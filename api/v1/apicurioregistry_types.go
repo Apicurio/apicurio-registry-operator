@@ -30,13 +30,14 @@ type ApicurioRegistrySpec struct {
 }
 
 type ApicurioRegistrySpecConfiguration struct {
-	Persistence string                                    `json:"persistence,omitempty"`
-	Sql         ApicurioRegistrySpecConfigurationSql      `json:"sql,omitempty"`
-	Kafkasql    ApicurioRegistrySpecConfigurationKafkasql `json:"kafkasql,omitempty"`
-	UI          ApicurioRegistrySpecConfigurationUI       `json:"ui,omitempty"`
-	LogLevel    string                                    `json:"logLevel,omitempty"`
-	Security    ApicurioRegistrySpecConfigurationSecurity `json:"security,omitempty"`
-	Env         []corev1.EnvVar                           `json:"env,omitempty"`
+	Persistence      string                                    `json:"persistence,omitempty"`
+	Sql              ApicurioRegistrySpecConfigurationSql      `json:"sql,omitempty"`
+	Kafkasql         ApicurioRegistrySpecConfigurationKafkasql `json:"kafkasql,omitempty"`
+	UI               ApicurioRegistrySpecConfigurationUI       `json:"ui,omitempty"`
+	LogLevel         string                                    `json:"logLevel,omitempty"`
+	RegistryLogLevel string                                    `json:"registryLogLevel,omitempty"`
+	Security         ApicurioRegistrySpecConfigurationSecurity `json:"security,omitempty"`
+	Env              []corev1.EnvVar                           `json:"env,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationDataSource struct {
