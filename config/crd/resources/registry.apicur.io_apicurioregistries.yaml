@@ -176,6 +176,8 @@ spec:
                     type: string
                   persistence:
                     type: string
+                  registryLogLevel:
+                    type: string
                   security:
                     properties:
                       https:

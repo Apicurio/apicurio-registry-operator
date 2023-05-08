@@ -11,14 +11,17 @@ import (
 var _ loop.ControlFunction = &LogLevelCF{}
 
 const ENV_REGISTRY_LOG_LEVEL = "LOG_LEVEL"
+const ENV_REGISTRY_LOG_LEVEL2 = "REGISTRY_LOG_LEVEL"
 
 type LogLevelCF struct {
 	ctx              context.LoopContext
 	svcResourceCache resources.ResourceCache
 	svcEnvCache      env.EnvCache
-	logLevel         string
 	valid            bool
+	logLevel         string
+	registryLogLevel string
 	envLogLevel      string
+	envLogLevel2     string
 }
 
 func NewLogLevelCF(ctx context.LoopContext) loop.ControlFunction {
@@ -26,9 +29,7 @@ func NewLogLevelCF(ctx context.LoopContext) loop.ControlFunction {
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
 		svcEnvCache:      ctx.GetEnvCache(),
-		logLevel:         "",
 		valid:            true,
-		envLogLevel:      "",
 	}
 }
 
@@ -44,12 +45,21 @@ func (this *LogLevelCF) Sense() {
 		this.logLevel = spec.Spec.Configuration.LogLevel
 		// Default value is false
 	}
+	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
+		spec := specEntry.GetValue().(*ar.ApicurioRegistry)
+		this.registryLogLevel = spec.Spec.Configuration.RegistryLogLevel
+		// Default value is false
+	}
 
 	// Observation #2
 	// Read the env values
 	this.envLogLevel = ""
 	if val, exists := this.svcEnvCache.Get(ENV_REGISTRY_LOG_LEVEL); exists {
 		this.envLogLevel = val.GetValue().Value
+	}
+	this.envLogLevel2 = ""
+	if val, exists := this.svcEnvCache.Get(ENV_REGISTRY_LOG_LEVEL2); exists {
+		this.envLogLevel2 = val.GetValue().Value
 	}
 
 	// TODO log level validation?
@@ -60,13 +70,18 @@ func (this *LogLevelCF) Sense() {
 func (this *LogLevelCF) Compare() bool {
 	// Condition #1
 	// Has the value changed
-	return this.logLevel != this.envLogLevel
+	return this.logLevel != this.envLogLevel || this.registryLogLevel != this.envLogLevel2
 }
 
 func (this *LogLevelCF) Respond() {
 	// Response #1
 	// Just set the value(s)!
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_LOG_LEVEL, this.logLevel).Build())
+	if this.logLevel != "" {
+		this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_LOG_LEVEL, this.logLevel).Build())
+	}
+	if this.registryLogLevel != "" {
+		this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_LOG_LEVEL2, this.registryLogLevel).Build())
+	}
 }
 
 func (this *LogLevelCF) Cleanup() bool {
