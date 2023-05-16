@@ -112,6 +112,7 @@ type ApicurioRegistrySpecDeployment struct {
 	Image string `json:"image,omitempty"`
 	// List of secrets in the same namespace to use for pulling the Deployment pod image.
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	DisableIngress   bool                          `json:"disableIngress,omitempty"`
 }
 
 // ### Status

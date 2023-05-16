@@ -1086,6 +1086,8 @@ spec:
                             type: array
                         type: object
                     type: object
+                  disableIngress:
+                    type: boolean
                   host:
                     type: string
                   image:

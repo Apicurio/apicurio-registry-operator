@@ -30,6 +30,7 @@ type IngressCF struct {
 	ingressName       string
 	serviceName       string
 	targetHostIsEmpty bool
+	disableIngress    bool
 }
 
 func NewIngressCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
@@ -44,6 +45,7 @@ func NewIngressCF(ctx context.LoopContext, services services.LoopServices) loop.
 		ingressName:       resources.RC_NOT_CREATED_NAME_EMPTY,
 		serviceName:       resources.RC_NOT_CREATED_NAME_EMPTY,
 		targetHostIsEmpty: true,
+		disableIngress:    false,
 	}
 	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
 	return res
@@ -54,6 +56,14 @@ func (this *IngressCF) Describe() string {
 }
 
 func (this *IngressCF) Sense() {
+	// terminate execution if ingress is disabled
+	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
+		this.disableIngress = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.DisableIngress
+		if this.disableIngress {
+			this.Cleanup()
+			return
+		}
+	}
 
 	// Observation #1
 	// Get cached Ingress
@@ -110,7 +120,7 @@ func (this *IngressCF) Compare() bool {
 	// We will create a new ingress only if the host is not empty
 	return !this.isCached &&
 		this.serviceName != resources.RC_NOT_CREATED_NAME_EMPTY &&
-		!this.targetHostIsEmpty
+		!this.targetHostIsEmpty && !this.disableIngress
 }
 
 func (this *IngressCF) Respond() {
