@@ -8,6 +8,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
 	"go.uber.org/zap"
 	policy_v1 "k8s.io/api/policy/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
@@ -22,6 +23,7 @@ type PodDisruptionBudgetV1CF struct {
 	svcResourceCache        resources.ResourceCache
 	svcClients              *client.Clients
 	svcKubeFactory          *factory.KubeFactory
+	svcStatus               *status.Status
 	isCached                bool
 	podDisruptionBudgets    []policy_v1.PodDisruptionBudget
 	podDisruptionBudgetName string
@@ -34,6 +36,7 @@ func NewPodDisruptionBudgetV1CF(ctx context.LoopContext, services services.LoopS
 		svcResourceCache:        ctx.GetResourceCache(),
 		svcClients:              ctx.GetClients(),
 		svcKubeFactory:          services.GetKubeFactory(),
+		svcStatus:               services.GetStatus(),
 		isCached:                false,
 		podDisruptionBudgets:    make([]policy_v1.PodDisruptionBudget, 0),
 		podDisruptionBudgetName: resources.RC_NOT_CREATED_NAME_EMPTY,
@@ -74,6 +77,11 @@ func (this *PodDisruptionBudgetV1CF) Sense() {
 				this.podDisruptionBudgets = append(this.podDisruptionBudgets, podDisruptionBudget)
 			}
 		}
+	}
+
+	// Update the status
+	if this.isPreferred {
+		this.svcStatus.SetConfig(status.CFG_STA_POD_DISRUPTION_BUDGET_NAME, this.podDisruptionBudgetName)
 	}
 }
 

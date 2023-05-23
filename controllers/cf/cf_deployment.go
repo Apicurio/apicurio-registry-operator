@@ -126,7 +126,7 @@ func (this *DeploymentCF) Cleanup() bool {
 	}
 	if deploymentEntry, deploymentExists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT); deploymentExists {
 		if err := this.svcClients.Kube().DeleteDeployment(deploymentEntry.GetValue().(*apps.Deployment)); err != nil && !api_errors.IsNotFound(err) {
-			this.log.Errorw("Could not delete deployment during cleanup", "error", err)
+			this.log.Errorw("could not delete deployment during cleanup", "error", err)
 			return false
 		} else {
 			this.svcResourceCache.Remove(resources.RC_KEY_DEPLOYMENT)

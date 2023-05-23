@@ -138,7 +138,7 @@ func (this *NetworkPolicyCF) Cleanup() bool {
 	// Network Policy should not have any deletion dependencies
 	if networkPolicyEntry, networkPolicyExists := this.svcResourceCache.Get(resources.RC_KEY_NETWORK_POLICY); networkPolicyExists {
 		if err := this.svcClients.Kube().DeleteNetworkPolicy(networkPolicyEntry.GetValue().(*networking.NetworkPolicy)); err != nil && !api_errors.IsNotFound(err) {
-			this.log.Errorw("could not delete networkPolicy during cleanup", "error", err)
+			this.log.Errorw("could not delete NetworkPolicy during cleanup", "error", err)
 			return false
 		} else {
 			this.svcResourceCache.Remove(resources.RC_KEY_NETWORK_POLICY)

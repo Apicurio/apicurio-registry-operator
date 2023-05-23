@@ -157,7 +157,7 @@ func (this *IngressCF) Respond() {
 	}
 	// Response #3 (and #4)
 	// If there is no ingress available (or there are more than 1),
-	// create a new one OR if not disabled
+	// create a new one IF not disabled
 	if !this.disableIngress && this.ingressName == resources.RC_NOT_CREATED_NAME_EMPTY && len(this.ingresses) != 1 {
 		ingress := this.svcKubeFactory.CreateIngress(this.serviceName)
 		// leave the creation itself to patcher+creator so other CFs can update

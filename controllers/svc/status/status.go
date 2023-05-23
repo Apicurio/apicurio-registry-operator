@@ -11,10 +11,13 @@ import (
 
 // status
 const CFG_STA_IMAGE = "CFG_STA_IMAGE"
+
 const CFG_STA_DEPLOYMENT_NAME = "CFG_STA_DEPLOYMENT_NAME"
 const CFG_STA_SERVICE_NAME = "CFG_STA_SERVICE_NAME"
 const CFG_STA_INGRESS_NAME = "CFG_STA_INGRESS_NAME"
 const CFG_STA_NETWORK_POLICY_NAME = "CFG_STA_NETWORK_POLICY_NAME"
+const CFG_STA_POD_DISRUPTION_BUDGET_NAME = "CFG_STA_POD_DISRUPTION_BUDGET_NAME"
+
 const CFG_STA_REPLICA_COUNT = "CFG_STA_REPLICA_COUNT"
 const CFG_STA_ROUTE = "CFG_STA_ROUTE"
 
@@ -39,9 +42,13 @@ func (this *Status) init() {
 	// DO NOT USE `spec` ! It's nil at this point
 	// status
 	this.set(this.config, CFG_STA_IMAGE, "")
+
 	this.set(this.config, CFG_STA_DEPLOYMENT_NAME, "")
 	this.set(this.config, CFG_STA_SERVICE_NAME, "")
 	this.set(this.config, CFG_STA_INGRESS_NAME, "")
+	this.set(this.config, CFG_STA_NETWORK_POLICY_NAME, "")
+	this.set(this.config, CFG_STA_POD_DISRUPTION_BUDGET_NAME, "")
+
 	this.set(this.config, CFG_STA_REPLICA_COUNT, "")
 	this.set(this.config, CFG_STA_ROUTE, "")
 }
@@ -121,6 +128,20 @@ func (this *Status) ComputeStatus() {
 					Kind:      "Ingress",
 					Namespace: this.ctx.GetAppNamespace().Str(),
 					Name:      this.GetConfig(CFG_STA_INGRESS_NAME),
+				})
+			}
+			if this.GetConfig(CFG_STA_NETWORK_POLICY_NAME) != "" {
+				res = append(res, api.ApicurioRegistryStatusManagedResource{
+					Kind:      "NetworkPolicy",
+					Namespace: this.ctx.GetAppNamespace().Str(),
+					Name:      this.GetConfig(CFG_STA_NETWORK_POLICY_NAME),
+				})
+			}
+			if this.GetConfig(CFG_STA_POD_DISRUPTION_BUDGET_NAME) != "" {
+				res = append(res, api.ApicurioRegistryStatusManagedResource{
+					Kind:      "PodDisruptionBudget",
+					Namespace: this.ctx.GetAppNamespace().Str(),
+					Name:      this.GetConfig(CFG_STA_POD_DISRUPTION_BUDGET_NAME),
 				})
 			}
 			status.ManagedResources = res
