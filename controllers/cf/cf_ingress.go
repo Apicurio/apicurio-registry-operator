@@ -11,6 +11,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
 	"go.uber.org/zap"
+	core "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
 	api_errors "k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,33 +20,31 @@ import (
 var _ loop.ControlFunction = &IngressCF{}
 
 type IngressCF struct {
-	ctx               context.LoopContext
-	log               *zap.SugaredLogger
-	svcResourceCache  resources.ResourceCache
-	svcClients        *client.Clients
-	svcStatus         *status.Status
-	svcKubeFactory    *factory.KubeFactory
-	isCached          bool
-	ingresses         []networking.Ingress
-	ingressName       string
-	serviceName       string
-	targetHostIsEmpty bool
-	disableIngress    bool
+	ctx              context.LoopContext
+	log              *zap.SugaredLogger
+	svcResourceCache resources.ResourceCache
+	svcClients       *client.Clients
+	svcStatus        *status.Status
+	svcKubeFactory   *factory.KubeFactory
+	isCached         bool
+	ingresses        []networking.Ingress
+	ingressName      string
+	serviceName      string
+	disableIngress   bool
 }
 
 func NewIngressCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
 	res := &IngressCF{
-		ctx:               ctx,
-		svcResourceCache:  ctx.GetResourceCache(),
-		svcClients:        ctx.GetClients(),
-		svcStatus:         services.GetStatus(),
-		svcKubeFactory:    services.GetKubeFactory(),
-		isCached:          false,
-		ingresses:         make([]networking.Ingress, 0),
-		ingressName:       resources.RC_NOT_CREATED_NAME_EMPTY,
-		serviceName:       resources.RC_NOT_CREATED_NAME_EMPTY,
-		targetHostIsEmpty: true,
-		disableIngress:    false,
+		ctx:              ctx,
+		svcResourceCache: ctx.GetResourceCache(),
+		svcClients:       ctx.GetClients(),
+		svcStatus:        services.GetStatus(),
+		svcKubeFactory:   services.GetKubeFactory(),
+		isCached:         false,
+		ingresses:        make([]networking.Ingress, 0),
+		ingressName:      resources.RC_NOT_CREATED_NAME_EMPTY,
+		serviceName:      resources.RC_NOT_CREATED_NAME_EMPTY,
+		disableIngress:   false,
 	}
 	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
 	return res
@@ -56,13 +55,12 @@ func (this *IngressCF) Describe() string {
 }
 
 func (this *IngressCF) Sense() {
+
+	this.disableIngress = false
 	// terminate execution if ingress is disabled
 	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		this.disableIngress = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.DisableIngress
-		if this.disableIngress {
-			this.Cleanup()
-			return
-		}
+		// Do cleanup in respond
 	}
 
 	// Observation #1
@@ -93,8 +91,16 @@ func (this *IngressCF) Sense() {
 
 	// Observation #3
 	// Is there a Service already? It must have been created (has a name)
-	serviceEntry, serviceExists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE)
-	if serviceExists {
+	if serviceEntry, serviceExists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE); serviceExists {
+		service := serviceEntry.GetValue().(*core.Service).Spec
+		foundHttpPort := false
+		for _, port := range service.Ports {
+			if port.Port == HttpPort {
+				foundHttpPort = true
+			}
+		}
+		// Disable ingress if there is no HTTP port in the service
+		this.disableIngress = this.disableIngress || !foundHttpPort
 		this.serviceName = serviceEntry.GetName().Str()
 	} else {
 		this.serviceName = resources.RC_NOT_CREATED_NAME_EMPTY
@@ -102,9 +108,14 @@ func (this *IngressCF) Sense() {
 
 	// Observation #4
 	// See if the host in the config spec is not empty
-	this.targetHostIsEmpty = true
 	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
-		this.targetHostIsEmpty = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Host == ""
+		this.disableIngress = this.disableIngress || specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Host == ""
+	}
+
+	if this.disableIngress {
+		this.log.Debugw("Ingress is disabled")
+	} else {
+		this.log.Debugw("Ingress is enabled")
 	}
 
 	// Update the status
@@ -112,20 +123,18 @@ func (this *IngressCF) Sense() {
 }
 
 func (this *IngressCF) Compare() bool {
+
 	// Condition #1
-	// If we already have a ingress cached, skip
-	// Condition #2
-	// The service has been created
-	// Condition #3
-	// We will create a new ingress only if the host is not empty
-	return !this.isCached &&
-		this.serviceName != resources.RC_NOT_CREATED_NAME_EMPTY &&
-		!this.targetHostIsEmpty && !this.disableIngress
+	// Ingress cached and at the same time it is disabled (or vice versa)
+	return (this.isCached == this.disableIngress) &&
+		// Condition #2
+		// The service has been created
+		this.serviceName != resources.RC_NOT_CREATED_NAME_EMPTY
 }
 
 func (this *IngressCF) Respond() {
 	// Response #1
-	// We already know about a ingress (name), and it is in the list
+	// We already know about an ingress (name), and it is in the list
 	if this.ingressName != resources.RC_NOT_CREATED_NAME_EMPTY {
 		contains := false
 		for _, val := range this.ingresses {
@@ -147,11 +156,17 @@ func (this *IngressCF) Respond() {
 		this.svcResourceCache.Set(resources.RC_KEY_INGRESS, resources.NewResourceCacheEntry(common.Name(ingress.Name), &ingress))
 	}
 	// Response #3 (and #4)
-	// If there is no ingress available (or there are more than 1), just create a new one
-	if this.ingressName == resources.RC_NOT_CREATED_NAME_EMPTY && len(this.ingresses) != 1 {
+	// If there is no ingress available (or there are more than 1),
+	// create a new one OR if not disabled
+	if !this.disableIngress && this.ingressName == resources.RC_NOT_CREATED_NAME_EMPTY && len(this.ingresses) != 1 {
 		ingress := this.svcKubeFactory.CreateIngress(this.serviceName)
 		// leave the creation itself to patcher+creator so other CFs can update
 		this.svcResourceCache.Set(resources.RC_KEY_INGRESS, resources.NewResourceCacheEntry(resources.RC_NOT_CREATED_NAME_EMPTY, ingress))
+	}
+
+	// Delete an existing ingress if disabled
+	if this.disableIngress {
+		this.Cleanup()
 	}
 }
 
@@ -159,11 +174,11 @@ func (this *IngressCF) Cleanup() bool {
 	// Ingress should not have any deletion dependencies
 	if ingressEntry, ingressExists := this.svcResourceCache.Get(resources.RC_KEY_INGRESS); ingressExists {
 		if err := this.svcClients.Kube().DeleteIngress(ingressEntry.GetValue().(*networking.Ingress)); err != nil && !api_errors.IsNotFound(err) {
-			this.log.Errorw("could not delete ingress during cleanup", "error", err)
+			this.log.Errorw("could not delete ingress", "error", err)
 			return false
 		} else {
 			this.svcResourceCache.Remove(resources.RC_KEY_INGRESS)
-			this.ctx.GetLog().Info("Ingress has been deleted.")
+			this.ctx.GetLog().Info("ingress has been deleted.")
 		}
 	}
 	return true
