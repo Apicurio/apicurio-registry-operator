@@ -1,70 +1,63 @@
 package cf
 
 import (
-	"errors"
-	"fmt"
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/status"
 	"go.uber.org/zap"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
+	networking "k8s.io/api/networking/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"time"
 )
 
 var _ loop.ControlFunction = &HttpsCF{}
 
-const JavaOptions = "-Dquarkus.http.ssl.certificate.file=/certs/tls.crt -Dquarkus.http.ssl.certificate.key-file=/certs/tls.key"
 const TlsCertMountPath = "/certs"
 const HttpsPort = 8443
-const HttpPort = 8080
+
+// TODO
+// const HttpPort = 8080
 
 type HttpsCF struct {
 	ctx              context.LoopContext
 	log              *zap.SugaredLogger
 	svcResourceCache resources.ResourceCache
+	svcEnvCache      env.EnvCache
 	svcClients       *client.Clients
-	svcStatus        *status.Status
-	svcKubeFactory   *factory.KubeFactory
-	serviceExists    bool
-	serviceEntry     resources.ResourceCacheEntry
-	specExists       bool
-	specEntry        resources.ResourceCacheEntry
-	deploymentExists bool
-	deploymentEntry  resources.ResourceCacheEntry
-	secretExists     bool
-	secretEntry      resources.ResourceCacheEntry
 
 	httpsEnabled bool
-	secret       *core.Secret
-	secretName   string
-	certificate  string
-	key          string
 
-	needsReconcile bool
-	cantReconcile  bool
+	secretExists       bool
+	targetSecretName   string
+	previousSecretName string
+
+	networkPolicyHttpsPortExists bool
+
+	javaOptions       map[string]string
+	targetJavaOptions map[string]string
+	javaOptionsExists bool
+
+	serviceHttpsPortExists bool
+
+	secretVolumeExists      bool
+	secretVolumeMountExists bool
+	containerPortExists     bool
+	networkPolicyExists     bool
 }
 
-func NewHttpsCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
+func NewHttpsCF(ctx context.LoopContext, _ services.LoopServices) loop.ControlFunction {
 	res := &HttpsCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
+		svcEnvCache:      ctx.GetEnvCache(),
 		svcClients:       ctx.GetClients(),
-		svcStatus:        services.GetStatus(),
-		svcKubeFactory:   services.GetKubeFactory(),
-		specExists:       false,
-		deploymentExists: false,
-		secretExists:     false,
-		httpsEnabled:     false,
-		needsReconcile:   false,
 	}
 	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
 	return res
@@ -78,205 +71,268 @@ func (this *HttpsCF) Sense() {
 
 	// Observation #1
 	// Read config values from the Apicurio custom resource
-	specEntry, specExists := this.svcResourceCache.Get(resources.RC_KEY_SPEC)
-	this.specEntry = specEntry
-	this.specExists = specExists
-
-	if this.specExists {
-		spec := specEntry.GetValue().(*ar.ApicurioRegistry).Spec
-		httpsConfig := spec.Configuration.Security.Https
-
-		if this.httpsEnabled != httpsConfig.Enabled {
-			this.httpsEnabled = httpsConfig.Enabled
-			this.needsReconcile = true
-		}
-
-		if this.secretName != httpsConfig.SecretName {
-			this.secretName = httpsConfig.SecretName
-			this.needsReconcile = true
-		}
-
-		if this.certificate != httpsConfig.Certificate {
-			this.certificate = httpsConfig.Certificate
-			this.needsReconcile = true
-		}
-
-		if this.key != httpsConfig.Key {
-			this.key = httpsConfig.Key
-			this.needsReconcile = true
-		}
-
+	this.targetSecretName = ""
+	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
+		spec := entry.GetValue().(*ar.ApicurioRegistry).Spec
+		this.targetSecretName = spec.Configuration.Security.Https.SecretName
 	}
+	this.log.Debugw("Observation #1", "this.targetSecretName", this.targetSecretName)
 
 	// Observation #2
-	// Get cached service and check if HTTPS port is enabled
-	serviceEntry, serviceExists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE)
-	this.serviceEntry = serviceEntry
-	this.serviceExists = serviceExists
-
-	if this.httpsEnabled && this.serviceExists {
-		service := serviceEntry.GetValue().(*core.Service).Spec
-		foundHttpsPort := false
-		for _, port := range service.Ports {
-			if port.Port == HttpsPort {
-				foundHttpsPort = true
-			}
-		}
-		if !foundHttpsPort {
-			this.needsReconcile = true
-		}
-	}
-
-	// Observation #3
 	// Get Secret containing the certificate and key
-	if this.httpsEnabled {
-		secret, err := this.svcClients.Kube().GetSecret(
-			this.ctx.GetAppNamespace(), common.Name(this.secretName), &meta.GetOptions{})
+	this.secretExists = false
+	if this.targetSecretName != "" {
+		secret, err := this.svcClients.Kube().
+			GetSecret(this.ctx.GetAppNamespace(), common.Name(this.targetSecretName), &meta.GetOptions{})
+
 		if err == nil {
-			this.secret = secret
-			// Validate provided secret contains both 'tls.crt' and 'tls.key'
-			if !common.SecretHasTLSFields(secret) {
-				// Log error and cancel current reconciliation and wait for 10 seconds
-				this.log.Errorw("both tls.crt and tls.key must be present", "error", errors.New(fmt.Sprintf("Invalid secret: %s", this.secretName)))
-				this.cancelCurrentReconcileAndWait(10)
-				return
+			if !common.SecretHasField(secret, "tls.crt") || !common.SecretHasField(secret, "tls.key") {
+				this.log.Errorw("HTTPS secret referenced in Apicurio Registry CR must have both tls.crt and tls.key fields",
+					"secretName", this.targetSecretName)
+				this.ctx.SetRequeueDelaySec(10)
+			} else {
+				this.secretExists = true
 			}
 		} else {
-			this.log.Errorw("secret referenced in Apicurio Registry CR is missing.", "error", errors.New(fmt.Sprintf("Secret '%s' is missing, error: %s", this.secretName, err)))
-			// Log error and cancel current reconciliation and wait for 10 seconds
-			this.cancelCurrentReconcileAndWait(10)
-			return
+			this.log.Errorw("HTTPS secret referenced in Apicurio Registry CR is missing",
+				"secretName", this.targetSecretName, "error", err)
+			this.ctx.SetRequeueDelaySec(10)
 		}
 	}
+	this.log.Debugw("Observation #2", "this.targetSecretName", this.targetSecretName,
+		"this.secretExists", this.secretExists)
 
-	// Observation #4
-	// Get cached deployment
-	// If httpsEnabled and deploymentExists, check deployment has mounted the secret from the config as a volume
-	deploymentEntry, deploymentExists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT)
-	this.deploymentEntry = deploymentEntry
-	this.deploymentExists = deploymentExists
-
-	if this.httpsEnabled && this.deploymentExists && this.secretExists {
-		deployment := this.deploymentEntry.GetValue().(*apps.Deployment)
-		volumes := deployment.Spec.Template.Spec.Volumes
-		foundVolume := false
-		for _, volume := range volumes {
-			if volume.Name == this.secret.Name {
-				foundVolume = true
+	// Observation #3
+	// Get cached service and check if HTTPS port is enabled
+	this.serviceHttpsPortExists = false
+	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE); exists {
+		service := entry.GetValue().(*core.Service).Spec
+		for _, port := range service.Ports {
+			if port.Port == HttpsPort {
+				this.serviceHttpsPortExists = true
+				break
 			}
 		}
-		if !foundVolume {
-			this.needsReconcile = true
+	}
+	this.log.Debugw("Observation #3", "this.serviceHttpsPortExists", this.serviceHttpsPortExists)
+
+	// Observation #4
+	// Check deployment has mounted the secret from the config as a volume
+	this.secretVolumeExists = false
+	this.secretVolumeMountExists = false
+	this.containerPortExists = false
+	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT); exists && this.targetSecretName != "" {
+		deployment := entry.GetValue().(*apps.Deployment)
+		// Volume
+		for _, volume := range deployment.Spec.Template.Spec.Volumes {
+			if volume.Name == this.targetSecretName {
+				this.secretVolumeExists = true
+				break
+			}
+		}
+		// Volume mount
+		for _, mount := range deployment.Spec.Template.Spec.Containers[0].VolumeMounts {
+			if mount.Name == this.targetSecretName {
+				this.secretVolumeMountExists = true
+				break
+			}
+		}
+		// Container port
+		for _, port := range deployment.Spec.Template.Spec.Containers[0].Ports {
+			if port.ContainerPort == HttpsPort {
+				this.containerPortExists = true
+				break
+			}
 		}
 	}
+	this.log.Debugw("Observation #4", "this.secretVolumeExists", this.secretVolumeExists,
+		"this.secretVolumeMountExists", this.secretVolumeMountExists,
+		"this.containerPortExists", this.containerPortExists)
 
+	// Observation #5
+	// Find out if JAVA_OPTIONS is set
+	this.targetJavaOptions = map[string]string{
+		"-Dquarkus.http.ssl.certificate.file":     "/certs/tls.crt",
+		"-Dquarkus.http.ssl.certificate.key-file": "/certs/tls.key",
+	}
+	this.javaOptions = env.ParseJavaOptionsMap(this.svcEnvCache)
+	this.javaOptionsExists = true
+	for k, v := range this.targetJavaOptions {
+		vold, exists := this.javaOptions[k]
+		this.javaOptionsExists = this.javaOptionsExists && exists && v == vold
+	}
+	this.log.Debugw("Observation #5", "this.javaOptionsExists", this.javaOptionsExists,
+		"this.javaOptions", this.javaOptions)
+
+	// Observation #6
+	// Find out if the HTTPS port is set in the NetworkPolicy
+	// NOTE: Network policy may not be created immediately, so we need to wait
+	// until it is available.
+	this.networkPolicyHttpsPortExists = false
+	this.networkPolicyExists = false
+	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_NETWORK_POLICY); exists {
+		policy := entry.GetValue().(*networking.NetworkPolicy)
+		this.networkPolicyExists = true
+		for _, rule := range policy.Spec.Ingress {
+			for _, port := range rule.Ports {
+				if *port.Protocol == "TCP" && int(port.Port.IntValue()) == HttpsPort {
+					this.networkPolicyHttpsPortExists = true
+				}
+			}
+		}
+	}
+	this.log.Debugw("Observation #6", "this.networkPolicyHttpsPortExists", this.networkPolicyHttpsPortExists)
 }
 
 func (this *HttpsCF) Compare() bool {
-	// Condition #1
-	// Only reconcile when this.needsReconcile = true
-	return this.needsReconcile
+	this.httpsEnabled = this.targetSecretName != "" && this.secretExists // Observation #1, #2
+
+	return (this.targetSecretName != this.previousSecretName) || // Secret renamed or removed
+		(this.httpsEnabled != this.serviceHttpsPortExists) || // Observation #3
+		(this.httpsEnabled != this.secretVolumeExists) || // Observation #4
+		(this.httpsEnabled != this.secretVolumeMountExists) || // Observation #4
+		(this.httpsEnabled != this.containerPortExists) || // Observation #4
+		(this.httpsEnabled != this.javaOptionsExists) || // Observation #5
+		(this.networkPolicyExists && this.httpsEnabled != this.networkPolicyHttpsPortExists) // Observation #6
 }
 
 func (this *HttpsCF) Respond() {
 
-	if this.cantReconcile {
-		this.cantReconcile = false
-		return
-	}
+	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT); exists {
+		entry.ApplyPatch(func(value interface{}) interface{} {
+			deployment := value.(*apps.Deployment).DeepCopy()
 
-	deployment := this.deploymentEntry.GetValue().(*apps.Deployment).DeepCopy()
-	apicurioContainer := &deployment.Spec.Template.Spec.Containers[0]
-	apicurioService := this.serviceEntry.GetValue().(*core.Service).DeepCopy()
+			apicurioContainer := &deployment.Spec.Template.Spec.Containers[0]
 
-	if this.httpsEnabled {
-
-		// Add volume containing the certificate and key if it's not already part of the deployment
-		common.AddVolumeToDeployment(deployment, &core.Volume{
-			Name: this.secretName,
-			VolumeSource: core.VolumeSource{
-				Secret: &core.SecretVolumeSource{
-					SecretName: this.secretName,
+			volume := &core.Volume{
+				Name: this.targetSecretName,
+				VolumeSource: core.VolumeSource{
+					Secret: &core.SecretVolumeSource{
+						SecretName: this.targetSecretName,
+					},
 				},
-			},
+			}
+
+			volumeMount := &core.VolumeMount{
+				Name:      this.targetSecretName,
+				MountPath: TlsCertMountPath,
+				ReadOnly:  true,
+			}
+
+			port := &core.ContainerPort{
+				ContainerPort: HttpsPort,
+			}
+
+			if this.httpsEnabled && !this.secretVolumeExists {
+				common.SetVolumeInDeployment(deployment, volume)
+				this.log.Debugw("added secret volume")
+			}
+			if !this.httpsEnabled && this.secretVolumeExists {
+				common.RemoveVolumeFromDeployment(deployment, volume)
+				this.log.Debugw("removed secret volume")
+			}
+			if this.httpsEnabled && !this.secretVolumeMountExists {
+				common.AddVolumeMountToContainer(apicurioContainer, volumeMount)
+				this.log.Debugw("added secret volume mount")
+			}
+			if !this.httpsEnabled && this.secretVolumeMountExists {
+				common.RemoveVolumeMountFromContainer(apicurioContainer, volumeMount)
+				this.log.Debugw("removed secret volume mount")
+			}
+			if this.httpsEnabled && !this.containerPortExists {
+				common.AddPortToContainer(apicurioContainer, port)
+				this.log.Debugw("added container port")
+			}
+			if !this.httpsEnabled && this.containerPortExists {
+				common.RemovePortFromContainer(apicurioContainer, port)
+				this.log.Debugw("removed container port")
+			}
+
+			return deployment
 		})
-
-		// Add volume mount containing the certs to the apicurio container if not already there
-		common.AddVolumeMountToContainer(apicurioContainer, &core.VolumeMount{
-			Name:      this.secretName,
-			MountPath: TlsCertMountPath,
-			ReadOnly:  true,
-		})
-
-		// Add HTTPS_PORT to the apicurio container if not already there
-		common.AddPortToContainer(apicurioContainer, &core.ContainerPort{
-			ContainerPort: HttpsPort,
-		})
-
-		// Add JAVA_OPTIONS environment variable to the apicurio container if not already there
-		common.AddEnvVarToContainer(apicurioContainer, &core.EnvVar{
-			Name:  "JAVA_OPTIONS",
-			Value: JavaOptions,
-		})
-
-		// Add HTTPS_PORT to the apicurio service if not already there
-		common.AddPortToService(apicurioService, &core.ServicePort{
-			Name:       "https",
-			Port:       HttpsPort,
-			TargetPort: intstr.IntOrString{Type: 0, IntVal: HttpsPort},
-		})
-
-		common.AddPortToService(apicurioService, &core.ServicePort{
-			Name:       "http",
-			Port:       HttpPort,
-			TargetPort: intstr.IntOrString{Type: 0, IntVal: HttpPort},
-		})
-
-	} else {
-
-		// Add HTTP_PORT if !httpsEnabled
-		common.AddPortToService(apicurioService, &core.ServicePort{
-			Name:       "http",
-			Port:       HttpPort,
-			TargetPort: intstr.IntOrString{Type: 0, IntVal: HttpPort},
-		})
-
-		// Remove HTTPS_PORT from apicurio service if !httpsEnabled
-		common.RemovePortFromService(apicurioService, &core.ServicePort{
-			Name:       "https",
-			Port:       HttpsPort,
-			TargetPort: intstr.IntOrString{Type: 0, IntVal: HttpsPort},
-		})
-
-		// Remove JAVA_OPTIONS environment variable from the apicurio container if present
-		common.RemoveEnvVarFromContainer(apicurioContainer, &core.EnvVar{
-			Name:  "JAVA_OPTIONS",
-			Value: JavaOptions,
-		})
-
 	}
 
-	// Patch service resource
-	this.serviceEntry.ApplyPatch(func(value interface{}) interface{} {
-		return apicurioService
-	})
+	// Java Options
+	if this.httpsEnabled && !this.javaOptionsExists {
+		for k, v := range this.targetJavaOptions {
+			this.javaOptions[k] = v
+		}
+		env.SaveJavaOptionsMap(this.svcEnvCache, this.javaOptions)
+		this.log.Debugw("added java options", "this.javaOptions", this.javaOptions)
+	}
+	if !this.httpsEnabled && this.javaOptionsExists {
+		changed := false
+		for k, _ := range this.targetJavaOptions {
+			if _, ok := this.javaOptions[k]; ok {
+				delete(this.javaOptions, k)
+				changed = true
+			}
+		}
+		if changed {
+			env.SaveJavaOptionsMap(this.svcEnvCache, this.javaOptions)
+			this.log.Debugw("removed java options", "this.javaOptions", this.javaOptions)
+		}
+	}
 
-	// Patch deployment resource
-	this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
-		return deployment
-	})
+	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE); exists {
+		entry.ApplyPatch(func(value interface{}) interface{} {
+			service := value.(*core.Service).DeepCopy()
 
-	this.needsReconcile = false
+			port := &core.ServicePort{
+				Name:       "https",
+				Protocol:   core.ProtocolTCP,
+				Port:       HttpsPort,
+				TargetPort: intstr.FromInt(HttpsPort),
+			}
 
+			if this.httpsEnabled && !this.serviceHttpsPortExists {
+				common.AddPortToService(service, port)
+				this.log.Debugw("added HTTPS port to service")
+			}
+			if !this.httpsEnabled && this.serviceHttpsPortExists {
+				common.RemovePortFromService(service, port)
+				this.log.Debugw("removed HTTPS port from service")
+			}
+
+			return service
+		})
+	}
+
+	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_NETWORK_POLICY); exists {
+		entry.ApplyPatch(func(value interface{}) interface{} {
+			policy := value.(*networking.NetworkPolicy).DeepCopy()
+
+			tcp := core.ProtocolTCP
+
+			rule := &networking.NetworkPolicyIngressRule{
+				Ports: []networking.NetworkPolicyPort{
+					{
+						Protocol: &tcp,
+						Port: &intstr.IntOrString{
+							Type:   intstr.Int,
+							IntVal: HttpsPort,
+						},
+					},
+				},
+			}
+
+			if this.httpsEnabled && !this.networkPolicyHttpsPortExists {
+				common.AddRuleToNetworkPolicy(policy, rule)
+				this.log.Debugw("added network policy rule")
+			}
+			if !this.httpsEnabled && this.networkPolicyHttpsPortExists {
+				common.RemoveRuleFromNetworkPolicy(policy, rule)
+				this.log.Debugw("removed network policy rule")
+			}
+
+			return policy
+		})
+	}
+
+	this.previousSecretName = this.targetSecretName
 }
 
 func (this *HttpsCF) Cleanup() bool {
 	// No cleanup
 	return true
-}
-
-func (this *HttpsCF) cancelCurrentReconcileAndWait(duration time.Duration) {
-	time.Sleep(duration * time.Second)
-	this.needsReconcile = true
-	this.cantReconcile = true
 }

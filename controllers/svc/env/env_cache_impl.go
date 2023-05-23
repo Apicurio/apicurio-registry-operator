@@ -208,3 +208,35 @@ func (this *envCache) processWithDependencies(depth int, processed map[string]bo
 		processed[val.GetName()] = true
 	}
 }
+
+func ParseJavaOptionsMap(envCache EnvCache) map[string]string {
+	javaOptions := make(map[string]string, 0)
+	if entry, exists := envCache.Get("JAVA_OPTIONS"); exists {
+		for _, f := range strings.Fields(entry.GetValue().Value) {
+			parts := strings.SplitN(f, "=", 2)
+			if len(parts) == 2 {
+				javaOptions[parts[0]] = parts[1]
+			} else {
+				// Option without the "="
+				javaOptions[parts[0]] = ""
+			}
+		}
+	}
+	return javaOptions
+}
+
+func SaveJavaOptionsMap(envCache EnvCache, options map[string]string) {
+	javaOptions := ""
+	for k, v := range options {
+		if v == "" {
+			javaOptions = javaOptions + k
+		} else {
+			javaOptions = javaOptions + k + "=" + v
+		}
+		javaOptions = javaOptions + " "
+	}
+	if javaOptions != "" {
+		envCache.Set(NewSimpleEnvCacheEntryBuilder("JAVA_OPTIONS", javaOptions).
+			SetPriority(PRIORITY_SPEC).Build())
+	}
+}

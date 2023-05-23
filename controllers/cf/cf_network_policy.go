@@ -90,6 +90,7 @@ func (this *NetworkPolicyCF) Sense() {
 		this.serviceName = resources.RC_NOT_CREATED_NAME_EMPTY
 	}
 
+	// TODO Fix this, we probably need a NP even if the host is empty
 	// Observation #4
 	// See if the host in the config spec is not empty
 	this.targetHostIsEmpty = true
