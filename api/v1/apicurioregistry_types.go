@@ -81,10 +81,8 @@ type ApicurioRegistrySpecConfigurationSecurity struct {
 }
 
 type ApicurioRegistrySpecConfigurationSecurityHttps struct {
-	Enabled     bool   `json:"enabled,omitempty"`
-	SecretName  string `json:"secretName,omitempty"`
-	Certificate string `json:"certificate,omitempty"`
-	Key         string `json:"key,omitempty"`
+	//EnableHttp bool   `json:"enableHttp,omitempty"`
+	SecretName string `json:"secretName,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationSecurityKeycloak struct {

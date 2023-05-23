@@ -91,7 +91,7 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 						Ports: []core.ContainerPort{
 							{
 								ContainerPort: 8080,
-								Protocol:      "TCP",
+								Protocol:      core.ProtocolTCP,
 							},
 						},
 						Env: []core.EnvVar{},
@@ -168,6 +168,7 @@ func (this *KubeFactory) CreateService() *core.Service {
 		Spec: core.ServiceSpec{
 			Ports: []core.ServicePort{
 				{
+					Name:       "http",
 					Protocol:   core.ProtocolTCP,
 					Port:       8080,
 					TargetPort: intstr.FromInt(8080),
@@ -240,7 +241,17 @@ func (this *KubeFactory) CreateNetworkPolicy(serviceName string) *networking.Net
 							Port: &intstr.IntOrString{
 								Type:   0,
 								IntVal: 8080,
-								StrVal: "8080",
+							},
+						},
+					},
+				},
+				{
+					Ports: []networking.NetworkPolicyPort{
+						{
+							Protocol: &protocolTCP,
+							Port: &intstr.IntOrString{
+								Type:   0,
+								IntVal: 8443,
 							},
 						},
 					},

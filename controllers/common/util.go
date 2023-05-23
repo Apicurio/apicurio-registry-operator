@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap/zapcore"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
+	networking "k8s.io/api/networking/v1"
 	"os"
 	"reflect"
 	kzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -103,7 +104,7 @@ func AssertSliceContains(t *testing.T, haystack []interface{}, needle interface{
 	}
 }
 
-func AddVolumeToDeployment(deployment *apps.Deployment, volume *core.Volume) {
+func SetVolumeInDeployment(deployment *apps.Deployment, volume *core.Volume) {
 
 	deploymentVolumes := &deployment.Spec.Template.Spec.Volumes
 	volumeAlreadyExists := false
@@ -119,7 +120,6 @@ func AddVolumeToDeployment(deployment *apps.Deployment, volume *core.Volume) {
 	if !volumeAlreadyExists {
 		*deploymentVolumes = append(*deploymentVolumes, *volume)
 	}
-
 }
 
 func RemoveVolumeFromDeployment(deployment *apps.Deployment, volume *core.Volume) {
@@ -133,7 +133,6 @@ func RemoveVolumeFromDeployment(deployment *apps.Deployment, volume *core.Volume
 			break
 		}
 	}
-
 }
 
 func AddVolumeMountToContainer(container *core.Container, volumeMount *core.VolumeMount) {
@@ -152,7 +151,6 @@ func AddVolumeMountToContainer(container *core.Container, volumeMount *core.Volu
 	if !mountAlreadyExists {
 		*volumeMounts = append(*volumeMounts, *volumeMount)
 	}
-
 }
 
 func RemoveVolumeMountFromContainer(container *core.Container, volumeMount *core.VolumeMount) {
@@ -166,7 +164,6 @@ func RemoveVolumeMountFromContainer(container *core.Container, volumeMount *core
 			break
 		}
 	}
-
 }
 
 func AddEnvVarToContainer(container *core.Container, envVar *core.EnvVar) {
@@ -185,7 +182,6 @@ func AddEnvVarToContainer(container *core.Container, envVar *core.EnvVar) {
 	if !varAlreadyExists {
 		*envVars = append(*envVars, *envVar)
 	}
-
 }
 
 func RemoveEnvVarFromContainer(container *core.Container, envVar *core.EnvVar) {
@@ -199,7 +195,6 @@ func RemoveEnvVarFromContainer(container *core.Container, envVar *core.EnvVar) {
 			break
 		}
 	}
-
 }
 
 func AddPortToContainer(container *core.Container, port *core.ContainerPort) {
@@ -218,7 +213,16 @@ func AddPortToContainer(container *core.Container, port *core.ContainerPort) {
 	if !portAlreadyExists {
 		*ports = append(*ports, *port)
 	}
+}
 
+func RemovePortFromContainer(container *core.Container, port *core.ContainerPort) {
+	ports := &container.Ports
+	for i, p := range *ports {
+		if p.ContainerPort == port.ContainerPort {
+			*ports = append((*ports)[:i], (*ports)[i+1:]...)
+			break
+		}
+	}
 }
 
 func AddPortToService(service *core.Service, port *core.ServicePort) {
@@ -227,6 +231,7 @@ func AddPortToService(service *core.Service, port *core.ServicePort) {
 	portAlreadyExists := false
 
 	// Modify servicePort if it exists, otherwise append as a new servicePort
+	// TODO Maybe compare by name?
 	for i, p := range *ports {
 		if p.Port == port.Port {
 			portAlreadyExists = true
@@ -237,7 +242,6 @@ func AddPortToService(service *core.Service, port *core.ServicePort) {
 	if !portAlreadyExists {
 		*ports = append(*ports, *port)
 	}
-
 }
 
 func RemovePortFromService(service *core.Service, port *core.ServicePort) {
@@ -251,27 +255,59 @@ func RemovePortFromService(service *core.Service, port *core.ServicePort) {
 			break
 		}
 	}
-
 }
 
-func SecretHasTLSFields(secret *core.Secret) bool {
-
-	foundCert := false
-	foundKey := false
-
-	// Validate the secret has both the 'tls.crt' and 'tls.key' fields
-	for key, _ := range secret.Data {
-		if key == "tls.crt" {
-			foundCert = true
-		} else if key == "tls.key" {
-			foundKey = true
+func AddRuleToNetworkPolicy(policy *networking.NetworkPolicy, rule *networking.NetworkPolicyIngressRule) {
+	exists := false
+	for i, r := range policy.Spec.Ingress {
+		equals := false
+		if len(r.Ports) == len(rule.Ports) {
+			for ii, p := range r.Ports {
+				if p.Protocol != rule.Ports[ii].Protocol ||
+					p.Port.String() != rule.Ports[ii].Port.String() {
+					equals = false
+					break
+				}
+			}
+		}
+		if equals {
+			exists = true
+			policy.Spec.Ingress[i] = *rule
+			break
 		}
 	}
-	if !foundCert || !foundKey {
-		return false
+	if !exists {
+		policy.Spec.Ingress = append(policy.Spec.Ingress, *rule)
 	}
-	return true
+}
 
+func RemoveRuleFromNetworkPolicy(policy *networking.NetworkPolicy, rule *networking.NetworkPolicyIngressRule) {
+	for i, r := range policy.Spec.Ingress {
+		equals := false
+		if len(r.Ports) == len(rule.Ports) {
+			for ii, p := range r.Ports {
+				if p.Protocol != rule.Ports[ii].Protocol ||
+					p.Port.String() != rule.Ports[ii].Port.String() {
+					equals = true
+					break
+				}
+			}
+		}
+		if equals {
+			policy.Spec.Ingress = append(policy.Spec.Ingress[:i], policy.Spec.Ingress[i+1:]...)
+			break
+		}
+	}
+}
+
+func SecretHasField(secret *core.Secret, field string) bool {
+
+	for key, _ := range secret.Data {
+		if key == field {
+			return true
+		}
+	}
+	return false
 }
 
 func HasPort(port string, ports []core.ServicePort) bool {
@@ -282,5 +318,4 @@ func HasPort(port string, ports []core.ServicePort) bool {
 		}
 	}
 	return false
-
 }
