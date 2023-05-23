@@ -1,7 +1,6 @@
 package cf
 
 import (
-	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
@@ -29,7 +28,6 @@ type NetworkPolicyCF struct {
 	networkPolicies   []networking.NetworkPolicy
 	networkPolicyName string
 	serviceName       string
-	targetHostIsEmpty bool
 }
 
 func NewNetworkPolicyCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
@@ -43,7 +41,6 @@ func NewNetworkPolicyCF(ctx context.LoopContext, services services.LoopServices)
 		networkPolicies:   make([]networking.NetworkPolicy, 0),
 		networkPolicyName: resources.RC_NOT_CREATED_NAME_EMPTY,
 		serviceName:       resources.RC_NOT_CREATED_NAME_EMPTY,
-		targetHostIsEmpty: true,
 	}
 	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
 	return res
@@ -90,14 +87,6 @@ func (this *NetworkPolicyCF) Sense() {
 		this.serviceName = resources.RC_NOT_CREATED_NAME_EMPTY
 	}
 
-	// TODO Fix this, we probably need a NP even if the host is empty
-	// Observation #4
-	// See if the host in the config spec is not empty
-	this.targetHostIsEmpty = true
-	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
-		this.targetHostIsEmpty = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Host == ""
-	}
-
 	// Update the status
 	this.svcStatus.SetConfig(status.CFG_STA_NETWORK_POLICY_NAME, this.networkPolicyName)
 }
@@ -110,8 +99,7 @@ func (this *NetworkPolicyCF) Compare() bool {
 	// Condition #3
 	// We will create a new networkPolicy only if the host is not empty
 	return !this.isCached &&
-		this.serviceName != resources.RC_NOT_CREATED_NAME_EMPTY &&
-		!this.targetHostIsEmpty
+		this.serviceName != resources.RC_NOT_CREATED_NAME_EMPTY
 }
 
 func (this *NetworkPolicyCF) Respond() {
