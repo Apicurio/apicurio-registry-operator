@@ -110,7 +110,17 @@ type ApicurioRegistrySpecDeployment struct {
 	Image string `json:"image,omitempty"`
 	// List of secrets in the same namespace to use for pulling the Deployment pod image.
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
-	DisableIngress   bool                          `json:"disableIngress,omitempty"`
+	// Configure how the Operator manages Kubernetes resources
+	ManagedResources ApicurioRegistrySpecDeploymentManagedResources `json:"managedResources,omitempty"`
+}
+
+type ApicurioRegistrySpecDeploymentManagedResources struct {
+	// Operator will not create or manage an Ingress for Apicurio Registry
+	DisableIngress bool `json:"disableIngress,omitempty"`
+	// Operator will not create or manage an NetworkPolicy for Apicurio Registry
+	DisableNetworkPolicy bool `json:"disableNetworkPolicy,omitempty"`
+	// Operator will not create or manage an PodDisruptionBudget for Apicurio Registry
+	DisablePodDisruptionBudget bool `json:"disablePodDisruptionBudget,omitempty"`
 }
 
 // ### Status

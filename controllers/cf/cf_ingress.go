@@ -57,13 +57,17 @@ func (this *IngressCF) Describe() string {
 func (this *IngressCF) Sense() {
 
 	this.disableIngress = false
+
+	// Observation #1
 	// terminate execution if ingress is disabled
 	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
-		this.disableIngress = specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.DisableIngress
+		spec := specEntry.GetValue().(*ar.ApicurioRegistry).Spec
+		this.disableIngress = spec.Deployment.ManagedResources.DisableIngress ||
+			spec.Deployment.Host == ""
 		// Do cleanup in respond
 	}
 
-	// Observation #1
+	// Observation #2
 	// Get cached Ingress
 	ingressEntry, ingressExists := this.svcResourceCache.Get(resources.RC_KEY_INGRESS)
 	if ingressExists {
@@ -73,7 +77,7 @@ func (this *IngressCF) Sense() {
 	}
 	this.isCached = ingressExists
 
-	// Observation #2
+	// Observation #3
 	// Get ingress(s) we *should* track
 	this.ingresses = make([]networking.Ingress, 0)
 	ingresses, err := this.svcClients.Kube().GetIngresses(
@@ -89,7 +93,7 @@ func (this *IngressCF) Sense() {
 		}
 	}
 
-	// Observation #3
+	// Observation #4
 	// Is there a Service already? It must have been created (has a name)
 	if serviceEntry, serviceExists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE); serviceExists {
 		service := serviceEntry.GetValue().(*core.Service).Spec
@@ -104,12 +108,6 @@ func (this *IngressCF) Sense() {
 		this.serviceName = serviceEntry.GetName().Str()
 	} else {
 		this.serviceName = resources.RC_NOT_CREATED_NAME_EMPTY
-	}
-
-	// Observation #4
-	// See if the host in the config spec is not empty
-	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
-		this.disableIngress = this.disableIngress || specEntry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.Host == ""
 	}
 
 	if this.disableIngress {
@@ -174,11 +172,11 @@ func (this *IngressCF) Cleanup() bool {
 	// Ingress should not have any deletion dependencies
 	if ingressEntry, ingressExists := this.svcResourceCache.Get(resources.RC_KEY_INGRESS); ingressExists {
 		if err := this.svcClients.Kube().DeleteIngress(ingressEntry.GetValue().(*networking.Ingress)); err != nil && !api_errors.IsNotFound(err) {
-			this.log.Errorw("could not delete ingress", "error", err)
+			this.log.Errorw("could not delete Ingress", "error", err)
 			return false
 		} else {
 			this.svcResourceCache.Remove(resources.RC_KEY_INGRESS)
-			this.ctx.GetLog().Info("ingress has been deleted.")
+			this.ctx.GetLog().Info("Ingress has been deleted")
 		}
 	}
 	return true
