@@ -123,6 +123,16 @@ var _ = Describe("operator processing a simple spec", Ordered, func() {
 				Name:      "test-ingress",
 				Namespace: registry.Namespace,
 			},
+			{
+				Kind:      "NetworkPolicy",
+				Name:      "test-networkpolicy",
+				Namespace: registry.Namespace,
+			},
+			{
+				Kind:      "PodDisruptionBudget",
+				Name:      "test-pdb",
+				Namespace: registry.Namespace,
+			},
 		}))
 	})
 

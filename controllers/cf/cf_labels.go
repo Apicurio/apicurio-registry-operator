@@ -51,6 +51,11 @@ type LabelsCF struct {
 	pdbV1IsCached bool
 	pdbV1Labels   map[string]string
 	updatePdbV1   bool
+
+	networkPolicyEntry    resources.ResourceCacheEntry
+	networkPolicyIsCached bool
+	networkPolicyLabels   map[string]string
+	updateNetworkPolicy   bool
 }
 
 // Update labels on some managed resources
@@ -100,7 +105,12 @@ func (this *LabelsCF) Sense() {
 	if this.pdbV1IsCached {
 		this.pdbV1Labels = this.pdbV1Entry.GetValue().(*policy_v1.PodDisruptionBudget).Labels
 	}
-	// TODO Network policy, Service Monitor?
+	// Observation #5
+	// NetworkPolicy
+	this.networkPolicyEntry, this.networkPolicyIsCached = this.svcResourceCache.Get(resources.RC_KEY_NETWORK_POLICY)
+	if this.networkPolicyIsCached {
+		this.networkPolicyLabels = this.networkPolicyEntry.GetValue().(*networking.NetworkPolicy).Labels
+	}
 }
 
 func (this *LabelsCF) Compare() bool {
@@ -112,13 +122,16 @@ func (this *LabelsCF) Compare() bool {
 	this.updateIngress = this.ingressIsCached && !LabelsEqual(this.ingressLabels, this.caLabels)
 	this.updatePdbV1beta1 = this.pdbV1beta1IsCached && !LabelsEqual(this.pdbV1beta1Labels, this.caLabels)
 	this.updatePdbV1 = this.pdbV1IsCached && !LabelsEqual(this.pdbV1Labels, this.caLabels)
+	this.updateNetworkPolicy = this.networkPolicyIsCached && !LabelsEqual(this.networkPolicyLabels, this.caLabels)
+	// TODO Add network policy labels
 
-	return (this.updateDeployment ||
+	return this.updateDeployment ||
 		this.updateDeploymentPod ||
 		this.updateService ||
 		this.updateIngress ||
 		this.updatePdbV1beta1 ||
-		this.updatePdbV1)
+		this.updatePdbV1 ||
+		this.updateNetworkPolicy
 }
 
 func (this *LabelsCF) Respond() {
@@ -172,6 +185,15 @@ func (this *LabelsCF) Respond() {
 			pdb := value.(*policy_v1.PodDisruptionBudget).DeepCopy()
 			LabelsUpdate(pdb.Labels, this.caLabels)
 			return pdb
+		})
+	}
+	// Response #4
+	// NetworkPolicy
+	if this.updateNetworkPolicy {
+		this.networkPolicyEntry.ApplyPatch(func(value interface{}) interface{} {
+			policy := value.(*networking.NetworkPolicy).DeepCopy()
+			LabelsUpdate(policy.Labels, this.caLabels)
+			return policy
 		})
 	}
 }

@@ -94,7 +94,7 @@ func (this *ServiceMonitorCF) Respond() {
 	}
 	_, err := monitoringClient.CreateServiceMonitor(entry.GetValue().(*ar.ApicurioRegistry), namespace, serviceMonitor)
 	if err != nil {
-		this.log.Errorw("could not create ServiceMonitor object", "error", err)
+		this.log.Errorw("could not create ServiceMonitor", "error", err)
 	}
 }
 

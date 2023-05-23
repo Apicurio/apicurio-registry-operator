@@ -29,6 +29,7 @@ type HttpsCF struct {
 	svcResourceCache resources.ResourceCache
 	svcEnvCache      env.EnvCache
 	svcClients       *client.Clients
+	services         services.LoopServices
 
 	httpsEnabled bool
 
@@ -55,12 +56,13 @@ type HttpsCF struct {
 	networkPolicyHttpPortExists bool
 }
 
-func NewHttpsCF(ctx context.LoopContext, _ services.LoopServices) loop.ControlFunction {
+func NewHttpsCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
 	res := &HttpsCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
 		svcEnvCache:      ctx.GetEnvCache(),
 		svcClients:       ctx.GetClients(),
+		services:         services,
 	}
 	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
 	return res
@@ -95,6 +97,8 @@ func (this *HttpsCF) Sense() {
 			if !common.SecretHasField(secret, "tls.crt") || !common.SecretHasField(secret, "tls.key") {
 				this.log.Errorw("HTTPS secret referenced in Apicurio Registry CR must have both tls.crt and tls.key fields",
 					"secretName", this.targetSecretName)
+				this.services.GetConditionManager().GetConfigurationErrorCondition().TransitionInvalid(this.targetSecretName, "spec.configuration.security.https.secretName")
+				this.services.GetConditionManager().GetReadyCondition().TransitionError()
 				this.ctx.SetRequeueDelaySec(10)
 			} else {
 				this.secretExists = true
@@ -102,6 +106,8 @@ func (this *HttpsCF) Sense() {
 		} else {
 			this.log.Errorw("HTTPS secret referenced in Apicurio Registry CR is missing",
 				"secretName", this.targetSecretName, "error", err)
+			this.services.GetConditionManager().GetConfigurationErrorCondition().TransitionInvalid(this.targetSecretName, "spec.configuration.security.https.secretName")
+			this.services.GetConditionManager().GetReadyCondition().TransitionError()
 			this.ctx.SetRequeueDelaySec(10)
 		}
 	}
