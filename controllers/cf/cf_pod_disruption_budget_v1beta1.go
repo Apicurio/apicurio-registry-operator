@@ -1,6 +1,7 @@
 package cf
 
 import (
+	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
@@ -28,6 +29,7 @@ type PodDisruptionBudgetV1beta1CF struct {
 	podDisruptionBudgets    []policy_v1beta1.PodDisruptionBudget
 	podDisruptionBudgetName string
 	isPreferred             bool
+	disabled                bool
 }
 
 func NewPodDisruptionBudgetV1beta1CF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
@@ -88,6 +90,19 @@ func (this *PodDisruptionBudgetV1beta1CF) Sense() {
 		}
 	}
 
+	this.disabled = false
+
+	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
+		spec := entry.GetValue().(*ar.ApicurioRegistry).Spec
+		this.disabled = this.disabled || spec.Deployment.ManagedResources.DisablePodDisruptionBudget
+	}
+
+	if this.disabled {
+		this.log.Debugw("PodDisruptionBudget is disabled")
+	} else {
+		this.log.Debugw("PodDisruptionBudget is enabled")
+	}
+
 	// Update the status
 	if this.isPreferred {
 		this.svcStatus.SetConfig(status.CFG_STA_POD_DISRUPTION_BUDGET_NAME, this.podDisruptionBudgetName)
@@ -96,11 +111,12 @@ func (this *PodDisruptionBudgetV1beta1CF) Sense() {
 
 func (this *PodDisruptionBudgetV1beta1CF) Compare() bool {
 	// Condition #1
-	// If we already have a PodDisruptionBudget cached, skip
+	// PodDisruptionBudget is preferred, while cached and at the same time it is disabled (or vice versa)
 	// Condition #2
 	// If the v1beta1 version is not preferred, we will try to remove it if it exists,
 	// so the other CF can create a v1 version instead
-	return (this.isPreferred && !this.isCached) || (!this.isPreferred && len(this.podDisruptionBudgets) > 0)
+	return (this.isPreferred && this.isCached == this.disabled) ||
+		(!this.isPreferred && len(this.podDisruptionBudgets) > 0)
 }
 
 func (this *PodDisruptionBudgetV1beta1CF) Respond() {
@@ -139,11 +155,18 @@ func (this *PodDisruptionBudgetV1beta1CF) Respond() {
 	}
 
 	// Response #3 (and #4)
-	// If there is no service PodDisruptionBudget (or there are more than 1), just create a new one
-	if this.podDisruptionBudgetName == resources.RC_NOT_CREATED_NAME_EMPTY && len(this.podDisruptionBudgets) != 1 {
+	// If there is no service PodDisruptionBudget (or there are more than 1),
+	// create a new one IF not disabled
+	if !this.disabled && this.podDisruptionBudgetName == resources.RC_NOT_CREATED_NAME_EMPTY && len(this.podDisruptionBudgets) != 1 {
 		podDisruptionBudget := this.svcKubeFactory.CreatePodDisruptionBudgetV1beta1()
 		// leave the creation itself to patcher+creator so other CFs can update
 		this.svcResourceCache.Set(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1BETA1, resources.NewResourceCacheEntry(resources.RC_NOT_CREATED_NAME_EMPTY, podDisruptionBudget))
+	}
+
+	// Delete an existing PDB if disabled
+	// TODO Unify with deletion above
+	if this.disabled {
+		this.Cleanup()
 	}
 }
 
@@ -151,11 +174,11 @@ func (this *PodDisruptionBudgetV1beta1CF) Cleanup() bool {
 	// PDB should not have any deletion dependencies
 	if pdbEntry, pdbExists := this.svcResourceCache.Get(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1BETA1); pdbExists {
 		if err := this.svcClients.Kube().DeletePodDisruptionBudgetV1beta1(pdbEntry.GetValue().(*policy_v1beta1.PodDisruptionBudget)); err != nil && !api_errors.IsNotFound(err) {
-			this.log.Errorw("could not delete PodDisruptionBudget during cleanup", "error", err)
+			this.log.Errorw("could not delete PodDisruptionBudget", "error", err)
 			return false
 		} else {
 			this.svcResourceCache.Remove(resources.RC_KEY_POD_DISRUPTION_BUDGET_V1BETA1)
-			this.ctx.GetLog().Info("PodDisruptionBudget has been deleted.")
+			this.ctx.GetLog().Info("PodDisruptionBudget has been deleted")
 		}
 	}
 	return true

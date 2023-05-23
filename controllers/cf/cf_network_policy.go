@@ -1,6 +1,7 @@
 package cf
 
 import (
+	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/client"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
@@ -28,6 +29,7 @@ type NetworkPolicyCF struct {
 	networkPolicies   []networking.NetworkPolicy
 	networkPolicyName string
 	serviceName       string
+	disabled          bool
 }
 
 func NewNetworkPolicyCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
@@ -51,6 +53,12 @@ func (this *NetworkPolicyCF) Describe() string {
 }
 
 func (this *NetworkPolicyCF) Sense() {
+
+	this.disabled = false
+	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
+		spec := entry.GetValue().(*ar.ApicurioRegistry).Spec
+		this.disabled = this.disabled || spec.Deployment.ManagedResources.DisableNetworkPolicy
+	}
 
 	// Observation #1
 	// Get cached Network Policy
@@ -87,18 +95,22 @@ func (this *NetworkPolicyCF) Sense() {
 		this.serviceName = resources.RC_NOT_CREATED_NAME_EMPTY
 	}
 
+	if this.disabled {
+		this.log.Debugw("NetworkPolicy is disabled")
+	} else {
+		this.log.Debugw("NetworkPolicy is enabled")
+	}
+
 	// Update the status
 	this.svcStatus.SetConfig(status.CFG_STA_NETWORK_POLICY_NAME, this.networkPolicyName)
 }
 
 func (this *NetworkPolicyCF) Compare() bool {
 	// Condition #1
-	// If we already have a networkPolicy cached, skip
-	// Condition #2
-	// The service has been created
-	// Condition #3
-	// We will create a new networkPolicy only if the host is not empty
-	return !this.isCached &&
+	// NetworkPolicy cached and at the same time it is disabled (or vice versa)
+	return (this.isCached == this.disabled) &&
+		// Condition #2
+		// The service has been created
 		this.serviceName != resources.RC_NOT_CREATED_NAME_EMPTY
 }
 
@@ -126,11 +138,17 @@ func (this *NetworkPolicyCF) Respond() {
 		this.svcResourceCache.Set(resources.RC_KEY_NETWORK_POLICY, resources.NewResourceCacheEntry(common.Name(networkPolicy.Name), &networkPolicy))
 	}
 	// Response #3 (and #4)
-	// If there is no networkPolicy available (or there are more than 1), just create a new one
-	if this.networkPolicyName == resources.RC_NOT_CREATED_NAME_EMPTY && len(this.networkPolicies) != 1 {
+	// If there is no NetworkPolicy available (or there are more than 1),
+	// create a new one IF not disabled
+	if !this.disabled && this.networkPolicyName == resources.RC_NOT_CREATED_NAME_EMPTY && len(this.networkPolicies) != 1 {
 		networkPolicy := this.svcKubeFactory.CreateNetworkPolicy(this.serviceName)
 		// leave the creation itself to patcher+creator so other CFs can update
 		this.svcResourceCache.Set(resources.RC_KEY_NETWORK_POLICY, resources.NewResourceCacheEntry(resources.RC_NOT_CREATED_NAME_EMPTY, networkPolicy))
+	}
+
+	// Delete an existing NetworkPolicy if disabled
+	if this.disabled {
+		this.Cleanup()
 	}
 }
 
@@ -138,11 +156,11 @@ func (this *NetworkPolicyCF) Cleanup() bool {
 	// Network Policy should not have any deletion dependencies
 	if networkPolicyEntry, networkPolicyExists := this.svcResourceCache.Get(resources.RC_KEY_NETWORK_POLICY); networkPolicyExists {
 		if err := this.svcClients.Kube().DeleteNetworkPolicy(networkPolicyEntry.GetValue().(*networking.NetworkPolicy)); err != nil && !api_errors.IsNotFound(err) {
-			this.log.Errorw("could not delete NetworkPolicy during cleanup", "error", err)
+			this.log.Errorw("could not delete NetworkPolicy", "error", err)
 			return false
 		} else {
 			this.svcResourceCache.Remove(resources.RC_KEY_NETWORK_POLICY)
-			this.ctx.GetLog().Info("Network Policy has been deleted.")
+			this.ctx.GetLog().Info("NetworkPolicy has been deleted")
 		}
 	}
 	return true
