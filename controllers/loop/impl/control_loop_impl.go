@@ -59,12 +59,12 @@ func (this *controlLoopImpl) Run() {
 		}
 
 		if stabilized {
-			this.ctx.GetLog().Info("Control loop is stable.")
+			this.ctx.GetLog().Info("control loop is stable")
 			break
 		}
 	}
 	if attempt == maxAttempts {
-		panic("Control loop stabilization limit exceeded.")
+		panic("control loop stabilization limit exceeded")
 	}
 
 	this.services.AfterRun()

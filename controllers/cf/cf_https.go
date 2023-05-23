@@ -21,9 +21,7 @@ var _ loop.ControlFunction = &HttpsCF{}
 
 const TlsCertMountPath = "/certs"
 const HttpsPort = 8443
-
-// TODO
-// const HttpPort = 8080
+const HttpPort = 8080
 
 type HttpsCF struct {
 	ctx              context.LoopContext
@@ -46,10 +44,15 @@ type HttpsCF struct {
 
 	serviceHttpsPortExists bool
 
-	secretVolumeExists      bool
-	secretVolumeMountExists bool
-	containerPortExists     bool
-	networkPolicyExists     bool
+	secretVolumeExists       bool
+	secretVolumeMountExists  bool
+	containerHttpsPortExists bool
+	networkPolicyExists      bool
+
+	httpEnabled                 bool
+	serviceHttpPortExists       bool
+	containerHttpPortExists     bool
+	networkPolicyHttpPortExists bool
 }
 
 func NewHttpsCF(ctx context.LoopContext, _ services.LoopServices) loop.ControlFunction {
@@ -72,11 +75,14 @@ func (this *HttpsCF) Sense() {
 	// Observation #1
 	// Read config values from the Apicurio custom resource
 	this.targetSecretName = ""
+	this.httpEnabled = true
 	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		spec := entry.GetValue().(*ar.ApicurioRegistry).Spec
 		this.targetSecretName = spec.Configuration.Security.Https.SecretName
+		this.httpEnabled = !spec.Configuration.Security.Https.DisableHttp
 	}
-	this.log.Debugw("Observation #1", "this.targetSecretName", this.targetSecretName)
+	this.log.Debugw("Observation #1", "this.targetSecretName", this.targetSecretName,
+		"this.httpEnabled", this.httpEnabled)
 
 	// Observation #2
 	// Get Secret containing the certificate and key
@@ -105,49 +111,60 @@ func (this *HttpsCF) Sense() {
 	// Observation #3
 	// Get cached service and check if HTTPS port is enabled
 	this.serviceHttpsPortExists = false
+	this.serviceHttpPortExists = false
 	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_SERVICE); exists {
 		service := entry.GetValue().(*core.Service).Spec
 		for _, port := range service.Ports {
 			if port.Port == HttpsPort {
 				this.serviceHttpsPortExists = true
-				break
+			}
+			if port.Port == HttpPort {
+				this.serviceHttpPortExists = true
 			}
 		}
 	}
-	this.log.Debugw("Observation #3", "this.serviceHttpsPortExists", this.serviceHttpsPortExists)
+	this.log.Debugw("Observation #3", "this.serviceHttpsPortExists", this.serviceHttpsPortExists,
+		"this.serviceHttpPortExists", this.serviceHttpPortExists)
 
 	// Observation #4
 	// Check deployment has mounted the secret from the config as a volume
 	this.secretVolumeExists = false
 	this.secretVolumeMountExists = false
-	this.containerPortExists = false
-	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT); exists && this.targetSecretName != "" {
+	this.containerHttpsPortExists = false
+	this.containerHttpPortExists = false
+	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT); exists {
 		deployment := entry.GetValue().(*apps.Deployment)
-		// Volume
-		for _, volume := range deployment.Spec.Template.Spec.Volumes {
-			if volume.Name == this.targetSecretName {
-				this.secretVolumeExists = true
-				break
+
+		if this.targetSecretName != "" {
+			// Volume
+			for _, volume := range deployment.Spec.Template.Spec.Volumes {
+				if volume.Name == this.targetSecretName {
+					this.secretVolumeExists = true
+					break
+				}
 			}
-		}
-		// Volume mount
-		for _, mount := range deployment.Spec.Template.Spec.Containers[0].VolumeMounts {
-			if mount.Name == this.targetSecretName {
-				this.secretVolumeMountExists = true
-				break
+			// Volume mount
+			for _, mount := range deployment.Spec.Template.Spec.Containers[0].VolumeMounts {
+				if mount.Name == this.targetSecretName {
+					this.secretVolumeMountExists = true
+					break
+				}
 			}
 		}
 		// Container port
 		for _, port := range deployment.Spec.Template.Spec.Containers[0].Ports {
 			if port.ContainerPort == HttpsPort {
-				this.containerPortExists = true
-				break
+				this.containerHttpsPortExists = true
+			}
+			if port.ContainerPort == HttpPort {
+				this.containerHttpPortExists = true
 			}
 		}
 	}
 	this.log.Debugw("Observation #4", "this.secretVolumeExists", this.secretVolumeExists,
 		"this.secretVolumeMountExists", this.secretVolumeMountExists,
-		"this.containerPortExists", this.containerPortExists)
+		"this.containerHttpsPortExists", this.containerHttpsPortExists,
+		"this.containerHttpPortExists", this.containerHttpPortExists)
 
 	// Observation #5
 	// Find out if JAVA_OPTIONS is set
@@ -169,6 +186,7 @@ func (this *HttpsCF) Sense() {
 	// NOTE: Network policy may not be created immediately, so we need to wait
 	// until it is available.
 	this.networkPolicyHttpsPortExists = false
+	this.networkPolicyHttpPortExists = false
 	this.networkPolicyExists = false
 	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_NETWORK_POLICY); exists {
 		policy := entry.GetValue().(*networking.NetworkPolicy)
@@ -178,10 +196,14 @@ func (this *HttpsCF) Sense() {
 				if *port.Protocol == "TCP" && int(port.Port.IntValue()) == HttpsPort {
 					this.networkPolicyHttpsPortExists = true
 				}
+				if *port.Protocol == "TCP" && int(port.Port.IntValue()) == HttpPort {
+					this.networkPolicyHttpPortExists = true
+				}
 			}
 		}
 	}
-	this.log.Debugw("Observation #6", "this.networkPolicyHttpsPortExists", this.networkPolicyHttpsPortExists)
+	this.log.Debugw("Observation #6", "this.networkPolicyHttpsPortExists", this.networkPolicyHttpsPortExists,
+		"this.networkPolicyHttpPortExists", this.networkPolicyHttpPortExists)
 }
 
 func (this *HttpsCF) Compare() bool {
@@ -191,9 +213,13 @@ func (this *HttpsCF) Compare() bool {
 		(this.httpsEnabled != this.serviceHttpsPortExists) || // Observation #3
 		(this.httpsEnabled != this.secretVolumeExists) || // Observation #4
 		(this.httpsEnabled != this.secretVolumeMountExists) || // Observation #4
-		(this.httpsEnabled != this.containerPortExists) || // Observation #4
+		(this.httpsEnabled != this.containerHttpsPortExists) || // Observation #4
 		(this.httpsEnabled != this.javaOptionsExists) || // Observation #5
-		(this.networkPolicyExists && this.httpsEnabled != this.networkPolicyHttpsPortExists) // Observation #6
+		(this.networkPolicyExists && this.httpsEnabled != this.networkPolicyHttpsPortExists) || // Observation #6
+		// HTTP port
+		((!this.httpsEnabled || this.httpEnabled) != this.serviceHttpPortExists) ||
+		((!this.httpsEnabled || this.httpEnabled) != this.containerHttpPortExists) ||
+		(this.networkPolicyExists && (!this.httpsEnabled || this.httpEnabled) != this.networkPolicyHttpPortExists)
 }
 
 func (this *HttpsCF) Respond() {
@@ -219,8 +245,12 @@ func (this *HttpsCF) Respond() {
 				ReadOnly:  true,
 			}
 
-			port := &core.ContainerPort{
+			httpsPort := &core.ContainerPort{
 				ContainerPort: HttpsPort,
+			}
+
+			httpPort := &core.ContainerPort{
+				ContainerPort: HttpPort,
 			}
 
 			if this.httpsEnabled && !this.secretVolumeExists {
@@ -239,13 +269,22 @@ func (this *HttpsCF) Respond() {
 				common.RemoveVolumeMountFromContainer(apicurioContainer, volumeMount)
 				this.log.Debugw("removed secret volume mount")
 			}
-			if this.httpsEnabled && !this.containerPortExists {
-				common.AddPortToContainer(apicurioContainer, port)
-				this.log.Debugw("added container port")
+			if this.httpsEnabled && !this.containerHttpsPortExists {
+				common.AddPortToContainer(apicurioContainer, httpsPort)
+				this.log.Debugw("added container HTTPS port")
 			}
-			if !this.httpsEnabled && this.containerPortExists {
-				common.RemovePortFromContainer(apicurioContainer, port)
-				this.log.Debugw("removed container port")
+			if !this.httpsEnabled && this.containerHttpsPortExists {
+				common.RemovePortFromContainer(apicurioContainer, httpsPort)
+				this.log.Debugw("removed container HTTPS port")
+			}
+			// HTTP port
+			if (!this.httpsEnabled || this.httpEnabled) && !this.containerHttpPortExists {
+				common.AddPortToContainer(apicurioContainer, httpPort)
+				this.log.Debugw("added container HTTP port")
+			}
+			if this.httpsEnabled && !this.httpEnabled && this.containerHttpPortExists {
+				common.RemovePortFromContainer(apicurioContainer, httpPort)
+				this.log.Debugw("removed container HTTP port")
 			}
 
 			return deployment
@@ -278,20 +317,35 @@ func (this *HttpsCF) Respond() {
 		entry.ApplyPatch(func(value interface{}) interface{} {
 			service := value.(*core.Service).DeepCopy()
 
-			port := &core.ServicePort{
+			httpsPort := &core.ServicePort{
 				Name:       "https",
 				Protocol:   core.ProtocolTCP,
 				Port:       HttpsPort,
 				TargetPort: intstr.FromInt(HttpsPort),
 			}
+			httpPort := &core.ServicePort{
+				Name:       "http",
+				Protocol:   core.ProtocolTCP,
+				Port:       HttpPort,
+				TargetPort: intstr.FromInt(HttpPort),
+			}
 
 			if this.httpsEnabled && !this.serviceHttpsPortExists {
-				common.AddPortToService(service, port)
+				common.AddPortToService(service, httpsPort)
 				this.log.Debugw("added HTTPS port to service")
 			}
 			if !this.httpsEnabled && this.serviceHttpsPortExists {
-				common.RemovePortFromService(service, port)
+				common.RemovePortFromService(service, httpsPort)
 				this.log.Debugw("removed HTTPS port from service")
+			}
+			// HTTP port
+			if (!this.httpsEnabled || this.httpEnabled) && !this.serviceHttpPortExists {
+				common.AddPortToService(service, httpPort)
+				this.log.Debugw("added HTTP port to service")
+			}
+			if this.httpsEnabled && !this.httpEnabled && this.serviceHttpPortExists {
+				common.RemovePortFromService(service, httpPort)
+				this.log.Debugw("removed HTTP port from service")
 			}
 
 			return service
@@ -304,7 +358,7 @@ func (this *HttpsCF) Respond() {
 
 			tcp := core.ProtocolTCP
 
-			rule := &networking.NetworkPolicyIngressRule{
+			httpsRule := &networking.NetworkPolicyIngressRule{
 				Ports: []networking.NetworkPolicyPort{
 					{
 						Protocol: &tcp,
@@ -316,13 +370,34 @@ func (this *HttpsCF) Respond() {
 				},
 			}
 
+			httpRule := &networking.NetworkPolicyIngressRule{
+				Ports: []networking.NetworkPolicyPort{
+					{
+						Protocol: &tcp,
+						Port: &intstr.IntOrString{
+							Type:   intstr.Int,
+							IntVal: HttpPort,
+						},
+					},
+				},
+			}
+
 			if this.httpsEnabled && !this.networkPolicyHttpsPortExists {
-				common.AddRuleToNetworkPolicy(policy, rule)
-				this.log.Debugw("added network policy rule")
+				common.AddRuleToNetworkPolicy(policy, httpsRule)
+				this.log.Debugw("added HTTPS network policy rule")
 			}
 			if !this.httpsEnabled && this.networkPolicyHttpsPortExists {
-				common.RemoveRuleFromNetworkPolicy(policy, rule)
-				this.log.Debugw("removed network policy rule")
+				common.RemoveRuleFromNetworkPolicy(policy, httpsRule)
+				this.log.Debugw("removed HTTPS network policy rule")
+			}
+			// HTTP port
+			if (!this.httpsEnabled || this.httpEnabled) && !this.networkPolicyHttpPortExists {
+				common.AddRuleToNetworkPolicy(policy, httpRule)
+				this.log.Debugw("added HTTP network policy rule")
+			}
+			if this.httpsEnabled && !this.httpEnabled && this.networkPolicyHttpPortExists {
+				common.RemoveRuleFromNetworkPolicy(policy, httpRule)
+				this.log.Debugw("removed HTTP network policy rule")
 			}
 
 			return policy

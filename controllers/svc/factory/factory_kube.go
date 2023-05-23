@@ -239,19 +239,8 @@ func (this *KubeFactory) CreateNetworkPolicy(serviceName string) *networking.Net
 						{
 							Protocol: &protocolTCP,
 							Port: &intstr.IntOrString{
-								Type:   0,
+								Type:   intstr.Int,
 								IntVal: 8080,
-							},
-						},
-					},
-				},
-				{
-					Ports: []networking.NetworkPolicyPort{
-						{
-							Protocol: &protocolTCP,
-							Port: &intstr.IntOrString{
-								Type:   0,
-								IntVal: 8443,
 							},
 						},
 					},
