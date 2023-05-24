@@ -12,9 +12,14 @@ type envCacheEntry struct {
 	value        *core.EnvVar
 	dependencies []string
 	priority     Priority
+	locked       bool
 }
 
 var _ EnvCacheEntry = &envCacheEntry{}
+
+func (this *envCacheEntry) IsLocked() bool {
+	return this.locked
+}
 
 func (this *envCacheEntry) GetName() string {
 	return this.value.Name
@@ -59,6 +64,11 @@ func NewSimpleEnvCacheEntryBuilder(name string, value string) EnvCacheEntryBuild
 		Name:  name,
 		Value: value,
 	})
+}
+
+func (this *envCacheEntryBuilder) Lock() EnvCacheEntryBuilder {
+	this.entry.locked = true
+	return this
 }
 
 func (this *envCacheEntryBuilder) SetDependency(name string) EnvCacheEntryBuilder {
@@ -225,7 +235,8 @@ func ParseJavaOptionsMap(envCache EnvCache) map[string]string {
 	return javaOptions
 }
 
-func SaveJavaOptionsMap(envCache EnvCache, options map[string]string) {
+func SaveJavaOptionsMap(envCache EnvCache, options map[string]string, lock bool) {
+	const name = "JAVA_OPTIONS"
 	javaOptions := ""
 	for k, v := range options {
 		if v == "" {
@@ -236,7 +247,13 @@ func SaveJavaOptionsMap(envCache EnvCache, options map[string]string) {
 		javaOptions = javaOptions + " "
 	}
 	if javaOptions != "" {
-		envCache.Set(NewSimpleEnvCacheEntryBuilder("JAVA_OPTIONS", javaOptions).
-			SetPriority(PRIORITY_SPEC).Build())
+		entry := NewSimpleEnvCacheEntryBuilder(name, javaOptions).
+			SetPriority(PRIORITY_SPEC)
+		if lock {
+			entry = entry.Lock()
+		}
+		envCache.Set(entry.Build())
+	} else {
+		envCache.DeleteByName(name)
 	}
 }

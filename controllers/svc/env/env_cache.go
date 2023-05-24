@@ -25,12 +25,16 @@ type EnvCacheEntry interface {
 	GetDependencies() []string
 
 	GetPriority() Priority
+
+	IsLocked() bool
 }
 
 type EnvCacheEntryBuilder interface {
 	SetDependency(name string) EnvCacheEntryBuilder
 
 	SetPriority(priority Priority) EnvCacheEntryBuilder
+
+	Lock() EnvCacheEntryBuilder
 
 	Build() EnvCacheEntry
 }

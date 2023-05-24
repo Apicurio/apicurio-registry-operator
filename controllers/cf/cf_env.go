@@ -69,7 +69,7 @@ func (this *EnvCF) Sense() {
 		for _, v := range this.svcEnvCache.GetSorted() { // TODO Iterate directly?
 			cached, _ := this.svcEnvCache.Get(v.Name)
 			// Iterate over cached
-			if !found(envConfig, v.Name) && cached.GetPriority() == env.PRIORITY_SPEC {
+			if !found(envConfig, v.Name) && cached.GetPriority() == env.PRIORITY_SPEC && !cached.IsLocked() {
 				// Element is in the cache, but not in spec
 				this.remove[v.Name] = v
 			}
