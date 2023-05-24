@@ -98,7 +98,7 @@ func (this *HttpsCF) Sense() {
 				this.log.Errorw("HTTPS secret referenced in Apicurio Registry CR must have both tls.crt and tls.key fields",
 					"secretName", this.targetSecretName)
 				this.services.GetConditionManager().GetConfigurationErrorCondition().TransitionInvalid(this.targetSecretName, "spec.configuration.security.https.secretName")
-				this.services.GetConditionManager().GetReadyCondition().TransitionError()
+				// No need to transition to not ready, since we can just run without HTTP
 				this.ctx.SetRequeueDelaySec(10)
 			} else {
 				this.secretExists = true
@@ -107,7 +107,7 @@ func (this *HttpsCF) Sense() {
 			this.log.Errorw("HTTPS secret referenced in Apicurio Registry CR is missing",
 				"secretName", this.targetSecretName, "error", err)
 			this.services.GetConditionManager().GetConfigurationErrorCondition().TransitionInvalid(this.targetSecretName, "spec.configuration.security.https.secretName")
-			this.services.GetConditionManager().GetReadyCondition().TransitionError()
+			// No need to transition to not ready, since we can just run without HTTP
 			this.ctx.SetRequeueDelaySec(10)
 		}
 	}
@@ -214,8 +214,7 @@ func (this *HttpsCF) Sense() {
 
 func (this *HttpsCF) Compare() bool {
 	this.httpsEnabled = this.targetSecretName != "" && this.secretExists // Observation #1, #2
-
-	return (this.targetSecretName != this.previousSecretName) || // Secret renamed or removed
+	return (this.secretExists && this.targetSecretName != this.previousSecretName) || // Secret renamed or removed
 		(this.httpsEnabled != this.serviceHttpsPortExists) || // Observation #3
 		(this.httpsEnabled != this.secretVolumeExists) || // Observation #4
 		(this.httpsEnabled != this.secretVolumeMountExists) || // Observation #4
@@ -236,21 +235,6 @@ func (this *HttpsCF) Respond() {
 
 			apicurioContainer := &deployment.Spec.Template.Spec.Containers[0]
 
-			volume := &core.Volume{
-				Name: this.targetSecretName,
-				VolumeSource: core.VolumeSource{
-					Secret: &core.SecretVolumeSource{
-						SecretName: this.targetSecretName,
-					},
-				},
-			}
-
-			volumeMount := &core.VolumeMount{
-				Name:      this.targetSecretName,
-				MountPath: TlsCertMountPath,
-				ReadOnly:  true,
-			}
-
 			httpsPort := &core.ContainerPort{
 				ContainerPort: HttpsPort,
 			}
@@ -260,19 +244,27 @@ func (this *HttpsCF) Respond() {
 			}
 
 			if this.httpsEnabled && !this.secretVolumeExists {
-				common.SetVolumeInDeployment(deployment, volume)
+				// Remove old secret reference if exists
+				if this.previousSecretName != "" {
+					common.RemoveVolumeFromDeployment(deployment, NewSecretVolume(this.previousSecretName))
+				}
+				common.SetVolumeInDeployment(deployment, NewSecretVolume(this.targetSecretName))
 				this.log.Debugw("added secret volume")
 			}
 			if !this.httpsEnabled && this.secretVolumeExists {
-				common.RemoveVolumeFromDeployment(deployment, volume)
+				common.RemoveVolumeFromDeployment(deployment, NewSecretVolume(this.targetSecretName))
 				this.log.Debugw("removed secret volume")
 			}
 			if this.httpsEnabled && !this.secretVolumeMountExists {
-				common.AddVolumeMountToContainer(apicurioContainer, volumeMount)
+				// Remove old secret reference if exists
+				if this.previousSecretName != "" {
+					common.RemoveVolumeMountFromContainer(apicurioContainer, NewSecretVolumeMount(this.previousSecretName))
+				}
+				common.AddVolumeMountToContainer(apicurioContainer, NewSecretVolumeMount(this.targetSecretName))
 				this.log.Debugw("added secret volume mount")
 			}
 			if !this.httpsEnabled && this.secretVolumeMountExists {
-				common.RemoveVolumeMountFromContainer(apicurioContainer, volumeMount)
+				common.RemoveVolumeMountFromContainer(apicurioContainer, NewSecretVolumeMount(this.targetSecretName))
 				this.log.Debugw("removed secret volume mount")
 			}
 			if this.httpsEnabled && !this.containerHttpsPortExists {
@@ -302,7 +294,7 @@ func (this *HttpsCF) Respond() {
 		for k, v := range this.targetJavaOptions {
 			this.javaOptions[k] = v
 		}
-		env.SaveJavaOptionsMap(this.svcEnvCache, this.javaOptions)
+		env.SaveJavaOptionsMap(this.svcEnvCache, this.javaOptions, true)
 		this.log.Debugw("added java options", "this.javaOptions", this.javaOptions)
 	}
 	if !this.httpsEnabled && this.javaOptionsExists {
@@ -314,7 +306,7 @@ func (this *HttpsCF) Respond() {
 			}
 		}
 		if changed {
-			env.SaveJavaOptionsMap(this.svcEnvCache, this.javaOptions)
+			env.SaveJavaOptionsMap(this.svcEnvCache, this.javaOptions, false)
 			this.log.Debugw("removed java options", "this.javaOptions", this.javaOptions)
 		}
 	}
@@ -410,10 +402,33 @@ func (this *HttpsCF) Respond() {
 		})
 	}
 
-	this.previousSecretName = this.targetSecretName
+	if this.secretExists {
+		this.previousSecretName = this.targetSecretName
+	} else {
+		this.previousSecretName = ""
+	}
 }
 
 func (this *HttpsCF) Cleanup() bool {
 	// No cleanup
 	return true
+}
+
+func NewSecretVolume(name string) *core.Volume {
+	return &core.Volume{
+		Name: name,
+		VolumeSource: core.VolumeSource{
+			Secret: &core.SecretVolumeSource{
+				SecretName: name,
+			},
+		},
+	}
+}
+
+func NewSecretVolumeMount(name string) *core.VolumeMount {
+	return &core.VolumeMount{
+		Name:      name,
+		MountPath: TlsCertMountPath,
+		ReadOnly:  true,
+	}
 }

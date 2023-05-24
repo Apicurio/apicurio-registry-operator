@@ -26,7 +26,7 @@ func (this *ConfigurationErrorCondition) IsActive() bool {
 func (this *ConfigurationErrorCondition) TransitionInvalidPersistence(currentValue string) {
 	this.data.Status = metav1.ConditionTrue
 	this.data.Reason = string(CONFIGURATION_ERROR_CONDITION_REASON_INVALID_PERSISTENCE)
-	this.data.Message = "Invalid persistence option " + currentValue + ". Supported: <none> (or mem), sql, kafkasql."
+	this.data.Message = "Invalid persistence option " + currentValue + " . Supported: <none> (or mem), sql, kafkasql"
 }
 
 func (this *ConfigurationErrorCondition) TransitionRequired(optionPath string) {
@@ -34,7 +34,7 @@ func (this *ConfigurationErrorCondition) TransitionRequired(optionPath string) {
 
 		this.data.Status = metav1.ConditionTrue
 		this.data.Reason = string(CONFIGURATION_ERROR_CONDITION_REASON_REQUIRED)
-		this.data.Message = "Required configuration option missing: " + optionPath + " ."
+		this.data.Message = "Required configuration option missing: " + optionPath
 	}
 }
 
@@ -44,6 +44,6 @@ func (this *ConfigurationErrorCondition) TransitionInvalid(currentValue string, 
 
 		this.data.Status = metav1.ConditionTrue
 		this.data.Reason = string(CONFIGURATION_ERROR_CONDITION_REASON_INVALID)
-		this.data.Message = "Invalid value for configuration option " + optionPath + ": " + currentValue + " ."
+		this.data.Message = "Invalid value for configuration option " + optionPath + ": " + currentValue
 	}
 }
