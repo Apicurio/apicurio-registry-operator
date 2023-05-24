@@ -319,3 +319,24 @@ func HasPort(port string, ports []core.ServicePort) bool {
 	}
 	return false
 }
+
+// Return *true* if, for given source labels,
+// the target label values exist and have the same value
+func LabelsEqual(target map[string]string, source map[string]string) bool {
+	for sourceKey, sourceValue := range source {
+		targetValue, targetExists := target[sourceKey]
+		if !targetExists || sourceValue != targetValue {
+			return false
+		}
+	}
+	return true
+}
+
+func LabelsUpdate(target map[string]string, source map[string]string) {
+	for sourceKey, sourceValue := range source {
+		targetValue, targetExists := target[sourceKey]
+		if !targetExists || sourceValue != targetValue {
+			target[sourceKey] = sourceValue
+		}
+	}
+}
