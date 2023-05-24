@@ -2,6 +2,7 @@ package cf
 
 import (
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
@@ -115,14 +116,14 @@ func (this *LabelsCF) Sense() {
 
 func (this *LabelsCF) Compare() bool {
 	this.caLabels = this.GetCommonApplicationLabels()
-	this.updateDeployment = this.deploymentIsCached && !LabelsEqual(this.deploymentLabels, this.caLabels)
+	this.updateDeployment = this.deploymentIsCached && !common.LabelsEqual(this.deploymentLabels, this.caLabels)
 	this.targetDeploymentPodLabels = this.GetTargetDeploymentPodLabels()
-	this.updateDeploymentPod = this.deploymentIsCached && !LabelsEqual(this.deploymentPodLabels, this.targetDeploymentPodLabels)
-	this.updateService = this.serviceIsCached && !LabelsEqual(this.serviceLabels, this.caLabels)
-	this.updateIngress = this.ingressIsCached && !LabelsEqual(this.ingressLabels, this.caLabels)
-	this.updatePdbV1beta1 = this.pdbV1beta1IsCached && !LabelsEqual(this.pdbV1beta1Labels, this.caLabels)
-	this.updatePdbV1 = this.pdbV1IsCached && !LabelsEqual(this.pdbV1Labels, this.caLabels)
-	this.updateNetworkPolicy = this.networkPolicyIsCached && !LabelsEqual(this.networkPolicyLabels, this.caLabels)
+	this.updateDeploymentPod = this.deploymentIsCached && !common.LabelsEqual(this.deploymentPodLabels, this.targetDeploymentPodLabels)
+	this.updateService = this.serviceIsCached && !common.LabelsEqual(this.serviceLabels, this.caLabels)
+	this.updateIngress = this.ingressIsCached && !common.LabelsEqual(this.ingressLabels, this.caLabels)
+	this.updatePdbV1beta1 = this.pdbV1beta1IsCached && !common.LabelsEqual(this.pdbV1beta1Labels, this.caLabels)
+	this.updatePdbV1 = this.pdbV1IsCached && !common.LabelsEqual(this.pdbV1Labels, this.caLabels)
+	this.updateNetworkPolicy = this.networkPolicyIsCached && !common.LabelsEqual(this.networkPolicyLabels, this.caLabels)
 	// TODO Add network policy labels
 
 	return this.updateDeployment ||
@@ -140,7 +141,7 @@ func (this *LabelsCF) Respond() {
 	if this.updateDeployment {
 		this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 			deployment := value.(*apps.Deployment).DeepCopy()
-			LabelsUpdate(deployment.Labels, this.caLabels)
+			common.LabelsUpdate(deployment.Labels, this.caLabels)
 			return deployment
 		})
 	}
@@ -149,7 +150,7 @@ func (this *LabelsCF) Respond() {
 	if this.updateDeploymentPod {
 		this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 			deployment := value.(*apps.Deployment).DeepCopy()
-			LabelsUpdate(deployment.Spec.Template.Labels, this.targetDeploymentPodLabels)
+			common.LabelsUpdate(deployment.Spec.Template.Labels, this.targetDeploymentPodLabels)
 			return deployment
 		})
 	}
@@ -158,7 +159,7 @@ func (this *LabelsCF) Respond() {
 	if this.updateService {
 		this.serviceEntry.ApplyPatch(func(value interface{}) interface{} {
 			service := value.(*core.Service).DeepCopy()
-			LabelsUpdate(service.Labels, this.caLabels)
+			common.LabelsUpdate(service.Labels, this.caLabels)
 			return service
 		})
 	}
@@ -167,7 +168,7 @@ func (this *LabelsCF) Respond() {
 	if this.updateIngress {
 		this.ingressEntry.ApplyPatch(func(value interface{}) interface{} {
 			ingress := value.(*networking.Ingress).DeepCopy()
-			LabelsUpdate(ingress.Labels, this.caLabels)
+			common.LabelsUpdate(ingress.Labels, this.caLabels)
 			return ingress
 		})
 	}
@@ -176,14 +177,14 @@ func (this *LabelsCF) Respond() {
 	if this.updatePdbV1beta1 {
 		this.pdbV1beta1Entry.ApplyPatch(func(value interface{}) interface{} {
 			pdb := value.(*policy_v1beta1.PodDisruptionBudget).DeepCopy()
-			LabelsUpdate(pdb.Labels, this.caLabels)
+			common.LabelsUpdate(pdb.Labels, this.caLabels)
 			return pdb
 		})
 	}
 	if this.updatePdbV1 {
 		this.pdbV1Entry.ApplyPatch(func(value interface{}) interface{} {
 			pdb := value.(*policy_v1.PodDisruptionBudget).DeepCopy()
-			LabelsUpdate(pdb.Labels, this.caLabels)
+			common.LabelsUpdate(pdb.Labels, this.caLabels)
 			return pdb
 		})
 	}
@@ -192,7 +193,7 @@ func (this *LabelsCF) Respond() {
 	if this.updateNetworkPolicy {
 		this.networkPolicyEntry.ApplyPatch(func(value interface{}) interface{} {
 			policy := value.(*networking.NetworkPolicy).DeepCopy()
-			LabelsUpdate(policy.Labels, this.caLabels)
+			common.LabelsUpdate(policy.Labels, this.caLabels)
 			return policy
 		})
 	}
@@ -211,28 +212,7 @@ func (this *LabelsCF) GetCommonApplicationLabels() map[string]string {
 
 func (this *LabelsCF) GetTargetDeploymentPodLabels() map[string]string {
 	targetDeploymentPodLabels := make(map[string]string)
-	LabelsUpdate(targetDeploymentPodLabels, this.GetCommonApplicationLabels())
-	LabelsUpdate(targetDeploymentPodLabels, this.additionalDeploymentPodLabels)
+	common.LabelsUpdate(targetDeploymentPodLabels, this.GetCommonApplicationLabels())
+	common.LabelsUpdate(targetDeploymentPodLabels, this.additionalDeploymentPodLabels)
 	return targetDeploymentPodLabels
-}
-
-// Return *true* if, for given source labels,
-// the target label values exist and have the same value
-func LabelsEqual(target map[string]string, source map[string]string) bool {
-	for sourceKey, sourceValue := range source {
-		targetValue, targetExists := target[sourceKey]
-		if !targetExists || sourceValue != targetValue {
-			return false
-		}
-	}
-	return true
-}
-
-func LabelsUpdate(target map[string]string, source map[string]string) {
-	for sourceKey, sourceValue := range source {
-		targetValue, targetExists := target[sourceKey]
-		if !targetExists || sourceValue != targetValue {
-			target[sourceKey] = sourceValue
-		}
-	}
 }

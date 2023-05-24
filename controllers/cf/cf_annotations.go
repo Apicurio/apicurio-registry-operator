@@ -1,13 +1,11 @@
 package cf
 
 import (
-	"reflect"
-
+	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
-
-	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	apps "k8s.io/api/apps/v1"
 )
 
@@ -63,7 +61,7 @@ func (this *AnnotationsCF) Compare() bool {
 	// Condition #3
 	// Existing pod annotations are different to target pod annotations
 	return this.deploymentEntryExists &&
-		!reflect.DeepEqual(this.existingAnnotations, this.targetAnnotations)
+		!common.LabelsEqual(this.existingAnnotations, this.targetAnnotations)
 }
 
 func (this *AnnotationsCF) Respond() {
@@ -71,7 +69,7 @@ func (this *AnnotationsCF) Respond() {
 	// Patch the resource
 	this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 		deployment := value.(*apps.Deployment).DeepCopy()
-		deployment.Spec.Template.Annotations = this.targetAnnotations
+		common.LabelsUpdate(deployment.Spec.Template.Annotations, this.targetAnnotations)
 		return deployment
 	})
 }

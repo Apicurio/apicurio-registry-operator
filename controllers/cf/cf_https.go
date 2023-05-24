@@ -213,7 +213,7 @@ func (this *HttpsCF) Sense() {
 }
 
 func (this *HttpsCF) Compare() bool {
-	this.httpsEnabled = this.targetSecretName != "" && this.secretExists // Observation #1, #2
+	this.httpsEnabled = this.targetSecretName != "" && this.secretExists              // Observation #1, #2
 	return (this.secretExists && this.targetSecretName != this.previousSecretName) || // Secret renamed or removed
 		(this.httpsEnabled != this.serviceHttpsPortExists) || // Observation #3
 		(this.httpsEnabled != this.secretVolumeExists) || // Observation #4
