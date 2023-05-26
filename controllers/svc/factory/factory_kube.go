@@ -23,6 +23,8 @@ func NewKubeFactory(ctx context.LoopContext) *KubeFactory {
 	}
 }
 
+const REGISTRY_CONTAINER_NAME = "registry"
+
 const ENV_REGISTRY_VERSION = "REGISTRY_VERSION"
 const ENV_OPERATOR_NAME = "OPERATOR_NAME"
 
@@ -82,56 +84,54 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 			Replicas: &replicas,
 			Selector: &meta.LabelSelector{MatchLabels: this.GetSelectorLabels()},
 			Template: core.PodTemplateSpec{
-				ObjectMeta: meta.ObjectMeta{
-					Labels: this.GetLabels(),
-				},
 				Spec: core.PodSpec{
-					Containers: []core.Container{{
-						Name: this.ctx.GetAppName().Str(),
-						Resources: core.ResourceRequirements{
-							Limits: core.ResourceList{
-								core.ResourceCPU:    resource.MustParse("1"),
-								core.ResourceMemory: resource.MustParse("1300Mi"),
-							},
-							Requests: core.ResourceList{
-								core.ResourceCPU:    resource.MustParse("500m"),
-								core.ResourceMemory: resource.MustParse("512Mi"),
-							},
-						},
-						LivenessProbe: &core.Probe{
-							ProbeHandler: core.ProbeHandler{
-								HTTPGet: &core.HTTPGetAction{
-									Path: "/health/live",
-									Port: intstr.FromInt(8080),
+					Containers: []core.Container{
+						{
+							Name: REGISTRY_CONTAINER_NAME,
+							Resources: core.ResourceRequirements{
+								Limits: core.ResourceList{
+									core.ResourceCPU:    resource.MustParse("1"),
+									core.ResourceMemory: resource.MustParse("1300Mi"),
+								},
+								Requests: core.ResourceList{
+									core.ResourceCPU:    resource.MustParse("500m"),
+									core.ResourceMemory: resource.MustParse("512Mi"),
 								},
 							},
-							InitialDelaySeconds: 15,
-							TimeoutSeconds:      5,
-							PeriodSeconds:       10,
-							SuccessThreshold:    1,
-							FailureThreshold:    3,
-						},
-						ReadinessProbe: &core.Probe{
-							ProbeHandler: core.ProbeHandler{
-								HTTPGet: &core.HTTPGetAction{
-									Path: "/health/ready",
-									Port: intstr.FromInt(8080),
+							LivenessProbe: &core.Probe{
+								ProbeHandler: core.ProbeHandler{
+									HTTPGet: &core.HTTPGetAction{
+										Path: "/health/live",
+										Port: intstr.FromInt(8080),
+									},
+								},
+								InitialDelaySeconds: 15,
+								TimeoutSeconds:      5,
+								PeriodSeconds:       10,
+								SuccessThreshold:    1,
+								FailureThreshold:    3,
+							},
+							ReadinessProbe: &core.Probe{
+								ProbeHandler: core.ProbeHandler{
+									HTTPGet: &core.HTTPGetAction{
+										Path: "/health/ready",
+										Port: intstr.FromInt(8080),
+									},
+								},
+								InitialDelaySeconds: 15,
+								TimeoutSeconds:      5,
+								PeriodSeconds:       10,
+								SuccessThreshold:    1,
+								FailureThreshold:    3,
+							},
+							VolumeMounts: []core.VolumeMount{
+								{
+									Name:      "tmp",
+									MountPath: "/tmp",
 								},
 							},
-							InitialDelaySeconds: 15,
-							TimeoutSeconds:      5,
-							PeriodSeconds:       10,
-							SuccessThreshold:    1,
-							FailureThreshold:    3,
 						},
-						TerminationMessagePath: "/dev/termination-log",
-						VolumeMounts: []core.VolumeMount{
-							{
-								Name:      "tmp",
-								MountPath: "/tmp",
-							},
-						},
-					}},
+					},
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					Volumes: []core.Volume{
 						{

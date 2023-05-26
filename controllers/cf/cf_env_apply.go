@@ -4,6 +4,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"go.uber.org/zap"
 	apps "k8s.io/api/apps/v1"
@@ -61,7 +62,7 @@ func (this *EnvApplyCF) Sense() {
 		deployment := this.deploymentEntry.GetValue().(*apps.Deployment)
 
 		for i, c := range deployment.Spec.Template.Spec.Containers {
-			if c.Name == this.ctx.GetAppName().Str() {
+			if c.Name == factory.REGISTRY_CONTAINER_NAME {
 				prevName := "" // To maintain ordering in case of interpolation
 				// Copy variables in the cache
 				deleted := make(map[string]bool, 0)
@@ -116,7 +117,7 @@ func (this *EnvApplyCF) Respond() {
 	this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 		deployment := value.(*apps.Deployment).DeepCopy()
 		for i, c := range deployment.Spec.Template.Spec.Containers {
-			if c.Name == this.ctx.GetAppName().Str() {
+			if c.Name == factory.REGISTRY_CONTAINER_NAME {
 				deployment.Spec.Template.Spec.Containers[i].Env = this.svcEnvCache.GetSorted()
 			}
 		} // TODO report a problem if not found?

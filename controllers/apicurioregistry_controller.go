@@ -222,15 +222,9 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName c.Name, appNamespa
 	//deployment
 	result.AddControlFunction(cf.NewDeploymentCF(ctx, loopServices))
 
-	//depends on deployment
-	if features.SupportsPDBv1beta1 {
-		result.AddControlFunction(cf.NewPodDisruptionBudgetV1beta1CF(ctx, loopServices))
-	}
-	if features.SupportsPDBv1 {
-		result.AddControlFunction(cf.NewPodDisruptionBudgetV1CF(ctx, loopServices))
-	}
-
 	//deployment modifiers
+	result.AddControlFunction(cf.NewUpgradeCF(ctx, loopServices))
+	result.AddControlFunction(cf.NewPodTemplateSpecCF(ctx, loopServices))
 	result.AddControlFunction(cf.NewAffinityCF(ctx))
 	result.AddControlFunction(cf.NewTolerationCF(ctx))
 	result.AddControlFunction(cf.NewAnnotationsCF(ctx))
@@ -254,9 +248,18 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName c.Name, appNamespa
 	//env vars applier
 	result.AddControlFunction(cf.NewEnvApplyCF(ctx))
 
+	//depends on deployment
+	if features.SupportsPDBv1beta1 {
+		result.AddControlFunction(cf.NewPodDisruptionBudgetV1beta1CF(ctx, loopServices))
+	}
+	if features.SupportsPDBv1 {
+		result.AddControlFunction(cf.NewPodDisruptionBudgetV1CF(ctx, loopServices))
+	}
+
 	//service
 	result.AddControlFunction(cf.NewServiceCF(ctx, loopServices))
 
+	// service modifiers
 	result.AddControlFunction(cf.NewHttpsCF(ctx, loopServices))
 
 	// depends on service
@@ -266,11 +269,11 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName c.Name, appNamespa
 		//result.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))
 	}
 
+	// network policy
+	result.AddControlFunction(cf.NewNetworkPolicyCF(ctx, loopServices))
+
 	// ingress
 	result.AddControlFunction(cf.NewIngressCF(ctx, loopServices))
-
-	//network policy
-	result.AddControlFunction(cf.NewNetworkPolicyCF(ctx, loopServices))
 
 	//dependents of ingress
 	if features.IsOCP {

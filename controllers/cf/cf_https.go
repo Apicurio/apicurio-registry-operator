@@ -8,6 +8,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"go.uber.org/zap"
 	apps "k8s.io/api/apps/v1"
@@ -140,6 +141,7 @@ func (this *HttpsCF) Sense() {
 	this.containerHttpPortExists = false
 	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT); exists {
 		deployment := entry.GetValue().(*apps.Deployment)
+		container := common.GetContainerByName(deployment.Spec.Template.Spec.Containers, factory.REGISTRY_CONTAINER_NAME)
 
 		if this.targetSecretName != "" {
 			// Volume
@@ -150,7 +152,7 @@ func (this *HttpsCF) Sense() {
 				}
 			}
 			// Volume mount
-			for _, mount := range deployment.Spec.Template.Spec.Containers[0].VolumeMounts {
+			for _, mount := range container.VolumeMounts {
 				if mount.Name == this.targetSecretName {
 					this.secretVolumeMountExists = true
 					break
@@ -158,7 +160,7 @@ func (this *HttpsCF) Sense() {
 			}
 		}
 		// Container port
-		for _, port := range deployment.Spec.Template.Spec.Containers[0].Ports {
+		for _, port := range container.Ports {
 			if port.ContainerPort == HttpsPort {
 				this.containerHttpsPortExists = true
 			}
@@ -232,15 +234,16 @@ func (this *HttpsCF) Respond() {
 	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT); exists {
 		entry.ApplyPatch(func(value interface{}) interface{} {
 			deployment := value.(*apps.Deployment).DeepCopy()
-
-			apicurioContainer := &deployment.Spec.Template.Spec.Containers[0]
+			apicurioContainer := common.GetContainerByName(deployment.Spec.Template.Spec.Containers, factory.REGISTRY_CONTAINER_NAME)
 
 			httpsPort := &core.ContainerPort{
 				ContainerPort: HttpsPort,
+				Protocol:      core.ProtocolTCP,
 			}
 
 			httpPort := &core.ContainerPort{
 				ContainerPort: HttpPort,
+				Protocol:      core.ProtocolTCP,
 			}
 
 			if this.httpsEnabled && !this.secretVolumeExists {
@@ -268,7 +271,7 @@ func (this *HttpsCF) Respond() {
 				this.log.Debugw("removed secret volume mount")
 			}
 			if this.httpsEnabled && !this.containerHttpsPortExists {
-				common.AddPortToContainer(apicurioContainer, httpsPort)
+				common.AddContainerPort(&apicurioContainer.Ports, httpsPort)
 				this.log.Debugw("added container HTTPS port")
 			}
 			if !this.httpsEnabled && this.containerHttpsPortExists {
@@ -277,7 +280,7 @@ func (this *HttpsCF) Respond() {
 			}
 			// HTTP port
 			if (!this.httpsEnabled || this.httpEnabled) && !this.containerHttpPortExists {
-				common.AddPortToContainer(apicurioContainer, httpPort)
+				common.AddContainerPort(&apicurioContainer.Ports, httpPort)
 				this.log.Debugw("added container HTTP port")
 			}
 			if this.httpsEnabled && !this.httpEnabled && this.containerHttpPortExists {

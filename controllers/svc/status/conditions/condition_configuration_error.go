@@ -38,12 +38,12 @@ func (this *ConfigurationErrorCondition) TransitionRequired(optionPath string) {
 	}
 }
 
-func (this *ConfigurationErrorCondition) TransitionInvalid(currentValue string, optionPath string) {
+func (this *ConfigurationErrorCondition) TransitionInvalid(details string, optionPath string) {
 	if this.data.Reason != string(CONFIGURATION_ERROR_CONDITION_REASON_INVALID_PERSISTENCE) &&
 		this.data.Reason != string(CONFIGURATION_ERROR_CONDITION_REASON_REQUIRED) {
 
 		this.data.Status = metav1.ConditionTrue
 		this.data.Reason = string(CONFIGURATION_ERROR_CONDITION_REASON_INVALID)
-		this.data.Message = "Invalid value for configuration option " + optionPath + ": " + currentValue
+		this.data.Message = "Invalid value for configuration option " + optionPath + ": " + details
 	}
 }

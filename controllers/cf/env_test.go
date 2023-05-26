@@ -7,6 +7,7 @@ import (
 	loop_impl "github.com/Apicurio/apicurio-registry-operator/controllers/loop/impl"
 	services2 "github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	apps "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -134,7 +135,7 @@ func TestEnvOrdering(t *testing.T) {
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name: ctx.GetAppName().Str(),
+							Name: factory.REGISTRY_CONTAINER_NAME,
 							Env: []corev1.EnvVar{
 								{
 									Name:  "DEPLOYMENT_VAR_1_NAME",
@@ -246,7 +247,7 @@ func TestEnvPriority(t *testing.T) {
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name: ctx.GetAppName().Str(),
+							Name: factory.REGISTRY_CONTAINER_NAME,
 							Env: []corev1.EnvVar{
 								{
 									Name:  "VAR_1_NAME",

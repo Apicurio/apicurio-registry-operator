@@ -69,7 +69,7 @@ func (this *AnnotationsCF) Respond() {
 	// Patch the resource
 	this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 		deployment := value.(*apps.Deployment).DeepCopy()
-		common.LabelsUpdate(deployment.Spec.Template.Annotations, this.targetAnnotations)
+		common.LabelsUpdate(&deployment.Spec.Template.Annotations, this.targetAnnotations)
 		return deployment
 	})
 }
