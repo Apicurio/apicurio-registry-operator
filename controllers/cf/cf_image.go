@@ -1,6 +1,7 @@
 package cf
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"go.uber.org/zap"
 	"os"
 
@@ -67,7 +68,7 @@ func (this *ImageCF) Sense() {
 	this.existingImage = ""
 	if this.deploymentExists {
 		for i, c := range deploymentEntry.GetValue().(*apps.Deployment).Spec.Template.Spec.Containers {
-			if c.Name == this.ctx.GetAppName().Str() {
+			if c.Name == factory.REGISTRY_CONTAINER_NAME {
 				this.existingImage = deploymentEntry.GetValue().(*apps.Deployment).Spec.Template.Spec.Containers[i].Image
 			}
 		} // TODO report a problem if not found?
@@ -99,9 +100,8 @@ func (this *ImageCF) Sense() {
 			this.persistenceError = true
 			this.log.Warnw(
 				"The operand image is not selected. " +
-					"Set the 'spec.configuration.persistence' property in your 'apicurioregistry' resource " +
-					"to select the appropriate Service Registry image, or set the 'spec.deployment.image' " +
-					"property to use a specific image.")
+					"Set the spec.configuration.persistence property to select an appropriate Apicurio Registry image, " +
+					"or set the spec.deployment.image property to use a custom image.")
 		}
 	}
 
@@ -110,6 +110,8 @@ func (this *ImageCF) Sense() {
 }
 
 func (this *ImageCF) Compare() bool {
+	this.log.Debugw("Observation", "this.existingImage", this.existingImage,
+		"this.targetImage", this.targetImage)
 	// Condition #1
 	// Deployment exists
 	// Condition #2
@@ -129,7 +131,7 @@ func (this *ImageCF) Respond() {
 	this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 		deployment := value.(*apps.Deployment).DeepCopy()
 		for i, c := range deployment.Spec.Template.Spec.Containers {
-			if c.Name == this.ctx.GetAppName().Str() {
+			if c.Name == factory.REGISTRY_CONTAINER_NAME {
 				deployment.Spec.Template.Spec.Containers[i].Image = this.targetImage
 			}
 		} // TODO report a problem if not found?

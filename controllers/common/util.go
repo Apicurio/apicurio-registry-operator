@@ -73,10 +73,6 @@ func AssertEquals(t *testing.T, expected interface{}, actual interface{}) {
 	}
 }
 
-func First(first interface{}, _ interface{}) interface{} {
-	return first
-}
-
 func FindIndex(haystack []interface{}, needle interface{}) (int, error) {
 	for i, v := range haystack {
 		if reflect.DeepEqual(v, needle) {
@@ -104,21 +100,39 @@ func AssertSliceContains(t *testing.T, haystack []interface{}, needle interface{
 	}
 }
 
+// TODO Refactor
 func SetVolumeInDeployment(deployment *apps.Deployment, volume *core.Volume) {
+	SetVolume(&deployment.Spec.Template.Spec.Volumes, volume)
+}
 
-	deploymentVolumes := &deployment.Spec.Template.Spec.Volumes
+func SetVolume(volumes *[]core.Volume, volume *core.Volume) {
 	volumeAlreadyExists := false
 
 	// Modify volume if it exists, otherwise append as a new volume
-	for i, vol := range *deploymentVolumes {
+	for i, vol := range *volumes {
 		if vol.Name == volume.Name {
 			volumeAlreadyExists = true
-			(*deploymentVolumes)[i] = *volume
+			(*volumes)[i] = *volume
 			break
 		}
 	}
 	if !volumeAlreadyExists {
-		*deploymentVolumes = append(*deploymentVolumes, *volume)
+		*volumes = append(*volumes, *volume)
+	}
+}
+
+func SetVolumeMount(volumeMounts *[]core.VolumeMount, volumeMount *core.VolumeMount) {
+	alreadyExists := false
+	// Modify if it exists, otherwise append
+	for i, v := range *volumeMounts {
+		if v.Name == volumeMount.Name {
+			alreadyExists = true
+			(*volumeMounts)[i] = *volumeMount
+			break
+		}
+	}
+	if !alreadyExists {
+		*volumeMounts = append(*volumeMounts, *volumeMount)
 	}
 }
 
@@ -166,51 +180,16 @@ func RemoveVolumeMountFromContainer(container *core.Container, volumeMount *core
 	}
 }
 
-func AddEnvVarToContainer(container *core.Container, envVar *core.EnvVar) {
-
-	envVars := &container.Env
-	varAlreadyExists := false
-
-	// Modify envVar if it exists, otherwise append as a new envVar
-	for i, variable := range *envVars {
-		if variable.Name == envVar.Name {
-			varAlreadyExists = true
-			(*envVars)[i] = *envVar
-			break
-		}
-	}
-	if !varAlreadyExists {
-		*envVars = append(*envVars, *envVar)
-	}
-}
-
-func RemoveEnvVarFromContainer(container *core.Container, envVar *core.EnvVar) {
-
-	envVars := &container.Env
-
-	// Remove envVar from container
-	for i, variable := range *envVars {
-		if variable.Name == envVar.Name {
-			*envVars = append((*envVars)[:i], (*envVars)[i+1:]...)
-			break
-		}
-	}
-}
-
-func AddPortToContainer(container *core.Container, port *core.ContainerPort) {
-
-	ports := &container.Ports
-	portAlreadyExists := false
-
-	// Modify containerPort if it exists, otherwise append as a new containerPort
+func AddContainerPort(ports *[]core.ContainerPort, port *core.ContainerPort) {
+	exists := false
 	for i, p := range *ports {
 		if p.ContainerPort == port.ContainerPort {
-			portAlreadyExists = true
+			exists = true
 			(*ports)[i] = *port
 			break
 		}
 	}
-	if !portAlreadyExists {
+	if !exists {
 		*ports = append(*ports, *port)
 	}
 }
@@ -332,11 +311,23 @@ func LabelsEqual(target map[string]string, source map[string]string) bool {
 	return true
 }
 
-func LabelsUpdate(target map[string]string, source map[string]string) {
+func LabelsUpdate(target *map[string]string, source map[string]string) {
+	if *target == nil {
+		*target = make(map[string]string)
+	}
 	for sourceKey, sourceValue := range source {
-		targetValue, targetExists := target[sourceKey]
+		targetValue, targetExists := (*target)[sourceKey]
 		if !targetExists || sourceValue != targetValue {
-			target[sourceKey] = sourceValue
+			(*target)[sourceKey] = sourceValue
 		}
 	}
+}
+
+func GetContainerByName(containers []core.Container, name string) *core.Container {
+	for i, c := range containers {
+		if c.Name == name {
+			return &containers[i]
+		}
+	}
+	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
@@ -212,7 +213,7 @@ func (this *KafkasqlSecurityScramCF) AddSecretMountPatch(deploymentEntry resourc
 	deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 		deployment := value.(*apps.Deployment).DeepCopy()
 		for ci, c := range deployment.Spec.Template.Spec.Containers {
-			if c.Name == this.ctx.GetAppName().Str() {
+			if c.Name == factory.REGISTRY_CONTAINER_NAME {
 				mount := core.VolumeMount{
 					Name:      volumeName,
 					ReadOnly:  true,

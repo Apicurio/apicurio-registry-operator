@@ -1,6 +1,7 @@
 package cf
 
 import (
+	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"go.uber.org/zap"
 	"os"
 
@@ -52,7 +53,7 @@ func (this *ImagePullPolicyCF) Sense() {
 		// Observation #2
 		// Get the existing pod ImagePullPolicy
 		for i, c := range this.deploymentEntry.GetValue().(*apps.Deployment).Spec.Template.Spec.Containers {
-			if c.Name == this.ctx.GetAppName().Str() {
+			if c.Name == factory.REGISTRY_CONTAINER_NAME {
 				this.existingImagePullPolicy = this.deploymentEntry.GetValue().(*apps.Deployment).Spec.Template.Spec.Containers[i].ImagePullPolicy
 			}
 		}
@@ -93,7 +94,7 @@ func (this *ImagePullPolicyCF) Respond() {
 	this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 		deployment := value.(*apps.Deployment).DeepCopy()
 		for i, c := range deployment.Spec.Template.Spec.Containers {
-			if c.Name == this.ctx.GetAppName().Str() {
+			if c.Name == factory.REGISTRY_CONTAINER_NAME {
 				deployment.Spec.Template.Spec.Containers[i].ImagePullPolicy = this.targetImagePullPolicy
 			}
 		}

@@ -124,7 +124,6 @@ func (this *LabelsCF) Compare() bool {
 	this.updatePdbV1beta1 = this.pdbV1beta1IsCached && !common.LabelsEqual(this.pdbV1beta1Labels, this.caLabels)
 	this.updatePdbV1 = this.pdbV1IsCached && !common.LabelsEqual(this.pdbV1Labels, this.caLabels)
 	this.updateNetworkPolicy = this.networkPolicyIsCached && !common.LabelsEqual(this.networkPolicyLabels, this.caLabels)
-	// TODO Add network policy labels
 
 	return this.updateDeployment ||
 		this.updateDeploymentPod ||
@@ -141,7 +140,7 @@ func (this *LabelsCF) Respond() {
 	if this.updateDeployment {
 		this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 			deployment := value.(*apps.Deployment).DeepCopy()
-			common.LabelsUpdate(deployment.Labels, this.caLabels)
+			common.LabelsUpdate(&deployment.Labels, this.caLabels)
 			return deployment
 		})
 	}
@@ -150,7 +149,7 @@ func (this *LabelsCF) Respond() {
 	if this.updateDeploymentPod {
 		this.deploymentEntry.ApplyPatch(func(value interface{}) interface{} {
 			deployment := value.(*apps.Deployment).DeepCopy()
-			common.LabelsUpdate(deployment.Spec.Template.Labels, this.targetDeploymentPodLabels)
+			common.LabelsUpdate(&deployment.Spec.Template.Labels, this.targetDeploymentPodLabels)
 			return deployment
 		})
 	}
@@ -159,7 +158,7 @@ func (this *LabelsCF) Respond() {
 	if this.updateService {
 		this.serviceEntry.ApplyPatch(func(value interface{}) interface{} {
 			service := value.(*core.Service).DeepCopy()
-			common.LabelsUpdate(service.Labels, this.caLabels)
+			common.LabelsUpdate(&service.Labels, this.caLabels)
 			return service
 		})
 	}
@@ -168,7 +167,7 @@ func (this *LabelsCF) Respond() {
 	if this.updateIngress {
 		this.ingressEntry.ApplyPatch(func(value interface{}) interface{} {
 			ingress := value.(*networking.Ingress).DeepCopy()
-			common.LabelsUpdate(ingress.Labels, this.caLabels)
+			common.LabelsUpdate(&ingress.Labels, this.caLabels)
 			return ingress
 		})
 	}
@@ -177,14 +176,14 @@ func (this *LabelsCF) Respond() {
 	if this.updatePdbV1beta1 {
 		this.pdbV1beta1Entry.ApplyPatch(func(value interface{}) interface{} {
 			pdb := value.(*policy_v1beta1.PodDisruptionBudget).DeepCopy()
-			common.LabelsUpdate(pdb.Labels, this.caLabels)
+			common.LabelsUpdate(&pdb.Labels, this.caLabels)
 			return pdb
 		})
 	}
 	if this.updatePdbV1 {
 		this.pdbV1Entry.ApplyPatch(func(value interface{}) interface{} {
 			pdb := value.(*policy_v1.PodDisruptionBudget).DeepCopy()
-			common.LabelsUpdate(pdb.Labels, this.caLabels)
+			common.LabelsUpdate(&pdb.Labels, this.caLabels)
 			return pdb
 		})
 	}
@@ -193,7 +192,7 @@ func (this *LabelsCF) Respond() {
 	if this.updateNetworkPolicy {
 		this.networkPolicyEntry.ApplyPatch(func(value interface{}) interface{} {
 			policy := value.(*networking.NetworkPolicy).DeepCopy()
-			common.LabelsUpdate(policy.Labels, this.caLabels)
+			common.LabelsUpdate(&policy.Labels, this.caLabels)
 			return policy
 		})
 	}
@@ -212,7 +211,7 @@ func (this *LabelsCF) GetCommonApplicationLabels() map[string]string {
 
 func (this *LabelsCF) GetTargetDeploymentPodLabels() map[string]string {
 	targetDeploymentPodLabels := make(map[string]string)
-	common.LabelsUpdate(targetDeploymentPodLabels, this.GetCommonApplicationLabels())
-	common.LabelsUpdate(targetDeploymentPodLabels, this.additionalDeploymentPodLabels)
+	common.LabelsUpdate(&targetDeploymentPodLabels, this.GetCommonApplicationLabels())
+	common.LabelsUpdate(&targetDeploymentPodLabels, this.additionalDeploymentPodLabels)
 	return targetDeploymentPodLabels
 }

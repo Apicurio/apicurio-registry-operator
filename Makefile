@@ -271,6 +271,7 @@ manager: generate go-fmt go-vet ## Build manager binary
 .PHONY: manifests
 manifests: install-controller-gen install-kustomize install-yq ## Generate manifests e.g. CRD, RBAC etc.
 	$(CONTROLLER_GEN) rbac:roleName=apicurio-registry-operator-role crd paths="./..." output:crd:artifacts:config=config/crd/resources output:rbac:artifacts:config=config/rbac/resources
+	$(YQ) e "del(.. | select(has(\"podTemplateSpecPreview\")).podTemplateSpecPreview | .. | select(has(\"description\")).description)" -i "config/crd/resources/registry.apicur.io_apicurioregistries.yaml"
 	cd config/manager && $(KUSTOMIZE) edit set image REGISTRY_OPERATOR_IMAGE=$(OPERATOR_IMAGE)
 	$(YQ) e ".metadata.annotations.createdAt = \"$(DATE)\"" -i "config/manifests/resources/apicurio-registry-operator.clusterserviceversion.yaml"
 	$(YQ) e ".metadata.annotations.containerImage = \"$(OPERATOR_IMAGE)\"" -i "config/manifests/resources/apicurio-registry-operator.clusterserviceversion.yaml"
