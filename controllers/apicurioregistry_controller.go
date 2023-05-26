@@ -261,7 +261,9 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName c.Name, appNamespa
 
 	// depends on service
 	if features.SupportsMonitoring {
-		result.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))
+		// TODO Temporarily disabling this feature, needs improvements
+		// mainly to support HTTPS
+		//result.AddControlFunction(cf.NewServiceMonitorCF(ctx, loopServices))
 	}
 
 	// ingress
