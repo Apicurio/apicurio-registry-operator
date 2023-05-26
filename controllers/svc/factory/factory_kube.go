@@ -1,8 +1,6 @@
 package factory
 
 import (
-	"os"
-
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
@@ -12,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"os"
 )
 
 type KubeFactory struct {
@@ -26,6 +25,8 @@ func NewKubeFactory(ctx context.LoopContext) *KubeFactory {
 
 const ENV_REGISTRY_VERSION = "REGISTRY_VERSION"
 const ENV_OPERATOR_NAME = "OPERATOR_NAME"
+
+var intstr1 = intstr.FromInt(1)
 
 // MUST NOT be used directly as selector labels, because some of them may change.
 func (this *KubeFactory) GetLabels() map[string]string {
@@ -86,15 +87,7 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 				},
 				Spec: core.PodSpec{
 					Containers: []core.Container{{
-						Name:  this.ctx.GetAppName().Str(),
-						Image: "",
-						Ports: []core.ContainerPort{
-							{
-								ContainerPort: 8080,
-								Protocol:      core.ProtocolTCP,
-							},
-						},
-						Env: []core.EnvVar{},
+						Name: this.ctx.GetAppName().Str(),
 						Resources: core.ResourceRequirements{
 							Limits: core.ResourceList{
 								core.ResourceCPU:    resource.MustParse("1"),
@@ -132,19 +125,16 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 							FailureThreshold:    3,
 						},
 						TerminationMessagePath: "/dev/termination-log",
-						ImagePullPolicy:        core.PullAlways,
 						VolumeMounts: []core.VolumeMount{
-							core.VolumeMount{
+							{
 								Name:      "tmp",
 								MountPath: "/tmp",
 							},
 						},
 					}},
-					RestartPolicy:                 core.RestartPolicyAlways,
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
-					DNSPolicy:                     core.DNSClusterFirst,
 					Volumes: []core.Volume{
-						core.Volume{
+						{
 							Name:         "tmp",
 							VolumeSource: core.VolumeSource{EmptyDir: &core.EmptyDirVolumeSource{}},
 						},
@@ -154,8 +144,8 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 			Strategy: apps.DeploymentStrategy{
 				Type: apps.RollingUpdateDeploymentStrategyType,
 				RollingUpdate: &apps.RollingUpdateDeployment{
-					MaxUnavailable: &intstr.IntOrString{Type: intstr.Int, IntVal: 1},
-					MaxSurge:       &intstr.IntOrString{Type: intstr.Int, IntVal: 1},
+					MaxUnavailable: &intstr1,
+					MaxSurge:       &intstr1,
 				},
 			},
 		},
@@ -166,17 +156,7 @@ func (this *KubeFactory) CreateService() *core.Service {
 	service := &core.Service{
 		ObjectMeta: this.createObjectMeta("service"),
 		Spec: core.ServiceSpec{
-			Ports: []core.ServicePort{
-				{
-					Name:       "http",
-					Protocol:   core.ProtocolTCP,
-					Port:       8080,
-					TargetPort: intstr.FromInt(8080),
-				},
-			},
-			Selector:        this.GetSelectorLabels(),
-			Type:            core.ServiceTypeClusterIP,
-			SessionAffinity: core.ServiceAffinityNone,
+			Selector: this.GetSelectorLabels(),
 		},
 	}
 	return service
@@ -198,7 +178,6 @@ func (this *KubeFactory) CreateIngress(serviceName string) *networking.Ingress {
 		Spec: networking.IngressSpec{
 			Rules: []networking.IngressRule{
 				{
-					Host: "",
 					IngressRuleValue: networking.IngressRuleValue{
 						HTTP: &networking.HTTPIngressRuleValue{
 							Paths: []networking.HTTPIngressPath{
@@ -226,27 +205,13 @@ func (this *KubeFactory) CreateIngress(serviceName string) *networking.Ingress {
 
 func (this *KubeFactory) CreateNetworkPolicy(serviceName string) *networking.NetworkPolicy {
 	metaData := this.createObjectMeta("networkpolicy")
-	protocolTCP := core.Protocol("TCP")
 	res := &networking.NetworkPolicy{
 		TypeMeta:   meta.TypeMeta{},
 		ObjectMeta: metaData,
 		Spec: networking.NetworkPolicySpec{
 			PodSelector: meta.LabelSelector{
-				MatchLabels: this.GetSelectorLabels()},
-			Ingress: []networking.NetworkPolicyIngressRule{
-				{
-					Ports: []networking.NetworkPolicyPort{
-						{
-							Protocol: &protocolTCP,
-							Port: &intstr.IntOrString{
-								Type:   intstr.Int,
-								IntVal: 8080,
-							},
-						},
-					},
-				},
+				MatchLabels: this.GetSelectorLabels(),
 			},
-			Egress:      []networking.NetworkPolicyEgressRule{},
 			PolicyTypes: []networking.PolicyType{"Ingress"},
 		},
 	}
@@ -260,9 +225,7 @@ func (this *KubeFactory) CreatePodDisruptionBudgetV1() *policy_v1.PodDisruptionB
 			Selector: &meta.LabelSelector{
 				MatchLabels: this.GetSelectorLabels(),
 			},
-			MaxUnavailable: &intstr.IntOrString{
-				IntVal: 1,
-			},
+			MaxUnavailable: &intstr1,
 		},
 	}
 	return podDisruptionBudget
@@ -275,9 +238,7 @@ func (this *KubeFactory) CreatePodDisruptionBudgetV1beta1() *policy_v1beta1.PodD
 			Selector: &meta.LabelSelector{
 				MatchLabels: this.GetSelectorLabels(),
 			},
-			MaxUnavailable: &intstr.IntOrString{
-				IntVal: 1,
-			},
+			MaxUnavailable: &intstr1,
 		},
 	}
 	return podDisruptionBudget
