@@ -43,12 +43,8 @@ func (this *LogLevelCF) Sense() {
 	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 		spec := specEntry.GetValue().(*ar.ApicurioRegistry)
 		this.logLevel = spec.Spec.Configuration.LogLevel
-		// Default value is false
-	}
-	if specEntry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
-		spec := specEntry.GetValue().(*ar.ApicurioRegistry)
 		this.registryLogLevel = spec.Spec.Configuration.RegistryLogLevel
-		// Default value is false
+		// Default values are false
 	}
 
 	// Observation #2
