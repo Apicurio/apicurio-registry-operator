@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"time"
 )
 
@@ -34,7 +35,7 @@ var _ = Describe("operator processing a simple spec", Ordered, func() {
 		testSupport.SetMockOperandMetricsReportReady(false)
 		ns := &core.Namespace{
 			ObjectMeta: meta.ObjectMeta{
-				Name: "test-namespace",
+				Name: "simple-deploy-test-namespace",
 			},
 		}
 		Expect(s.k8sClient.Create(context.TODO(), ns)).To(Succeed())
@@ -81,6 +82,15 @@ var _ = Describe("operator processing a simple spec", Ordered, func() {
 		Eventually(func() error {
 			return s.k8sClient.Get(s.ctx, serviceKey, service)
 		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
+		// Issue #149
+		Expect(service.Spec.Ports).Should(ConsistOf(
+			core.ServicePort{
+				Name:       "http",
+				Protocol:   core.ProtocolTCP,
+				Port:       8080,
+				TargetPort: intstr.FromInt(8080),
+			},
+		))
 	})
 
 	It("should create an ingress", func() {
