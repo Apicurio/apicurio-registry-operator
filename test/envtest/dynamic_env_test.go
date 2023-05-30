@@ -2,6 +2,8 @@ package envtest
 
 import (
 	"context"
+	"time"
+
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -9,7 +11,6 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"time"
 )
 
 var _ = Describe("dynamic environment variables", Ordered, func() {
@@ -145,9 +146,14 @@ var _ = Describe("dynamic environment variables", Ordered, func() {
 		Eventually(func() error {
 			Expect(s.k8sClient.Get(s.ctx, registryKey, registry)).To(Succeed())
 			registry.Spec.Configuration.LogLevel = "DEBUG"
+			registry.Spec.Configuration.RegistryLogLevel = "DEBUG"
 			registry.Spec.Configuration.Env = []core.EnvVar{
 				{
 					Name:  "LOG_LEVEL",
+					Value: "OVERRIDDEN_FROM_SPEC",
+				},
+				{
+					Name:  "REGISTRY_LOG_LEVEL",
 					Value: "OVERRIDDEN_FROM_SPEC",
 				},
 			}
@@ -163,6 +169,10 @@ var _ = Describe("dynamic environment variables", Ordered, func() {
 		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(ContainElements([]core.EnvVar{
 			{
 				Name:  "LOG_LEVEL",
+				Value: "DEBUG",
+			},
+			{
+				Name:  "REGISTRY_LOG_LEVEL",
 				Value: "DEBUG",
 			},
 		}))
