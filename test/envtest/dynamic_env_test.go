@@ -25,7 +25,7 @@ var _ = Describe("dynamic environment variables", Ordered, func() {
 		testSupport.SetMockOperandMetricsReportReady(true)
 		ns := &core.Namespace{
 			ObjectMeta: meta.ObjectMeta{
-				Name: "test2-namespace",
+				Name: "dynamic-env-test-namespace",
 			},
 		}
 		Expect(s.k8sClient.Create(context.TODO(), ns)).To(Succeed())
