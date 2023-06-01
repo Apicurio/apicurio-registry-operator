@@ -19,7 +19,7 @@ For example, from the *Project* drop-down, select `my-project`.
 ifdef::apicurio-registry[]
 . Click *Installed Operators* > *{registry}* > *ApicurioRegistry* > *Create ApicurioRegistry*.
 endif::[]
-ifdef::rh-service-registry[]
+ifdef::service-registry[]
 . Click *Installed Operators* > *Red Hat Integration - {registry}* > *ApicurioRegistry* > *Create ApicurioRegistry*.
 endif::[]
 

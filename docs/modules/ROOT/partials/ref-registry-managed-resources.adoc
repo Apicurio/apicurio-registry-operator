@@ -1,14 +1,47 @@
 [#managed-resources]
+// Do not forget to update link text in related xref(s). Antora does not support automatic name if the link has a fragment.
 = {registry} managed resources
 
 The resources managed by the {operator} when deploying {registry} are as follows:
 
 * `Deployment`
-* `Service`
 ifdef::apicurio-registry[]
 * `Ingress`
 endif::[]
 ifdef::service-registry[]
 * `Ingress` (and `Route`)
 endif::[]
+* `NetworkPolicy`
 * `PodDisruptionBudget`
+* `Service`
+
+You can disable the {operator} from creating and managing some resources, so they can be configured manually.
+This will provide users with greater flexibility in using features that the {operator} does not currently support.
+If you disable a resource type, its existing instance will be deleted.
+If you enable a resource, the {operator} will attempt to find a resource using the `app` label, e.g. `app=example-apicurioregistry` and start managing it, otherwise it will create a new instance.
+The following resource types can be disabled in this way:
+
+ifdef::apicurio-registry[]
+* `Ingress`
+endif::[]
+ifdef::service-registry[]
+* `Ingress` (and `Route`)
+endif::[]
+* `NetworkPolicy`
+* `PodDisruptionBudget`
+
+For example:
+
+[source,yaml]
+----
+apiVersion: registry.apicur.io/v1
+kind: ApicurioRegistry
+metadata:
+  name: example-apicurioregistry
+spec:
+  deployment:
+    managedResources:
+      disableIngress: true
+      disableNetworkPolicy: true
+      disablePodDisruptionBudget: false # Can be omitted
+----

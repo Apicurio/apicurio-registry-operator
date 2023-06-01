@@ -53,7 +53,7 @@ status:
 
 | `conditions/message`
 | string
-| A human readable message indicating details about the transition.
+| A human-readable message indicating details about the transition.
 
 | `conditions/lastTransitionTime`
 | string

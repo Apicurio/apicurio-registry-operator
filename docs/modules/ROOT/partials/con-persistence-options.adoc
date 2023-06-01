@@ -22,7 +22,7 @@ endif::[]
 ifdef::apicurio-registry[]
 |Apache Kafka 
 endif::[]
-ifdef::rh-service-registry[]
+ifdef::service-registry[]
 |{kafka-streams} 
 endif::[]
 |Data is stored using Apache Kafka, with the help of a local SQL database on each node. This storage option is provided for production environments where database management expertise is not available, or where storage in Kafka is a specific requirement.

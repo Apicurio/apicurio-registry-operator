@@ -120,7 +120,6 @@ Reserved:
   - spec.containers[*]
     - spec.containers[name = "registry"].env [alternative exists]
     - spec.containers[name = "registry"].image [alternative exists]
-    - spec.containers[name = "registry"].imagePullPolicy [alternative exists]
   - spec.imagePullSecrets [alternative exists]
   - spec.tolerations [alternative exists]
 */
@@ -185,12 +184,6 @@ func SanitizeBasePodSpec(log *zap.SugaredLogger, base *ar.ApicurioRegistryPodTem
 			return nil, newReservedFieldError("spec.containers[name = \"registry\"].image")
 		}
 		baseContainer.Image = currentContainer.Image
-
-		// spec.containers[name = "registry"].imagePullPolicy
-		if baseContainer.ImagePullPolicy != "" {
-			return nil, newReservedFieldError("spec.containers[name = \"registry\"].imagePullPolicy")
-		}
-		baseContainer.ImagePullPolicy = currentContainer.ImagePullPolicy
 
 		// (Factory) spec.containers[name = "registry"].livenessProbe
 		if baseContainer.LivenessProbe == nil {
