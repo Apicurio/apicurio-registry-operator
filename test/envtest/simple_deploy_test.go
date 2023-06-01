@@ -94,25 +94,9 @@ var _ = Describe("operator processing a simple spec", Ordered, func() {
 		))
 	})
 
-	It("should not create an ingress if disabled in CR", func() {
-		ingressKey = types.NamespacedName{Namespace: registry.Namespace, Name: registry.Name + "-ingress"}
-		Eventually(func() error {
-			Expect(s.k8sClient.Get(s.ctx, registryKey, registry)).To(Succeed())
-			registry.Spec.Deployment.ManagedResources.DisableIngress = true
-			return s.k8sClient.Update(s.ctx, registry)
-		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
-		Eventually(func() bool {
-			return errors.IsNotFound(s.k8sClient.Get(s.ctx, ingressKey, &networking.Ingress{}))
-		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(BeTrue())
-	})
-
-	It("should create an ingress by default", func() {
+	It("should create an ingress", func() {
 		ingress := &networking.Ingress{}
 		ingressKey = types.NamespacedName{Namespace: registry.Namespace, Name: registry.Name + "-ingress"}
-		Eventually(func() error {
-			registry.Spec.Deployment.ManagedResources.DisableIngress = false
-			return s.k8sClient.Update(s.ctx, registry)
-		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
 		Eventually(func() error {
 			return s.k8sClient.Get(s.ctx, ingressKey, ingress)
 		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
@@ -225,6 +209,24 @@ var _ = Describe("operator processing a simple spec", Ordered, func() {
 		Eventually(func() bool {
 			return testSupport.TimerDuration() > 10*time.Second
 		}, 20*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(BeTrue())
+	})
+
+	It("should not create an ingress if disabled in CR", func() {
+		ingressKey = types.NamespacedName{Namespace: registry.Namespace, Name: registry.Name + "-ingress"}
+		Eventually(func() error {
+			Expect(s.k8sClient.Get(s.ctx, registryKey, registry)).To(Succeed())
+			registry.Spec.Deployment.ManagedResources.DisableIngress = true
+			return s.k8sClient.Update(s.ctx, registry)
+		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
+		Eventually(func() bool {
+			return errors.IsNotFound(s.k8sClient.Get(s.ctx, ingressKey, &networking.Ingress{}))
+		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(BeTrue())
+
+		// Rectreating ingress to test cleanUp functionalty
+		Eventually(func() error {
+			registry.Spec.Deployment.ManagedResources.DisableIngress = false
+			return s.k8sClient.Update(s.ctx, registry)
+		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
 	})
 
 	It("should delete created resources during cleanup", func() {
