@@ -76,7 +76,7 @@ ifdef::apicurio-registry[]
 include::example$/keycloak/apicurioregistry_mem_keycloak_cr.yaml[]
 ----
 endif::[]
-ifdef::rh-service-registry[]
+ifdef::service-registry[]
 +
 [source,yaml]
 ----    

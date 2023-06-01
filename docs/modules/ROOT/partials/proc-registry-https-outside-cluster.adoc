@@ -41,8 +41,8 @@ You can alternatively generate a custom self-signed certificate using the follow
 +
 [source,bash]
 ----
-openssl genrsa 2048 > host.key &&
-openssl req -new -x509 -nodes -sha256 -days 365 -key host.key -out host.cert
+openssl genrsa 2048 > tls.key &&
+openssl req -new -x509 -nodes -sha256 -days 365 -key tls.key -out tls.crt
 ----
 +
 and then create a route using the OpenShift CLI:
@@ -51,7 +51,7 @@ and then create a route using the OpenShift CLI:
 ----
 oc create route edge \
   --service=example-apicurioregistry-service-9whd7 \
-  --cert=host.cert --key=host.key \
+  --cert=tls.crt --key=tls.key \
   --hostname=example-apicurioregistry-default.apps.example.com \
   --insecure-policy=Redirect \
   -n default
