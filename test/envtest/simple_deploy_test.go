@@ -2,6 +2,8 @@ package envtest
 
 import (
 	"context"
+	"time"
+
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -16,7 +18,6 @@ import (
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"time"
 )
 
 var _ = Describe("operator processing a simple spec", Ordered, func() {
@@ -93,9 +94,25 @@ var _ = Describe("operator processing a simple spec", Ordered, func() {
 		))
 	})
 
-	It("should create an ingress", func() {
+	It("should not create an ingress if disabled in CR", func() {
+		ingressKey = types.NamespacedName{Namespace: registry.Namespace, Name: registry.Name + "-ingress"}
+		Eventually(func() error {
+			Expect(s.k8sClient.Get(s.ctx, registryKey, registry)).To(Succeed())
+			registry.Spec.Deployment.ManagedResources.DisableIngress = true
+			return s.k8sClient.Update(s.ctx, registry)
+		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
+		Eventually(func() bool {
+			return errors.IsNotFound(s.k8sClient.Get(s.ctx, ingressKey, &networking.Ingress{}))
+		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(BeTrue())
+	})
+
+	It("should create an ingress by default", func() {
 		ingress := &networking.Ingress{}
 		ingressKey = types.NamespacedName{Namespace: registry.Namespace, Name: registry.Name + "-ingress"}
+		Eventually(func() error {
+			registry.Spec.Deployment.ManagedResources.DisableIngress = false
+			return s.k8sClient.Update(s.ctx, registry)
+		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
 		Eventually(func() error {
 			return s.k8sClient.Get(s.ctx, ingressKey, ingress)
 		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
