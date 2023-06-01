@@ -1,0 +1,11 @@
+include::partial$shared/all-attributes.adoc[]
+
+[id="operator-release-notes"]
+= {operator} release notes
+
+This chapter provides a list of features, bug fixes, and notes for {operator} releases:
+
+* xref:release-1-1-0-v2-4-2-final[Release 1.1.0-v2.4.2.final]
+
+// INCLUDES
+include::partial$release-1.1.0-v2.4.2.final.adoc[leveloffset=+1]

@@ -13,6 +13,7 @@ documentation for the {operator}:
 
 ifdef::apicurio-registry[]
 * https://github.com/Apicurio/apicurio-registry-operator[See the {operator} project on GitHub]
+* xref:assembly-operator-release-notes.adoc[See the {operator} release notes]
 endif::[]
 
 include::partial$con-registry-intro.adoc[leveloffset=+1]

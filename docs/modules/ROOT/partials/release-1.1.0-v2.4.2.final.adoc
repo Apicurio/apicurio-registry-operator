@@ -1,0 +1,27 @@
+[id="release-1-1-0-v2-4-2-final"]
+= Release 1.1.0-v2.4.2.final
+
+// TODO Work in progress, upstream only
+
+* Deployed {registry} version is `2.4.2.Final`
+* Features
+** Support Kubernetes v1.25 by working with both `v1beta1` and `v1` versions of the `PodDisruptionBudget`.
+** Support setting of environment variables for {registry} in the `ApicurioRegistry` CRD.
+A new field is available at `spec.configuration.env` that can contain a list of environment variable definitions of the same structure as in a `Deployment`.
+** Added initial HTTPS support. *TODO*
+** Improved Operator logging.
+You can now set the minimal log level for the operator using an environment variable `LOG_LEVEL` in its `Deployment`.
+Supported values are `debug`, `info` (default), `warn`, and `error`.
+** Support a `NetworkPolicy`
+** Add `spec.deployment.imagePullSecrets` field in the CR, and a
+`REGISTRY_IMAGE_PULL_POLICY` environment variable. *TODO*
+** ia new `spec.deployment.image` field, which overrides the values set in the `REGISTRY_IMAGE_MEM`, `REGISTRY_IMAGE_KAFKASQL` or
+`REGISTRY_IMAGE_SQL` operator environment variables.
+** feat: Allow specification of pod annotations and labels
+
+- Via new object fields `spec.deployment.metadata.annotations`
+and `spec.deployment.metadata.labels`.
+
+* Bug fixes
+* Notes
+** Add security context to the operator deployment

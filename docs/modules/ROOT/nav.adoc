@@ -5,3 +5,7 @@ include::partial$shared/all-attributes.adoc[]
 * xref:ROOT:assembly-registry-storage.adoc[]
 * xref:ROOT:assembly-registry-maintenance.adoc[]
 * xref:ROOT:assembly-operator-configuration.adoc[]
+ifdef::apicurio-registry[]
+// TODO Work in progress, upstream only
+* xref:ROOT:assembly-operator-release-notes.adoc[]
+endif::[]
