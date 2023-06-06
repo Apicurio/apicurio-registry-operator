@@ -14,23 +14,25 @@ import (
 
 var _ = Describe("operator configuring https", Ordered, func() {
 
-	var registry *ar.ApicurioRegistry
-	//var registryKey types.NamespacedName
+	var registryKey types.NamespacedName
 	var secretKey types.NamespacedName
 	var serviceKey types.NamespacedName
 
+	const testNamespace = "https-test-namespace"
+	const registryName = "test"
+
 	BeforeAll(func() {
-		const registryName = "test"
+
 		// Consistency in case the specs are reordered
-		testSupport.SetMockCanMakeHTTPRequestToOperand(false)
-		testSupport.SetMockOperandMetricsReportReady(false)
+		testSupport.SetMockCanMakeHTTPRequestToOperand(testNamespace, false)
+		testSupport.SetMockOperandMetricsReportReady(testNamespace, false)
 		ns := &core.Namespace{
 			ObjectMeta: meta.ObjectMeta{
-				Name: "https-test-namespace",
+				Name: testNamespace,
 			},
 		}
 		Expect(s.k8sClient.Create(context.TODO(), ns)).To(Succeed())
-		secretKey = types.NamespacedName{Namespace: ns.ObjectMeta.Name, Name: registryName + "-https-secret"}
+		secretKey = types.NamespacedName{Namespace: ns.Name, Name: registryName + "-https-secret"}
 		secret := &core.Secret{
 			ObjectMeta: meta.ObjectMeta{
 				Name:      secretKey.Name,
@@ -42,7 +44,7 @@ var _ = Describe("operator configuring https", Ordered, func() {
 			},
 		}
 		Expect(s.k8sClient.Create(context.TODO(), secret)).To(Succeed())
-		registry = &ar.ApicurioRegistry{
+		registry := &ar.ApicurioRegistry{
 			ObjectMeta: meta.ObjectMeta{
 				Name:      registryName,
 				Namespace: ns.ObjectMeta.Name,
@@ -58,13 +60,13 @@ var _ = Describe("operator configuring https", Ordered, func() {
 			},
 		}
 		Expect(s.k8sClient.Create(s.ctx, registry)).To(Succeed())
-		//registryKey = types.NamespacedName{Namespace: registry.Namespace, Name: registry.Name}
+		registryKey = types.NamespacedName{Namespace: registry.Namespace, Name: registry.Name}
 	})
 
 	// TODO Add tests for other resources. This specifically tests issue #149.
 	It("should create a service", func() {
 		service := &core.Service{}
-		serviceKey = types.NamespacedName{Namespace: registry.Namespace, Name: registry.Name + "-service"}
+		serviceKey = types.NamespacedName{Namespace: registryKey.Namespace, Name: registryKey.Name + "-service"}
 		Eventually(func() []core.ServicePort {
 			if err := s.k8sClient.Get(s.ctx, serviceKey, service); err == nil {
 				return service.Spec.Ports
@@ -86,4 +88,5 @@ var _ = Describe("operator configuring https", Ordered, func() {
 			},
 		))
 	})
+
 })

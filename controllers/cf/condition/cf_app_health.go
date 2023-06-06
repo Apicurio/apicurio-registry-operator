@@ -118,11 +118,11 @@ func (this *AppHealthCF) Sense() {
 		}
 
 		if this.ctx.GetTestingSupport().IsEnabled() {
-			if this.ctx.GetTestingSupport().GetMockCanMakeHTTPRequestToOperand() {
+			if this.ctx.GetTestingSupport().GetMockCanMakeHTTPRequestToOperand(this.ctx.GetAppNamespace().Str()) {
 				this.initializing = false
 			}
-			this.requestLivenessOk = this.ctx.GetTestingSupport().GetMockOperandMetricsReportReady()
-			this.requestReadinessOk = this.ctx.GetTestingSupport().GetMockOperandMetricsReportReady()
+			this.requestLivenessOk = this.ctx.GetTestingSupport().GetMockOperandMetricsReportReady(this.ctx.GetAppNamespace().Str())
+			this.requestReadinessOk = this.ctx.GetTestingSupport().GetMockOperandMetricsReportReady(this.ctx.GetAppNamespace().Str())
 		}
 
 	} else {
@@ -152,7 +152,7 @@ func (this *AppHealthCF) Respond() {
 
 	this.ctx.SetRequeueDelaySec(3 * 60) // 3 min
 
-	if this.ctx.GetTestingSupport().IsEnabled() && !this.ctx.GetTestingSupport().GetMockOperandMetricsReportReady() {
+	if this.ctx.GetTestingSupport().IsEnabled() && !this.ctx.GetTestingSupport().GetMockOperandMetricsReportReady(this.ctx.GetAppNamespace().Str()) {
 		this.ctx.SetRequeueNow() // Ensure the reconciler is executed again very soon
 	}
 }

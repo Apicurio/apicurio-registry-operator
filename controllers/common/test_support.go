@@ -6,12 +6,16 @@ import (
 )
 
 type TestSupport struct {
-	enabled                     bool
+	enabled    bool
+	log        *zap.Logger
+	features   *SupportedFeatures
+	namespaced map[string]*testSupportNamespaced
+}
+
+type testSupportNamespaced struct {
 	canMakeHTTPRequestToOperand bool
 	operandMetricsReportReady   bool
 	loopTick                    time.Time
-	log                         *zap.Logger
-	features                    *SupportedFeatures
 }
 
 func NewTestSupport(rootLog *zap.Logger, enabled bool) *TestSupport {
@@ -20,11 +24,17 @@ func NewTestSupport(rootLog *zap.Logger, enabled bool) *TestSupport {
 		log.Sugar().Warnw("TESTING SUPPORT IS ENABLED. YOU SHOULD NOT SEE THIS MESSAGE IN PRODUCTION.")
 	}
 	return &TestSupport{
-		enabled:                     enabled,
+		enabled:    enabled,
+		namespaced: make(map[string]*testSupportNamespaced),
+		log:        log,
+	}
+}
+
+func newTestSupportNamespaced() *testSupportNamespaced {
+	return &testSupportNamespaced{
 		canMakeHTTPRequestToOperand: false,
 		operandMetricsReportReady:   false,
 		loopTick:                    time.Time{},
-		log:                         log,
 	}
 }
 
@@ -38,34 +48,52 @@ func (this *TestSupport) panicIfNotTesting() {
 	}
 }
 
-func (this *TestSupport) SetMockCanMakeHTTPRequestToOperand(value bool) {
+func (this *TestSupport) SetMockCanMakeHTTPRequestToOperand(namespace string, value bool) {
 	this.panicIfNotTesting()
-	this.canMakeHTTPRequestToOperand = value
+	if _, e := this.namespaced[namespace]; !e {
+		this.namespaced[namespace] = newTestSupportNamespaced()
+	}
+	this.namespaced[namespace].canMakeHTTPRequestToOperand = value
 }
 
-func (this *TestSupport) GetMockCanMakeHTTPRequestToOperand() bool {
+func (this *TestSupport) GetMockCanMakeHTTPRequestToOperand(namespace string) bool {
 	this.panicIfNotTesting()
-	return this.canMakeHTTPRequestToOperand
+	if _, e := this.namespaced[namespace]; !e {
+		this.namespaced[namespace] = newTestSupportNamespaced()
+	}
+	return this.namespaced[namespace].canMakeHTTPRequestToOperand
 }
 
-func (this *TestSupport) SetMockOperandMetricsReportReady(value bool) {
+func (this *TestSupport) SetMockOperandMetricsReportReady(namespace string, value bool) {
 	this.panicIfNotTesting()
-	this.operandMetricsReportReady = value
+	if _, e := this.namespaced[namespace]; !e {
+		this.namespaced[namespace] = newTestSupportNamespaced()
+	}
+	this.namespaced[namespace].operandMetricsReportReady = value
 }
 
-func (this *TestSupport) GetMockOperandMetricsReportReady() bool {
+func (this *TestSupport) GetMockOperandMetricsReportReady(namespace string) bool {
 	this.panicIfNotTesting()
-	return this.operandMetricsReportReady
+	if _, e := this.namespaced[namespace]; !e {
+		this.namespaced[namespace] = newTestSupportNamespaced()
+	}
+	return this.namespaced[namespace].operandMetricsReportReady
 }
 
-func (this *TestSupport) ResetTimer() {
+func (this *TestSupport) ResetTimer(namespace string) {
 	this.panicIfNotTesting()
-	this.loopTick = time.Now()
+	if _, e := this.namespaced[namespace]; !e {
+		this.namespaced[namespace] = newTestSupportNamespaced()
+	}
+	this.namespaced[namespace].loopTick = time.Now()
 }
 
-func (this *TestSupport) TimerDuration() time.Duration {
+func (this *TestSupport) TimerDuration(namespace string) time.Duration {
 	this.panicIfNotTesting()
-	return time.Now().Sub(this.loopTick)
+	if _, e := this.namespaced[namespace]; !e {
+		this.namespaced[namespace] = newTestSupportNamespaced()
+	}
+	return time.Now().Sub(this.namespaced[namespace].loopTick)
 }
 
 func (this *TestSupport) SetSupportedFeatures(features *SupportedFeatures) {

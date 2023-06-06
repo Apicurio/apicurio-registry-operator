@@ -154,12 +154,13 @@ func (this *ApicurioRegistryReconciler) setupWithManager(mgr cr.Manager) error {
 // +kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get
 
 func (this *ApicurioRegistryReconciler) Reconcile(_ go_ctx.Context, request reconcile.Request) (reconcile.Result, error) {
-	if this.testing.IsEnabled() {
-		this.testing.ResetTimer()
-	}
 
 	appName := c.Name(request.Name)
 	appNamespace := c.Namespace(request.Namespace)
+
+	if this.testing.IsEnabled() {
+		this.testing.ResetTimer(appNamespace.Str())
+	}
 
 	this.log.Sugar().Info("reconciler executing")
 
