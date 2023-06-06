@@ -103,7 +103,7 @@ func (this *InitializingCF) Sense() {
 		}
 
 		if this.ctx.GetTestingSupport().IsEnabled() {
-			this.requestOk = this.ctx.GetTestingSupport().GetMockCanMakeHTTPRequestToOperand()
+			this.requestOk = this.ctx.GetTestingSupport().GetMockCanMakeHTTPRequestToOperand(this.ctx.GetAppNamespace().Str())
 		}
 	} else {
 		this.log.Infow("initializing health check is disabled because auth is enabled")

@@ -2,8 +2,6 @@ package envtest
 
 import (
 	"context"
-	"time"
-
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -11,28 +9,30 @@ import (
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"time"
 )
 
 var _ = Describe("dynamic environment variables", Ordered, func() {
 
-	var registry *ar.ApicurioRegistry
 	var registryKey types.NamespacedName
-	var deployment *apps.Deployment
 	var deploymentKey types.NamespacedName
+
+	const testNamespace = "dynamic-env-test-namespace"
+	const registryName = "test"
 
 	BeforeAll(func() {
 		// Speed the tests up
-		testSupport.SetMockCanMakeHTTPRequestToOperand(true)
-		testSupport.SetMockOperandMetricsReportReady(true)
+		testSupport.SetMockCanMakeHTTPRequestToOperand(testNamespace, true)
+		testSupport.SetMockOperandMetricsReportReady(testNamespace, true)
 		ns := &core.Namespace{
 			ObjectMeta: meta.ObjectMeta{
-				Name: "dynamic-env-test-namespace",
+				Name: testNamespace,
 			},
 		}
 		Expect(s.k8sClient.Create(context.TODO(), ns)).To(Succeed())
-		registry = &ar.ApicurioRegistry{
+		registry := &ar.ApicurioRegistry{
 			ObjectMeta: meta.ObjectMeta{
-				Name:      "test2",
+				Name:      registryName,
 				Namespace: ns.ObjectMeta.Name,
 			},
 			Spec: ar.ApicurioRegistrySpec{},
@@ -44,6 +44,7 @@ var _ = Describe("dynamic environment variables", Ordered, func() {
 
 	It("should be set in the deployment", func() {
 		Eventually(func() error {
+			registry := &ar.ApicurioRegistry{}
 			Expect(s.k8sClient.Get(s.ctx, registryKey, registry)).To(Succeed())
 			registry.Spec.Configuration.Env = []core.EnvVar{
 				{
@@ -62,7 +63,7 @@ var _ = Describe("dynamic environment variables", Ordered, func() {
 			return s.k8sClient.Update(s.ctx, registry)
 		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
 		Eventually(func() []core.EnvVar {
-			deployment = &apps.Deployment{}
+			deployment := &apps.Deployment{}
 			if err := s.k8sClient.Get(s.ctx, deploymentKey, deployment); err == nil {
 				return deployment.Spec.Template.Spec.Containers[0].Env
 			} else {
@@ -94,6 +95,7 @@ var _ = Describe("dynamic environment variables", Ordered, func() {
 
 	It("should be reordered", func() {
 		Eventually(func() error {
+			registry := &ar.ApicurioRegistry{}
 			Expect(s.k8sClient.Get(s.ctx, registryKey, registry)).To(Succeed())
 			registry.Spec.Configuration.Env = []core.EnvVar{
 				{
@@ -112,7 +114,7 @@ var _ = Describe("dynamic environment variables", Ordered, func() {
 			return s.k8sClient.Update(s.ctx, registry)
 		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
 		Eventually(func() []core.EnvVar {
-			deployment = &apps.Deployment{}
+			deployment := &apps.Deployment{}
 			if err := s.k8sClient.Get(s.ctx, deploymentKey, deployment); err == nil {
 				return deployment.Spec.Template.Spec.Containers[0].Env
 			} else {
@@ -144,6 +146,7 @@ var _ = Describe("dynamic environment variables", Ordered, func() {
 
 	It("should not override environment variables set by the operator", func() {
 		Eventually(func() error {
+			registry := &ar.ApicurioRegistry{}
 			Expect(s.k8sClient.Get(s.ctx, registryKey, registry)).To(Succeed())
 			registry.Spec.Configuration.LogLevel = "DEBUG"
 			registry.Spec.Configuration.RegistryLogLevel = "DEBUG"
@@ -160,7 +163,7 @@ var _ = Describe("dynamic environment variables", Ordered, func() {
 			return s.k8sClient.Update(s.ctx, registry)
 		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
 		Eventually(func() []core.EnvVar {
-			deployment = &apps.Deployment{}
+			deployment := &apps.Deployment{}
 			if err := s.k8sClient.Get(s.ctx, deploymentKey, deployment); err == nil {
 				return deployment.Spec.Template.Spec.Containers[0].Env
 			} else {
@@ -180,7 +183,7 @@ var _ = Describe("dynamic environment variables", Ordered, func() {
 
 	It("should work with variables set in the deployment", func() {
 		Eventually(func() error {
-			deployment = &apps.Deployment{}
+			deployment := &apps.Deployment{}
 			Expect(s.k8sClient.Get(s.ctx, deploymentKey, deployment)).To(Succeed())
 			deployment.Spec.Template.Spec.Containers[0].Env = []core.EnvVar{
 				{
@@ -191,7 +194,7 @@ var _ = Describe("dynamic environment variables", Ordered, func() {
 			return s.k8sClient.Update(s.ctx, deployment)
 		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
 		Eventually(func() []core.EnvVar {
-			deployment = &apps.Deployment{}
+			deployment := &apps.Deployment{}
 			if err := s.k8sClient.Get(s.ctx, deploymentKey, deployment); err == nil {
 				return deployment.Spec.Template.Spec.Containers[0].Env
 			} else {
@@ -204,13 +207,13 @@ var _ = Describe("dynamic environment variables", Ordered, func() {
 			},
 		}))
 		Eventually(func() error {
-			deployment = &apps.Deployment{}
+			deployment := &apps.Deployment{}
 			Expect(s.k8sClient.Get(s.ctx, deploymentKey, deployment)).To(Succeed())
 			deployment.Spec.Template.Spec.Containers[0].Env = []core.EnvVar{}
 			return s.k8sClient.Update(s.ctx, deployment)
 		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Succeed())
 		Eventually(func() []core.EnvVar {
-			deployment = &apps.Deployment{}
+			deployment := &apps.Deployment{}
 			if err := s.k8sClient.Get(s.ctx, deploymentKey, deployment); err == nil {
 				return deployment.Spec.Template.Spec.Containers[0].Env
 			} else {
@@ -223,4 +226,5 @@ var _ = Describe("dynamic environment variables", Ordered, func() {
 			},
 		})))
 	})
+
 })
