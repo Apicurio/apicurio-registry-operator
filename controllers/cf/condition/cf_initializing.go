@@ -2,6 +2,7 @@ package condition
 
 import (
 	"crypto/tls"
+	"github.com/Apicurio/apicurio-registry-operator/controllers/cf"
 	c "github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
@@ -11,6 +12,7 @@ import (
 	core "k8s.io/api/core/v1"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -27,6 +29,8 @@ type InitializingCF struct {
 	targetIP   string
 
 	requestOk bool
+
+	disabled bool
 }
 
 func NewInitializingCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
@@ -58,49 +62,59 @@ func (this *InitializingCF) Sense() {
 		return
 	}
 
-	// The application is initialized if we can make an HTTP request to the app via the Service
-	// (as Ingress/Route might not work on some systems, or without additional config).
-
-	var port string = "8080"
-	var scheme string = "http://"
-	if serviceEntry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_SERVICE); exists {
-		this.targetType = serviceEntry.GetValue().(*core.Service).Spec.Type
-		this.targetIP = serviceEntry.GetValue().(*core.Service).Spec.ClusterIP
-
-		if c.HasPort("https", serviceEntry.GetValue().(*core.Service).Spec.Ports) {
-			port = "8443"
-			scheme = "https://"
-		}
-
+	this.disabled = false
+	if entry, exists := this.ctx.GetEnvCache().Get(cf.ENV_REGISTRY_AUTH_ENABLED); exists {
+		this.disabled = strings.ToLower(entry.GetValue().Value) == "true"
 	}
+	if !this.disabled {
 
-	this.requestOk = false
-	if this.targetType == core.ServiceTypeClusterIP && this.targetIP != "" {
-		url := scheme + this.targetIP + ":" + port
-		res, err := this.httpClient.Get(url)
-		if err == nil {
-			defer res.Body.Close()
-			if res.StatusCode >= 200 && res.StatusCode < 300 {
-				this.requestOk = true
-			} else {
-				this.log.Warnw("request to check that Apicurio Registry instance is available has failed with a status", "url", url, "status", res.StatusCode)
+		// The application is initialized if we can make an HTTP request to the app via the Service
+		// (as Ingress/Route might not work on some systems, or without additional config).
+
+		var port string = "8080"
+		var scheme string = "http://"
+		if serviceEntry, exists := this.ctx.GetResourceCache().Get(resources.RC_KEY_SERVICE); exists {
+			this.targetType = serviceEntry.GetValue().(*core.Service).Spec.Type
+			this.targetIP = serviceEntry.GetValue().(*core.Service).Spec.ClusterIP
+
+			if c.HasPort("https", serviceEntry.GetValue().(*core.Service).Spec.Ports) {
+				port = "8443"
+				scheme = "https://"
 			}
-		} else if os.IsTimeout(err) {
-			this.log.Warnw("request to check that Apicurio Registry instance is available has timed out", "url", url, "timeout", this.httpClient.Timeout)
-		} else {
-			this.log.Warnw("request to check that Apicurio Registry instance is available has failed", "url", url)
-		}
-	}
 
-	if this.ctx.GetTestingSupport().IsEnabled() {
-		this.requestOk = this.ctx.GetTestingSupport().GetMockCanMakeHTTPRequestToOperand()
+		}
+
+		this.requestOk = false
+		if this.targetType == core.ServiceTypeClusterIP && this.targetIP != "" {
+			url := scheme + this.targetIP + ":" + port
+			res, err := this.httpClient.Get(url)
+			if err == nil {
+				defer res.Body.Close()
+				if res.StatusCode >= 200 && res.StatusCode < 300 {
+					this.requestOk = true
+				} else {
+					this.log.Warnw("request to check that Apicurio Registry instance is available has failed with a status", "url", url, "status", res.StatusCode)
+				}
+			} else if os.IsTimeout(err) {
+				this.log.Warnw("request to check that Apicurio Registry instance is available has timed out", "url", url, "timeout", this.httpClient.Timeout)
+			} else {
+				this.log.Warnw("request to check that Apicurio Registry instance is available has failed", "url", url)
+			}
+		}
+
+		if this.ctx.GetTestingSupport().IsEnabled() {
+			this.requestOk = this.ctx.GetTestingSupport().GetMockCanMakeHTTPRequestToOperand()
+		}
+	} else {
+		this.log.Infow("initializing health check is disabled because auth is enabled")
+		this.initializing = false
 	}
 }
 
 func (this *InitializingCF) Compare() bool {
 	// Executing only when initializing
 	// Prevent loop from getting stable by only executing once
-	return this.initializing && this.ctx.GetAttempts() == 0
+	return !this.disabled && this.initializing && this.ctx.GetAttempts() == 0
 }
 
 func (this *InitializingCF) Respond() {
