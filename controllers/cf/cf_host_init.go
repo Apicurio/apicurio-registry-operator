@@ -52,12 +52,7 @@ func (this *HostInitCF) Sense() {
 func (this *HostInitCF) Compare() bool {
 	// Condition #1
 	// First run & no host set
-	condition := this.specEntry != nil && this.isFirstRun && this.targetHost == ""
-	// We are going to try this only once
-	if condition {
-		this.isFirstRun = false
-	}
-	return condition
+	return this.specEntry != nil && this.isFirstRun && this.targetHost == ""
 }
 
 func (this *HostInitCF) Respond() {
@@ -72,6 +67,9 @@ func (this *HostInitCF) Respond() {
 		spec.Spec.Deployment.Host = this.ctx.GetAppName().Str() + dotNamespace
 		return spec
 	})
+
+	// We are going to try this only once
+	this.isFirstRun = false
 }
 
 func (this *HostInitCF) Cleanup() bool {

@@ -4,7 +4,6 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/common"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
-	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/services"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/factory"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"go.uber.org/zap"
@@ -22,7 +21,7 @@ type UpgradeCF struct {
 	containerNameUpgradeDone   bool
 }
 
-func NewUpgradeCF(ctx context.LoopContext, _ services.LoopServices) loop.ControlFunction {
+func NewUpgradeCF(ctx context.LoopContext) loop.ControlFunction {
 	res := &UpgradeCF{
 		ctx:              ctx,
 		svcResourceCache: ctx.GetResourceCache(),
