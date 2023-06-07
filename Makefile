@@ -362,10 +362,12 @@ docs: install-antora ## Build documentation
 
 
 .PHONY: dist
-dist: install-kustomize docs ## Generate distribution archive
+dist: install-kustomize docs licenses ## Generate distribution archive
 	mkdir -p dist
 	cp -rt ./dist ./dist-base/*
+	# Licenses
 	cp -t ./dist ./LICENSE
+	cp -rt ./dist ./docs/resources/licenses
 	# Examples
 	cp -t ./dist/examples ./config/examples/resources/*
 	cp -rt ./dist/examples ./docs/modules/ROOT/examples/*
@@ -377,6 +379,14 @@ dist: install-kustomize docs ## Generate distribution archive
 	$(KUSTOMIZE) build config/default/ > ./docs/resources/install.yaml
 	# Archive
 	tar -zcf apicurio-registry-operator-$(PACKAGE_VERSION).tar.gz -C ./dist .
+
+
+GO_LICENSES = $(shell pwd)/bin/go-licenses
+.PHONY: licenses
+licenses: ## Generate license list
+	$(call go-install-tool,$(GO_LICENSES),github.com/google/go-licenses@latest)
+	$(GO_LICENSES) check .
+	$(GO_LICENSES) csv . > docs/resources/licenses/licenses.csv
 
 
 .PHONY: clean
