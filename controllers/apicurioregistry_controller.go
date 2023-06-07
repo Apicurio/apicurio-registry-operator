@@ -224,7 +224,7 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName c.Name, appNamespa
 	result.AddControlFunction(cf.NewDeploymentCF(ctx, loopServices))
 
 	//deployment modifiers
-	result.AddControlFunction(cf.NewUpgradeCF(ctx, loopServices))
+	result.AddControlFunction(cf.NewUpgradeCF(ctx))
 	result.AddControlFunction(cf.NewPodTemplateSpecCF(ctx, loopServices))
 	result.AddControlFunction(cf.NewAffinityCF(ctx))
 	result.AddControlFunction(cf.NewTolerationCF(ctx))
@@ -243,6 +243,7 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName c.Name, appNamespa
 	result.AddControlFunction(cf.NewProfileCF(ctx))
 	result.AddControlFunction(cf.NewUICF(ctx))
 	result.AddControlFunction(cf.NewKeycloakCF(ctx))
+	result.AddControlFunction(cf.NewCorsCF(ctx))
 
 	//env vars from CR
 	result.AddControlFunction(cf.NewEnvCF(ctx))

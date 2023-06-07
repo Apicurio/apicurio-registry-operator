@@ -7,7 +7,11 @@ import (
 type Priority int
 
 const (
-	PRIORITY_DEPLOYMENT Priority = 0
+	// TODO DEPRECATION:
+	// - Remove support for variables from Deployment
+	// - Make sure unused env. variables are deleted (see cf_kafkasql_security_scram)
+	// - Operator-set variables are now lowest precedence
+	PRIORITY_DEPLOYMENT Priority = 0 // TODO Deprecated
 	PRIORITY_SPEC       Priority = 1
 	PRIORITY_OPERATOR   Priority = 2
 	PRIORITY_MAX        Priority = PRIORITY_OPERATOR
