@@ -17,7 +17,7 @@ ifdef::service-registry[]
 . Select the *Installed Operators* tab, and then *Red Hat Integration - Service Registry Operator*.
 endif::[]
 . On the *Apicurio Registry* tab, click the `ApicurioRegistry` CR for your {registry} deployment.
-. Click the *YAML* tab and then edit the `spec.configuration.env` section as needed. The following example shows how to set global content rules :
+. Click the *YAML* tab and then edit the `spec.configuration.env` section as needed. The following example shows how to set default global content rules:
 +
 [source,yaml]
 ----
@@ -62,4 +62,4 @@ spec:
         value: false
 ----
 +
-This configuration results in the {registry} web console being in the read-only mode.
+This configuration results in the {registry} web console being in read-only mode.
