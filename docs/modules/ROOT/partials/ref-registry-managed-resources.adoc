@@ -1,4 +1,4 @@
-[#managed-resources]
+[id="managed-resources"]
 // Do not forget to update link text in related xref(s). Antora does not support automatic name if the link has a fragment.
 = {registry} managed resources
 
@@ -16,10 +16,12 @@ endif::[]
 * `Service`
 
 You can disable the {operator} from creating and managing some resources, so they can be configured manually.
-This will provide users with greater flexibility in using features that the {operator} does not currently support.
-If you disable a resource type, its existing instance will be deleted.
-If you enable a resource, the {operator} will attempt to find a resource using the `app` label, e.g. `app=example-apicurioregistry` and start managing it, otherwise it will create a new instance.
-The following resource types can be disabled in this way:
+This provides greater flexibility when using features that the {operator} does not currently support.
+
+If you disable a resource type, its existing instance is deleted.
+If you enable a resource, the {operator} attempts to find a resource using the `app` label, for example, `app=example-apicurioregistry`, and starts managing it. Otherwise, the Operator creates a new instance.
+
+You can disable the following resource types in this way:
 
 ifdef::apicurio-registry[]
 * `Ingress`

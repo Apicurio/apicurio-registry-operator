@@ -36,8 +36,7 @@ spec:
 +
 NOTE: Make sure the `insecureEdgeTerminationPolicy: Redirect` configuration property is set.
 +
-If you do not specify a certificate, OpenShift will use a default.
-You can alternatively generate a custom self-signed certificate using the following commands:
+If you do not specify a certificate, OpenShift will use a default. Alternatively, you can generate a custom self-signed certificate using the following commands:
 +
 [source,bash]
 ----
@@ -45,7 +44,7 @@ openssl genrsa 2048 > tls.key &&
 openssl req -new -x509 -nodes -sha256 -days 365 -key tls.key -out tls.crt
 ----
 +
-and then create a route using the OpenShift CLI:
+Then create a route using the OpenShift CLI:
 +
 [source,bash]
 ----

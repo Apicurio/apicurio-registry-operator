@@ -44,7 +44,7 @@ ifdef::apicurio-registry-operator-downstream[]
 :registry: Service Registry
 :operator: {registry} Operator
 
-:registry-version: 2.3
+:registry-version: 2.4
 :operator-version: 1.0.0.redhat.x
 
 :platform: OpenShift
@@ -52,16 +52,18 @@ ifdef::apicurio-registry-operator-downstream[]
 :kafka-streams: AMQ Streams
 :keycloak: {org-name} Single Sign-On
 
+
 ifdef::RHAF[]
 :prodnamefull: {org-name} Application Foundations
-:registry-name-full:{org-name} build of Apicurio Registry
+:registry-name-full: {org-name} build of Apicurio Registry
 :registry: Apicurio Registry
 endif::[]
 
 endif::[]
 
 // ===== Common
-:registry-ocp-version: 4.12
+:registry-ocp-version: 4.13
+
 
 // Characters
 :copy: ©
