@@ -8,8 +8,7 @@ The following procedure shows how to configure {registry} deployment to expose a
 * Read the https://docs.openshift.com/container-platform/latest/networking/routes/secured-routes.html[OpenShift documentation for creating secured routes].
 
 .Procedure
-. Add a second *Route* in addition to the HTTP route created by the {operator}.
-See the following example:
+. Add a second *Route* in addition to the HTTP route created by the {operator}. For example:
 +
 [source,yaml]
 ----
