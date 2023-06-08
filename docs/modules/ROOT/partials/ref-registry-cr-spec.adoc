@@ -263,7 +263,7 @@ endif::[]
 | `configuration/security/https`
 | -
 | -
-| Configuration for HTTPS. See xref:ROOT:assembly-registry-maintenance.adoc#registry-https-in-cluster[Configuring an HTTPS connection to {registry} from inside the OpenShift cluster] for more details.
+| Configuration for HTTPS. For more details, see xref:ROOT:assembly-registry-maintenance.adoc#registry-https-in-cluster[Configuring an HTTPS connection to {registry} from inside the OpenShift cluster].
 
 | `configuration/security/https/sercretName`
 | string
@@ -278,7 +278,7 @@ endif::[]
 | `configuration/env`
 | k8s.io/api/core/v1 []EnvVar
 | _empty_
-| Configure a list of environment variables to be provided to the {registry} pod. See xref:ROOT:assembly-registry-maintenance.adoc#manage-registry-environment-variables[Managing {registry} environment variables] for more details.
+| Configure a list of environment variables to be provided to the {registry} pod. For more details, see xref:ROOT:assembly-registry-maintenance.adoc#manage-registry-environment-variables[Managing {registry} environment variables].
 
 | `deployment`
 | -
@@ -336,7 +336,7 @@ endif::[]
 | `deployment/managedResources`
 | -
 | -
-| Section to configure how the {operator} manages Kubernetes resources. See xref:ROOT:assembly-operator-configuration.adoc#managed-resources[{registry} managed resources] for more details.
+| Section to configure how the {operator} manages Kubernetes resources. For more details, see xref:ROOT:assembly-operator-configuration.adoc#managed-resources[{registry} managed resources].
 
 | `deployment/managedResources/disableIngress`
 | bool
@@ -356,8 +356,7 @@ endif::[]
 | `deployment/podTemplateSpecPreview`
 | k8s.io/api/core/v1 PodTemplateSpec
 | _empty_
-| Configure parts of the {registry} deployment resource. See xref:ROOT:assembly-registry-maintenance.adoc#pod-spec[Configuring {registry} deployment using `PodTemplate`] for more details.
-
+| Configure parts of the {registry} deployment resource. For more details, see xref:ROOT:assembly-registry-maintenance.adoc#pod-spec[Configuring {registry} deployment using PodTemplate].
 |===
 
 NOTE: If an option is marked as _required_, it might be conditional on other configuration options being enabled.

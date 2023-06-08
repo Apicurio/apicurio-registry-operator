@@ -6,6 +6,8 @@
 
 .Procedure
 
+You can manage {registry} environment variables by using the OpenShift web console or CLI.
+
 OpenShift web console::
 
 ifdef::apicurio-registry[]
@@ -39,9 +41,11 @@ OpenShift CLI::
 . Run `oc get apicurioregistry` to get the list of `ApicurioRegistry` CRs
 . Run `oc edit apicurioregistry` on the CR representing the {registry} instance that you want to configure.
 . Add or modify the environment variable in the `spec.configuration.env` section.
-
-The {operator} might attempt to set an environment variable that is already explicitly specified in the `spec.configuration.env` field. If an environment variable configuration has a conflicting value, the value set by {operator} takes precedence. You can avoid this conflict by either using the high-level configuration for the feature, or only using the explicitly specified environment variables. The following is an example of a conflicting configuration:
-
++
+The {operator} might attempt to set an environment variable that is already explicitly specified in the `spec.configuration.env` field. If an environment variable configuration has a conflicting value, the value set by {operator} takes precedence. 
++
+You can avoid this conflict by either using the high-level configuration for the feature, or only using the explicitly specified environment variables. The following is an example of a conflicting configuration:
++
 [source,yaml]
 ----
 apiVersion: registry.apicur.io/v1
@@ -57,5 +61,5 @@ spec:
       - name: REGISTRY_UI_FEATURES_READONLY
         value: false
 ----
-
-Which results is the UI being in the read-only mode.
++
+This configuration results in the {registry} web console being in the read-only mode.

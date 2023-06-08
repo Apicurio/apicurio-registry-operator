@@ -76,8 +76,8 @@ NOTE: In the Kubernetes secret containing the HTTPS certificate and key, the nam
 This is currently not configurable.
 
 .Disabling HTTP
-If you enabled HTTPS using the procedure in this section, you can also disable the default HTTP connection by setting the `spec.security.https.disableHttp` to `true`.
-This removes the HTTP port 8080 from the {registry} pod container, `Service`, and the `NetworkPolicy`  (if present).
+If you enabled HTTPS using the procedure in this section, you can also disable the default HTTP connection by setting the `spec.security.https.disableHttp` to `true`. This removes the HTTP port 8080 from the {registry} pod container, `Service`, and the `NetworkPolicy`  (if present).
+
 Importantly, `Ingress` is also removed because the {operator} currently does not support configuring HTTPS in `Ingress`.
 Users must create an `Ingress` for HTTPS connections manually.
 
