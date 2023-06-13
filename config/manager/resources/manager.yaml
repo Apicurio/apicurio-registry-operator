@@ -65,12 +65,4 @@ spec:
             requests:
               cpu: 100m
               memory: 50Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-            runAsNonRoot: true
-            seccompProfile:
-              type: RuntimeDefault
       terminationGracePeriodSeconds: 10
