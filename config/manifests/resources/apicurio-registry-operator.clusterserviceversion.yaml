@@ -22,6 +22,263 @@ spec:
         kind: ApicurioRegistry
         name: apicurioregistries.registry.apicur.io
         version: v1
+        specDescriptors:
+          # === Configuration
+          - displayName: Apicurio Registry application configuration
+            path: configuration
+            description: " "
+          - displayName: Storage
+            description: >-
+              Type of storage used by Apicurio Registry. Default value is `mem`.
+            path: configuration.persistence
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:select:mem
+              - urn:alm:descriptor:com.tectonic.ui:select:sql
+              - urn:alm:descriptor:com.tectonic.ui:select:kafkasql
+          # SQL
+          - displayName: Configuration of Apicurio Registry SQL storage
+            description: " "
+            path: configuration.sql
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:fieldDependency:configuration.persistence:sql
+          - displayName: SQL data source
+            description: " "
+            path: configuration.sql.dataSource
+          - displayName: Data source URL
+            description: >-
+              URL of the PostgreSQL database, for example: `jdbc:postgresql://<service name>.<namespace>.svc:5432/<database name>`.
+            path: configuration.sql.dataSource.url
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+          - displayName: Data source username
+            description: " "
+            path: configuration.sql.dataSource.userName
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+          - displayName: Data source password
+            description: " "
+            path: configuration.sql.dataSource.password
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:password
+          # KafkaSQL
+          - displayName: Configuration of Apicurio Registry KafkaSQL storage
+            description: " "
+            path: configuration.kafkasql
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:fieldDependency:configuration.persistence:kafkasql
+          - displayName: Kafka bootstrap servers URL
+            description: >-
+              URL of one of the Kafka brokers, which provide initial metadata about the Kafka cluster,  for example: `<service name>.<namespace>.svc:9092`.
+            path: configuration.kafkasql.bootstrapServers
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+          - displayName: Kafka security configuration
+            description: >-
+              Provide the following configuration options if your Kafka cluster  is secured using TLS or SCRAM.
+            path: configuration.kafkasql.security
+          - displayName: TLS
+            description: Kafka is secured using TLS.
+            path: configuration.kafkasql.security.tls
+          - displayName: Truststore Secret name
+            description: >-
+              Name of a Secret that contains TLS truststore (in PKCS12 format)  under the `ca.p12` key, and truststore password under the `ca.password` key.
+            path: configuration.kafkasql.security.tls.truststoreSecretName
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+          - displayName: Keystore Secret name
+            description: >-
+              Name of a Secret that contains TLS keystore (in PKCS12 format)  under the `user.p12` key, and keystore password under the `user.password` key.
+            path: configuration.kafkasql.security.tls.keystoreSecretName
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+          - displayName: SCRAM
+            description: Kafka is secured using SCRAM.
+            path: configuration.kafkasql.security.scram
+          - displayName: Trust store Secret name
+            description: >-
+              Name of a Secret that contains TLS truststore (in PKCS12 format)  under the `ca.p12` key, and truststore password under the `ca.password` key.
+            path: configuration.kafkasql.security.scram.truststoreSecretName
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+          - displayName: User name
+            description: " "
+            path: configuration.kafkasql.security.scram.user
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+          - displayName: Mechanism
+            description: Name of the SCRAM mechanism, default value is SCRAM-SHA-512.
+            path: configuration.kafkasql.security.scram.mechanism
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:select:SCRAM-SHA-512
+              - urn:alm:descriptor:com.tectonic.ui:select:SCRAM-SHA-256
+          - displayName: User password Secret name
+            description: >-
+              Name of a Secret that contains password of the SCRAM user under the `password` key.
+            path: configuration.kafkasql.security.scram.passwordSecretName
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+          # UI
+          - displayName: Configuration of Apicurio Registry web console
+            description: " "
+            path: configuration.ui
+          - displayName: Read-only
+            description: >-
+              Set the web console to read-only mode. WARNING: This does not affect access to the Apicurio REST API.
+            path: configuration.ui.readOnly
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:checkbox
+          # Logging
+          - displayName: Apicurio Registry application log level
+            description: " "
+            path: configuration.registryLogLevel
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:select:INFO
+              - urn:alm:descriptor:com.tectonic.ui:select:DEBUG
+          - displayName: Third-party (non-Apicurio) library log level
+            description: " "
+            path: configuration.logLevel
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:select:INFO
+              - urn:alm:descriptor:com.tectonic.ui:select:DEBUG
+          # Security
+          - displayName: Security configuration
+            description: " "
+            path: configuration.security
+          - displayName: Keycloak
+            description: Configure Apicurio Registry to use Keycloak for Identity and Access Management (IAM).
+            path: configuration.security.keycloak
+          - displayName: Keycloak auth URL
+            description: >-
+              URL of the Keycloak auth endpoint, must end with `/auth`.
+            path: configuration.security.keycloak.url
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+          - displayName: Keycloak realm
+            description: " "
+            path: configuration.security.keycloak.realm
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+          - displayName: Client ID for the REST API
+            description: " "
+            path: configuration.security.keycloak.apiClientId
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+          - displayName: Client ID for the UI
+            description: " "
+            path: configuration.security.keycloak.uiClientId
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+          - displayName: HTTPS
+            description: Configure Apicurio Registry to be accessible using HTTPS.
+            path: configuration.security.https
+          - displayName: HTTPS certificate and private key Secret name
+            description: >-
+              Name of a Secret that contains HTTPS certificate under the `tls.crt` key, and the private key under the `tls.key` key.
+            path: configuration.security.https.secretName
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+          - displayName: Disable HTTP
+            description: Disable HTTP if HTTPS is enabled.
+            path: configuration.security.https.disableHttp
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:checkbox
+          # Environment variables
+          - displayName: Environment variables
+            description: >-
+              List of additional environment variables that will be provided to the Apicurio Registry application.
+            path: configuration.env
+          # === Deployment
+          - displayName: Apicurio Registry deployment configuration
+            description: " "
+            path: deployment
+          - displayName: Replicas
+            description: The required number of Apicurio Registry pods. Default value is 1.
+            path: deployment.replicas
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:podCount
+          - displayName: Hostname
+            description: Apicurio Registry application hostname (part of the URL without the protocol and path).
+            path: deployment.host
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+          - displayName: Affinity
+            description: " "
+            path: deployment.affinity
+          - displayName: Pod affinity
+            path: deployment.affinity.podAffinity
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:podAffinity
+          - displayName: Pod anti-affinity
+            path: deployment.affinity.podAntiAffinity
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:podAntiAffinity
+          - displayName: Node affinity
+            path: deployment.affinity.nodeAffinity
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:nodeAffinity
+          - displayName: Tolerations
+            description: " "
+            path: deployment.tolerations
+          - displayName: Metadata of the Apicurio Registry pod
+            description: " "
+            path: deployment.metadata
+          - displayName: Annotations
+            description: Additional Apicurio Registry Pod annotations.
+            path: deployment.metadata.annotations
+          - displayName: Labels
+            description: Additional Apicurio Registry Pod labels.
+            path: deployment.metadata.labels
+            #- urn:alm:descriptor:com.tectonic.ui:label
+          - displayName: Apicurio Registry image
+            description: >-
+              Replaces the default Apicurio Registry application image.  Overrides the values in the REGISTRY_IMAGE_MEM, REGISTRY_IMAGE_KAFKASQL and REGISTRY_IMAGE_SQL Operator environment variables.
+            path: deployment.image
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+              - urn:alm:descriptor:com.tectonic.ui:advanced
+              # Use for Service Registry
+              #- urn:alm:descriptor:com.tectonic.ui:hidden
+          - displayName: Apicurio Registry image pull secrets
+            description: List of Secrets to use when pulling the Apicurio Registry image.
+            path: deployment.imagePullSecrets
+          - displayName: Apicurio Registry managed resources
+            description: Configure how the Operator manages Kubernetes resources.
+            path: deployment.managedResources
+          - displayName: Disable Ingress
+            description: Operator will not create or manage an Ingress for Apicurio Registry, so it can be done manually.
+            path: deployment.managedResources.disableIngress
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:checkbox
+          - displayName: Disable NetworkPolicy
+            description: Operator will not create or manage a NetworkPolicy for Apicurio Registry, so it can be done manually.
+            path: deployment.managedResources.disableNetworkPolicy
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:checkbox
+          - displayName: Disable PodDisruptionBudget
+            description: Operator will not create or manage a PodDisruptionBudget for Apicurio Registry, so it can be done manually.
+            path: deployment.managedResources.disablePodDisruptionBudget
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:checkbox
+          - displayName: Configure Apicurio Registry pod template
+            description: >-
+              With some restrictions, the Apicurio Registry Operator forwards the data from this field to the corresponding  "spec.template" field in the Apicurio Registry Deployment. This feature provides greater configuration flexibility,  without the need for the Operator to natively support each use case.  WARNING: This feature is a Technology Preview feature only.
+            path: deployment.podTemplateSpecPreview
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:advanced
+        statusDescriptors:
+          - displayName: Information about the Apicurio Registry application
+            description: " "
+            path: info
+          - displayName: Apicurio Registry URL
+            description: " "
+            path: info.host
+            x-descriptors:
+              - urn:alm:descriptor:com.tectonic.ui:text
+          - displayName: Conditions
+            description: Apicurio Registry application and Operator conditions.
+            path: conditions
+            x-descriptors:
+              - urn:alm:descriptor:io.kubernetes.conditions
   description: |
     ## Apicurio Registry
 

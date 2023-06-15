@@ -23,7 +23,7 @@ jobs:
 
       - name: Build
         id: build
-        run: make build bundle-build
+        run: make build bundle bundle-build
 
       - name: Test
         id: test
