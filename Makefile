@@ -333,7 +333,7 @@ bundle: manifests install-operator-sdk install-yq ## Generate bundle manifests a
 
 
 .PHONY: bundle-build
-bundle-build: bundle ## Build bundle image
+bundle-build: ## Build bundle image
 	docker build -f bundle.Dockerfile -t $(BUNDLE_IMAGE) .
 
 

@@ -26,119 +26,234 @@ import (
 
 // ApicurioRegistrySpec defines the desired state of ApicurioRegistry
 type ApicurioRegistrySpec struct {
+	// Apicurio Registry application configuration
 	Configuration ApicurioRegistrySpecConfiguration `json:"configuration,omitempty"`
-	Deployment    ApicurioRegistrySpecDeployment    `json:"deployment,omitempty"`
+	// Apicurio Registry deployment configuration
+	Deployment ApicurioRegistrySpecDeployment `json:"deployment,omitempty"`
 }
 
 type ApicurioRegistrySpecConfiguration struct {
-	Persistence      string                                    `json:"persistence,omitempty"`
-	Sql              ApicurioRegistrySpecConfigurationSql      `json:"sql,omitempty"`
-	Kafkasql         ApicurioRegistrySpecConfigurationKafkasql `json:"kafkasql,omitempty"`
-	UI               ApicurioRegistrySpecConfigurationUI       `json:"ui,omitempty"`
-	LogLevel         string                                    `json:"logLevel,omitempty"`
-	RegistryLogLevel string                                    `json:"registryLogLevel,omitempty"`
-	Security         ApicurioRegistrySpecConfigurationSecurity `json:"security,omitempty"`
-	Env              []core.EnvVar                             `json:"env,omitempty"`
+	// Storage:
+	//
+	// Type of storage used by Apicurio Registry, one of: mem, sql, kafkasql.
+	// Default value is `mem`.
+	Persistence string `json:"persistence,omitempty"`
+	// Configuration of Apicurio Registry SQL storage
+	Sql ApicurioRegistrySpecConfigurationSql `json:"sql,omitempty"`
+	// Configuration of Apicurio Registry KafkaSQL storage
+	Kafkasql ApicurioRegistrySpecConfigurationKafkasql `json:"kafkasql,omitempty"`
+	// Configuration of Apicurio Registry web console
+	UI ApicurioRegistrySpecConfigurationUI `json:"ui,omitempty"`
+	// Third-party (non-Apicurio) library log level
+	LogLevel string `json:"logLevel,omitempty"`
+	// Apicurio Registry application log level
+	RegistryLogLevel string `json:"registryLogLevel,omitempty"`
+	// Security configuration
+	Security ApicurioRegistrySpecConfigurationSecurity `json:"security,omitempty"`
+	// Environment variables:
+	//
+	// List of additional environment variables that will be
+	// provided to the Apicurio Registry application.
+	Env []core.EnvVar `json:"env,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationDataSource struct {
-	Url      string `json:"url,omitempty"`
+	// Data source URL:
+	//
+	// URL of the PostgreSQL database, for example:
+	// `jdbc:postgresql://<service name>.<namespace>.svc:5432/<database name>`.
+	Url string `json:"url,omitempty"`
+	// Data source username
 	UserName string `json:"userName,omitempty"`
-	Password string `json:"password,omitempty"` // TODO Password secret
+	// Data source password
+	Password string `json:"password,omitempty"` // TODO Support Secrets
 }
 
 type ApicurioRegistrySpecConfigurationSql struct {
+	// SQL data source
 	DataSource ApicurioRegistrySpecConfigurationDataSource `json:"dataSource,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationKafkasql struct {
-	BootstrapServers string                                         `json:"bootstrapServers,omitempty"`
-	Security         ApicurioRegistrySpecConfigurationKafkaSecurity `json:"security,omitempty"`
+	// Kafka bootstrap servers URL:
+	//
+	// URL of one of the Kafka brokers, which provide initial metadata about the Kafka cluster,
+	// for example: `<service name>.<namespace>.svc:9092`.
+	BootstrapServers string `json:"bootstrapServers,omitempty"`
+	// Kafka security configuration:
+	//
+	// Provide the following configuration options if your Kafka cluster
+	// is secured using TLS or SCRAM.
+	Security ApicurioRegistrySpecConfigurationKafkaSecurity `json:"security,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationKafkaSecurity struct {
-	Tls   ApicurioRegistrySpecConfigurationKafkaSecurityTls   `json:"tls,omitempty"`
+	// TLS:
+	//
+	// Kafka is secured using TLS.
+	Tls ApicurioRegistrySpecConfigurationKafkaSecurityTls `json:"tls,omitempty"`
+	// SCRAM:
+	//
+	// Kafka is secured using SCRAM.
 	Scram ApicurioRegistrySpecConfigurationKafkaSecurityScram `json:"scram,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationKafkaSecurityTls struct {
+	// Truststore Secret name:
+	//
+	// Name of a Secret that contains TLS truststore (in PKCS12 format)
+	// under the `ca.p12` key, and truststore password under the `ca.password` key.
 	TruststoreSecretName string `json:"truststoreSecretName,omitempty"`
-	KeystoreSecretName   string `json:"keystoreSecretName,omitempty"`
+	// Keystore Secret name:
+	//
+	// Name of a Secret that contains TLS keystore (in PKCS12 format)
+	// under the `user.p12` key, and keystore password under the `user.password` key.
+	KeystoreSecretName string `json:"keystoreSecretName,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationKafkaSecurityScram struct {
+	// Truststore Secret name:
+	//
+	// Name of a Secret that contains TLS truststore (in PKCS12 format)
+	// under the `ca.p12` key, and truststore password under the `ca.password` key.
 	TruststoreSecretName string `json:"truststoreSecretName,omitempty"`
-	User                 string `json:"user,omitempty"`
-	PasswordSecretName   string `json:"passwordSecretName,omitempty"`
-	Mechanism            string `json:"mechanism,omitempty"`
+	// User name
+	User string `json:"user,omitempty"`
+	// User password Secret name:
+	//
+	// Name of a Secret that contains password of the SCRAM user
+	// under the `password` key.
+	PasswordSecretName string `json:"passwordSecretName,omitempty"`
+	// Mechanism:
+	//
+	// Name of the SCRAM mechanism, default value is SCRAM-SHA-512.
+	Mechanism string `json:"mechanism,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationUI struct {
+	// Read-only:
+	//
+	// Set the web console to read-only mode.
+	// WARNING: This does not affect access to the Apicurio REST API.
 	ReadOnly bool `json:"readOnly,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationSecurity struct {
+	// Keycloak:
+	//
+	// Configure Apicurio Registry to use Keycloak for Identity and Access Management (IAM).
 	Keycloak ApicurioRegistrySpecConfigurationSecurityKeycloak `json:"keycloak,omitempty"`
-	Https    ApicurioRegistrySpecConfigurationSecurityHttps    `json:"https,omitempty"`
+	// HTTPS:
+	//
+	// Configure Apicurio Registry to be accessible using HTTPS.
+	Https ApicurioRegistrySpecConfigurationSecurityHttps `json:"https,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationSecurityHttps struct {
-	DisableHttp bool   `json:"disableHttp,omitempty"`
-	SecretName  string `json:"secretName,omitempty"`
+	// Disable HTTP:
+	//
+	// Disable HTTP if HTTPS is enabled.
+	DisableHttp bool `json:"disableHttp,omitempty"`
+	// HTTPS certificate and private key Secret name:
+	//
+	// Name of a Secret that contains HTTPS certificate under the `tls.crt` key,
+	// and the private key under the `tls.key` key.
+	SecretName string `json:"secretName,omitempty"`
 }
 
 type ApicurioRegistrySpecConfigurationSecurityKeycloak struct {
-	Url         string `json:"url,omitempty"`
-	Realm       string `json:"realm,omitempty"`
+	// Keycloak auth URL:
+	//
+	// URL of the Keycloak auth endpoint, must end with `/auth`.
+	Url string `json:"url,omitempty"`
+	// Keycloak realm
+	Realm string `json:"realm,omitempty"`
+	// Client ID for the REST API
 	ApiClientId string `json:"apiClientId,omitempty"`
-	UiClientId  string `json:"uiClientId,omitempty"`
+	// Client ID for the UI
+	UiClientId string `json:"uiClientId,omitempty"`
 }
 
 type ApicurioRegistrySpecDeploymentMetadata struct {
-	// Annotations added to the Deployment pod template.
+	// Annotations:
+	//
+	// Additional Apicurio Registry Pod annotations.
 	Annotations map[string]string `json:"annotations,omitempty"`
-	// Labels added to the Deployment pod template.
+	// Labels:
+	//
+	// Additional Apicurio Registry Pod labels.
 	Labels map[string]string `json:"labels,omitempty"`
 }
 
 type ApicurioRegistrySpecDeployment struct {
-	Replicas    int32             `json:"replicas,omitempty"`
-	Host        string            `json:"host,omitempty"`
-	Affinity    *core.Affinity    `json:"affinity,omitempty"`
+	// Replicas:
+	//
+	// The required number of Apicurio Registry pods. Default value is 1.
+	Replicas int32 `json:"replicas,omitempty"`
+	// Hostname:
+	//
+	// Apicurio Registry application hostname (part of the URL without the protocol and path).
+	Host string `json:"host,omitempty"`
+	// Affinity
+	Affinity *core.Affinity `json:"affinity,omitempty"`
+	// Tolerations
 	Tolerations []core.Toleration `json:"tolerations,omitempty"`
-	// Metadata applied to the Deployment pod template.
+	// Metadata of the Apicurio Registry pod
 	Metadata ApicurioRegistrySpecDeploymentMetadata `json:"metadata,omitempty"`
-	// Image set in the Deployment pod template. Overrides the values in the REGISTRY_IMAGE_MEM, REGISTRY_IMAGE_KAFKASQL and REGISTRY_IMAGE_SQL operator environment variables.
+	// Apicurio Registry image:
+	//
+	// Replaces the default Apicurio Registry application image.
+	// Overrides the values in the REGISTRY_IMAGE_MEM, REGISTRY_IMAGE_KAFKASQL and REGISTRY_IMAGE_SQL Operator environment variables.
 	Image string `json:"image,omitempty"`
-	// List of secrets in the same namespace to use for pulling the Deployment pod image.
+	// Apicurio Registry image pull secrets:
+	//
+	// List of Secrets to use when pulling the Apicurio Registry image.
 	ImagePullSecrets []core.LocalObjectReference `json:"imagePullSecrets,omitempty"`
-	// Configure how the Operator manages Kubernetes resources
+	// Apicurio Registry managed resources:
+	//
+	// Configure how the Operator manages Kubernetes resources.
 	ManagedResources ApicurioRegistrySpecDeploymentManagedResources `json:"managedResources,omitempty"`
-
+	// Configure Apicurio Registry pod template:
+	//
+	// With some restrictions, the Apicurio Registry Operator forwards the data from this field
+	// to the corresponding "spec.template" field in the Apicurio Registry Deployment.
+	// This feature provides greater configuration flexibility, without the need for the Operator to natively support each use case.
+	// WARNING: This feature is a Technology Preview feature only.
 	PodTemplateSpecPreview ApicurioRegistryPodTemplateSpec `json:"podTemplateSpecPreview,omitempty"`
 }
 
 type ApicurioRegistrySpecDeploymentManagedResources struct {
-	// Operator will not create or manage an Ingress for Apicurio Registry
+	// Disable Ingress:
+	//
+	// Operator will not create or manage an Ingress for Apicurio Registry, so it can be done manually.
 	DisableIngress bool `json:"disableIngress,omitempty"`
-	// Operator will not create or manage an NetworkPolicy for Apicurio Registry
+	// Disable NetworkPolicy:
+	//
+	// Operator will not create or manage a NetworkPolicy for Apicurio Registry, so it can be done manually.
 	DisableNetworkPolicy bool `json:"disableNetworkPolicy,omitempty"`
-	// Operator will not create or manage an PodDisruptionBudget for Apicurio Registry
+	// Disable PodDisruptionBudget:
+	//
+	// Operator will not create or manage a PodDisruptionBudget for Apicurio Registry, so it can be done manually.
 	DisablePodDisruptionBudget bool `json:"disablePodDisruptionBudget,omitempty"`
 }
 
 // ### Status
 
 type ApicurioRegistryStatus struct {
-	// Information about the deployed application.
+	// Information about the Apicurio Registry application
 	Info ApicurioRegistryStatusInfo `json:"info,omitempty"`
-	// List of status conditions.
+	// Conditions:
+	//
+	// Apicurio Registry application and Operator conditions.
 	Conditions []meta.Condition `json:"conditions,omitempty"`
-	// List of resources managed by this operator.
+	// Managed Resources:
+	//
+	// Kubernetes resources managed by the Apicurio Registry Operator.
 	ManagedResources []ApicurioRegistryStatusManagedResource `json:"managedResources,omitempty"`
 }
 
 type ApicurioRegistryStatusInfo struct {
+	// Apicurio Registry URL
 	Host string `json:"host,omitempty"`
 }
 
