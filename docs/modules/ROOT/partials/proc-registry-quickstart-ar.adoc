@@ -16,7 +16,7 @@ endif::[]
 +
 [source,bash]
 ----
-export NAMESPACE="default"
+export NAMESPACE="apicurio-registry-operator-namespace"
 ----
 
 . Create an `ApicurioRegistry` custom resource (CR):
