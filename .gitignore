@@ -6,3 +6,4 @@ testbin
 bundle
 bundle_tmp*
 dist
+.trash~
