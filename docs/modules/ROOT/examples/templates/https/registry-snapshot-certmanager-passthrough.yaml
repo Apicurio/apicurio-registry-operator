@@ -1,0 +1,254 @@
+# This example template deploys Registry with a passthrough HTTPS route, using cert-manager operator.
+#
+# Steps:
+#
+# 1. Create or select a namespace:
+#
+# oc new-project registry-snapshot-certmanager-passthrough
+#
+# 2. Install the operator(s):
+#
+#  - cert-manager Operator for Red Hat OpenShift
+#
+# 3. Apply the template:
+#
+# oc process -f registry-snapshot-certmanager-passthrough.yaml \
+#  -p NAMESPACE=registry-snapshot-certmanager-passthrough \
+#  -p INGRESS_ROUTER_CANONICAL_HOSTNAME=router-default.apps.apicur.eastus.aroapp.io \
+#  | oc apply -f - && oc wait --for=condition=ready pod -l app=registry-snapshot-certmanager-passthrough --timeout=120s
+#
+# IMPORTANT NOTES:
+#
+# 1. This example uses *upstream snapshot version*, until the required code changes are available
+# in a new version of Red Hat Integration - Service Registry.
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: registry-snapshot-certmanager-passthrough-template
+labels:
+  template: registry-snapshot-certmanager-passthrough-template
+objects:
+  # Registry - in-memory, SNAPSHOT
+  - kind: Deployment
+    apiVersion: apps/v1
+    metadata:
+      name: registry-snapshot-certmanager-passthrough
+      namespace: ${NAMESPACE}
+      labels:
+        app: registry-snapshot-certmanager-passthrough
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: registry-snapshot-certmanager-passthrough
+      template:
+        metadata:
+          labels:
+            app: registry-snapshot-certmanager-passthrough
+        spec:
+          containers:
+            - resources:
+                limits:
+                  cpu: 1000m
+                  memory: 1024Mi
+                requests:
+                  cpu: 500m
+                  memory: 512Mi
+              terminationMessagePath: /dev/termination-log
+              name: registry
+              env:
+                - name: QUARKUS_PROFILE
+                  value: prod
+                - name: QUARKUS_HTTP_SSL_CERTIFICATE_FILE
+                  value: /certs/tls.crt
+                - name: QUARKUS_HTTP_SSL_CERTIFICATE_KEY_FILE
+                  value: /certs/tls.key
+                - name: REGISTRY_URL_OVERRIDE_HOST
+                  value: registry-snapshot-certmanager-passthrough-https.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
+                - name: REGISTRY_URL_OVERRIDE_PORT
+                  value: "443"
+                - name: LOG_LEVEL
+                  value: DEBUG
+                - name: REGISTRY_LOG_LEVEL
+                  value: DEBUG
+                - name: CORS_ALLOWED_ORIGINS
+                  value: https://registry-snapshot-certmanager-passthrough-https.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
+              ports:
+                #- containerPort: 8080
+                #  protocol: TCP
+                - containerPort: 8443
+                  protocol: TCP
+              imagePullPolicy: Always
+              terminationMessagePolicy: File
+              image: quay.io/apicurio/apicurio-registry-mem:latest-snapshot
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                capabilities:
+                  drop:
+                    - ALL
+                seccompProfile:
+                  type: RuntimeDefault
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+                - name: registry-snapshot-certmanager-passthrough-tls-secret
+                  readOnly: true
+                  mountPath: /certs
+              readinessProbe:
+                httpGet:
+                  path: /health/ready
+                  port: 8080
+                  scheme: HTTP
+                initialDelaySeconds: 15
+                timeoutSeconds: 5
+                periodSeconds: 10
+                successThreshold: 1
+                failureThreshold: 3
+              livenessProbe:
+                httpGet:
+                  path: /health/live
+                  port: 8080
+                  scheme: HTTP
+                initialDelaySeconds: 15
+                timeoutSeconds: 5
+                periodSeconds: 10
+                successThreshold: 1
+                failureThreshold: 3
+          restartPolicy: Always
+          terminationGracePeriodSeconds: 30
+          dnsPolicy: ClusterFirst
+          securityContext: { }
+          schedulerName: default-scheduler
+          volumes:
+            - name: tmp
+              emptyDir: { }
+            - name: registry-snapshot-certmanager-passthrough-tls-secret
+              secret:
+                secretName: registry-snapshot-certmanager-passthrough-tls-secret
+                defaultMode: 420
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxUnavailable: 25%
+          maxSurge: 25%
+      revisionHistoryLimit: 10
+      progressDeadlineSeconds: 600
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: registry-snapshot-certmanager-passthrough-service
+      namespace: ${NAMESPACE}
+      labels:
+        app: registry-snapshot-certmanager-passthrough
+    spec:
+      ports:
+        - name: https
+          protocol: TCP
+          port: 8443
+          targetPort: 8443
+        #- name: http
+        #  protocol: TCP
+        #  port: 8080
+        #  targetPort: 8080
+      type: ClusterIP
+      selector:
+        app: registry-snapshot-certmanager-passthrough
+  - kind: NetworkPolicy
+    apiVersion: networking.k8s.io/v1
+    metadata:
+      name: registry-snapshot-certmanager-passthrough-networkpolicy
+      namespace: test3
+      labels:
+        app: registry-snapshot-certmanager-passthrough
+    spec:
+      podSelector:
+        matchLabels:
+          app: registry-snapshot-certmanager-passthrough
+      ingress:
+        - ports:
+            - protocol: TCP
+              port: 8443
+        #- ports:
+        #    - protocol: TCP
+        #      port: 8080
+      policyTypes:
+        - Ingress
+  # Certificates
+  # Self-signed cluster issuer for the "root CA certificate"
+  - apiVersion: cert-manager.io/v1
+    kind: ClusterIssuer
+    metadata:
+      name: selfsigned-cluster-issuer
+    spec:
+      selfSigned: { }
+  # Create the "root CA certificate"
+  - apiVersion: cert-manager.io/v1
+    kind: Certificate
+    metadata:
+      name: selfsigned-ca
+      namespace: ${NAMESPACE}
+    spec:
+      commonName: selfsigned-ca
+      isCA: true
+      issuerRef:
+        group: cert-manager.io
+        kind: ClusterIssuer
+        name: selfsigned-cluster-issuer
+      privateKey:
+        algorithm: ECDSA
+        size: 256
+      secretName: ca-root-secret
+  # Issuer for Ingress
+  - apiVersion: cert-manager.io/v1
+    kind: Issuer
+    metadata:
+      name: selfsigned-ca-issuer
+      namespace: ${NAMESPACE}
+    spec:
+      ca:
+        secretName: ca-root-secret
+  # Certificate for Registry
+  - apiVersion: cert-manager.io/v1
+    kind: Certificate
+    metadata:
+      name: registry-snapshot-certmanager-passthrough-tls
+      namespace: ${NAMESPACE}
+    spec:
+      commonName: "*.${INGRESS_ROUTER_CANONICAL_HOSTNAME}"
+      secretName: registry-snapshot-certmanager-passthrough-tls-secret
+      issuerRef:
+        group: cert-manager.io
+        kind: Issuer
+        name: selfsigned-ca-issuer
+  # A separate HTTP Ingress is not available because of the REGISTRY_URL_OVERRIDE_HOST configuration.
+  # HTTPS Ingress
+  - kind: Ingress
+    apiVersion: networking.k8s.io/v1
+    metadata:
+      name: registry-snapshot-certmanager-passthrough-https-ingress
+      namespace: ${NAMESPACE}
+      annotations:
+        route.openshift.io/termination: passthrough
+    spec:
+      rules:
+        - host: registry-snapshot-certmanager-passthrough-https.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
+          http:
+            paths:
+              - path: ""
+                pathType: ImplementationSpecific
+                backend:
+                  service:
+                    name: registry-snapshot-certmanager-passthrough-service
+                    port:
+                      number: 8443
+parameters:
+  - name: NAMESPACE
+    required: true
+  - name: INGRESS_ROUTER_CANONICAL_HOSTNAME
+    # Find out from a status block of any Ingress or Route resource, e.g.:
+    # status:
+    #  loadBalancer:
+    #    ingress:
+    #      - hostname: router-default.apps.apicur.eastus.aroapp.io
+    required: true
