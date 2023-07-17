@@ -1,17 +1,18 @@
 # This example template deploys Registry with PostgreSQL database.
 #
-# Prerequisites:
+# Steps:
 #
 # 1. Create or select a namespace:
 #
-# oc project test
+# oc new-project registry-simple-postgresql
 #
-# 2. Install the operators
+# 2. Install the operator(s):
+#
 #  - Red Hat Integration - Service Registry Operator
 #
-# Apply the template:
+# 3. Apply the template:
 #
-# oc process -f registry-simple-postgresql.yaml -p NAMESPACE=test \
+# oc process -f registry-simple-postgresql.yaml -p NAMESPACE=registry-simple-postgresql \
 #  | oc apply -f - && oc wait --for=condition=ready apicurioregistry registry-simple-postgresql --timeout=60s
 apiVersion: template.openshift.io/v1
 kind: Template
@@ -77,6 +78,14 @@ objects:
               imagePullPolicy: IfNotPresent
               terminationMessagePolicy: File
               image: quay.io/centos7/postgresql-12-centos7:1
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                capabilities:
+                  drop:
+                    - ALL
+                seccompProfile:
+                  type: RuntimeDefault
           restartPolicy: Always
           terminationGracePeriodSeconds: 30
           dnsPolicy: ClusterFirst
