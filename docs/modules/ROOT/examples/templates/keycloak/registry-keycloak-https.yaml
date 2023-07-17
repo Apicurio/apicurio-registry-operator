@@ -1,25 +1,33 @@
 # This example template deploys Registry with a Keycloak instance that is using HTTPS.
 #
-# Prerequisites:
+# Steps:
 #
 # 1. Create or select a namespace:
 #
-# oc project test
+# oc new-project registry-keycloak-https
 #
-# 2. Install the operators
+# 2. Install the operator(s):
+#
 #  - Red Hat Integration - Service Registry Operator
 #  - Red Hat Single Sign-On Operator
 #
 # 3. Prepare a truststore with certificates for the Keycloak URL. In this example,
-# I'm using the default router certificates on my OpenShift cluster:
+# I'm using the default ingress router certificates on my OpenShift cluster:
 #
-# oc get secret router-certs-default -n openshift-ingress -o jsonpath="{.data['tls\.crt']}" | base64 -d > tls.crt
+# oc get secret -n openshift-ingress --field-selector=type=kubernetes.io/tls | grep -v metrics
+#
+# will list something like:
+#
+# NAME                                           TYPE                DATA   AGE
+# 0b9c209b-0566-4e3b-a2e2-c93e27e90eb2-ingress   kubernetes.io/tls   2      20m
+#
+# oc get secret -n openshift-ingress 0b9c209b-0566-4e3b-a2e2-c93e27e90eb2-ingress -o jsonpath="{.data['tls\.crt']}" | base64 -d > tls.crt
 # echo "y" | keytool -import -alias IngressCertificate -file tls.crt -keystore tls.truststore -storepass password
 # oc create secret generic keycloak-truststore-secret --from-file=tls.truststore
 #
-# Apply the template:
+# 4. Apply the template:
 #
-# oc process -f registry-keycloak-https.yaml -p NAMESPACE=test -p INGRESS_ROUTER_APPS_HOSTNAME=apps.jsenko413.apicurio.example.com \
+# oc process -f registry-keycloak-https.yaml -p NAMESPACE=registry-keycloak-https -p INGRESS_ROUTER_APPS_HOSTNAME=apps.apicur.eastus.aroapp.io \
 #  | oc apply -f - && oc wait --for=condition=ready apicurioregistry registry-keycloak-https --timeout=120s
 apiVersion: template.openshift.io/v1
 kind: Template
@@ -85,6 +93,14 @@ objects:
               imagePullPolicy: IfNotPresent
               terminationMessagePolicy: File
               image: quay.io/centos7/postgresql-12-centos7:1
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                capabilities:
+                  drop:
+                    - ALL
+                seccompProfile:
+                  type: RuntimeDefault
           restartPolicy: Always
           terminationGracePeriodSeconds: 30
           dnsPolicy: ClusterFirst
@@ -233,5 +249,5 @@ parameters:
     value: password
   - name: INGRESS_ROUTER_APPS_HOSTNAME
     # Find out from a URL of any Ingress or Route resource, usually starts with "apps." e.g.:
-    # apps.jsenko413.apicurio.example.com
+    # apps.apicur.eastus.aroapp.io
     required: true
