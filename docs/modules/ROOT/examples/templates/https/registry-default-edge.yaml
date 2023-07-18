@@ -19,7 +19,7 @@
 # NAME                                           TYPE                DATA   AGE
 # 0b9c209b-0566-4e3b-a2e2-c93e27e90eb2-ingress   kubernetes.io/tls   2      20m
 #
-# kubectl get secret -n openshift-ingress <NAME> -o json \
+# oc get secret -n openshift-ingress <NAME> -o json \
 #  | jq 'del(.metadata["namespace", "creationTimestamp", "resourceVersion", "selfLink", "uid", "ownerReferences", "managedFields"]) | .metadata.name="registry-default-edge-tls-secret"' \
 #  | oc create -f -
 #
