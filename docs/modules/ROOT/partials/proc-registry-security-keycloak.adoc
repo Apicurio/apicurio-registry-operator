@@ -41,7 +41,7 @@ include::example$/keycloak/keycloak.yaml[]
 
 . Wait until the instance has been created, and click *Networking*  and then *Routes* to access the new route for the *keycloak* instance. 
 
-. Click the *Location* URL and copy the displayed `../auth` URL value for later use when deploying {registry}.
+. Click the *Location* URL and copy the displayed URL value for later use when deploying {registry}.
 
 . Click *Installed Operators* and *{keycloak} Operator*, and click the *Keycloak Realm* tab, and then *Create Keycloak Realm* to create a `registry` example realm:
 +

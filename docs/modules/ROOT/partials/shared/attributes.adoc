@@ -57,6 +57,7 @@ ifdef::RHAF[]
 :prodnamefull: {org-name} Application Foundations
 :registry-name-full: {org-name} build of Apicurio Registry
 :registry: Apicurio Registry
+:operator: {registry} Operator
 endif::[]
 
 endif::[]
