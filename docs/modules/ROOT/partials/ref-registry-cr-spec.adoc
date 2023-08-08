@@ -238,27 +238,27 @@ endif::[]
 | `configuration/security/keycloak`
 | -
 | -
-| Web console and REST API security configuration using Keycloak
+| Web console and REST API security configuration using {Keycloak}
 
 | `configuration/security/keycloak/url`
 | string
 | _required_
-| Keycloak URL, must end with `/auth`
+| {keycloak} URL
 
 | `configuration/security/keycloak/realm`
 | string
 | _required_
-| Keycloak realm
+|  {keycloak} realm
 
 | `configuration/security/keycloak/apiClientId`
 | string
 | `registry-client-api`
-| Keycloak client for REST API
+|  {keycloak} client for REST API
 
 | `configuration/security/keycloak/uiClientId`
 | string
 | `registry-client-ui`
-| Keycloak client for web console
+|  {keycloak} client for web console
 
 | `configuration/security/https`
 | -

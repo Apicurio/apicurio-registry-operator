@@ -13,9 +13,8 @@ spec:
         # ^ Optional
     security:
       keycloak:
-        url: "http://keycloak-http-<namespace>.apps.<cluster host>/auth"
+        url: "http://keycloak-http-<namespace>.apps.<cluster host>"
         # ^ Required
-        # Keycloak server URL, must end with `/auth`.
         # Use an HTTP URL in development.
         realm: "registry"
         # apiClientId: "registry-client-api"
