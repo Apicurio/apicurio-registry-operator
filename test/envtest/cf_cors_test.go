@@ -5,6 +5,7 @@ import (
 	ar "github.com/Apicurio/apicurio-registry-operator/api/v1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -59,10 +60,10 @@ var _ = Describe("cf_cors", Ordered, func() {
 		}))
 	})
 
-	It("should update the CORS_ALLOWED_ORIGINS env. variable", func() {
+	It("should update the CORS_ALLOWED_ORIGINS env. variable, with host", func() {
 		registry := &ar.ApicurioRegistry{}
 		Expect(s.k8sClient.Get(s.ctx, registryKey, registry)).To(Succeed())
-		registry.Spec.Deployment.Host = "baz"
+		registry.Spec.Deployment.Host = "host"
 		Expect(s.k8sClient.Update(s.ctx, registry)).To(Succeed())
 		deployment := &apps.Deployment{}
 		Eventually(func() []core.EnvVar {
@@ -71,18 +72,19 @@ var _ = Describe("cf_cors", Ordered, func() {
 			} else {
 				return []core.EnvVar{}
 			}
-		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Not(ContainElements([]core.EnvVar{
+		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(ContainElements([]core.EnvVar{
 			{
 				Name:  "CORS_ALLOWED_ORIGINS",
-				Value: "baz",
+				Value: "http://host,https://host",
 			},
-		})))
+		}))
 	})
 
-	It("should remove the CORS_ALLOWED_ORIGINS env. variable", func() {
+	It("should update the CORS_ALLOWED_ORIGINS env. variable, with Keycloak only", func() {
 		registry := &ar.ApicurioRegistry{}
 		Expect(s.k8sClient.Get(s.ctx, registryKey, registry)).To(Succeed())
 		registry.Spec.Deployment.Host = ""
+		registry.Spec.Configuration.Security.Keycloak.Url = "httporhttps://keycloak.cloud/path"
 		Expect(s.k8sClient.Update(s.ctx, registry)).To(Succeed())
 		deployment := &apps.Deployment{}
 		Eventually(func() []core.EnvVar {
@@ -91,22 +93,44 @@ var _ = Describe("cf_cors", Ordered, func() {
 			} else {
 				return []core.EnvVar{}
 			}
-		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Not(ContainElements([]core.EnvVar{
+		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(ContainElements([]core.EnvVar{
 			{
-				Name: "CORS_ALLOWED_ORIGINS",
-				Value: "http://" + registryKey.Name + "." + registryKey.Namespace + "," +
-					"https://" + registryKey.Name + "." + registryKey.Namespace,
+				Name:  "CORS_ALLOWED_ORIGINS",
+				Value: "httporhttps://keycloak.cloud",
 			},
-		})))
+		}))
+	})
+
+	It("should update the CORS_ALLOWED_ORIGINS env. variable, with host and Keycloak", func() {
+		registry := &ar.ApicurioRegistry{}
+		Expect(s.k8sClient.Get(s.ctx, registryKey, registry)).To(Succeed())
+		registry.Spec.Deployment.Host = "host"
+		registry.Spec.Configuration.Security.Keycloak.Url = "httporhttps://keycloak.cloud/path"
+		Expect(s.k8sClient.Update(s.ctx, registry)).To(Succeed())
+		deployment := &apps.Deployment{}
+		Eventually(func() []core.EnvVar {
+			if err := s.k8sClient.Get(s.ctx, deploymentKey, deployment); err == nil {
+				return deployment.Spec.Template.Spec.Containers[0].Env
+			} else {
+				return []core.EnvVar{}
+			}
+		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(ContainElements([]core.EnvVar{
+			{
+				Name:  "CORS_ALLOWED_ORIGINS",
+				Value: "http://host,https://host,httporhttps://keycloak.cloud",
+			},
+		}))
 	})
 
 	It("should not prevent custom CORS_ALLOWED_ORIGINS env. variable", func() {
 		registry := &ar.ApicurioRegistry{}
 		Expect(s.k8sClient.Get(s.ctx, registryKey, registry)).To(Succeed())
+		registry.Spec.Deployment.Host = "host"
+		registry.Spec.Configuration.Security.Keycloak.Url = "httporhttps://keycloak.cloud/path"
 		registry.Spec.Configuration.Env = []core.EnvVar{
 			{
 				Name:  "CORS_ALLOWED_ORIGINS",
-				Value: "foo",
+				Value: "custom",
 			},
 		}
 		Expect(s.k8sClient.Update(s.ctx, registry)).To(Succeed())
@@ -120,8 +144,27 @@ var _ = Describe("cf_cors", Ordered, func() {
 		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(ContainElements([]core.EnvVar{
 			{
 				Name:  "CORS_ALLOWED_ORIGINS",
-				Value: "foo",
+				Value: "custom",
 			},
 		}))
+	})
+
+	It("should remove the CORS_ALLOWED_ORIGINS env. variable", func() {
+		registry := &ar.ApicurioRegistry{}
+		Expect(s.k8sClient.Get(s.ctx, registryKey, registry)).To(Succeed())
+		registry.Spec.Deployment.Host = ""
+		registry.Spec.Configuration.Security.Keycloak.Url = ""
+		registry.Spec.Configuration.Env = []core.EnvVar{}
+		Expect(s.k8sClient.Update(s.ctx, registry)).To(Succeed())
+		deployment := &apps.Deployment{}
+		Eventually(func() []core.EnvVar {
+			if err := s.k8sClient.Get(s.ctx, deploymentKey, deployment); err == nil {
+				return deployment.Spec.Template.Spec.Containers[0].Env
+			} else {
+				return []core.EnvVar{}
+			}
+		}, 10*time.Second*T_SCALE, EVENTUALLY_CHECK_PERIOD).Should(Not(ContainElements(MatchFields(IgnoreExtras, Fields{
+			"Name": Equal("CORS_ALLOWED_ORIGINS"),
+		}))))
 	})
 })
