@@ -32,7 +32,10 @@
 #
 # IMPORTANT NOTES:
 #
-# 1. By default, this template uses the staging Let's Encrypt issuer, suitable for testing (see https://letsencrypt.org/docs/rate-limits/).
+# 1. Before you apply the template, make sure the ingress/route hostname will be shorter than 64 characters, due to this limitation
+# https://community.letsencrypt.org/t/a-certificate-for-a-63-character-domain/78870 .
+#
+# 2. By default, this template uses the staging Let's Encrypt issuer, suitable for testing (see https://letsencrypt.org/docs/rate-limits/).
 # You can try the letsencrypt-production-cluster-issuer instead.
 apiVersion: template.openshift.io/v1
 kind: Template
@@ -147,6 +150,12 @@ objects:
             url: jdbc:postgresql://registry-certmanager-letsencrypt-custom-domain-edge-postgres.${NAMESPACE}.svc.cluster.local:5432/${POSTGRESQL_DATABASE}
             userName: ${POSTGRESQL_USER}
             password: ${POSTGRESQL_PASSWORD}
+        env:
+          - name: CORS_ALLOWED_ORIGINS
+            value: >-
+              https://${CUSTOM_DOMAIN},
+              http://registry-http.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME},
+              https://registry-https.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
       deployment:
         managedResources:
           disableIngress: true
@@ -186,7 +195,7 @@ objects:
     spec:
       rules:
         - host: >-
-            registry-certmanager-letsencrypt-custom-domain-edge-http.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
+            registry-http.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
           http:
             paths:
               - path: /
@@ -203,15 +212,15 @@ objects:
       name: registry-certmanager-letsencrypt-custom-domain-edge-https-ingress
       namespace: ${NAMESPACE}
       annotations:
-        # Use a staging Let's encrypt issuer for testing.
-        # https://letsencrypt.org/docs/rate-limits/
+        # Use a staging Let's encrypt issuer for testing:
         cert-manager.io/cluster-issuer: letsencrypt-staging-cluster-issuer
+        # See https://letsencrypt.org/docs/rate-limits
         # cert-manager.io/cluster-issuer: letsencrypt-production-cluster-issuer
     spec:
       tls:
         - hosts:
             - ${CUSTOM_DOMAIN}
-            - registry-certmanager-letsencrypt-custom-domain-edge-https.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
+            - registry-https.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
           secretName: registry-certmanager-letsencrypt-custom-domain-edge-tls-secret
       rules:
         - host: ${CUSTOM_DOMAIN}
@@ -225,7 +234,7 @@ objects:
                     port:
                       number: 8080
         # This rule is optional
-        - host: registry-certmanager-letsencrypt-custom-domain-edge-https.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
+        - host: registry-https.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
           http:
             paths:
               - path: /

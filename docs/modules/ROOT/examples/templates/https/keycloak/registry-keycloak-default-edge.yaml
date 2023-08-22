@@ -1,10 +1,10 @@
-# This example template deploys Registry with a Keycloak instance that is using HTTPS.
+# This example template deploys Registry, and a Red Hat Single Sign-On (Keycloak) instance with an edge-terminated HTTPS route.
 #
 # Steps:
 #
 # 1. Create or select a namespace:
 #
-# oc new-project registry-keycloak-https
+# oc new-project registry-keycloak-default-edge
 #
 # 2. Install the operator(s):
 #
@@ -27,32 +27,34 @@
 #
 # 4. Apply the template:
 #
-# oc process -f registry-keycloak-https.yaml -p NAMESPACE=registry-keycloak-https -p INGRESS_ROUTER_APPS_HOSTNAME=apps.apicur.eastus.aroapp.io \
-#  | oc apply -f - && oc wait --for=condition=ready apicurioregistry registry-keycloak-https --timeout=120s
+# oc process -f registry-keycloak-default-edge.yaml \
+#   -p NAMESPACE=registry-keycloak-default-edge \
+#   -p INGRESS_ROUTER_CANONICAL_HOSTNAME=router-default.apps.apicur.eastus.aroapp.io \
+#  | oc apply -f - && oc wait --for=condition=ready apicurioregistry registry-keycloak-default-edge --timeout=120s
 apiVersion: template.openshift.io/v1
 kind: Template
 metadata:
-  name: registry-keycloak-https-template
+  name: registry-keycloak-default-edge-template
 labels:
-  template: registry-keycloak-https-template
+  template: registry-keycloak-default-edge-template
 objects:
   # PostgreSQL storage
   - kind: Deployment
     apiVersion: apps/v1
     metadata:
-      name: registry-keycloak-https-postgres
+      name: registry-keycloak-default-edge-postgres
       namespace: ${NAMESPACE}
       labels:
-        app: registry-keycloak-https-postgres
+        app: registry-keycloak-default-edge-postgres
     spec:
       replicas: 1
       selector:
         matchLabels:
-          app: registry-keycloak-https-postgres
+          app: registry-keycloak-default-edge-postgres
       template:
         metadata:
           labels:
-            app: registry-keycloak-https-postgres
+            app: registry-keycloak-default-edge-postgres
         spec:
           containers:
             - resources:
@@ -116,10 +118,10 @@ objects:
   - kind: Service
     apiVersion: v1
     metadata:
-      name: registry-keycloak-https-postgres
+      name: registry-keycloak-default-edge-postgres
       namespace: ${NAMESPACE}
       labels:
-        app: registry-keycloak-https-postgres
+        app: registry-keycloak-default-edge-postgres
     spec:
       ports:
         - protocol: TCP
@@ -127,14 +129,14 @@ objects:
           targetPort: 5432
       type: ClusterIP
       selector:
-        app: registry-keycloak-https-postgres
+        app: registry-keycloak-default-edge-postgres
   # Keycloak
   - apiVersion: keycloak.org/v1alpha1
     kind: Keycloak
     metadata:
       labels:
         app: sso
-      name: registry-keycloak-https-keycloak
+      name: registry-keycloak-default-edge-keycloak
       namespace: ${NAMESPACE}
     spec:
       externalAccess:
@@ -143,7 +145,7 @@ objects:
   - apiVersion: keycloak.org/v1alpha1
     kind: KeycloakRealm
     metadata:
-      name: registry-keycloak-https-keycloakrealm
+      name: registry-keycloak-default-edge-keycloakrealm
       namespace: ${NAMESPACE}
     spec:
       instanceSelector:
@@ -205,14 +207,14 @@ objects:
   - apiVersion: registry.apicur.io/v1
     kind: ApicurioRegistry
     metadata:
-      name: registry-keycloak-https
+      name: registry-keycloak-default-edge
       namespace: ${NAMESPACE}
     spec:
       configuration:
         persistence: sql
         sql:
           dataSource:
-            url: jdbc:postgresql://registry-keycloak-https-postgres.${NAMESPACE}.svc.cluster.local:5432/${POSTGRESQL_DATABASE}
+            url: jdbc:postgresql://registry-keycloak-default-edge-postgres.${NAMESPACE}.svc.cluster.local:5432/${POSTGRESQL_DATABASE}
             userName: ${POSTGRESQL_USER}
             password: ${POSTGRESQL_PASSWORD}
         env:
@@ -224,7 +226,7 @@ objects:
             value: "true"
         security:
           keycloak:
-            url: https://keycloak-${NAMESPACE}.${INGRESS_ROUTER_APPS_HOSTNAME}/auth
+            url: https://keycloak-${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}/auth
             realm: registry
       deployment:
         podTemplateSpecPreview:
@@ -234,6 +236,7 @@ objects:
                 volumeMounts:
                   - mountPath: /mnt/truststore
                     name: truststore
+                    readOnly: true
             volumes:
               - name: truststore
                 secret:
@@ -247,7 +250,10 @@ parameters:
     value: apicurio
   - name: POSTGRESQL_PASSWORD
     value: password
-  - name: INGRESS_ROUTER_APPS_HOSTNAME
-    # Find out from a URL of any Ingress or Route resource, usually starts with "apps." e.g.:
-    # apps.apicur.eastus.aroapp.io
+  - name: INGRESS_ROUTER_CANONICAL_HOSTNAME
+    # Find out from a status block of any Ingress or Route resource, e.g.:
+    # status:
+    #  loadBalancer:
+    #    ingress:
+    #      - hostname: router-default.apps.apicur.eastus.aroapp.io
     required: true

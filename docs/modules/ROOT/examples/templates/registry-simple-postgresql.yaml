@@ -12,7 +12,8 @@
 #
 # 3. Apply the template:
 #
-# oc process -f registry-simple-postgresql.yaml -p NAMESPACE=registry-simple-postgresql \
+# oc process -f registry-simple-postgresql.yaml \
+#   -p NAMESPACE=registry-simple-postgresql \
 #  | oc apply -f - && oc wait --for=condition=ready apicurioregistry registry-simple-postgresql --timeout=60s
 apiVersion: template.openshift.io/v1
 kind: Template

@@ -13,7 +13,9 @@
 #
 # 3. Apply the template:
 #
-# oc process -f registry-certmanager-letsencrypt-edge.yaml -p NAMESPACE=test -p INGRESS_ROUTER_CANONICAL_HOSTNAME=router-default.apps.apicur.eastus.aroapp.io \
+# oc process -f registry-certmanager-letsencrypt-edge.yaml \
+#   -p NAMESPACE=test \
+#   -p INGRESS_ROUTER_CANONICAL_HOSTNAME=router-default.apps.apicur.eastus.aroapp.io \
 #  | oc apply -f - && oc wait --for=condition=ready apicurioregistry registry-certmanager-letsencrypt-edge --timeout=120s
 #
 # It may take a few minutes until the certificate has been issued.
@@ -25,10 +27,10 @@
 #
 # The resulting hostname will be:
 #
-# registry.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
+# registry-https.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
 #
 # You can choose a shorter namespace name, or edit the Ingress below to make the prefix even shorter.
-# Alternatively, you can use your custom domain as the Common Name (CN) field in the certificate,
+# Alternatively, you can use your custom domain as the Common Name (CN) field in the certificate
 # if it's shorter than 64 characters, and include the full ingress/route hostname in the Subject Alt Names (SAN) field.
 # See the `registry-certmanager-letsencrypt-custom-domain-edge.yaml` example.
 #
@@ -147,6 +149,11 @@ objects:
             url: jdbc:postgresql://registry-certmanager-letsencrypt-edge-postgres.${NAMESPACE}.svc.cluster.local:5432/${POSTGRESQL_DATABASE}
             userName: ${POSTGRESQL_USER}
             password: ${POSTGRESQL_PASSWORD}
+        env:
+          - name: CORS_ALLOWED_ORIGINS
+            value: >-
+              http://registry-http.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME},
+              https://registry-https.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
       deployment:
         managedResources:
           disableIngress: true
@@ -186,7 +193,7 @@ objects:
     spec:
       rules:
         - host: >-
-            registry-certmanager-letsencrypt-edge-http.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
+            registry-http.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
           http:
             paths:
               - path: /
@@ -203,17 +210,17 @@ objects:
       name: registry-certmanager-letsencrypt-edge-https-ingress
       namespace: ${NAMESPACE}
       annotations:
-        # Use a staging Let's encrypt issuer for testing.
-        # https://letsencrypt.org/docs/rate-limits/
+        # Use a staging Let's encrypt issuer for testing:
         cert-manager.io/cluster-issuer: letsencrypt-staging-cluster-issuer
+        # See https://letsencrypt.org/docs/rate-limits
         # cert-manager.io/cluster-issuer: letsencrypt-production-cluster-issuer
     spec:
       tls:
         - hosts:
-            - registry.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
+            - registry-https.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
           secretName: registry-certmanager-letsencrypt-edge-tls-secret
       rules:
-        - host: registry.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
+        - host: registry-https.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
           http:
             paths:
               - path: /
