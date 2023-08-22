@@ -1,58 +1,46 @@
-# This example template deploys Registry with an edge-terminated HTTPS route, with a default ingress router certificate.
+# This example template deploys Registry with a passthrough HTTPS route, using cert-manager operator.
 #
 # Steps:
 #
 # 1. Create or select a namespace:
 #
-# oc new-project registry-default-edge
+# oc new-project registry-certmanager-passthrough
 #
 # 2. Install the operator(s):
 #
 #  - Red Hat Integration - Service Registry Operator
+#  - cert-manager Operator for Red Hat OpenShift
 #
-# 3. Find and copy the default ingress router certificate to the ${NAMESPACE}:
+# 3. Apply the template:
 #
-# oc get secret -n openshift-ingress --field-selector=type=kubernetes.io/tls | grep -v metrics
-#
-# will list something like:
-#
-# NAME                                           TYPE                DATA   AGE
-# 0b9c209b-0566-4e3b-a2e2-c93e27e90eb2-ingress   kubernetes.io/tls   2      20m
-#
-# oc get secret -n openshift-ingress <NAME> -o json \
-#  | jq 'del(.metadata["namespace", "creationTimestamp", "resourceVersion", "selfLink", "uid", "ownerReferences", "managedFields"]) | .metadata.name="registry-default-edge-tls-secret"' \
-#  | oc create -f -
-#
-# 4. Apply the template:
-#
-# oc process -f registry-default-edge.yaml \
-#   -p NAMESPACE=registry-default-edge \
-#   -p INGRESS_ROUTER_CANONICAL_HOSTNAME=router-default.apps.apicur.eastus.aroapp.io \
-#  | oc apply -f - && oc wait --for=condition=ready apicurioregistry registry-default-edge --timeout=120s
+# oc process -f registry-certmanager-passthrough.yaml \
+#  -p NAMESPACE=registry-certmanager-passthrough \
+#  -p INGRESS_ROUTER_CANONICAL_HOSTNAME=router-default.apps.apicur.eastus.aroapp.io \
+#  | oc apply -f - && oc wait --for=condition=ready apicurioregistry registry-certmanager-passthrough --timeout=120s
 apiVersion: template.openshift.io/v1
 kind: Template
 metadata:
-  name: registry-default-edge-template
+  name: registry-certmanager-passthrough-template
 labels:
-  template: registry-default-edge-template
+  template: registry-certmanager-passthrough-template
 objects:
   # PostgreSQL storage
   - kind: Deployment
     apiVersion: apps/v1
     metadata:
-      name: registry-default-edge-postgres
+      name: registry-certmanager-passthrough-postgres
       namespace: ${NAMESPACE}
       labels:
-        app: registry-default-edge-postgres
+        app: registry-certmanager-passthrough-postgres
     spec:
       replicas: 1
       selector:
         matchLabels:
-          app: registry-default-edge-postgres
+          app: registry-certmanager-passthrough-postgres
       template:
         metadata:
           labels:
-            app: registry-default-edge-postgres
+            app: registry-certmanager-passthrough-postgres
         spec:
           containers:
             - resources:
@@ -116,10 +104,10 @@ objects:
   - kind: Service
     apiVersion: v1
     metadata:
-      name: registry-default-edge-postgres
+      name: registry-certmanager-passthrough-postgres
       namespace: ${NAMESPACE}
       labels:
-        app: registry-default-edge-postgres
+        app: registry-certmanager-passthrough-postgres
     spec:
       ports:
         - protocol: TCP
@@ -127,72 +115,109 @@ objects:
           targetPort: 5432
       type: ClusterIP
       selector:
-        app: registry-default-edge-postgres
+        app: registry-certmanager-passthrough-postgres
   # Registry
   - apiVersion: registry.apicur.io/v1
     kind: ApicurioRegistry
     metadata:
-      name: registry-default-edge
+      name: registry-certmanager-passthrough
       namespace: ${NAMESPACE}
     spec:
       configuration:
         persistence: sql
         sql:
           dataSource:
-            url: jdbc:postgresql://registry-default-edge-postgres.${NAMESPACE}.svc.cluster.local:5432/${POSTGRESQL_DATABASE}
+            url: jdbc:postgresql://registry-certmanager-passthrough-postgres.${NAMESPACE}.svc.cluster.local:5432/${POSTGRESQL_DATABASE}
             userName: ${POSTGRESQL_USER}
             password: ${POSTGRESQL_PASSWORD}
         env:
+          - name: REGISTRY_URL_OVERRIDE_HOST
+            value: registry.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
+          - name: REGISTRY_URL_OVERRIDE_PORT
+            value: "443"
           - name: CORS_ALLOWED_ORIGINS
-            value: >-
-              http://registry-http.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME},
-              https://registry-https.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
-      deployment:
-        managedResources:
-          disableIngress: true
-  # HTTP Ingress
-  - kind: Ingress
-    apiVersion: networking.k8s.io/v1
+            value: https://registry.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
+        security:
+          https:
+            secretName: registry-certmanager-passthrough-tls-secret
+            disableHttp: true
+  # Certificates
+  # Self-signed cluster issuer for the "root CA certificate"
+  - apiVersion: cert-manager.io/v1
+    kind: ClusterIssuer
     metadata:
-      name: registry-default-edge-http-ingress
+      name: selfsigned-cluster-issuer
+    spec:
+      selfSigned: { }
+  # Create the "root CA certificate"
+  - apiVersion: cert-manager.io/v1
+    kind: Certificate
+    metadata:
+      name: selfsigned-ca
       namespace: ${NAMESPACE}
     spec:
-      rules:
-        - host: >-
-            registry-http.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
-          http:
-            paths:
-              - path: /
-                pathType: Prefix
-                backend:
-                  service:
-                    name: registry-default-edge-service
-                    port:
-                      number: 8080
+      secretName: ca-root-secret
+      duration: 17520h # 2*365*24h ~= 2 years      
+      isCA: true
+      privateKey:
+        algorithm: RSA
+        encoding: PKCS1
+        size: 2048
+      commonName: selfsigned-ca
+      issuerRef:
+        group: cert-manager.io
+        kind: ClusterIssuer
+        name: selfsigned-cluster-issuer
+  # Issuer for Ingress
+  - apiVersion: cert-manager.io/v1
+    kind: Issuer
+    metadata:
+      name: selfsigned-ca-issuer
+      namespace: ${NAMESPACE}
+    spec:
+      ca:
+        secretName: ca-root-secret
+  # Certificate for Registry
+  - apiVersion: cert-manager.io/v1
+    kind: Certificate
+    metadata:
+      name: registry-certmanager-passthrough-tls
+      namespace: ${NAMESPACE}
+    spec:
+      secretName: registry-certmanager-passthrough-tls-secret
+      duration: 17520h # 2*365*24h ~= 2 years
+      isCA: false
+      privateKey:
+        algorithm: RSA
+        encoding: PKCS1
+        size: 2048
+      dnsNames:
+        - registry.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
+      issuerRef:
+        group: cert-manager.io
+        kind: Issuer
+        name: selfsigned-ca-issuer
+  # A separate HTTP Ingress is not available because of the REGISTRY_URL_OVERRIDE_HOST configuration.
   # HTTPS Ingress
   - kind: Ingress
     apiVersion: networking.k8s.io/v1
     metadata:
-      name: registry-default-edge-https-ingress
+      name: registry-certmanager-passthrough-https-ingress
       namespace: ${NAMESPACE}
       annotations:
-        cert-manager.io/issuer: selfsigned-ca-issuer
+        route.openshift.io/termination: passthrough
     spec:
-      tls:
-        - hosts:
-            - registry-https.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
-          secretName: registry-default-edge-tls-secret
       rules:
-        - host: registry-https.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
+        - host: registry.${NAMESPACE}.${INGRESS_ROUTER_CANONICAL_HOSTNAME}
           http:
             paths:
-              - path: /
-                pathType: Prefix
+              - path: ""
+                pathType: ImplementationSpecific
                 backend:
                   service:
-                    name: registry-default-edge-service
+                    name: registry-certmanager-passthrough-service
                     port:
-                      number: 8080
+                      number: 8443
 parameters:
   - name: NAMESPACE
     required: true
