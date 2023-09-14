@@ -39,8 +39,11 @@ spec:
             description: ApicurioRegistrySpec defines the desired state of ApicurioRegistry
             properties:
               configuration:
+                description: Apicurio Registry application configuration
                 properties:
                   env:
+                    description: "Environment variables: \n List of additional environment
+                      variables that will be provided to the Apicurio Registry application."
                     items:
                       description: EnvVar represents an environment variable present
                         in a Container.
@@ -150,80 +153,139 @@ spec:
                       type: object
                     type: array
                   kafkasql:
+                    description: Configuration of Apicurio Registry KafkaSQL storage
                     properties:
                       bootstrapServers:
+                        description: "Kafka bootstrap servers URL: \n URL of one of
+                          the Kafka brokers, which provide initial metadata about
+                          the Kafka cluster, for example: `<service name>.<namespace>.svc:9092`."
                         type: string
                       security:
+                        description: "Kafka security configuration: \n Provide the
+                          following configuration options if your Kafka cluster is
+                          secured using TLS or SCRAM."
                         properties:
                           scram:
+                            description: "SCRAM: \n Kafka is secured using SCRAM."
                             properties:
                               mechanism:
+                                description: "Mechanism: \n Name of the SCRAM mechanism,
+                                  default value is SCRAM-SHA-512."
                                 type: string
                               passwordSecretName:
+                                description: "User password Secret name: \n Name of
+                                  a Secret that contains password of the SCRAM user
+                                  under the `password` key."
                                 type: string
                               truststoreSecretName:
+                                description: "Truststore Secret name: \n Name of a
+                                  Secret that contains TLS truststore (in PKCS12 format)
+                                  under the `ca.p12` key, and truststore password
+                                  under the `ca.password` key."
                                 type: string
                               user:
+                                description: User name
                                 type: string
                             type: object
                           tls:
+                            description: "TLS: \n Kafka is secured using TLS."
                             properties:
                               keystoreSecretName:
+                                description: "Keystore Secret name: \n Name of a Secret
+                                  that contains TLS keystore (in PKCS12 format) under
+                                  the `user.p12` key, and keystore password under
+                                  the `user.password` key."
                                 type: string
                               truststoreSecretName:
+                                description: "Truststore Secret name: \n Name of a
+                                  Secret that contains TLS truststore (in PKCS12 format)
+                                  under the `ca.p12` key, and truststore password
+                                  under the `ca.password` key."
                                 type: string
                             type: object
                         type: object
                     type: object
                   logLevel:
+                    description: Third-party (non-Apicurio) library log level
                     type: string
                   persistence:
+                    description: "Storage: \n Type of storage used by Apicurio Registry,
+                      one of: mem, sql, kafkasql. Default value is `mem`."
                     type: string
                   registryLogLevel:
+                    description: Apicurio Registry application log level
                     type: string
                   security:
+                    description: Security configuration
                     properties:
                       https:
+                        description: "HTTPS: \n Configure Apicurio Registry to be
+                          accessible using HTTPS."
                         properties:
                           disableHttp:
+                            description: "Disable HTTP: \n Disable HTTP if HTTPS is
+                              enabled."
                             type: boolean
                           secretName:
+                            description: "HTTPS certificate and private key Secret
+                              name: \n Name of a Secret that contains HTTPS certificate
+                              under the `tls.crt` key, and the private key under the
+                              `tls.key` key."
                             type: string
                         type: object
                       keycloak:
+                        description: "Keycloak: \n Configure Apicurio Registry to
+                          use Keycloak for Identity and Access Management (IAM)."
                         properties:
                           apiClientId:
+                            description: Client ID for the REST API
                             type: string
                           realm:
+                            description: Keycloak realm
                             type: string
                           uiClientId:
+                            description: Client ID for the UI
                             type: string
                           url:
+                            description: "Keycloak auth URL: \n URL of the Keycloak
+                              auth endpoint, must end with `/auth`."
                             type: string
                         type: object
                     type: object
                   sql:
+                    description: Configuration of Apicurio Registry SQL storage
                     properties:
                       dataSource:
+                        description: SQL data source
                         properties:
                           password:
+                            description: Data source password
                             type: string
                           url:
+                            description: "Data source URL: \n URL of the PostgreSQL
+                              database, for example: `jdbc:postgresql://<service name>.<namespace>.svc:5432/<database
+                              name>`."
                             type: string
                           userName:
+                            description: Data source username
                             type: string
                         type: object
                     type: object
                   ui:
+                    description: Configuration of Apicurio Registry web console
                     properties:
                       readOnly:
+                        description: "Read-only: \n Set the web console to read-only
+                          mode. WARNING: This does not affect access to the Apicurio
+                          REST API."
                         type: boolean
                     type: object
                 type: object
               deployment:
+                description: Apicurio Registry deployment configuration
                 properties:
                   affinity:
-                    description: Affinity is a group of affinity scheduling rules.
+                    description: Affinity
                     properties:
                       nodeAffinity:
                         description: Describes node affinity scheduling rules for
@@ -1088,15 +1150,18 @@ spec:
                         type: object
                     type: object
                   host:
+                    description: "Hostname: \n Apicurio Registry application hostname
+                      (part of the URL without the protocol and path)."
                     type: string
                   image:
-                    description: Image set in the Deployment pod template. Overrides
-                      the values in the REGISTRY_IMAGE_MEM, REGISTRY_IMAGE_KAFKASQL
-                      and REGISTRY_IMAGE_SQL operator environment variables.
+                    description: "Apicurio Registry image: \n Replaces the default
+                      Apicurio Registry application image. Overrides the values in
+                      the REGISTRY_IMAGE_MEM, REGISTRY_IMAGE_KAFKASQL and REGISTRY_IMAGE_SQL
+                      Operator environment variables."
                     type: string
                   imagePullSecrets:
-                    description: List of secrets in the same namespace to use for
-                      pulling the Deployment pod image.
+                    description: "Apicurio Registry image pull secrets: \n List of
+                      Secrets to use when pulling the Apicurio Registry image."
                     items:
                       description: LocalObjectReference contains enough information
                         to let you locate the referenced object inside the same namespace.
@@ -1108,33 +1173,39 @@ spec:
                       type: object
                     type: array
                   managedResources:
-                    description: Configure how the Operator manages Kubernetes resources
+                    description: "Apicurio Registry managed resources: \n Configure
+                      how the Operator manages Kubernetes resources."
                     properties:
                       disableIngress:
-                        description: Operator will not create or manage an Ingress
-                          for Apicurio Registry
+                        description: "Disable Ingress: \n Operator will not create
+                          or manage an Ingress for Apicurio Registry, so it can be
+                          done manually."
                         type: boolean
                       disableNetworkPolicy:
-                        description: Operator will not create or manage an NetworkPolicy
-                          for Apicurio Registry
+                        description: "Disable NetworkPolicy: \n Operator will not
+                          create or manage a NetworkPolicy for Apicurio Registry,
+                          so it can be done manually."
                         type: boolean
                       disablePodDisruptionBudget:
-                        description: Operator will not create or manage an PodDisruptionBudget
-                          for Apicurio Registry
+                        description: "Disable PodDisruptionBudget: \n Operator will
+                          not create or manage a PodDisruptionBudget for Apicurio
+                          Registry, so it can be done manually."
                         type: boolean
                     type: object
                   metadata:
-                    description: Metadata applied to the Deployment pod template.
+                    description: Metadata of the Apicurio Registry pod
                     properties:
                       annotations:
                         additionalProperties:
                           type: string
-                        description: Annotations added to the Deployment pod template.
+                        description: "Annotations: \n Additional Apicurio Registry
+                          Pod annotations."
                         type: object
                       labels:
                         additionalProperties:
                           type: string
-                        description: Labels added to the Deployment pod template.
+                        description: "Labels: \n Additional Apicurio Registry Pod
+                          labels."
                         type: object
                     type: object
                   podTemplateSpecPreview:
@@ -4259,9 +4330,12 @@ spec:
                         type: object
                     type: object
                   replicas:
+                    description: "Replicas: \n The required number of Apicurio Registry
+                      pods. Default value is 1."
                     format: int32
                     type: integer
                   tolerations:
+                    description: Tolerations
                     items:
                       description: The pod this Toleration is attached to tolerates
                         any taint that matches the triple <key,value,effect> using
@@ -4306,7 +4380,8 @@ spec:
           status:
             properties:
               conditions:
-                description: List of status conditions.
+                description: "Conditions: \n Apicurio Registry application and Operator
+                  conditions."
                 items:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
@@ -4375,13 +4450,15 @@ spec:
                   type: object
                 type: array
               info:
-                description: Information about the deployed application.
+                description: Information about the Apicurio Registry application
                 properties:
                   host:
+                    description: Apicurio Registry URL
                     type: string
                 type: object
               managedResources:
-                description: List of resources managed by this operator.
+                description: "Managed Resources: \n Kubernetes resources managed by
+                  the Apicurio Registry Operator."
                 items:
                   properties:
                     kind:
@@ -4551,6 +4628,12 @@ rules:
   - routes/custom-host
   verbs:
   - '*'
+- apiGroups:
+  - security.openshift.io
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -4622,11 +4705,11 @@ spec:
         - name: REGISTRY_VERSION
           value: 2.x
         - name: REGISTRY_IMAGE_MEM
-          value: quay.io/apicurio/apicurio-registry-mem:latest-snapshot
+          value: quay.io/apicurio/apicurio-registry-mem:2.5.x-snapshot
         - name: REGISTRY_IMAGE_KAFKASQL
-          value: quay.io/apicurio/apicurio-registry-kafkasql:latest-snapshot
+          value: quay.io/apicurio/apicurio-registry-kafkasql:2.5.x-snapshot
         - name: REGISTRY_IMAGE_SQL
-          value: quay.io/apicurio/apicurio-registry-sql:latest-snapshot
+          value: quay.io/apicurio/apicurio-registry-sql:2.5.x-snapshot
         - name: WATCH_NAMESPACE
           valueFrom:
             fieldRef:
@@ -4668,6 +4751,7 @@ spec:
           capabilities:
             drop:
             - ALL
+          readOnlyRootFilesystem: false
           runAsNonRoot: true
           seccompProfile:
             type: RuntimeDefault

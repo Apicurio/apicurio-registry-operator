@@ -89,3 +89,9 @@ rules:
   - routes/custom-host
   verbs:
   - '*'
+- apiGroups:
+  - security.openshift.io
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use

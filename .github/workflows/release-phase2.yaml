@@ -1,0 +1,95 @@
+name: Release Phase 2 - Create Operator Hub PRs
+on:
+  workflow_dispatch:
+    inputs:
+      release-branch:
+        description: Branch used during the release
+        required: true
+        default: release
+      debug:
+        type: boolean
+        description: Debug with tmate on failure
+
+env:
+  RELEASE_BRANCH: ${{ github.event.inputs.release-branch }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'Apicurio'
+    steps:
+
+      - name: Checkout the Operator repository
+        run: |
+          git init
+          git config user.name apicurio-ci
+          git config user.email apicurio.ci@gmail.com
+          git remote add origin "https://apicurio-ci:${{ secrets.ACCESS_TOKEN }}@github.com/Apicurio/apicurio-registry-operator.git"
+          git fetch          
+          git checkout --track "origin/$RELEASE_BRANCH"
+
+      - name: Run make info
+        run: make info
+
+      - name: Configure env. variables
+        run: |
+          echo "PACKAGE_VERSION=$(make get-variable-package-version)" >> "$GITHUB_ENV"
+          echo "GH_TOKEN=${{ secrets.JSENKO_ACCESS_TOKEN }}" >> "$GITHUB_ENV"
+
+      - name: Checkout the Community Operators repository
+        run: |
+          cd ..
+          mkdir community-operators
+          cd community-operators
+          git init
+          git config user.name "Jakub Senko"
+          git config user.email m@jsenko.net          
+          git remote add origin https://github.com/k8s-operatorhub/community-operators.git          
+          git remote add source "https://jsenko:${{ secrets.JSENKO_ACCESS_TOKEN }}@github.com/jsenko/community-operators.git"
+          git fetch
+          git checkout --track origin/main
+          git push -f source main
+
+      - name: Create the Community Operators PR
+        run: |
+          cd ../community-operators
+          git checkout -b "$RELEASE_BRANCH"
+          TITLE="Release Apicurio Registry Operator $PACKAGE_VERSION"
+          BODY=$(curl -s https://raw.githubusercontent.com/k8s-operatorhub/community-operators/main/docs/pull_request_template.md)
+          cp -r "../apicurio-registry-operator/bundle/$PACKAGE_VERSION" operators/apicurio-registry
+          git add .
+          git commit -s -m "$TITLE"
+          git push -f source "$RELEASE_BRANCH"
+          gh repo set-default jsenko/community-operators
+          gh pr create --title "$TITLE" --body "$BODY" --base origin/main --head "$RELEASE_BRANCH"
+
+      - name: Checkout the Openshift Community Operators repository
+        run: |
+          cd ..
+          mkdir openshift-community-operators
+          cd openshift-community-operators
+          git init
+          git config user.name "Jakub Senko"
+          git config user.email m@jsenko.net          
+          git remote add origin https://github.com/redhat-openshift-ecosystem/community-operators-prod.git
+          git remote add source "https://jsenko:${{ secrets.JSENKO_ACCESS_TOKEN }}@github.com/jsenko/community-operators-prod.git"
+          git fetch
+          git checkout --track origin/main
+          git push -f source main
+
+      - name: Create the Openshift Community Operators PR
+        run: |
+          cd ../openshift-community-operators
+          git checkout -b "$RELEASE_BRANCH"
+          TITLE="Release Apicurio Registry Operator $PACKAGE_VERSION"
+          BODY=$(curl -s https://raw.githubusercontent.com/redhat-openshift-ecosystem/community-operators-prod/main/docs/pull_request_template.md)
+          cp -r "../apicurio-registry-operator/bundle/$PACKAGE_VERSION" operators/apicurio-registry
+          git add .
+          git commit -s -m "$TITLE"
+          git push -f source "$RELEASE_BRANCH"
+          gh repo set-default jsenko/community-operators-prod
+          gh pr create --title "$TITLE" --body "$BODY" --base origin/main --head "$RELEASE_BRANCH"
+
+      - name: Setup tmate session
+        if: failure() && inputs.debug
+        uses: mxschmitt/action-tmate@v3

@@ -30,6 +30,9 @@ const ENV_OPERATOR_NAME = "OPERATOR_NAME"
 
 var intstr1 = intstr.FromInt(1)
 
+var boolFalse = false
+var boolTrue = true
+
 // MUST NOT be used directly as selector labels, because some of them may change.
 func (this *KubeFactory) GetLabels() map[string]string {
 
@@ -128,6 +131,19 @@ func (this *KubeFactory) CreateDeployment() *apps.Deployment {
 								{
 									Name:      "tmp",
 									MountPath: "/tmp",
+								},
+							},
+							SecurityContext: &core.SecurityContext{
+								Capabilities: &core.Capabilities{
+									Drop: []core.Capability{
+										"ALL",
+									},
+								},
+								ReadOnlyRootFilesystem:   &boolFalse,
+								AllowPrivilegeEscalation: &boolFalse,
+								RunAsNonRoot:             &boolTrue,
+								SeccompProfile: &core.SeccompProfile{
+									Type: "RuntimeDefault",
 								},
 							},
 						},

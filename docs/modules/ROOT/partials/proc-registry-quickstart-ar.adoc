@@ -5,7 +5,7 @@ To quickly create a new {registry} instance deployment, use the in-memory storag
 which does not require an external storage to be configured as a prerequisite.
 
 ifdef::apicurio-registry-operator-dev[]
-NOTE: This procedure deploys the latest {operator} release version. To deploy the development version, see https://github.com/Apicurio/apicurio-registry-operator/[{operator} GitHub repository].
+NOTE: This procedure deploys the latest {operator} development version. To deploy a version that has already been released, see install files in https://github.com/Apicurio/apicurio-registry-operator/tree/main/install[{operator} GitHub repository].
 endif::[]
 
 .Prerequisites

@@ -6,8 +6,8 @@ on:
 
 env:
   IMAGE_REGISTRY: quay.io
-  IMAGE_REGISTRY_ORG: apicurio
 
+# TODO Regenerate install/install.yaml file
 jobs:
   main:
     name: Build and publish from main
@@ -18,31 +18,31 @@ jobs:
 
       - uses: actions/setup-go@v2
         with:
-          go-version: '^1.16.8'
+          go-version: '^1.17.10'
       - run: go version
 
       - name: Setup the environment
-        run: ./.github/scripts/setup.sh
+        run: .github/scripts/setup.sh
 
       - name: Setup Docker
         run: |
           docker login -u "${{ secrets.QUAY_USERNAME }}" -p "${{ secrets.QUAY_PASSWORD }}" "${IMAGE_REGISTRY}"
 
       - name: Build
-        id: build
-        run: make all
+        run: make build bundle bundle-build dist
+
+      - name: Test Before
+        run: CI_BUILD=true .github/scripts/test_operator.sh
 
       - name: Publish
-        id: publish
-        run: make all-push
+        run: make docker-push bundle-push catalog-build catalog-push
 
-      - name: Test
-        id: test
-        run: ./.github/scripts/test_operator.sh
+      - name: Test After
+        run: .github/scripts/test_operator.sh
 
       - name: Collect logs
         if: failure()
-        run: ./.github/scripts/collect_logs.sh
+        run: .github/scripts/collect_logs.sh
 
       - name: Upload tests logs artifacts
         if: failure()

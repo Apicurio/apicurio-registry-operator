@@ -1,0 +1,128 @@
+name: Release Phase 1 - Prepare release branch, build, test, and push images
+on:
+  workflow_dispatch:
+    inputs:
+      operator-release-version:
+        description: Operator version being released
+      operand-release-version:
+        description: Operand version to use
+        required: true
+      branch:
+        description: Branch to release from
+        required: true
+        default: main
+      release-branch:
+        description: Branch used during the release
+        required: true
+        default: release
+      debug:
+        type: boolean
+        description: Debug with tmate on failure
+
+env:
+  IMAGE_REGISTRY: quay.io
+  EXTRA_CHECKS: "true"
+  OPERAND_VERSION: ${{ github.event.inputs.operand-release-version }}
+  RELEASE_BRANCH: ${{ github.event.inputs.release-branch }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'Apicurio'
+    steps:
+
+      - name: Checkout the Operator repository
+        run: |
+          git init
+          git config user.name apicurio-ci
+          git config user.email apicurio.ci@gmail.com
+          git remote add origin "https://apicurio-ci:${{ secrets.ACCESS_TOKEN }}@github.com/Apicurio/apicurio-registry-operator.git"
+          git fetch
+          git checkout --track "origin/${{ github.event.inputs.branch }}"
+          git checkout -b "$RELEASE_BRANCH"
+
+      - name: Configure env. variables
+        run: |
+          if [[ -z "${{ github.event.inputs.operator-release-version }}" ]]; then
+            echo "OPERATOR_VERSION=$(make get-variable-operator-version-prefix)" >> "$GITHUB_ENV"
+          else
+            echo "OPERATOR_VERSION=${{ github.event.inputs.operator-release-version }}" >> "$GITHUB_ENV"
+          fi          
+
+      - name: Run make info
+        run: make info
+
+      - name: Update operator and operand versions
+        run: |
+          make release-set-operator-version
+          git add .
+          git commit -m "release: update operator version"
+          make release-set-operand-version
+          git add .
+          git commit -m "release: update operand version"
+
+      - name: Setup go 1.17.10
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.17.10
+      - run: go version
+
+      - name: Configure go
+        run: .github/scripts/setup.sh
+
+      - name: Build operator image
+        run: make build
+
+      - name: Commit after build
+        run: |
+          git add .
+          git commit -m "release: update resources"
+
+      - name: Run e2e test
+        run: |
+          CI_BUILD=true EXTRA_CHECKS=false .github/scripts/test_operator.sh
+
+      - name: Bundle
+        run: make bundle bundle-build
+
+      - name: Commit bundle
+        run: |
+          git add -f bundle.Dockerfile bundle
+          git commit -m "release: bundle"
+
+      - name: Setup Docker
+        run: docker login -u "${{ secrets.QUAY_USERNAME }}" -p "${{ secrets.QUAY_PASSWORD }}" "$IMAGE_REGISTRY"
+
+      - name: Publish operator and bundle images
+        run: make docker-push bundle-push
+
+      - name: Build and publish catalog image
+        run: make catalog-build catalog-push
+
+      - name: Generate dist
+        run: |
+          RELEASE=true make dist
+          git add -f dist
+          git add .
+          git commit -m "release: dist"
+
+      - name: Run e2e tests with release images
+        run: .github/scripts/test_operator.sh
+
+      - name: Push the release branch
+        run: git push origin "$RELEASE_BRANCH"
+
+      - name: Collect logs
+        if: failure()
+        run: .github/scripts/collect_logs.sh
+
+      - name: Upload tests logs artifacts
+        if: failure()
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: tests-logs
+          path: artifacts
+
+      - name: Setup tmate session
+        if: failure() && inputs.debug
+        uses: mxschmitt/action-tmate@v3

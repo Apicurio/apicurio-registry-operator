@@ -1,3 +1,0 @@
-= Notice
-
-Please prefer using installation files from the `/install` directory on the `master` branch instead. This directory may not be updated in the future.
