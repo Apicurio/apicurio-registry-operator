@@ -1,0 +1,85 @@
+name: Release Phase 3 - Build and publish the Java API Model
+on:
+  workflow_dispatch:
+    inputs:
+      release-branch:
+        description: Branch used during the release
+        required: true
+        default: release
+      debug:
+        type: boolean
+        description: Debug with tmate on failure
+
+env:
+  RELEASE_BRANCH: ${{ github.event.inputs.release-branch }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'Apicurio'
+    steps:
+
+      - name: Checkout the Operator repository
+        run: |
+          git init
+          git config user.name apicurio-ci
+          git config user.email apicurio.ci@gmail.com
+          git remote add origin "https://apicurio-ci:${{ secrets.ACCESS_TOKEN }}@github.com/Apicurio/apicurio-registry-operator.git"
+          git fetch          
+          git checkout --track "origin/$RELEASE_BRANCH"
+
+      - name: Run make info
+        run: make info
+
+      - name: Configure env. variables
+        run: |
+          echo "PACKAGE_VERSION=$(make get-variable-package-version)" >> "$GITHUB_ENV"
+          echo "OPERATOR_VERSION=$(make get-variable-operator-version)" >> "$GITHUB_ENV"
+
+      - name: Set up JDK 11
+        uses: AdoptOpenJDK/install-jdk@v1
+        with:
+          version: "11"
+          architecture: x64
+
+      - name: Set up settings.xml
+        run: |
+          pwd
+          mkdir -p /home/runner/.m2
+          chmod 755 /home/runner/.m2
+          echo "<settings><servers><server><id>${{ secrets.OSSRH_ID }}</id><username>${{ secrets.OSSRH_USERNAME }}</username><password>${{ secrets.OSSRH_TOKEN }}</password></server></servers><profiles><profile><id>${{ secrets.OSSRH_ID }}</id><activation><activeByDefault>true</activeByDefault></activation><properties><gpg.executable>gpg</gpg.executable><gpg.passphrase>${{ secrets.GPG_PASSPHRASE}}</gpg.passphrase></properties></profile></profiles></settings>" > /home/runner/.m2/settings.xml
+
+      - name: Import GPG Key
+        uses: crazy-max/ghaction-import-gpg@v1
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Update Release Version
+        run: |
+          cd api-model
+          ./mvnw -B versions:set "-DnewVersion=$OPERATOR_VERSION" -DgenerateBackupPoms=false -DprocessAllModules=true
+
+      - name: Commit Release Version Change
+        run: |
+          git add .
+          git commit -m "release: update Java API Model version"
+          git push origin "$RELEASE_BRANCH"
+
+      - name: Build
+        run: |
+          cd api-model
+          ./mvnw -B clean install "-DpackageVersion=$PACKAGE_VERSION"
+
+      - name: Maven Deploy
+        run: |
+          cd api-model
+          # Retry 3 times before the steps actually fails
+          (echo "===== Maven Deploy Attempt: 1 ====" && ./mvnw -B --settings /home/runner/.m2/settings.xml clean deploy -Prelease -DskipTests "-DpackageVersion=$PACKAGE_VERSION") || \
+          (echo "===== Maven Deploy Attempt: 2 ====" && ./mvnw -B --settings /home/runner/.m2/settings.xml clean deploy -Prelease -DskipTests "-DpackageVersion=$PACKAGE_VERSION") || \
+          (echo "===== Maven Deploy Attempt: 3 ====" && ./mvnw -B --settings /home/runner/.m2/settings.xml clean deploy -Prelease -DskipTests "-DpackageVersion=$PACKAGE_VERSION") || \
+          (echo "==== Maven Deploy Step Failed ====" && exit 1)
+
+      - name: Setup tmate session
+        if: failure() && inputs.debug
+        uses: mxschmitt/action-tmate@v3

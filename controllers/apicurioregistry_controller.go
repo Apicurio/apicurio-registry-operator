@@ -138,6 +138,7 @@ func (this *ApicurioRegistryReconciler) setupWithManager(mgr cr.Manager) error {
 
 // OpenShift
 // +kubebuilder:rbac:groups=route.openshift.io,resources=routes;routes/custom-host,verbs=*
+// +kubebuilder:rbac:groups=security.openshift.io,resources=securitycontextconstraints,verbs=use
 
 // Common
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=*

@@ -1,31 +1,41 @@
 #!/bin/bash
 set -e -a
 
-VERSION=$(sed -n 's/^.*Version.*=.*"\(.*\)".*$/\1/p' ./version/version.go)
-DASH_VERSION=$(echo "$VERSION" | sed -n 's/^[0-9\.]*-\([^-+]*\).*$/-\1/p')
+if [[ ! $OPERATOR_VERSION ]]; then
+  OPERATOR_VERSION=$(sed -n 's/.*Version.*=.*"\(.*\)".*/\1/p' ./version/version.go)
+fi
+OPERATOR_VERSION_SUFFIX=$(echo "$OPERATOR_VERSION" | sed -n 's/^[0-9\.]*-\([^-+]*\).*$/-\1/p')
 
-echo $VERSION
-echo $DASH_VERSION
+if [[ ! $OPERAND_VERSION ]]; then
+  OPERAND_VERSION="2.x"
+fi
+LC_OPERAND_VERSION=$(echo $OPERAND_VERSION | tr A-Z a-z)
 
-OPERATOR_IMAGE="quay.io/apicurio/apicurio-registry-operator:$VERSION"
-CSV_VERSION=1.1.0-dev-v2.x
-OPERATOR_METADATA_IMAGE="quay.io/apicurio/apicurio-registry-operator-bundle:$CSV_VERSION"
-OLM_CSV="apicurio-registry-operator.v$CSV_VERSION"
-CATALOG_SOURCE_IMAGE="quay.io/apicurio/apicurio-registry-operator-catalog:latest$DASH_VERSION"
+if [[ ! $OPERATOR_IMAGE_REPOSITORY ]]; then
+  OPERATOR_IMAGE_REPOSITORY="quay.io/apicurio"
+fi
 
-BUNDLE_URL=${PWD}/dist/install.yaml
-OPERATOR_PROJECT_DIR=${PWD}
+PACKAGE_VERSION="$OPERATOR_VERSION-v$LC_OPERAND_VERSION"
+
+OPERATOR_IMAGE="$OPERATOR_IMAGE_REPOSITORY/apicurio-registry-operator:$OPERATOR_VERSION"
+BUNDLE_IMAGE="$OPERATOR_IMAGE_REPOSITORY/apicurio-registry-operator-bundle:$PACKAGE_VERSION"
+CATALOG_IMAGE="$OPERATOR_IMAGE_REPOSITORY/apicurio-registry-operator-catalog:latest$OPERATOR_VERSION_SUFFIX"
+
+OPERATOR_PROJECT_DIR=$(pwd)
 
 make dist
 
 git clone https://github.com/Apicurio/apicurio-registry-k8s-tests-e2e.git
-
 pushd apicurio-registry-k8s-tests-e2e
 
+git checkout master
 ./scripts/install_kind.sh
-
 make run-operator-ci
 
 popd
+
+git reset --hard
+git clean -df
+rm -rf apicurio-registry-k8s-tests-e2e dist
 
 set +e +a

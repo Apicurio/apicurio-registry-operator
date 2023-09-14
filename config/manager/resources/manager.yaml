@@ -27,11 +27,11 @@ spec:
             - name: REGISTRY_VERSION
               value: 2.x
             - name: REGISTRY_IMAGE_MEM
-              value: "quay.io/apicurio/apicurio-registry-mem:latest-snapshot"
+              value: "quay.io/apicurio/apicurio-registry-mem:2.5.x-snapshot"
             - name: REGISTRY_IMAGE_KAFKASQL
-              value: "quay.io/apicurio/apicurio-registry-kafkasql:latest-snapshot"
+              value: "quay.io/apicurio/apicurio-registry-kafkasql:2.5.x-snapshot"
             - name: REGISTRY_IMAGE_SQL
-              value: "quay.io/apicurio/apicurio-registry-sql:latest-snapshot"
+              value: "quay.io/apicurio/apicurio-registry-sql:2.5.x-snapshot"
             - name: WATCH_NAMESPACE
               valueFrom:
                 fieldRef:
@@ -65,4 +65,13 @@ spec:
             requests:
               cpu: 100m
               memory: 50Mi
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
       terminationGracePeriodSeconds: 10

@@ -4,12 +4,12 @@ on: [ pull_request ]
 
 env:
   IMAGE_REGISTRY: quay.io
-  IMAGE_REGISTRY_ORG: apicurio
 
 jobs:
   test:
     name: Build and test a pull request
     runs-on: ubuntu-latest
+    if: github.repository_owner == 'Apicurio'
     steps:
       - uses: actions/checkout@v3
 
@@ -19,19 +19,17 @@ jobs:
       - run: go version
 
       - name: Setup the environment
-        run: ./.github/scripts/setup.sh
+        run: .github/scripts/setup.sh
 
       - name: Build
-        id: build
         run: make build bundle bundle-build
 
       - name: Test
-        id: test
-        run: CI_BUILD=true ./.github/scripts/test_operator.sh
+        run: CI_BUILD=true .github/scripts/test_operator.sh
 
       - name: Collect logs
         if: failure()
-        run: ./.github/scripts/collect_logs.sh
+        run: .github/scripts/collect_logs.sh
 
       - name: Upload tests logs artifacts
         if: failure()

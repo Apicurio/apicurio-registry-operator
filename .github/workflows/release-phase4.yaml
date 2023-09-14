@@ -1,0 +1,141 @@
+name: Release Phase 4 - Tag, create a release in GitHub, cleanup and set up next dev version
+on:
+  workflow_dispatch:
+    inputs:
+      operator-next-version:
+        description: Next Operator version (-dev)
+        required: true
+      operand-next-version:
+        description: Next Operand version
+        required: true
+        default: 2.x
+      operand-next-image-tag:
+        description: Next Operand image version
+        required: true
+        default: 2.5.x-snapshot
+      release-branch:
+        description: Branch used during the release
+        required: true
+        default: release
+      debug:
+        type: boolean
+        description: Debug with tmate on failure
+
+env:
+  RELEASE_BRANCH: ${{ github.event.inputs.release-branch }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'Apicurio'
+    steps:
+
+      - name: Checkout the Operator repository
+        run: |
+          git init
+          git config user.name apicurio-ci
+          git config user.email apicurio.ci@gmail.com
+          git remote add origin "https://apicurio-ci:${{ secrets.ACCESS_TOKEN }}@github.com/Apicurio/apicurio-registry-operator.git"
+          git fetch
+          git checkout --track "origin/$RELEASE_BRANCH"
+
+      - name: Configure env. variables
+        run: |
+          echo "OPERATOR_VERSION=$(make get-variable-operator-version)" >> "$GITHUB_ENV"
+          echo "OPERAND_VERSION=$(make get-variable-operand-version)" >> "$GITHUB_ENV"
+          echo "GH_TOKEN=${{ secrets.JSENKO_ACCESS_TOKEN }}" >> "$GITHUB_ENV"
+          echo "PACKAGE_VERSION=$(make get-variable-package-version)" >> "$GITHUB_ENV"
+
+      - name: Configure more env. variables
+        run: |
+          echo "RELEASE_TAG=v$OPERATOR_VERSION" >> "$GITHUB_ENV"
+          echo "RELEASE_TAG_FULL=v$PACKAGE_VERSION" >> "$GITHUB_ENV"   
+          echo "DIST_FILE=apicurio-registry-operator-$PACKAGE_VERSION.tar.gz" >> "$GITHUB_ENV"
+
+      - name: Run make info
+        run: make info
+
+      - name: Create git tags
+        run: |
+          git tag -a "$RELEASE_TAG" -m "Apicurio Registry Operator $OPERATOR_VERSION"
+          git tag -a "$RELEASE_TAG_FULL" -m "Apicurio Registry Operator $OPERATOR_VERSION with Apicurio Registry $OPERAND_VERSION"
+
+      - name: Cleanup
+        run: |
+          cp -t /tmp "$DIST_FILE"
+          make clean
+          git add .
+          git commit -m "release: clean release files"
+
+      - name: Record previous package version
+        run: |
+          make release-update-previous-package-version
+          git add .
+          git commit -m "release: update previous package version"
+
+      - name: Update env. variables
+        run: |
+          echo "OPERATOR_VERSION=${{ github.event.inputs.operator-next-version }}" >> "$GITHUB_ENV"
+          echo "OPERAND_VERSION=${{ github.event.inputs.operand-next-version }}" >> "$GITHUB_ENV"
+
+      - name: Set next Operator version
+        run: |
+          SNAPSHOT=true make release-set-operator-version
+          git add .
+          git commit -m "release: update to next operator version"
+
+      - name: Set next Operand version
+        run: |
+          OPERAND_IMAGE_TAG="${{ github.event.inputs.operand-next-image-tag }}" make release-set-operand-version
+          git add .
+          git commit -m "release: update to next operand version"
+
+      - name: Set next api-model version
+        run: |
+          SNAPSHOT_VERSION="$(make get-variable-operator-version-prefix)-SNAPSHOT"
+          cd api-model
+          ./mvnw -B versions:set "-DnewVersion=$SNAPSHOT_VERSION" -DgenerateBackupPoms=false -DprocessAllModules=true
+          git add .
+          git commit -m "release: update Java API Model to next version"
+
+      - name: Update resources
+        run: |
+          make release-update-install-file
+          git add .
+          git commit -m "release: update resources"
+
+      - name: Push release branch last time
+        run: |
+          git push origin "$RELEASE_BRANCH"
+
+      - name: Merge release branch
+        run: |
+          git checkout --track origin/main
+          git merge --ff-only "$RELEASE_BRANCH"
+          git push origin main
+
+      - name: Push release tag
+        run: |
+          git push origin "$RELEASE_TAG"
+          git push origin "$RELEASE_TAG_FULL"
+
+      - name: Create a GitHub release
+        run: |
+          gh repo set-default Apicurio/apicurio-registry-operator 
+          RELEASE_NOTES="docs/resources/release-notes/$PACKAGE_VERSION.md"
+          if [[ ! -f $RELEASE_NOTES ]]; then
+            echo "Missing release notes file: $RELEASE_NOTES"
+            exit 1
+          fi
+          gh release create "$RELEASE_TAG_FULL" --latest \
+            --title "Apicurio Registry Operator $PACKAGE_VERSION" \
+            -F "$RELEASE_NOTES" \
+            "/tmp/$DIST_FILE"
+
+      - name: Delete release branch
+        run: |
+          git push --delete origin "$RELEASE_BRANCH"
+
+      - name: Setup tmate session
+        if: failure() && inputs.debug
+        uses: mxschmitt/action-tmate@v3
