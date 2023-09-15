@@ -1,15 +1,18 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0"?>
+<project
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.apicurio</groupId>
     <artifactId>apicurio-registry-operator-api-model</artifactId>
     <version>1.1.0-SNAPSHOT</version>
+
     <name>apicurio-registry-operator-api-model</name>
 
     <url>https://www.apicur.io/</url>
-    <description>Open Source API &amp; Schema Registry</description>
+    <description>Open Source API and Schema Registry</description>
 
     <organization>
         <name>Red Hat</name>
@@ -19,24 +22,14 @@
     <developers>
         <developer>
             <name>Jakub Senko</name>
-            <id>JakubSenko</id>
-            <email>jsenko@redhat.com</email>
+            <id>jsenko</id>
+            <email>m@jsenko.net</email>
             <organization>Red Hat</organization>
             <roles>
                 <role>Project Lead</role>
                 <role>Developer</role>
             </roles>
             <timezone>+1</timezone>
-        </developer>
-        <developer>
-            <name>Eric Wittmann</name>
-            <id>EricWittmann</id>
-            <email>eric.wittmann@redhat.com</email>
-            <organization>Red Hat</organization>
-            <roles>
-                <role>Developer</role>
-            </roles>
-            <timezone>-5</timezone>
         </developer>
     </developers>
 
@@ -60,95 +53,127 @@
     </scm>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
-        <timestamp>${maven.build.timestamp}</timestamp>
+        <!-- Config -->
+        <crd.path>${project.basedir}/../bundle/${packageVersion}/manifests/registry.apicur.io_apicurioregistries.yaml
+        </crd.path>
 
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
 
-        <version.fabric8>5.12.1</version.fabric8>
-        <sundrio.version>0.40.1</sundrio.version>
-        <version.slf4j>1.7.36</version.slf4j>
+        <version.fabric8>6.8.1</version.fabric8>
+        <version.sundrio>0.100.2</version.sundrio>
+        <version.lombok>1.18.24</version.lombok>
 
-        <!-- Plugins -->
+        <!-- Test -->
+        <version.slf4j>1.7.36</version.slf4j>
+        <version.junit-jupiter>5.9.0</version.junit-jupiter>
+        <version.junit-jupiter.platform-launcher>1.9.0</version.junit-jupiter.platform-launcher>
+
+        <!-- Plugin -->
         <version.maven-javadoc-plugin>3.3.1</version.maven-javadoc-plugin>
         <version.maven-source-plugin>3.2.1</version.maven-source-plugin>
         <version.maven-compiler-plugin>3.9.0</version.maven-compiler-plugin>
-        <surefire-plugin.version>2.22.2</surefire-plugin.version>
-        <surefire-junit.version>5.9.0</surefire-junit.version>
-        <junit.platform-launcher.version>1.9.0</junit.platform-launcher.version>
+        <version.maven-surefire-plugin>2.22.2</version.maven-surefire-plugin>
+
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>generator-annotations</artifactId>
+            <version>${version.fabric8}</version>
+        </dependency>
         <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>kubernetes-client</artifactId>
             <version>${version.fabric8}</version>
         </dependency>
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-model-core</artifactId>
-            <version>${version.fabric8}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-model-networking</artifactId>
-            <version>${version.fabric8}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-model-common</artifactId>
-            <version>${version.fabric8}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-model-apiextensions</artifactId>
-            <version>${version.fabric8}</version>
-        </dependency>
+
         <dependency>
             <groupId>io.sundr</groupId>
             <artifactId>builder-annotations</artifactId>
-            <version>${sundrio.version}</version>
+            <version>${version.sundrio}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.24</version>
+            <version>${version.lombok}</version>
+            <scope>provided</scope>
         </dependency>
+
+        <!-- Test -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${version.slf4j}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>${version.slf4j}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>${surefire-junit.version}</version>
+            <version>${version.junit-jupiter}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>${surefire-junit.version}</version>
+            <version>${version.junit-jupiter}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
-            <version>${junit.platform-launcher.version}</version>
+            <version>${version.junit-jupiter.platform-launcher}</version>
             <scope>provided</scope>
         </dependency>
+
     </dependencies>
 
     <build>
         <plugins>
+
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>java-generator-maven-plugin</artifactId>
+                <version>${version.fabric8}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <source>${crd.path}</source>
+                    <extraAnnotations>true</extraAnnotations>
+                    <packageOverrides>
+                        <io.apicur.registry.v1>io.apicurio.registry.operator.api.v1.model</io.apicur.registry.v1>
+                    </packageOverrides>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jboss.jandex</groupId>
+                <artifactId>jandex-maven-plugin</artifactId>
+                <version>1.1.1</version><!--$NO-MVN-MAN-VER$-->
+                <executions>
+                    <execution>
+                        <id>make-index</id>
+                        <goals>
+                            <goal>jandex</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -159,6 +184,7 @@
                     <fork>true</fork>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -172,33 +198,18 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>${version.maven-javadoc-plugin}</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <failOnError>false</failOnError>
-                    <failOnWarnings>false</failOnWarnings>
-                    <source>${maven.compiler.source}</source>
-                </configuration>
-            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>${surefire-plugin.version}</version>
+                <version>${version.maven-surefire-plugin}</version>
             </plugin>
+
         </plugins>
     </build>
 
     <profiles>
+
         <profile>
             <id>release</id>
             <distributionManagement>
@@ -243,6 +254,7 @@
                 </plugins>
             </build>
         </profile>
+
     </profiles>
 
 </project>

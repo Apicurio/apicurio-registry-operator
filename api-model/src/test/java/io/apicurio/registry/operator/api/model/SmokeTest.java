@@ -6,7 +6,7 @@ import io.apicurio.registry.operator.api.v1.model.ApicurioRegistry;
 import io.apicurio.registry.operator.api.v1.model.ApicurioRegistryBuilder;
 import io.apicurio.registry.operator.api.v1.model.ApicurioRegistryList;
 import io.apicurio.registry.operator.api.v1.model.ApicurioRegistryListBuilder;
-import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.apicurio.registry.operator.api.v1.model.apicurioregistryspec.configuration.EnvBuilder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -14,7 +14,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-class ModelTest {
+/**
+ * @author Jakub Senko <em>m@jsenko.net</em>
+ */
+class SmokeTest {
 
     public static final ObjectMapper MAPPER;
 
@@ -25,22 +28,22 @@ class ModelTest {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Test
-    void basicSerDesTest() throws IOException {
+    void simpleSerDesTest() throws IOException {
 
         var ar1 = new ApicurioRegistryBuilder()
                 .withNewMetadata()
-                    .withName("test")
-                    .withNamespace("test-namespace")
+                .withName("test")
+                .withNamespace("test-namespace")
                 .endMetadata()
                 .withNewSpec()
-                    .withNewConfiguration()
-                        .withPersistence("mem")
-                        .withEnv(new EnvVarBuilder()
-                                .withName("VAR_1_NAME")
-                                .withValue("VAR_1_VALUE")
-                                .build()
-                        )
-                    .endConfiguration()
+                .withNewConfiguration()
+                .withPersistence("mem")
+                .withEnv(new EnvBuilder()
+                        .withName("VAR_1_NAME")
+                        .withValue("VAR_1_VALUE")
+                        .build()
+                )
+                .endConfiguration()
                 .endSpec()
                 .build();
 

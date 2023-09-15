@@ -1,8 +1,8 @@
 name: Validate API Model
-on:
-  push:
-  pull_request:
-    branches: [ main ]
+on: { }
+#  push:
+#  pull_request:
+#    branches: [ main ]
 
 jobs:
   build-project:
@@ -29,4 +29,4 @@ jobs:
 
       - name: Build Project
         if: steps.filter.outputs.api-model == 'true'
-        run: cd api-model && ./mvnw clean install
+        run: cd api-model && mvn clean install

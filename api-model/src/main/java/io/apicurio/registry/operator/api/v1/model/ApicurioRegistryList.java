@@ -16,8 +16,8 @@
 
 package io.apicurio.registry.operator.api.v1.model;
 
+import io.fabric8.kubernetes.api.model.DefaultKubernetesResourceList;
 import io.fabric8.kubernetes.api.model.ListMeta;
-import io.fabric8.kubernetes.client.CustomResourceList;
 import io.sundr.builder.annotations.Buildable;
 import lombok.ToString;
 
@@ -29,14 +29,16 @@ import java.util.Objects;
  * so only items are used in the comparison.
  * If full comparison is needed, use the `*Full` methods.
  * Kind and version are not compared.
+ *
+ * @author Jakub Senko <em>m@jsenko.net</em>
  */
 @Buildable(
         editableEnabled = false,
-        builderPackage = Constants.FABRIC8_KUBERNETES_API
+        builderPackage = "io.fabric8.kubernetes.api.builder"
 )
 @ToString
 // NOTE: We can not use Lombok @Getter and @Setter because it does not work with fabric8 generator.
-public class ApicurioRegistryList extends CustomResourceList<ApicurioRegistry> {
+public class ApicurioRegistryList extends DefaultKubernetesResourceList<ApicurioRegistry> {
 
     private static final long serialVersionUID = -2979078702023320890L;
 
@@ -96,5 +98,15 @@ public class ApicurioRegistryList extends CustomResourceList<ApicurioRegistry> {
     public int hashCodeFull() {
         return Objects.hash(getMetadata(),
                 getItems());
+    }
+
+    @Override
+    public String toString() {
+        return "ApicurioRegistryList(" +
+                "kind=" + getKind() + ", " +
+                "apiVersion=" + getApiVersion() + ", " +
+                "metadata=" + getMetadata() + ", " +
+                "items=" + getItems() +
+                ")";
     }
 }
