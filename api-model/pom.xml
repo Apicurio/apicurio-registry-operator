@@ -5,7 +5,7 @@
 
     <groupId>io.apicurio</groupId>
     <artifactId>apicurio-registry-operator-api-model</artifactId>
-    <version>2.3.1.Final</version>
+    <version>2.3.2-SNAPSHOT</version>
     <name>apicurio-registry-operator-api-model</name>
 
     <url>https://www.apicur.io/</url>
