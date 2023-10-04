@@ -18,6 +18,7 @@ package io.apicurio.registry.operator.api.v1.model;
 
 import io.fabric8.kubernetes.api.model.Affinity;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.Toleration;
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
@@ -47,6 +48,10 @@ public class ApicurioRegistrySpecDeployment {
     private String image;
 
     private List<LocalObjectReference> imagePullSecrets;
+
+    private ApicurioRegistrySpecDeploymentManagedResources managedResources;
+
+    private PodTemplateSpec podTemplateSpecPreview;
 
     public Integer getReplicas() {
         return replicas;
@@ -102,5 +107,21 @@ public class ApicurioRegistrySpecDeployment {
 
     public void setImagePullSecrets(List<LocalObjectReference> imagePullSecrets) {
         this.imagePullSecrets = imagePullSecrets;
+    }
+
+    public ApicurioRegistrySpecDeploymentManagedResources getManagedResources() {
+        return managedResources;
+    }
+
+    public void setManagedResources(ApicurioRegistrySpecDeploymentManagedResources managedResources) {
+        this.managedResources = managedResources;
+    }
+
+    public PodTemplateSpec getPodTemplateSpecPreview() {
+        return podTemplateSpecPreview;
+    }
+
+    public void setPodTemplateSpecPreview(PodTemplateSpec podTemplateSpecPreview) {
+        this.podTemplateSpecPreview = podTemplateSpecPreview;
     }
 }

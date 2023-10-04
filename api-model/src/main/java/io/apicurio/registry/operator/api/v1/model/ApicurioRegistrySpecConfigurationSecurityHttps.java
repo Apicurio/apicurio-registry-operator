@@ -16,12 +16,9 @@
 
 package io.apicurio.registry.operator.api.v1.model;
 
-import io.fabric8.kubernetes.api.model.Condition;
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-
-import java.util.List;
 
 @Buildable(
         editableEnabled = false,
@@ -30,35 +27,25 @@ import java.util.List;
 @EqualsAndHashCode
 @ToString
 // NOTE: We can not use Lombok @Getter and @Setter because it does not work with fabric8 generator.
-public class ApicurioRegistryStatus {
+public class ApicurioRegistrySpecConfigurationSecurityHttps {
 
-    private ApicurioRegistryStatusInfo info;
+    private boolean disableHttp;
 
-    private List<Condition> conditions;
+    private String secretName;
 
-    private List<ApicurioRegistryStatusManagedResource> managedResources;
-
-    public ApicurioRegistryStatusInfo getInfo() {
-        return info;
+    public boolean isDisableHttp() {
+        return disableHttp;
     }
 
-    public void setInfo(ApicurioRegistryStatusInfo info) {
-        this.info = info;
+    public void setDisableHttp(boolean disableHttp) {
+        this.disableHttp = disableHttp;
     }
 
-    public List<Condition> getConditions() {
-        return conditions;
+    public String getSecretName() {
+        return secretName;
     }
 
-    public void setConditions(List<Condition> conditions) {
-        this.conditions = conditions;
-    }
-
-    public List<ApicurioRegistryStatusManagedResource> getManagedResources() {
-        return managedResources;
-    }
-
-    public void setManagedResources(List<ApicurioRegistryStatusManagedResource> managedResources) {
-        this.managedResources = managedResources;
+    public void setSecretName(String secretName) {
+        this.secretName = secretName;
     }
 }

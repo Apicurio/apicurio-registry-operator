@@ -31,11 +31,21 @@ public class ApicurioRegistrySpecConfigurationSecurity {
 
     private ApicurioRegistrySpecConfigurationSecurityKeycloak keycloak;
 
+    private ApicurioRegistrySpecConfigurationSecurityHttps https;
+
     public ApicurioRegistrySpecConfigurationSecurityKeycloak getKeycloak() {
         return keycloak;
     }
 
     public void setKeycloak(ApicurioRegistrySpecConfigurationSecurityKeycloak keycloak) {
         this.keycloak = keycloak;
+    }
+
+    public ApicurioRegistrySpecConfigurationSecurityHttps getHttps() {
+        return https;
+    }
+
+    public void setHttps(ApicurioRegistrySpecConfigurationSecurityHttps https) {
+        this.https = https;
     }
 }

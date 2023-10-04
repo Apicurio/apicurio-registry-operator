@@ -42,6 +42,8 @@ public class ApicurioRegistrySpecConfiguration {
 
     private String logLevel;
 
+    private String registryLogLevel;
+
     private ApicurioRegistrySpecConfigurationSecurity security;
 
     private List<EnvVar> env;
@@ -84,6 +86,14 @@ public class ApicurioRegistrySpecConfiguration {
 
     public void setLogLevel(String logLevel) {
         this.logLevel = logLevel;
+    }
+
+    public String getRegistryLogLevel() {
+        return registryLogLevel;
+    }
+
+    public void setRegistryLogLevel(String registryLogLevel) {
+        this.registryLogLevel = registryLogLevel;
     }
 
     public ApicurioRegistrySpecConfigurationSecurity getSecurity() {

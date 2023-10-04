@@ -16,7 +16,9 @@
 
 package io.apicurio.registry.operator.api.v1.model;
 
-import io.fabric8.kubernetes.api.model.Condition;
+import io.fabric8.kubernetes.api.model.Affinity;
+import io.fabric8.kubernetes.api.model.LocalObjectReference;
+import io.fabric8.kubernetes.api.model.Toleration;
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -30,35 +32,35 @@ import java.util.List;
 @EqualsAndHashCode
 @ToString
 // NOTE: We can not use Lombok @Getter and @Setter because it does not work with fabric8 generator.
-public class ApicurioRegistryStatus {
+public class ApicurioRegistrySpecDeploymentManagedResources {
 
-    private ApicurioRegistryStatusInfo info;
+    private boolean disableIngress;
 
-    private List<Condition> conditions;
+    private boolean disableNetworkPolicy;
 
-    private List<ApicurioRegistryStatusManagedResource> managedResources;
+    private boolean disablePodDisruptionBudget;
 
-    public ApicurioRegistryStatusInfo getInfo() {
-        return info;
+    public boolean isDisableIngress() {
+        return disableIngress;
     }
 
-    public void setInfo(ApicurioRegistryStatusInfo info) {
-        this.info = info;
+    public void setDisableIngress(boolean disableIngress) {
+        this.disableIngress = disableIngress;
     }
 
-    public List<Condition> getConditions() {
-        return conditions;
+    public boolean isDisableNetworkPolicy() {
+        return disableNetworkPolicy;
     }
 
-    public void setConditions(List<Condition> conditions) {
-        this.conditions = conditions;
+    public void setDisableNetworkPolicy(boolean disableNetworkPolicy) {
+        this.disableNetworkPolicy = disableNetworkPolicy;
     }
 
-    public List<ApicurioRegistryStatusManagedResource> getManagedResources() {
-        return managedResources;
+    public boolean isDisablePodDisruptionBudget() {
+        return disablePodDisruptionBudget;
     }
 
-    public void setManagedResources(List<ApicurioRegistryStatusManagedResource> managedResources) {
-        this.managedResources = managedResources;
+    public void setDisablePodDisruptionBudget(boolean disablePodDisruptionBudget) {
+        this.disablePodDisruptionBudget = disablePodDisruptionBudget;
     }
 }
