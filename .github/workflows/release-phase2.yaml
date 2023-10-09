@@ -62,7 +62,8 @@ jobs:
           git push -f source "$RELEASE_BRANCH"
           gh repo set-default k8s-operatorhub/community-operators
           # GitHub user ID must be used, the "-u" workaround did not work:
-          gh pr create --title "$TITLE" --body "$BODY" --base main --head "jsenko:$RELEASE_BRANCH" 
+          # Temporarily disabled:
+          # gh pr create --title "$TITLE" --body "$BODY" --base main --head "jsenko:$RELEASE_BRANCH" 
 
       - name: Checkout the Openshift Community Operators repository
         run: |
