@@ -59,9 +59,10 @@ jobs:
           cp -r "../apicurio-registry-operator/bundle/$PACKAGE_VERSION" operators/apicurio-registry
           git add .
           git commit -s -m "$TITLE"
-          git push -u -f source "$RELEASE_BRANCH"
+          git push -f source "$RELEASE_BRANCH"
           gh repo set-default k8s-operatorhub/community-operators
-          gh pr create --title "$TITLE" --body "$BODY" --base origin/main --head "source:$RELEASE_BRANCH"
+          # GitHub user ID must be used, the "-u" workaround did not work:
+          gh pr create --title "$TITLE" --body "$BODY" --base main --head "jsenko:$RELEASE_BRANCH" 
 
       - name: Checkout the Openshift Community Operators repository
         run: |
@@ -86,9 +87,10 @@ jobs:
           cp -r "../apicurio-registry-operator/bundle/$PACKAGE_VERSION" operators/apicurio-registry
           git add .
           git commit -s -m "$TITLE"
-          git push -u -f source "$RELEASE_BRANCH"
+          git push -f source "$RELEASE_BRANCH"
           gh repo set-default redhat-openshift-ecosystem/community-operators-prod
-          gh pr create --title "$TITLE" --body "$BODY" --base origin/main --head "source:$RELEASE_BRANCH"
+          # GitHub user ID must be used, the "-u" workaround did not work:
+          gh pr create --title "$TITLE" --body "$BODY" --base main --head "jsenko:$RELEASE_BRANCH"
 
       - name: Setup tmate session
         if: failure() && inputs.debug
