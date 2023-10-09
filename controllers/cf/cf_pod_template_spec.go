@@ -115,11 +115,12 @@ Reserved:
 - metadata
   - metadata.annotations [alternative exists]
   - metadata.labels [alternative exists]
+
 - spec
   - spec.affinity [alternative exists]
   - spec.containers[*]
-    - spec.containers[name = "registry"].env [alternative exists]
-    - spec.containers[name = "registry"].image [alternative exists]
+  - spec.containers[name = "registry"].env [alternative exists]
+  - spec.containers[name = "registry"].image [alternative exists]
   - spec.imagePullSecrets [alternative exists]
   - spec.tolerations [alternative exists]
 */
