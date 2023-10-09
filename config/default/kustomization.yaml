@@ -1,14 +1,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 commonLabels:
   apicur.io/name: apicurio-registry-operator
   apicur.io/type: operator
-  apicur.io/version: 1.1.0-dev
-
+  apicur.io/version: 1.1.0
 namespace: apicurio-registry-operator-namespace
-
 resources:
-- ../crd
-- ../rbac
-- ../manager
+  - ../crd
+  - ../rbac
+  - ../manager
