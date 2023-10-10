@@ -25,13 +25,13 @@ spec:
           imagePullPolicy: Always
           env:
             - name: REGISTRY_VERSION
-              value: 2.4.12.Final
+              value: 2.x
             - name: REGISTRY_IMAGE_MEM
-              value: "quay.io/apicurio/apicurio-registry-mem:2.4.12.Final"
+              value: "quay.io/apicurio/apicurio-registry-mem:2.5.x-snapshot"
             - name: REGISTRY_IMAGE_KAFKASQL
-              value: "quay.io/apicurio/apicurio-registry-kafkasql:2.4.12.Final"
+              value: "quay.io/apicurio/apicurio-registry-kafkasql:2.5.x-snapshot"
             - name: REGISTRY_IMAGE_SQL
-              value: "quay.io/apicurio/apicurio-registry-sql:2.4.12.Final"
+              value: "quay.io/apicurio/apicurio-registry-sql:2.5.x-snapshot"
             - name: WATCH_NAMESPACE
               valueFrom:
                 fieldRef:
