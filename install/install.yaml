@@ -7,7 +7,7 @@ metadata:
   labels:
     apicur.io/name: apicurio-registry-operator
     apicur.io/type: operator
-    apicur.io/version: 1.1.0
+    apicur.io/version: 1.2.0-dev
   name: apicurioregistries.registry.apicur.io
 spec:
   group: registry.apicur.io
@@ -4488,7 +4488,7 @@ metadata:
   labels:
     apicur.io/name: apicurio-registry-operator
     apicur.io/type: operator
-    apicur.io/version: 1.1.0
+    apicur.io/version: 1.2.0-dev
   name: apicurio-registry-operator
   namespace: apicurio-registry-operator-namespace
 ---
@@ -4498,7 +4498,7 @@ metadata:
   labels:
     apicur.io/name: apicurio-registry-operator
     apicur.io/type: operator
-    apicur.io/version: 1.1.0
+    apicur.io/version: 1.2.0-dev
   name: apicurio-registry-operator-leader-election-role
   namespace: apicurio-registry-operator-namespace
 rules:
@@ -4541,7 +4541,7 @@ metadata:
   labels:
     apicur.io/name: apicurio-registry-operator
     apicur.io/type: operator
-    apicur.io/version: 1.1.0
+    apicur.io/version: 1.2.0-dev
   name: apicurio-registry-operator-role
 rules:
 - apiGroups:
@@ -4641,7 +4641,7 @@ metadata:
   labels:
     apicur.io/name: apicurio-registry-operator
     apicur.io/type: operator
-    apicur.io/version: 1.1.0
+    apicur.io/version: 1.2.0-dev
   name: apicurio-registry-operator-leader-election-rolebinding
   namespace: apicurio-registry-operator-namespace
 roleRef:
@@ -4659,7 +4659,7 @@ metadata:
   labels:
     apicur.io/name: apicurio-registry-operator
     apicur.io/type: operator
-    apicur.io/version: 1.1.0
+    apicur.io/version: 1.2.0-dev
   name: apicurio-registry-operator-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -4676,7 +4676,7 @@ metadata:
   labels:
     apicur.io/name: apicurio-registry-operator
     apicur.io/type: operator
-    apicur.io/version: 1.1.0
+    apicur.io/version: 1.2.0-dev
     name: apicurio-registry-operator
   name: apicurio-registry-operator
   namespace: apicurio-registry-operator-namespace
@@ -4686,14 +4686,14 @@ spec:
     matchLabels:
       apicur.io/name: apicurio-registry-operator
       apicur.io/type: operator
-      apicur.io/version: 1.1.0
+      apicur.io/version: 1.2.0-dev
       name: apicurio-registry-operator
   template:
     metadata:
       labels:
         apicur.io/name: apicurio-registry-operator
         apicur.io/type: operator
-        apicur.io/version: 1.1.0
+        apicur.io/version: 1.2.0-dev
         name: apicurio-registry-operator
     spec:
       containers:
@@ -4703,13 +4703,13 @@ spec:
         - /manager
         env:
         - name: REGISTRY_VERSION
-          value: 2.4.12.Final
+          value: 2.x
         - name: REGISTRY_IMAGE_MEM
-          value: quay.io/apicurio/apicurio-registry-mem:2.4.12.Final
+          value: quay.io/apicurio/apicurio-registry-mem:2.5.x-snapshot
         - name: REGISTRY_IMAGE_KAFKASQL
-          value: quay.io/apicurio/apicurio-registry-kafkasql:2.4.12.Final
+          value: quay.io/apicurio/apicurio-registry-kafkasql:2.5.x-snapshot
         - name: REGISTRY_IMAGE_SQL
-          value: quay.io/apicurio/apicurio-registry-sql:2.4.12.Final
+          value: quay.io/apicurio/apicurio-registry-sql:2.5.x-snapshot
         - name: WATCH_NAMESPACE
           valueFrom:
             fieldRef:
@@ -4724,7 +4724,7 @@ spec:
               fieldPath: metadata.namespace
         - name: OPERATOR_NAME
           value: apicurio-registry-operator
-        image: quay.io/apicurio/apicurio-registry-operator:1.1.0
+        image: quay.io/apicurio/apicurio-registry-operator:1.2.0-dev
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
