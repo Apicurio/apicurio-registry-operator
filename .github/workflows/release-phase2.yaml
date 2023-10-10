@@ -27,6 +27,7 @@ jobs:
           git remote add origin "https://apicurio-ci:${{ secrets.ACCESS_TOKEN }}@github.com/Apicurio/apicurio-registry-operator.git"
           git fetch          
           git checkout --track "origin/$RELEASE_BRANCH"
+          make release-fix-annotations
 
       - name: Run make info
         run: make info

@@ -371,7 +371,7 @@ packagemanifests: manifests install-operator-sdk install-yq ## Generate package 
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate packagemanifests -q --version $(PACKAGE_VERSION) $(PACKAGE_MANIFESTS_OPTS)
 	# Workaround for https://github.com/operator-framework/operator-lifecycle-manager/issues/1608
 	# See https://github.com/operator-framework/operator-lifecycle-manager/issues/952#issuecomment-639657949
-	$(YQ) e ".spec.install.spec.deployments[0].name = .spec.install.spec.deployments[0].name + \"-v$(OPERATOR_VERSION)\"" -i "packagemanifests/$(PACKAGE_VERSION)/apicurio-registry-operator.clusterserviceversion.yaml"
+	$(YQ) e ".spec.install.spec.deployments[0].name = .spec.install.spec.deployments[0].name + \"-v$(PACKAGE_VERSION)\"" -i "packagemanifests/$(PACKAGE_VERSION)/apicurio-registry-operator.clusterserviceversion.yaml"
 
 
 .PHONY: docs
@@ -500,3 +500,9 @@ release-set-operand-version: install-yq
 .PHONY: release-update-previous-package-version
 release-update-previous-package-version:
 	sed -i 's/^\( *PREVIOUS_PACKAGE_VERSION *= *\)\([^ ]*\)\(.*\)$$/\1$(PACKAGE_VERSION)\3/g' Makefile
+
+
+.PHONY: release-fix-annotations
+release-fix-annotations:
+	$(YQ) e  '.annotations."operators.operatorframework.io.bundle.package.v1" = "apicurio-registry"' -i bundle/$(PACKAGE_VERSION)/metadata/annotations.yaml
+	sed -i 's/^\( *LABEL *operators.operatorframework.io.bundle.package.v1 *= *\)\(apicurio-registry-operator\)\(.*\)$$/\1apicurio-registry\3/g' bundle/$(PACKAGE_VERSION)/bundle.Dockerfile
