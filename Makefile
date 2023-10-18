@@ -73,9 +73,9 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 # of numbers, which must be incremented on each release.
 # It is not the same as PACKAGE_VERSION in case there is branching
 # in the future
-CATALOG_TAG ?= 1
+CATALOG_TAG ?= 2
 USE_OFFICIAL_PREVIOUS_CATALOG ?= true
-# PREVIOUS_CATALOG_TAG ?= latest$(OPERATOR_VERSION_SUFFIX)
+PREVIOUS_CATALOG_TAG ?= latest
 # TODO ^ after release
 
 CATALOG_IMAGE_NAME = $(OPERATOR_IMAGE_NAME)-catalog
@@ -452,7 +452,7 @@ catalog-build: install-opm ## Build the catalog image
 	@echo "Note: You need to build and push your bundle image before building a catalog image."
 	@echo "Run 'make bundle-build bundle-push' to do this."
 	# TODO: Remove the first bundle in the list after we can start using previous catalog images
-	$(OPM) index add --container-tool docker --bundles quay.io/apicurio/apicurio-registry-operator-bundle:1.0.0-v2.0.0.final,$(BUNDLE_IMAGE) --tag $(CATALOG_IMAGE) $(FROM_INDEX_OPT)
+	$(OPM) index add --container-tool docker --bundles $(BUNDLE_IMAGE) --tag $(CATALOG_IMAGE) $(FROM_INDEX_OPT)
 ifeq ($(ADD_LATEST_TAG),true)
 	docker tag $(CATALOG_IMAGE) $(CATALOG_IMAGE_NAME):latest$(OPERATOR_VERSION_SUFFIX)
 endif
