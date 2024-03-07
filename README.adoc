@@ -20,7 +20,7 @@ The Apicurio Registry Operator supports the following platform versions:
 == Build Requirements
 
 * Docker
-* https://golang.org/[go] v1.17 (with `export GO111MODULE='on'`, `$GOPATH` and `$GOROOT`)
+* https://golang.org/[go] v1.20 (with `export GO111MODULE='on'`, `$GOPATH` and `$GOROOT`)
 * https://sdk.operatorframework.io/docs/installation/[Operator SDK] v1.14
 * A running Kubernetes (https://minikube.sigs.k8s.io/docs/start/[Minikube]) or OpenShift (https://www.okd.io/minishift/[Minishift]) cluster with system admin access
 
