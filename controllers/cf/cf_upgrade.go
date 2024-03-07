@@ -46,11 +46,13 @@ func (this *UpgradeCF) Sense() {
 		oldContainer := common.GetContainerByName(containers, this.ctx.GetAppName().Str())
 		newContainer := common.GetContainerByName(containers, factory.REGISTRY_CONTAINER_NAME)
 		if oldContainer != nil {
-			if newContainer != nil {
-				this.log.Warnw("cannot upgrade: both containers named " + oldContainer.Name + " and " + newContainer.Name +
-					" found in the Deployment")
-			} else {
+			if newContainer == nil {
 				this.containerNameUpgradeNeeded = true
+			} else {
+				if oldContainer.Name != newContainer.Name {
+					this.log.Warnw("cannot upgrade: both containers named " + oldContainer.Name + " and " + newContainer.Name +
+						" found in the Deployment")
+				} // else, just by coincidence, the CRD is named factory.REGISTRY_CONTAINER_NAME
 			}
 		}
 	}

@@ -11,10 +11,11 @@ const (
 	// - Remove support for variables from Deployment
 	// - Make sure unused env. variables are deleted (see cf_kafkasql_security_scram)
 	// - Operator-set variables are now lowest precedence
-	PRIORITY_DEPLOYMENT Priority = 0 // TODO Deprecated
-	PRIORITY_SPEC       Priority = 1
-	PRIORITY_OPERATOR   Priority = 2
-	PRIORITY_MAX        Priority = PRIORITY_OPERATOR
+	PRIORITY_MIN        Priority = 0
+	PRIORITY_DEPLOYMENT Priority = 1 // TODO Deprecated
+	PRIORITY_SPEC       Priority = 2
+	PRIORITY_OPERATOR   Priority = 3
+	PRIORITY_MAX        Priority = 4
 )
 
 func (this Priority) toInt() int {
