@@ -175,7 +175,7 @@ func (this *HttpsCF) Sense() {
 		"this.containerHttpPortExists", this.containerHttpPortExists)
 
 	// Observation #5
-	// Find out if JAVA_OPTIONS is set
+	// Find out if Java options is set
 	this.targetJavaOptions = map[string]string{
 		"-Dquarkus.http.ssl.certificate.file":     "/certs/tls.crt",
 		"-Dquarkus.http.ssl.certificate.key-file": "/certs/tls.key",
