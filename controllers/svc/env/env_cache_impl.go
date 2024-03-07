@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+const JAVA_OPTIONS = "JAVA_OPTS_APPEND"
+
 type envCacheEntry struct {
 	value        *core.EnvVar
 	dependencies []string
@@ -221,7 +223,7 @@ func (this *envCache) processWithDependencies(depth int, processed map[string]bo
 
 func ParseJavaOptionsMap(envCache EnvCache) map[string]string {
 	javaOptions := make(map[string]string, 0)
-	if entry, exists := envCache.Get("JAVA_OPTIONS"); exists {
+	if entry, exists := envCache.Get(JAVA_OPTIONS); exists {
 		for _, f := range strings.Fields(entry.GetValue().Value) {
 			parts := strings.SplitN(f, "=", 2)
 			if len(parts) == 2 {
@@ -236,7 +238,6 @@ func ParseJavaOptionsMap(envCache EnvCache) map[string]string {
 }
 
 func SaveJavaOptionsMap(envCache EnvCache, options map[string]string, lock bool) {
-	const name = "JAVA_OPTIONS"
 	javaOptions := ""
 	for k, v := range options {
 		if v == "" {
@@ -247,13 +248,13 @@ func SaveJavaOptionsMap(envCache EnvCache, options map[string]string, lock bool)
 		javaOptions = javaOptions + " "
 	}
 	if javaOptions != "" {
-		entry := NewSimpleEnvCacheEntryBuilder(name, javaOptions).
+		entry := NewSimpleEnvCacheEntryBuilder(JAVA_OPTIONS, javaOptions).
 			SetPriority(PRIORITY_SPEC)
 		if lock {
 			entry = entry.Lock()
 		}
 		envCache.Set(entry.Build())
 	} else {
-		envCache.DeleteByName(name)
+		envCache.DeleteByName(JAVA_OPTIONS)
 	}
 }
