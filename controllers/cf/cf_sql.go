@@ -6,6 +6,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/loop/context"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
+	"go.uber.org/zap"
 )
 
 var _ loop.ControlFunction = &SqlCF{}
@@ -19,13 +20,14 @@ type SqlCF struct {
 	svcResourceCache resources.ResourceCache
 	svcEnvCache      env.EnvCache
 	persistence      string
-	url              string
-	user             string
-	password         string
 	valid            bool
-	envUrl           string
-	envUser          string
-	envPassword      string
+	url              string
+	envUrl           env.EnvCacheEntry
+	user             string
+	envUser          env.EnvCacheEntry
+	password         string
+	envPassword      env.EnvCacheEntry
+	log              *zap.SugaredLogger
 }
 
 func NewSqlCF(ctx context.LoopContext) loop.ControlFunction {
@@ -34,13 +36,14 @@ func NewSqlCF(ctx context.LoopContext) loop.ControlFunction {
 		svcResourceCache: ctx.GetResourceCache(),
 		svcEnvCache:      ctx.GetEnvCache(),
 		persistence:      "",
-		url:              "",
-		user:             "",
-		password:         "",
 		valid:            true,
-		envUrl:           "",
-		envUser:          "",
-		envPassword:      "",
+		url:              "",
+		envUrl:           nil,
+		user:             "",
+		envUser:          nil,
+		password:         "",
+		envPassword:      nil,
+		log:              ctx.GetLog().Sugar(),
 	}
 }
 
@@ -60,43 +63,89 @@ func (this *SqlCF) Sense() {
 		// TODO Use secrets!
 	}
 
-	// Observation #2 + #3
+	// Observation #2
 	// Is the correct persistence type selected?
 	// Validate the config values
-	this.valid = this.persistence == "sql" && this.url != "" && this.user != ""
+	this.valid = this.persistence == "sql" && (this.url != "" || this.envUrl != nil) && (this.user != "" || this.envUser != nil)
 
-	// Observation #4
+	// Observation #3
 	// Read the env values
 	if val, exists := this.svcEnvCache.Get(ENV_REGISTRY_DATASOURCE_URL); exists {
-		this.envUrl = val.GetValue().Value
+		this.envUrl = val
+	} else {
+		this.envUrl = nil
 	}
 	if val, exists := this.svcEnvCache.Get(ENV_REGISTRY_DATASOURCE_USERNAME); exists {
-		this.envUser = val.GetValue().Value
+		this.envUser = val
+	} else {
+		this.envUser = nil
 	}
 	if val, exists := this.svcEnvCache.Get(ENV_REGISTRY_DATASOURCE_PASSWORD); exists {
-		this.envPassword = val.GetValue().Value
+		this.envPassword = val
+	} else {
+		this.envPassword = nil
 	}
-
-	// We won't actively delete old env values if not used
 }
 
 func (this *SqlCF) Compare() bool {
-	// Condition #1
-	// Is SQL & config values are valid
-	// Condition #2 + #3
-	// The required env vars are not present OR they differ
-	return this.valid && (this.url != this.envUrl ||
-		this.user != this.envUser ||
-		this.password != this.envPassword)
+	var updateUrl = false
+	if this.envUrl == nil {
+		updateUrl = this.url != ""
+	} else {
+		// Values differ, and either we override the data from spec.configuration.env (if spec...url is set), or we have created the variable ourselves and need to update it accordingly
+		updateUrl = this.url != this.envUrl.GetValue().Value && (this.url != "" || this.envUrl.GetPriority() == env.PRIORITY_OPERATOR)
+	}
+	var updateUser = false
+	if this.envUser == nil {
+		updateUser = this.user != ""
+	} else {
+		updateUser = this.user != this.envUser.GetValue().Value && (this.user != "" || this.envUser.GetPriority() == env.PRIORITY_OPERATOR)
+	}
+	var updatePassword = false
+	if this.envPassword == nil {
+		updatePassword = true // Password can be empty
+	} else {
+		updatePassword = this.password != this.envPassword.GetValue().Value && (this.password != "" || this.envPassword.GetPriority() == env.PRIORITY_OPERATOR || this.envPassword.GetPriority() == env.PRIORITY_MIN)
+	}
+	return this.valid && (updateUrl || updateUser || updatePassword)
 }
 
 func (this *SqlCF) Respond() {
-	// Response #1
-	// Just set the value(s)!
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_DATASOURCE_URL, this.url).Build())
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_DATASOURCE_USERNAME, this.user).Build())
-	this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_DATASOURCE_PASSWORD, this.password).Build())
 
+	if this.url != "" {
+		// Not empty, we just set the variable, overriding spec.configuration.env
+		this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_DATASOURCE_URL, this.url).Build())
+	} else {
+		if this.envUrl != nil {
+			if this.envUrl.GetPriority() == env.PRIORITY_OPERATOR {
+				// We've set it, we can delete it
+				this.svcEnvCache.DeleteByName(ENV_REGISTRY_DATASOURCE_URL)
+			} // else is managed by spec.configuration.env
+		} else {
+			// Invalid state
+			panic("unreachable")
+		}
+	}
+
+	if this.user != "" {
+		this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_DATASOURCE_USERNAME, this.user).Build())
+	} else {
+		if this.envUser != nil {
+			if this.envUser.GetPriority() == env.PRIORITY_OPERATOR {
+				this.svcEnvCache.DeleteByName(ENV_REGISTRY_DATASOURCE_USERNAME)
+			}
+		} else {
+			panic("unreachable")
+		}
+	}
+
+	if this.password != "" {
+		// Not empty, we just set the variable, overriding spec.configuration.env
+		this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_DATASOURCE_PASSWORD, this.password).Build())
+	} else {
+		// Set empty password, but make it overridable
+		this.svcEnvCache.Set(env.NewSimpleEnvCacheEntryBuilder(ENV_REGISTRY_DATASOURCE_PASSWORD, this.password).SetPriority(env.PRIORITY_MIN).Build())
+	}
 }
 
 func (this *SqlCF) Cleanup() bool {
