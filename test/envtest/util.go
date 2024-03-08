@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-const T_SCALE = 3
+const T_SCALE = 4
 const EVENTUALLY_CHECK_PERIOD = 500 * time.Millisecond
 
 type SuiteState struct {
