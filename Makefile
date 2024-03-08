@@ -73,10 +73,9 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 # of numbers, which must be incremented on each release.
 # It is not the same as PACKAGE_VERSION in case there is branching
 # in the future
-CATALOG_TAG ?= 1
+CATALOG_TAG ?= 2
 USE_OFFICIAL_PREVIOUS_CATALOG ?= true
-# PREVIOUS_CATALOG_TAG ?= latest$(OPERATOR_VERSION_SUFFIX)
-# TODO ^ after release
+PREVIOUS_CATALOG_TAG ?= latest$(OPERATOR_VERSION_SUFFIX)
 
 CATALOG_IMAGE_NAME = $(OPERATOR_IMAGE_NAME)-catalog
 CATALOG_IMAGE ?= $(CATALOG_IMAGE_NAME):$(CATALOG_TAG)$(OPERATOR_VERSION_SUFFIX)
@@ -185,7 +184,7 @@ endef
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 .PHONY: install-controller-gen
-install-controller-gen: ## Install controller-gen@v0.4.1
+install-controller-gen: ## Install controller-gen@v0.8.0
 	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0)
 
 
@@ -451,8 +450,7 @@ clean: ## Remove temporary and generated files
 catalog-build: install-opm ## Build the catalog image
 	@echo "Note: You need to build and push your bundle image before building a catalog image."
 	@echo "Run 'make bundle-build bundle-push' to do this."
-	# TODO: Remove the first bundle in the list after we can start using previous catalog images
-	$(OPM) index add --container-tool docker --bundles quay.io/apicurio/apicurio-registry-operator-bundle:1.0.0-v2.0.0.final,$(BUNDLE_IMAGE) --tag $(CATALOG_IMAGE) $(FROM_INDEX_OPT)
+	$(OPM) index add --container-tool docker --bundles $(BUNDLE_IMAGE) --tag $(CATALOG_IMAGE) $(FROM_INDEX_OPT)
 ifeq ($(ADD_LATEST_TAG),true)
 	docker tag $(CATALOG_IMAGE) $(CATALOG_IMAGE_NAME):latest$(OPERATOR_VERSION_SUFFIX)
 endif
@@ -497,12 +495,14 @@ release-set-operand-version: install-yq
 	sed -i 's/^\(.*\):registry-version:\(.*\)$$/\1:registry-version: $(OPERAND_VERSION)/g'	docs/modules/ROOT/partials/shared/attributes.adoc
 
 
-.PHONY: release-update-previous-package-version
-release-update-previous-package-version:
+.PHONY: release-update-makefile
+release-update-makefile:
 	sed -i 's/^\( *PREVIOUS_PACKAGE_VERSION *= *\)\([^ ]*\)\(.*\)$$/\1$(PACKAGE_VERSION)\3/g' Makefile
+	$(eval CATALOG_TAG:=$(shell echo $$(($(CATALOG_TAG)+1)))) # Increment CATALOG_TAG
+	sed -i 's/^\( *CATALOG_TAG *?= *\)\([^ ]*\)\(.*\)$$/\1$(CATALOG_TAG)\3/g' Makefile
 
 
 .PHONY: release-fix-annotations
 release-fix-annotations:
-	$(YQ) e  '.annotations."operators.operatorframework.io.bundle.package.v1" = "apicurio-registry"' -i bundle/$(PACKAGE_VERSION)/metadata/annotations.yaml
+	$(YQ) e '.annotations."operators.operatorframework.io.bundle.package.v1" = "apicurio-registry"' -i bundle/$(PACKAGE_VERSION)/metadata/annotations.yaml
 	sed -i 's/^\( *LABEL *operators.operatorframework.io.bundle.package.v1 *= *\)\(apicurio-registry-operator\)\(.*\)$$/\1apicurio-registry\3/g' bundle/$(PACKAGE_VERSION)/bundle.Dockerfile
