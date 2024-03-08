@@ -85,26 +85,27 @@ func (this *InitializingCF) Sense() {
 		}
 
 		this.requestOk = false
-		if this.targetType == core.ServiceTypeClusterIP && this.targetIP != "" {
-			url := scheme + this.targetIP + ":" + port
-			res, err := this.httpClient.Get(url)
-			if err == nil {
-				defer res.Body.Close()
-				if res.StatusCode >= 200 && res.StatusCode < 300 {
-					this.requestOk = true
+		if this.ctx.GetTestingSupport().IsEnabled() {
+			this.requestOk = this.ctx.GetTestingSupport().GetMockCanMakeHTTPRequestToOperand(this.ctx.GetAppNamespace().Str())
+		} else {
+			if this.targetType == core.ServiceTypeClusterIP && this.targetIP != "" {
+				url := scheme + this.targetIP + ":" + port
+				res, err := this.httpClient.Get(url)
+				if err == nil {
+					defer res.Body.Close()
+					if res.StatusCode >= 200 && res.StatusCode < 300 {
+						this.requestOk = true
+					} else {
+						this.log.Warnw("request to check that Apicurio Registry instance is available has failed with a status", "url", url, "status", res.StatusCode)
+					}
+				} else if os.IsTimeout(err) {
+					this.log.Warnw("request to check that Apicurio Registry instance is available has timed out", "url", url, "timeout", this.httpClient.Timeout)
 				} else {
-					this.log.Warnw("request to check that Apicurio Registry instance is available has failed with a status", "url", url, "status", res.StatusCode)
+					this.log.Warnw("request to check that Apicurio Registry instance is available has failed", "url", url)
 				}
-			} else if os.IsTimeout(err) {
-				this.log.Warnw("request to check that Apicurio Registry instance is available has timed out", "url", url, "timeout", this.httpClient.Timeout)
-			} else {
-				this.log.Warnw("request to check that Apicurio Registry instance is available has failed", "url", url)
 			}
 		}
 
-		if this.ctx.GetTestingSupport().IsEnabled() {
-			this.requestOk = this.ctx.GetTestingSupport().GetMockCanMakeHTTPRequestToOperand(this.ctx.GetAppNamespace().Str())
-		}
 	} else {
 		this.log.Infow("initializing health check is disabled because auth is enabled")
 		this.initializing = false
