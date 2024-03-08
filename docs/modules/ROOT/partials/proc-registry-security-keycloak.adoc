@@ -28,6 +28,7 @@ NOTE: There is a related configuration option in the `ApicurioRegistry` CRD that
 
 IMPORTANT: The example configuration in this procedure is intended for development and testing only. To keep the procedure simple, it does not use HTTPS and other defenses recommended for a production environment. For more details, see the {keycloak} documentation. 
 
+ifdef::apicurio-registry[]
 
 .Procedure
 . In the OpenShift web console, click *Installed Operators* and *{keycloak} Operator*, and then the *Keycloak* tab.
@@ -39,10 +40,36 @@ IMPORTANT: The example configuration in this procedure is intended for developme
 +
 [source,yaml]
 ----
+include::example$/keycloak/keycloak_realm_import.yaml[]
+----
++
+IMPORTANT: You must customize this `KeycloakRealmImport` resource with values suitable for your environment if you are deploying to production. You can also create and manage realms using the {keycloak} web console.
+endif::[]
+ifdef::service-registry[]
+
+.Procedure
+. In the OpenShift web console, click *Installed Operators* and *{keycloak} Operator*, and then the *Keycloak* tab.
+
+. Click *Create Keycloak* to provision a new {keycloak} instance for securing a {registry} deployment. You can use the default value, for example:
++
+[source,yaml]
+----
+include::example$/keycloak/keycloak.yaml[]
+----
+
+. Wait until the instance has been created, and click *Networking*  and then *Routes* to access the new route for the *keycloak* instance. 
+
+. Click the *Location* URL and copy the displayed URL value for later use when deploying {registry}.
+
+. Click *Installed Operators* and *{keycloak} Operator*, and click the *Keycloak Realm* tab, and then *Create Keycloak Realm* to create a `registry` example realm:
++
+[source,yaml]
+----
 include::example$/keycloak/keycloak_realm.yaml[]
 ----
 +
 IMPORTANT: You must customize this `KeycloakRealm` resource with values suitable for your environment if you are deploying to production. You can also create and manage realms using the {keycloak} web console.
+endif::[]
 
 . If your cluster does not have a valid HTTPS certificate configured, you can create the following HTTP `Service` and `Ingress` resources as a temporary workaround:
 
