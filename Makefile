@@ -365,14 +365,6 @@ ifeq ($(ADD_LATEST_TAG),true)
 endif
 
 
-.PHONY: packagemanifests
-packagemanifests: manifests install-operator-sdk install-yq ## Generate package manifests
-	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate packagemanifests -q --version $(PACKAGE_VERSION) $(PACKAGE_MANIFESTS_OPTS)
-	# Workaround for https://github.com/operator-framework/operator-lifecycle-manager/issues/1608
-	# See https://github.com/operator-framework/operator-lifecycle-manager/issues/952#issuecomment-639657949
-	$(YQ) e ".spec.install.spec.deployments[0].name = .spec.install.spec.deployments[0].name + \"-v$(PACKAGE_VERSION)\"" -i "packagemanifests/$(PACKAGE_VERSION)/apicurio-registry-operator.clusterserviceversion.yaml"
-
-
 .PHONY: docs
 docs: install-antora ## Build documentation
 	cd ./docs && antora local-test-playbook.yml
