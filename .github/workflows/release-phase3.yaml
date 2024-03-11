@@ -37,10 +37,10 @@ jobs:
           echo "OPERATOR_VERSION=$(make get-variable-operator-version)" >> "$GITHUB_ENV"
 
       - name: Set up JDK 11
-        uses: AdoptOpenJDK/install-jdk@v1
+        uses: actions/setup-java@v4
         with:
-          version: "11"
-          architecture: x64
+          distribution: temurin
+          java-version: "11"
 
       - name: Set up settings.xml
         run: |
@@ -50,7 +50,7 @@ jobs:
           echo "<settings><servers><server><id>${{ secrets.OSSRH_ID }}</id><username>${{ secrets.OSSRH_USERNAME }}</username><password>${{ secrets.OSSRH_TOKEN }}</password></server></servers><profiles><profile><id>${{ secrets.OSSRH_ID }}</id><activation><activeByDefault>true</activeByDefault></activation><properties><gpg.executable>gpg</gpg.executable><gpg.passphrase>${{ secrets.GPG_PASSPHRASE}}</gpg.passphrase></properties></profile></profiles></settings>" > /home/runner/.m2/settings.xml
 
       - name: Import GPG Key
-        uses: crazy-max/ghaction-import-gpg@v1
+        uses: crazy-max/ghaction-import-gpg@v6
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
