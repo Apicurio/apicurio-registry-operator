@@ -495,6 +495,6 @@ release-update-makefile:
 
 
 .PHONY: release-fix-annotations
-release-fix-annotations:
+release-fix-annotations: install-yq
 	$(YQ) e '.annotations."operators.operatorframework.io.bundle.package.v1" = "apicurio-registry"' -i bundle/$(PACKAGE_VERSION)/metadata/annotations.yaml
 	sed -i 's/^\( *LABEL *operators.operatorframework.io.bundle.package.v1 *= *\)\(apicurio-registry-operator\)\(.*\)$$/\1apicurio-registry\3/g' bundle/$(PACKAGE_VERSION)/bundle.Dockerfile
