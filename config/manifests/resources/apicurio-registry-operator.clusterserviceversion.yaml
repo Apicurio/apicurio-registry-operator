@@ -6,8 +6,8 @@ metadata:
     capabilities: Basic Install
     categories: Streaming & Messaging
     certified: "false"
-    containerImage: quay.io/apicurio/apicurio-registry-operator:1.2.0-dev
-    createdAt: "2023-10-10"
+    containerImage: quay.io/apicurio/apicurio-registry-operator:1.1.1
+    createdAt: "2024-03-11"
     description: Deploy and manage Apicurio Registry on Kubernetes.
     repository: https://github.com/Apicurio/apicurio-registry-operator
     support: Apicurio
