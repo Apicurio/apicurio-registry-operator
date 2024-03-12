@@ -184,8 +184,8 @@ endef
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 .PHONY: install-controller-gen
-install-controller-gen: ## Install controller-gen@v0.8.0
-	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0)
+install-controller-gen: ## Install controller-gen@v0.13.0
+	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.13.0)
 
 
 KUSTOMIZE = $(shell pwd)/bin/kustomize
