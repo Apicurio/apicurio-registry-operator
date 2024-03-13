@@ -11,6 +11,17 @@ metadata:
     description: Deploy and manage Apicurio Registry on Kubernetes.
     repository: https://github.com/Apicurio/apicurio-registry-operator
     support: Apicurio
+    operators.openshift.io/infrastructure-features: '[]'
+    features.operators.openshift.io/disconnected: "false" # TODO: Support disconnected install
+    features.operators.openshift.io/proxy-aware: "false"
+    features.operators.openshift.io/fips-compliant: "false"
+    features.operators.openshift.io/tls-profiles: "false"
+    features.operators.openshift.io/token-auth-aws: "false"
+    features.operators.openshift.io/token-auth-azure: "false"
+    features.operators.openshift.io/token-auth-gcp: "false"
+    features.operators.openshift.io/cnf: "false"
+    features.operators.openshift.io/cni: "false"
+    features.operators.openshift.io/csi: "false"
   name: apicurio-registry-operator.v0.0.0
   namespace: placeholder
 spec:
