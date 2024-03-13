@@ -340,7 +340,12 @@ bundle: manifests install-operator-sdk install-yq ## Generate bundle manifests a
 	# Workaround for https://github.com/operator-framework/operator-lifecycle-manager/issues/1608
 	# See https://github.com/operator-framework/operator-lifecycle-manager/issues/952#issuecomment-639657949
 	$(YQ) e ".spec.install.spec.deployments[0].name = .spec.install.spec.deployments[0].name + \"-v$(OPERATOR_VERSION)\"" -i "$(BUNDLE_DIR)/manifests/apicurio-registry-operator.clusterserviceversion.yaml"
+	# Post-process bundle
+	$(YQ) e "... comments=\"\"" -i "$(BUNDLE_DIR)/metadata/annotations.yaml"
+	$(YQ) e ".annotations.\"com.redhat.openshift.versions\" = \"v4.6\"" -i "$(BUNDLE_DIR)/metadata/annotations.yaml"
+	$(YQ) e "sort_keys(..)" -i "$(BUNDLE_DIR)/metadata/annotations.yaml"
 	cp bundle.Dockerfile $(BUNDLE_DIR)
+	sed -i 's/^FROM scratch$$/FROM scratch\n\nLABEL com.redhat.openshift.versions=v4.6/g' "$(BUNDLE_DIR)/bundle.Dockerfile"
 	$(OPERATOR_SDK) bundle validate $(BUNDLE_DIR)
 
 
