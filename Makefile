@@ -30,7 +30,7 @@ CLIENT ?= kubectl
 
 CHANNEL ?= 2.x
 IS_DEFAULT_CHANNEL ?= 1
-PREVIOUS_PACKAGE_VERSION = 1.1.0-v2.4.12.final
+PREVIOUS_PACKAGE_VERSION = 1.1.1-v2.5.9.final
 
 REPLACES = apicurio-registry-operator.v$(PREVIOUS_PACKAGE_VERSION)
 
@@ -73,7 +73,7 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 # of numbers, which must be incremented on each release.
 # It is not the same as PACKAGE_VERSION in case there is branching
 # in the future
-CATALOG_TAG ?= 2
+CATALOG_TAG ?= 3
 USE_OFFICIAL_PREVIOUS_CATALOG ?= true
 PREVIOUS_CATALOG_TAG ?= latest
 
