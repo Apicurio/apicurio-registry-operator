@@ -30,6 +30,12 @@ jobs:
     if: github.repository_owner == 'Apicurio'
     steps:
 
+      - name: Setup go 1.20
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+      - run: go version
+
       - name: Checkout the Operator repository
         run: |
           git init
