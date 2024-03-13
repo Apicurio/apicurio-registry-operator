@@ -51,7 +51,7 @@ jobs:
 
       - name: Import GPG Key
         uses: crazy-max/ghaction-import-gpg@v6
-        env:
+        with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
