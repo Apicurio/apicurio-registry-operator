@@ -182,7 +182,7 @@ func (this *HttpsCF) Sense() {
 	}
 
 	var err error = nil
-	if this.javaOptions, err = env.ParseJavaOptionsMap(this.svcEnvCache); err == nil {
+	if this.javaOptions, err = env.ParseOperatorJavaOptionsMap(this.svcEnvCache); err == nil {
 		this.javaOptionsExists = true
 		for k, v := range this.targetJavaOptions {
 			vold, exists := this.javaOptions[k]
@@ -306,7 +306,7 @@ func (this *HttpsCF) Respond() {
 		for k, v := range this.targetJavaOptions {
 			this.javaOptions[k] = v
 		}
-		env.SaveJavaOptionsMap(this.svcEnvCache, this.javaOptions)
+		env.SaveOperatorJavaOptionsMap(this.svcEnvCache, this.javaOptions)
 		this.log.Debugw("added java options", "this.javaOptions", this.javaOptions)
 	}
 	if !this.httpsEnabled && this.javaOptionsExists {
@@ -318,7 +318,7 @@ func (this *HttpsCF) Respond() {
 			}
 		}
 		if changed {
-			env.SaveJavaOptionsMap(this.svcEnvCache, this.javaOptions)
+			env.SaveOperatorJavaOptionsMap(this.svcEnvCache, this.javaOptions)
 			this.log.Debugw("removed java options", "this.javaOptions", this.javaOptions)
 		}
 	}

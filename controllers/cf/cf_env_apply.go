@@ -67,14 +67,27 @@ func (this *EnvApplyCF) Sense() {
 				// Copy variables in the cache
 				deleted := make(map[string]bool, 0)
 				for _, v := range this.svcEnvCache.GetSorted() {
+					if v.Name == env.JAVA_OPTIONS_OPERATOR || v.Name == env.JAVA_OPTIONS_COMBINED {
+						continue // Do not delete, these are special internal-only env. variables.
+						// TODO: Consider refactoring this so the special case is no longer needed.
+					}
 					deleted[v.Name] = true // deletes spec stuff as well
 				}
 				for _, e := range deployment.Spec.Template.Spec.Containers[i].Env {
+
 					// Remove from deleted if in spec
 					delete(deleted, e.Name)
 
 					// If already marked as deleted, do not re-add them
 					if this.svcEnvCache.WasDeleted(e.Name) {
+						continue
+					}
+
+					if e.Name == env.JAVA_OPTIONS {
+						/*
+							Do not read this variable from deployment, we can't support this specific use-case anymore.
+							It has been deprecated for some time, and it's very unlikely someone relies on this behavior.
+						*/
 						continue
 					}
 
@@ -99,8 +112,8 @@ func (this *EnvApplyCF) Sense() {
 	}
 
 	// Handle Java Options legacy variable by parsing and saving again ¯\_(ツ)_/¯
-	if parsed, err := env.ParseJavaOptionsMap(this.svcEnvCache); err == nil {
-		env.SaveJavaOptionsMap(this.svcEnvCache, parsed)
+	if parsed, err := env.ParseCombinedJavaOptionsMap(this.svcEnvCache); err == nil {
+		env.SaveCombinedJavaOptionsMap(this.svcEnvCache, parsed)
 	} else {
 		this.log.Errorw("could not parse env. variables "+env.JAVA_OPTIONS+" or "+env.JAVA_OPTIONS_LEGACY, "error", err)
 	}
@@ -125,7 +138,16 @@ func (this *EnvApplyCF) Respond() {
 		deployment := value.(*apps.Deployment).DeepCopy()
 		for i, c := range deployment.Spec.Template.Spec.Containers {
 			if c.Name == factory.REGISTRY_CONTAINER_NAME {
-				deployment.Spec.Template.Spec.Containers[i].Env = this.svcEnvCache.GetSorted()
+
+				sorted := this.svcEnvCache.GetSorted()
+				// Hack to replace JAVA_OPTIONS with JAVA_OPTIONS_COMBINED
+				if _, found := env.GetEnv(sorted, env.JAVA_OPTIONS_COMBINED); found {
+					sorted, _ = env.RemoveEnv(sorted, env.JAVA_OPTIONS)
+					sorted, _ = env.RemoveEnv(sorted, env.JAVA_OPTIONS_OPERATOR)
+					v, _ := env.GetEnv(sorted, env.JAVA_OPTIONS_COMBINED)
+					v.Name = env.JAVA_OPTIONS
+				}
+				deployment.Spec.Template.Spec.Containers[i].Env = sorted
 			}
 		} // TODO report a problem if not found?
 		return deployment
