@@ -53,17 +53,17 @@ func TestJavaOptions(t *testing.T) {
 		"-Djust.double.quote": "\"",
 	}
 
-	parsed3, err := ParseJavaOptionsMap(cache)
+	parsed3, err := ParseCombinedJavaOptionsMap(cache)
 	if err != nil {
 		t.Fatal(err)
 	}
 	c.AssertEquals(t, expectedMerged, parsed3)
 
-	SaveJavaOptionsMap(cache, parsed3)
+	SaveCombinedJavaOptionsMap(cache, parsed3)
 
-	option, exists := cache.Get(JAVA_OPTIONS)
+	option, exists := cache.Get(JAVA_OPTIONS_COMBINED)
 	if !exists {
-		t.Fatal(JAVA_OPTIONS + " not found")
+		t.Fatal(JAVA_OPTIONS_COMBINED + " not found")
 	}
 	javaOptionsMerged := option.GetValue().Value
 	parsed4, err := ParseShellArgs(javaOptionsMerged)

@@ -6,11 +6,15 @@ import (
 	"go.uber.org/zap"
 	core "k8s.io/api/core/v1"
 	"reflect"
+	"sort"
 	"strings"
 )
 
 const JAVA_OPTIONS = "JAVA_OPTS_APPEND"
 const JAVA_OPTIONS_LEGACY = "JAVA_OPTIONS"
+
+const JAVA_OPTIONS_OPERATOR = "__JAVA_OPTIONS_OPERATOR__bedc397c-9486-4d87-8741-e4c90e72abe5__"
+const JAVA_OPTIONS_COMBINED = "__JAVA_OPTIONS_COMBINED__bedc397c-9486-4d87-8741-e4c90e72abe5__"
 
 type envCacheEntry struct {
 	value        *core.EnvVar
@@ -247,7 +251,19 @@ func MergeMaps(base map[string]string, update map[string]string) {
 	}
 }
 
-func ParseJavaOptionsMap(envCache EnvCache) (map[string]string, error) {
+func ParseOperatorJavaOptionsMap(envCache EnvCache) (map[string]string, error) {
+	options := make(map[string]string, 0)
+	if entry, exists := envCache.Get(JAVA_OPTIONS_OPERATOR); exists {
+		if parsed, err := ParseShellArgs(entry.GetValue().Value); err == nil {
+			MergeMaps(options, parsed)
+		} else {
+			return nil, err
+		}
+	}
+	return options, nil
+}
+
+func ParseCombinedJavaOptionsMap(envCache EnvCache) (map[string]string, error) {
 	options := make(map[string]string, 0)
 	// Do the legacy env. variable first, so the values can be overwritten
 	if entry, exists := envCache.Get(JAVA_OPTIONS_LEGACY); exists {
@@ -264,10 +280,25 @@ func ParseJavaOptionsMap(envCache EnvCache) (map[string]string, error) {
 			return nil, err
 		}
 	}
+	if entry, exists := envCache.Get(JAVA_OPTIONS_OPERATOR); exists {
+		if parsed, err := ParseShellArgs(entry.GetValue().Value); err == nil {
+			MergeMaps(options, parsed)
+		} else {
+			return nil, err
+		}
+	}
 	return options, nil
 }
 
-func SaveJavaOptionsMap(envCache EnvCache, javaOptions map[string]string) {
+func SaveOperatorJavaOptionsMap(envCache EnvCache, javaOptions map[string]string) {
+	saveJavaOptionsMap(envCache, JAVA_OPTIONS_OPERATOR, javaOptions)
+}
+
+func SaveCombinedJavaOptionsMap(envCache EnvCache, javaOptions map[string]string) {
+	saveJavaOptionsMap(envCache, JAVA_OPTIONS_COMBINED, javaOptions)
+}
+
+func saveJavaOptionsMap(envCache EnvCache, name string, javaOptions map[string]string) {
 	joinedJavaOptions := make([]string, 0)
 	for k, v := range javaOptions {
 		if v == "" {
@@ -276,14 +307,33 @@ func SaveJavaOptionsMap(envCache EnvCache, javaOptions map[string]string) {
 			joinedJavaOptions = append(joinedJavaOptions, k+"="+v)
 		}
 	}
+	sort.Strings(joinedJavaOptions)
 	if len(joinedJavaOptions) > 0 {
 		rawJavaOptions := shellquote.Join(joinedJavaOptions...)
-		envCache.Set(NewSimpleEnvCacheEntryBuilder(JAVA_OPTIONS, rawJavaOptions).
-			SetPriority(PRIORITY_SPEC).
-			Lock(). // Lock so EnvCF does not delete it, we do it manually below
+		envCache.Set(NewSimpleEnvCacheEntryBuilder(name, rawJavaOptions).
+			SetPriority(PRIORITY_OPERATOR).
+			SetDependency(JAVA_OPTIONS_LEGACY).
+			SetDependency(JAVA_OPTIONS).
 			Build())
 	} else {
-		envCache.DeleteByName(JAVA_OPTIONS)
-		envCache.DeleteByName(JAVA_OPTIONS_LEGACY)
+		envCache.DeleteByName(name)
 	}
+}
+
+func GetEnv(haystack []core.EnvVar, name string) (*core.EnvVar, bool) {
+	for i, _ := range haystack {
+		if haystack[i].Name == name {
+			return &haystack[i], true
+		}
+	}
+	return nil, false
+}
+
+func RemoveEnv(haystack []core.EnvVar, name string) ([]core.EnvVar, bool) {
+	for i, _ := range haystack {
+		if haystack[i].Name == name {
+			return append(haystack[:i], haystack[i+1:]...), true
+		}
+	}
+	return haystack, false
 }
