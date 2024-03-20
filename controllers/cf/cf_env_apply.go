@@ -98,6 +98,13 @@ func (this *EnvApplyCF) Sense() {
 		}
 	}
 
+	// Handle Java Options legacy variable by parsing and saving again ¯\_(ツ)_/¯
+	if parsed, err := env.ParseJavaOptionsMap(this.svcEnvCache); err == nil {
+		env.SaveJavaOptionsMap(this.svcEnvCache, parsed)
+	} else {
+		this.log.Errorw("could not parse env. variables "+env.JAVA_OPTIONS+" or "+env.JAVA_OPTIONS_LEGACY, "error", err)
+	}
+
 	// Observation #2
 	// Was the env cache updated?
 	this.envCacheUpdated = this.svcEnvCache.IsChanged()
