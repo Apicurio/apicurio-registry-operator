@@ -20,14 +20,9 @@ type envCacheEntry struct {
 	value        *core.EnvVar
 	dependencies []string
 	priority     Priority
-	locked       bool
 }
 
 var _ EnvCacheEntry = &envCacheEntry{}
-
-func (this *envCacheEntry) IsLocked() bool {
-	return this.locked
-}
 
 func (this *envCacheEntry) GetName() string {
 	return this.value.Name
@@ -72,11 +67,6 @@ func NewSimpleEnvCacheEntryBuilder(name string, value string) EnvCacheEntryBuild
 		Name:  name,
 		Value: value,
 	})
-}
-
-func (this *envCacheEntryBuilder) Lock() EnvCacheEntryBuilder {
-	this.entry.locked = true
-	return this
 }
 
 func (this *envCacheEntryBuilder) SetDependency(name string) EnvCacheEntryBuilder {
