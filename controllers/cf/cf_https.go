@@ -180,12 +180,19 @@ func (this *HttpsCF) Sense() {
 		"-Dquarkus.http.ssl.certificate.file":     "/certs/tls.crt",
 		"-Dquarkus.http.ssl.certificate.key-file": "/certs/tls.key",
 	}
-	this.javaOptions = env.ParseJavaOptionsMap(this.svcEnvCache)
-	this.javaOptionsExists = true
-	for k, v := range this.targetJavaOptions {
-		vold, exists := this.javaOptions[k]
-		this.javaOptionsExists = this.javaOptionsExists && exists && v == vold
+
+	var err error = nil
+	if this.javaOptions, err = env.ParseJavaOptionsMap(this.svcEnvCache); err == nil {
+		this.javaOptionsExists = true
+		for k, v := range this.targetJavaOptions {
+			vold, exists := this.javaOptions[k]
+			this.javaOptionsExists = this.javaOptionsExists && exists && v == vold
+		}
+	} else {
+		this.javaOptions = nil
+		this.log.Errorw("could not parse env. variables "+env.JAVA_OPTIONS+" or "+env.JAVA_OPTIONS_LEGACY, "error", err)
 	}
+
 	this.log.Debugw("Observation #5", "this.javaOptionsExists", this.javaOptionsExists,
 		"this.javaOptions", this.javaOptions)
 
@@ -215,8 +222,8 @@ func (this *HttpsCF) Sense() {
 }
 
 func (this *HttpsCF) Compare() bool {
-	this.httpsEnabled = this.targetSecretName != "" && this.secretExists              // Observation #1, #2
-	return (this.secretExists && this.targetSecretName != this.previousSecretName) || // Secret renamed or removed
+	this.httpsEnabled = this.targetSecretName != "" && this.secretExists                       // Observation #1, #2
+	actionNeeded := (this.secretExists && this.targetSecretName != this.previousSecretName) || // Secret renamed or removed
 		(this.httpsEnabled != this.serviceHttpsPortExists) || // Observation #3
 		(this.httpsEnabled != this.secretVolumeExists) || // Observation #4
 		(this.httpsEnabled != this.secretVolumeMountExists) || // Observation #4
@@ -227,6 +234,8 @@ func (this *HttpsCF) Compare() bool {
 		((!this.httpsEnabled || this.httpEnabled) != this.serviceHttpPortExists) ||
 		((!this.httpsEnabled || this.httpEnabled) != this.containerHttpPortExists) ||
 		(this.networkPolicyExists && (!this.httpsEnabled || this.httpEnabled) != this.networkPolicyHttpPortExists)
+	valid := this.javaOptions != nil
+	return valid && actionNeeded
 }
 
 func (this *HttpsCF) Respond() {
@@ -297,7 +306,7 @@ func (this *HttpsCF) Respond() {
 		for k, v := range this.targetJavaOptions {
 			this.javaOptions[k] = v
 		}
-		env.SaveJavaOptionsMap(this.svcEnvCache, this.javaOptions, true)
+		env.SaveJavaOptionsMap(this.svcEnvCache, this.javaOptions)
 		this.log.Debugw("added java options", "this.javaOptions", this.javaOptions)
 	}
 	if !this.httpsEnabled && this.javaOptionsExists {
@@ -309,7 +318,7 @@ func (this *HttpsCF) Respond() {
 			}
 		}
 		if changed {
-			env.SaveJavaOptionsMap(this.svcEnvCache, this.javaOptions, false)
+			env.SaveJavaOptionsMap(this.svcEnvCache, this.javaOptions)
 			this.log.Debugw("removed java options", "this.javaOptions", this.javaOptions)
 		}
 	}

@@ -32,3 +32,12 @@ func isBefore(haystack []core.EnvVar, before string, after string) bool {
 	}
 	return beforeI >= 0 && afterI >= 0 && afterI > beforeI
 }
+
+func get(haystack []core.EnvVar, name string) (*core.EnvVar, bool) {
+	for i, _ := range haystack {
+		if haystack[i].Name == name {
+			return &haystack[i], true
+		}
+	}
+	return nil, false
+}

@@ -2,6 +2,7 @@ package env
 
 import (
 	c "github.com/Apicurio/apicurio-registry-operator/controllers/common"
+	"github.com/kballard/go-shellquote"
 	"go.uber.org/zap"
 	core "k8s.io/api/core/v1"
 	"reflect"
@@ -9,6 +10,7 @@ import (
 )
 
 const JAVA_OPTIONS = "JAVA_OPTS_APPEND"
+const JAVA_OPTIONS_LEGACY = "JAVA_OPTIONS"
 
 type envCacheEntry struct {
 	value        *core.EnvVar
@@ -221,40 +223,67 @@ func (this *envCache) processWithDependencies(depth int, processed map[string]bo
 	}
 }
 
-func ParseJavaOptionsMap(envCache EnvCache) map[string]string {
-	javaOptions := make(map[string]string, 0)
-	if entry, exists := envCache.Get(JAVA_OPTIONS); exists {
-		for _, f := range strings.Fields(entry.GetValue().Value) {
-			parts := strings.SplitN(f, "=", 2)
+func ParseShellArgs(input string) (map[string]string, error) {
+	result := make(map[string]string, 0)
+	if parsed, err := shellquote.Split(input); err == nil {
+		for _, v := range parsed {
+			parts := strings.SplitN(v, "=", 2)
 			if len(parts) == 2 {
-				javaOptions[parts[0]] = parts[1]
+				result[parts[0]] = parts[1]
 			} else {
 				// Option without the "="
-				javaOptions[parts[0]] = ""
+				result[parts[0]] = ""
 			}
 		}
+	} else {
+		return nil, err
 	}
-	return javaOptions
+	return result, nil
 }
 
-func SaveJavaOptionsMap(envCache EnvCache, options map[string]string, lock bool) {
-	javaOptions := ""
-	for k, v := range options {
-		if v == "" {
-			javaOptions = javaOptions + k
-		} else {
-			javaOptions = javaOptions + k + "=" + v
-		}
-		javaOptions = javaOptions + " "
+func MergeMaps(base map[string]string, update map[string]string) {
+	for k, v := range update {
+		base[k] = v
 	}
-	if javaOptions != "" {
-		entry := NewSimpleEnvCacheEntryBuilder(JAVA_OPTIONS, javaOptions).
-			SetPriority(PRIORITY_SPEC)
-		if lock {
-			entry = entry.Lock()
+}
+
+func ParseJavaOptionsMap(envCache EnvCache) (map[string]string, error) {
+	options := make(map[string]string, 0)
+	// Do the legacy env. variable first, so the values can be overwritten
+	if entry, exists := envCache.Get(JAVA_OPTIONS_LEGACY); exists {
+		if parsed, err := ParseShellArgs(entry.GetValue().Value); err == nil {
+			MergeMaps(options, parsed)
+		} else {
+			return nil, err
 		}
-		envCache.Set(entry.Build())
+	}
+	if entry, exists := envCache.Get(JAVA_OPTIONS); exists {
+		if parsed, err := ParseShellArgs(entry.GetValue().Value); err == nil {
+			MergeMaps(options, parsed)
+		} else {
+			return nil, err
+		}
+	}
+	return options, nil
+}
+
+func SaveJavaOptionsMap(envCache EnvCache, javaOptions map[string]string) {
+	joinedJavaOptions := make([]string, 0)
+	for k, v := range javaOptions {
+		if v == "" {
+			joinedJavaOptions = append(joinedJavaOptions, k)
+		} else {
+			joinedJavaOptions = append(joinedJavaOptions, k+"="+v)
+		}
+	}
+	if len(joinedJavaOptions) > 0 {
+		rawJavaOptions := shellquote.Join(joinedJavaOptions...)
+		envCache.Set(NewSimpleEnvCacheEntryBuilder(JAVA_OPTIONS, rawJavaOptions).
+			SetPriority(PRIORITY_SPEC).
+			Lock(). // Lock so EnvCF does not delete it, we do it manually below
+			Build())
 	} else {
 		envCache.DeleteByName(JAVA_OPTIONS)
+		envCache.DeleteByName(JAVA_OPTIONS_LEGACY)
 	}
 }
