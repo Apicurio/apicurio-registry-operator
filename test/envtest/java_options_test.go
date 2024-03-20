@@ -35,7 +35,11 @@ var _ = Describe("java options environment variables", Ordered, func() {
 				Name:      registryName,
 				Namespace: ns.ObjectMeta.Name,
 			},
-			Spec: ar.ApicurioRegistrySpec{},
+			Spec: ar.ApicurioRegistrySpec{
+				Configuration: ar.ApicurioRegistrySpecConfiguration{
+					Persistence: "sql",
+				},
+			},
 		}
 		Expect(s.k8sClient.Create(s.ctx, registry)).To(Succeed())
 		registryKey = types.NamespacedName{Namespace: registry.Namespace, Name: registry.Name}
