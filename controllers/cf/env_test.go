@@ -42,6 +42,7 @@ func TestEnvCF(t *testing.T) {
 		},
 	}))
 	loop.Run()
+	ctx.Finalize()
 	c.AssertEquals(t, []corev1.EnvVar{
 		{
 			Name:  "VAR_1_NAME",
@@ -78,6 +79,7 @@ func TestEnvCF(t *testing.T) {
 		},
 	}))
 	loop.Run()
+	ctx.Finalize()
 	c.AssertEquals(t, []corev1.EnvVar{
 		{
 			Name:  "VAR_3_NAME",
@@ -110,6 +112,7 @@ func TestEnvCF(t *testing.T) {
 		},
 	}))
 	loop.Run()
+	ctx.Finalize()
 	c.AssertEquals(t, []corev1.EnvVar{
 		{
 			Name:  "VAR_3_NAME",
@@ -169,6 +172,7 @@ func TestEnvOrdering(t *testing.T) {
 		},
 	}))
 	loop.Run()
+	ctx.Finalize()
 	ctx.GetResourceCache().Set(resources.RC_KEY_SPEC, resources.NewResourceCacheEntry(ctx.GetAppName(), &v1.ApicurioRegistry{
 		Spec: v1.ApicurioRegistrySpec{
 			Configuration: v1.ApicurioRegistrySpecConfiguration{
@@ -186,6 +190,7 @@ func TestEnvOrdering(t *testing.T) {
 		},
 	}))
 	loop.Run()
+	ctx.Finalize()
 	sorted := ctx.GetEnvCache().GetSorted()
 	sortedI := convert(sorted)
 	c.AssertIsInOrder(t, sortedI,
@@ -230,13 +235,13 @@ func TestEnvPriority(t *testing.T) {
 		},
 	}))
 	loop.Run()
-
+	ctx.Finalize()
 	// TODO When overwriting an entry, previous dependencies are removed!
 	// Operator Managed
 	ctx.GetEnvCache().Set(env.NewSimpleEnvCacheEntryBuilder("VAR_2_NAME", "OPERATOR").Build())
 	ctx.GetEnvCache().Set(env.NewSimpleEnvCacheEntryBuilder("VAR_3_NAME", "OPERATOR").Build())
 	loop.Run()
-
+	ctx.Finalize()
 	// Deployment - User Managed
 	ctx.GetResourceCache().Set(resources.RC_KEY_DEPLOYMENT, resources.NewResourceCacheEntry(ctx.GetAppName(), &apps.Deployment{
 		ObjectMeta: meta.ObjectMeta{
@@ -269,6 +274,7 @@ func TestEnvPriority(t *testing.T) {
 		},
 	}))
 	loop.Run()
+	ctx.Finalize()
 
 	sorted := ctx.GetEnvCache().GetSorted()
 	sortedI := convert(sorted)

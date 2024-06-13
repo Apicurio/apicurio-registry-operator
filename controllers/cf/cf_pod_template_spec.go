@@ -26,15 +26,31 @@ type PodTemplateSpecCF struct {
 
 	previousBasePodTemplateSpec *ar.ApicurioRegistryPodTemplateSpec
 	basePodTemplateSpec         *ar.ApicurioRegistryPodTemplateSpec
-	valid                       bool
-	targetPodTemplateSpec       *core.PodTemplateSpec
+
+	previousDeploymentPodSpec *core.PodTemplateSpec
+	deploymentPodSpec         *core.PodTemplateSpec
+
+	valid                 bool
+	targetPodTemplateSpec *core.PodTemplateSpec
+
+	lastActedReconcileSequence int64
 }
 
+// Using the Deployment directly to detemine whether the PTS has to be applied is a problem,
+// because other CFs might modify the Deployment as well.
+// We have no way of comparing the target PTS with the PTS in the Deployment,
+// since we don't know which changes are from spec PTS and which from the CFs.
+// To work around this, we will reconcile if:
+// - The PTS in the spec has changed, or
+// - The PTS in the Deployment has changed.
+// If we are done, there will be no change in the Deployment between execution of this CF in subsequent reconciliations,
+// so we don't have to update the PTS again. This may waste a few cycles, but I don't think we can do better than that.
 func NewPodTemplateSpecCF(ctx context.LoopContext, services services.LoopServices) loop.ControlFunction {
 	res := &PodTemplateSpecCF{
-		ctx:              ctx,
-		svcResourceCache: ctx.GetResourceCache(),
-		services:         services,
+		ctx:                        ctx,
+		svcResourceCache:           ctx.GetResourceCache(),
+		services:                   services,
+		lastActedReconcileSequence: -2,
 	}
 	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
 	return res
@@ -45,18 +61,36 @@ func (this *PodTemplateSpecCF) Describe() string {
 }
 
 func (this *PodTemplateSpecCF) Sense() {
+
+	this.log.Debugw("Sense",
+		"this.ctx.GetReconcileSequence()", this.ctx.GetReconcileSequence(),
+		"this.lastActedReconcileSequence", this.lastActedReconcileSequence,
+	)
+
+	if this.lastActedReconcileSequence+1 == this.ctx.GetReconcileSequence() {
+		this.log.Debugln("Sense", "We have acted in the previous loop, record the previous PTS from the Deployment, and reschedule")
+		// We have acted in the previous loop, record the previous PTS from the Deployment, and reschedule
+		if deploymentEntry, deploymentExists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT); deploymentExists {
+			this.log.Debugln("Sense", "Setting this.previousDeploymentPodSpec")
+			this.previousDeploymentPodSpec = &deploymentEntry.GetValue().(*apps.Deployment).Spec.Template
+			this.previousDeploymentPodSpec = this.previousDeploymentPodSpec.DeepCopy() // Defensive copy
+			this.ctx.SetRequeueNow()
+			return
+		}
+	}
+
 	this.valid = false
 
 	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_SPEC); exists {
 
 		this.basePodTemplateSpec = &entry.GetValue().(*ar.ApicurioRegistry).Spec.Deployment.PodTemplateSpecPreview
-		this.basePodTemplateSpec = this.basePodTemplateSpec.DeepCopy() // Defensive copy so we don't update the spec
+		this.basePodTemplateSpec = this.basePodTemplateSpec.DeepCopy() // Defensive copy so we won't update the spec
 
 		if deploymentEntry, deploymentExists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT); deploymentExists {
-			currentPodSpec := &deploymentEntry.GetValue().(*apps.Deployment).Spec.Template
-			currentPodSpec = currentPodSpec.DeepCopy()
+			this.deploymentPodSpec = &deploymentEntry.GetValue().(*apps.Deployment).Spec.Template
+			this.deploymentPodSpec = this.deploymentPodSpec.DeepCopy() // Defensive copy
 			factoryPodSpec := this.services.GetKubeFactory().CreateDeployment().Spec.Template
-			targetPodSpec, err := SanitizeBasePodSpec(this.log, this.basePodTemplateSpec, currentPodSpec, &factoryPodSpec)
+			targetPodSpec, err := SanitizeBasePodSpec(this.log, this.basePodTemplateSpec, this.deploymentPodSpec, &factoryPodSpec)
 			if err == nil {
 				this.targetPodTemplateSpec, err = ConvertToPodTemplateSpec(targetPodSpec)
 				if err == nil {
@@ -68,7 +102,7 @@ func (this *PodTemplateSpecCF) Sense() {
 				this.log.Errorw("an error has occurred when processing spec.deployment.podTemplateSpecPreview field", "error", err)
 				this.services.GetConditionManager().GetConfigurationErrorCondition().
 					TransitionInvalid(err.Error(), "spec.deployment.podTemplateSpecPreview")
-				// No need to transition to not ready, since we can just with the previous config
+				// No need to transition to not-ready
 				this.ctx.SetRequeueDelaySec(10)
 			}
 		}
@@ -76,29 +110,49 @@ func (this *PodTemplateSpecCF) Sense() {
 }
 
 func (this *PodTemplateSpecCF) Compare() bool {
-	if this.previousBasePodTemplateSpec != nil { // common.LogNillable does not work TODO find out why
-		this.log.Debugw("Obsevation #1", "this.previousBasePodTemplateSpec", this.previousBasePodTemplateSpec)
-	} else {
-		this.log.Debugw("Obsevation #1", "this.previousBasePodTemplateSpec", "<nil>")
+
+	if this.lastActedReconcileSequence == this.ctx.GetReconcileSequence() {
+		this.log.Debugln("Compare", "Act only once per reconciliation loop")
+		return false // Act only once per reconciliation loop
 	}
-	this.log.Debugw("Obsevation #2", "this.basePodTemplateSpec", this.basePodTemplateSpec)
-	this.log.Debugw("Obsevation #3", "this.targetPodTemplateSpec", this.targetPodTemplateSpec)
+	if this.lastActedReconcileSequence+1 == this.ctx.GetReconcileSequence() {
+		this.log.Debugln("Compare", "We have acted in the previous loop, recorded the previous PTS from the Deployment, and have to skip")
+		return false // We have acted in the reconciliation, recorded the previous PTS from the Deployment, and have to skip
+	}
+
+	this.log.Debugw("Compare", "valid", this.valid)
+
+	if this.previousBasePodTemplateSpec != nil { // common.LogNillable does not work TODO find out why
+		this.log.Debugw("Compare", "this.previousBasePodTemplateSpec", this.previousBasePodTemplateSpec)
+	} else {
+		this.log.Debugw("Compare", "this.previousBasePodTemplateSpec", "<nil>")
+	}
+	this.log.Debugw("Compare", "this.basePodTemplateSpec", this.basePodTemplateSpec)
+
+	if this.previousDeploymentPodSpec != nil { // common.LogNillable does not work TODO find out why
+		this.log.Debugw("Compare", "this.previousDeploymentPodSpec", this.previousDeploymentPodSpec)
+	} else {
+		this.log.Debugw("Compare", "this.previousDeploymentPodSpec", "<nil>")
+	}
+	this.log.Debugw("Compare", "this.deploymentPodSpec", this.deploymentPodSpec)
+
+	this.log.Debugw("Compare", "!reflect.DeepEqual(this.basePodTemplateSpec, this.previousBasePodTemplateSpec)", !reflect.DeepEqual(this.basePodTemplateSpec, this.previousBasePodTemplateSpec))
+
+	this.log.Debugw("Compare", "!reflect.DeepEqual(this.deploymentPodSpec, this.previousDeploymentPodSpec)", !reflect.DeepEqual(this.deploymentPodSpec, this.previousDeploymentPodSpec))
+
 	return this.valid &&
-		// We're only comparing changes to the podSpecPreview, not the real pod spec,
-		// so we do not overwrite changes by the other CFs, which would cause a loop panic
-		(this.previousBasePodTemplateSpec == nil || !reflect.DeepEqual(this.basePodTemplateSpec, this.previousBasePodTemplateSpec))
+		(!reflect.DeepEqual(this.basePodTemplateSpec, this.previousBasePodTemplateSpec) || !reflect.DeepEqual(this.deploymentPodSpec, this.previousDeploymentPodSpec))
 }
 
 func (this *PodTemplateSpecCF) Respond() {
-
+	this.log.Debugln("Respond", "start respond")
 	if entry, exists := this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT); exists {
 		entry.ApplyPatch(func(value interface{}) interface{} {
 			deployment := value.(*apps.Deployment).DeepCopy()
-
-			deployment.Spec.Template = *this.targetPodTemplateSpec
-
 			this.previousBasePodTemplateSpec = this.basePodTemplateSpec
-
+			deployment.Spec.Template = *this.targetPodTemplateSpec
+			this.lastActedReconcileSequence = this.ctx.GetReconcileSequence()
+			this.log.Debugln("Respond", "responded")
 			return deployment
 		})
 	}

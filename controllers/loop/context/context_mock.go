@@ -6,24 +6,27 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"go.uber.org/zap"
+	"math"
 	"time"
 )
 
 var _ LoopContext = &LoopContextMock{}
 
 type LoopContextMock struct {
-	appName       c.Name
-	appNamespace  c.Namespace
-	log           *zap.Logger
-	resourceCache resources.ResourceCache
-	envCache      env.EnvCache
-	attempts      int
+	appName           c.Name
+	appNamespace      c.Namespace
+	log               *zap.Logger
+	resourceCache     resources.ResourceCache
+	envCache          env.EnvCache
+	attempts          int
+	reconcileSequence int64
 }
 
 func NewLoopContextMock() *LoopContextMock {
 	res := &LoopContextMock{
-		appName:      c.Name("mock"),
-		appNamespace: c.Namespace("mock"),
+		appName:           c.Name("mock"),
+		appNamespace:      c.Namespace("mock"),
+		reconcileSequence: 0,
 	}
 	res.log = c.GetRootLogger(true)
 	res.resourceCache = resources.NewResourceCache()
@@ -55,8 +58,12 @@ func (this *LoopContextMock) SetRequeueDelaySec(delay uint) {
 	panic("Not implemented")
 }
 
-func (this *LoopContextMock) GetAndResetRequeue() (bool, time.Duration) {
-	panic("Not implemented")
+func (this *LoopContextMock) Finalize() (bool, time.Duration) {
+	if this.reconcileSequence == math.MaxInt64 {
+		panic("int64 counter overflow. Restarting to reset.") // This will probably never happen
+	}
+	this.reconcileSequence += 1
+	return false, 0
 }
 
 func (this *LoopContextMock) GetResourceCache() resources.ResourceCache {
@@ -85,4 +92,8 @@ func (this *LoopContextMock) GetTestingSupport() *c.TestSupport {
 
 func (this *LoopContextMock) GetSupportedFeatures() *c.SupportedFeatures {
 	panic("Not implemented")
+}
+
+func (this *LoopContextMock) GetReconcileSequence() int64 {
+	return this.reconcileSequence
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/env"
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"go.uber.org/zap"
+	"math"
 	"time"
 )
 
@@ -13,30 +14,32 @@ var _ LoopContext = &loopContext{}
 
 // A long-lived singleton container for shared, data only, 0 dependencies, components
 type loopContext struct {
-	appName       c.Name
-	appNamespace  c.Namespace
-	log           *zap.Logger
-	requeue       bool
-	requeueDelay  time.Duration
-	resourceCache resources.ResourceCache
-	envCache      env.EnvCache
-	attempts      int
-	clients       *client.Clients
-	testing       *c.TestSupport
-	features      *c.SupportedFeatures
+	appName           c.Name
+	appNamespace      c.Namespace
+	log               *zap.Logger
+	requeue           bool
+	requeueDelay      time.Duration
+	resourceCache     resources.ResourceCache
+	envCache          env.EnvCache
+	attempts          int
+	clients           *client.Clients
+	testing           *c.TestSupport
+	features          *c.SupportedFeatures
+	reconcileSequence int64
 }
 
 // Create a new context when the operator is deployed, provide mostly static data
 func NewLoopContext(appName c.Name, appNamespace c.Namespace, log *zap.Logger, clients *client.Clients, testing *c.TestSupport, features *c.SupportedFeatures) LoopContext {
 	this := &loopContext{
-		appName:      appName,
-		appNamespace: appNamespace,
-		requeue:      false,
-		requeueDelay: 0,
-		clients:      clients,
-		testing:      testing,
-		log:          log,
-		features:     features,
+		appName:           appName,
+		appNamespace:      appNamespace,
+		requeue:           false,
+		requeueDelay:      0,
+		clients:           clients,
+		testing:           testing,
+		log:               log,
+		features:          features,
+		reconcileSequence: 0,
 	}
 	this.resourceCache = resources.NewResourceCache()
 	this.envCache = env.NewEnvCache(log)
@@ -64,6 +67,7 @@ func (this *loopContext) SetRequeueDelaySoon() {
 }
 
 func (this *loopContext) SetRequeueDelaySec(delay uint) {
+	this.log.Sugar().Debugln("SetRequeueDelaySec called with", delay)
 	d := time.Duration(delay) * time.Second
 	if this.requeue == false || d < this.requeueDelay {
 		this.requeueDelay = d
@@ -71,11 +75,15 @@ func (this *loopContext) SetRequeueDelaySec(delay uint) {
 	}
 }
 
-func (this *loopContext) GetAndResetRequeue() (bool, time.Duration) {
+func (this *loopContext) Finalize() (bool, time.Duration) {
 	defer func() {
 		this.requeue = false
 		this.requeueDelay = 0
 	}()
+	if this.reconcileSequence == math.MaxInt64 {
+		panic("int64 counter overflow. Restarting to reset.") // This will probably never happen
+	}
+	this.reconcileSequence += 1
 	return this.requeue, this.requeueDelay
 }
 
@@ -105,4 +113,8 @@ func (this *loopContext) GetTestingSupport() *c.TestSupport {
 
 func (this *loopContext) GetSupportedFeatures() *c.SupportedFeatures {
 	return this.features
+}
+
+func (this *loopContext) GetReconcileSequence() int64 {
+	return this.reconcileSequence
 }

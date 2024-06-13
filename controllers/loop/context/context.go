@@ -16,7 +16,7 @@ type LoopContext interface {
 	SetRequeueNow()
 	SetRequeueDelaySoon()
 	SetRequeueDelaySec(delay uint)
-	GetAndResetRequeue() (bool, time.Duration)
+	Finalize() (bool, time.Duration)
 	GetClients() *client.Clients
 	GetResourceCache() resources.ResourceCache
 	GetEnvCache() env.EnvCache
@@ -24,4 +24,5 @@ type LoopContext interface {
 	GetAttempts() int
 	GetTestingSupport() *c.TestSupport
 	GetSupportedFeatures() *c.SupportedFeatures
+	GetReconcileSequence() int64
 }

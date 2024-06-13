@@ -89,7 +89,10 @@ func (this *InitializingCF) Sense() {
 			this.requestOk = this.ctx.GetTestingSupport().GetMockCanMakeHTTPRequestToOperand(this.ctx.GetAppNamespace().Str())
 		} else {
 			if this.targetType == core.ServiceTypeClusterIP && this.targetIP != "" {
-				url := scheme + this.targetIP + ":" + port
+				// NOTE: The client will follow redirects, but I have found that there is a strange issue with a cyclic redirect:
+				// http://172.30.162.200:8080 -> http://172.30.162.200:8080/ui -> http://172.30.162.200:8080/ui
+				// that ends with the client returning status 404. Therefore, we are using /apis instead.
+				url := scheme + this.targetIP + ":" + port + "/apis"
 				res, err := this.httpClient.Get(url)
 				if err == nil {
 					defer res.Body.Close()
@@ -99,9 +102,9 @@ func (this *InitializingCF) Sense() {
 						this.log.Warnw("request to check that Apicurio Registry instance is available has failed with a status", "url", url, "status", res.StatusCode)
 					}
 				} else if os.IsTimeout(err) {
-					this.log.Warnw("request to check that Apicurio Registry instance is available has timed out", "url", url, "timeout", this.httpClient.Timeout)
+					this.log.Warnw("request to check that Apicurio Registry instance is available has timed out", "url", url, "timeout", this.httpClient.Timeout, "err", err)
 				} else {
-					this.log.Warnw("request to check that Apicurio Registry instance is available has failed", "url", url)
+					this.log.Warnw("request to check that Apicurio Registry instance is available has failed", "url", url, "err", err)
 				}
 			}
 		}
@@ -115,6 +118,9 @@ func (this *InitializingCF) Sense() {
 func (this *InitializingCF) Compare() bool {
 	// Executing only when initializing
 	// Prevent loop from getting stable by only executing once
+	this.log.Debugln("this.disabled", this.disabled)
+	this.log.Debugln("this.initializing", this.initializing)
+	this.log.Debugln("this.ctx.GetAttempts()", this.ctx.GetAttempts())
 	return !this.disabled && this.initializing && this.ctx.GetAttempts() == 0
 }
 
