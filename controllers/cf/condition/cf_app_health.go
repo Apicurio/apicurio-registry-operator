@@ -135,6 +135,9 @@ func (this *AppHealthCF) Compare() bool {
 	// Executing AFTER initialization,
 	// that part is handled by InitializingCF
 	// Prevent loop from getting stable by only executing once
+	this.log.Debugln("this.disabled", this.disabled)
+	this.log.Debugln("this.initializing", this.initializing)
+	this.log.Debugln("this.ctx.GetAttempts()", this.ctx.GetAttempts())
 	return !this.disabled && !this.initializing && this.ctx.GetAttempts() == 0
 }
 
