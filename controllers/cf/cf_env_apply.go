@@ -8,36 +8,34 @@ import (
 	"github.com/Apicurio/apicurio-registry-operator/controllers/svc/resources"
 	"go.uber.org/zap"
 	apps "k8s.io/api/apps/v1"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ loop.ControlFunction = &EnvApplyCF{}
 
 type EnvApplyCF struct {
-	ctx                context.LoopContext
-	log                *zap.SugaredLogger
-	svcResourceCache   resources.ResourceCache
-	svcEnvCache        env.EnvCache
-	deploymentExists   bool
-	deploymentEntry    resources.ResourceCacheEntry
-	deploymentName     string
-	envCacheUpdated    bool
-	lastDeploymentName string
-	deploymentUID      types.UID
-	lastDeploymentUID  types.UID
+	ctx              context.LoopContext
+	log              *zap.SugaredLogger
+	svcResourceCache resources.ResourceCache
+
+	svcEnvCache     env.EnvCache
+	envCacheUpdated bool
+
+	deploymentExists      bool
+	deploymentEntry       resources.ResourceCacheEntry
+	deploymentNeedsUpdate bool
 }
 
 // Is responsible for managing environment variables from the env cache
 func NewEnvApplyCF(ctx context.LoopContext) loop.ControlFunction {
 	res := &EnvApplyCF{
-		ctx:                ctx,
-		svcResourceCache:   ctx.GetResourceCache(),
-		svcEnvCache:        ctx.GetEnvCache(),
-		deploymentExists:   false,
-		deploymentEntry:    nil,
-		deploymentName:     resources.RC_NOT_CREATED_NAME_EMPTY,
-		lastDeploymentName: resources.RC_NOT_CREATED_NAME_EMPTY,
-		envCacheUpdated:    false,
+		ctx:              ctx,
+		svcResourceCache: ctx.GetResourceCache(),
+
+		svcEnvCache:     ctx.GetEnvCache(),
+		envCacheUpdated: false,
+
+		deploymentExists: false,
+		deploymentEntry:  nil,
 	}
 	res.log = ctx.GetLog().Sugar().With("cf", res.Describe())
 	return res
@@ -48,63 +46,49 @@ func (this *EnvApplyCF) Describe() string {
 }
 
 func (this *EnvApplyCF) Sense() {
+	this.log.Debugw("env cache before", "value", this.svcEnvCache.GetSorted())
 	// Observation #1
 	// Is deployment available and/or is it already created
 	var deploymentEntry resources.ResourceCacheEntry
 	if deploymentEntry, this.deploymentExists = this.svcResourceCache.Get(resources.RC_KEY_DEPLOYMENT); this.deploymentExists {
 		this.deploymentEntry = deploymentEntry
-		this.deploymentName = deploymentEntry.GetName().Str()
-
-		// Observation #2
-		// First, read the existing env variables, and the add them to cache,
-		// keeping the original ordering.
-		// The operator overwrites user defined ones only when necessary.
 		deployment := this.deploymentEntry.GetValue().(*apps.Deployment)
 
+		// Observation #2
+		// Determine whether any env. variables are missing or need to be removed
 		for i, c := range deployment.Spec.Template.Spec.Containers {
 			if c.Name == factory.REGISTRY_CONTAINER_NAME {
-				prevName := "" // To maintain ordering in case of interpolation
-				// Copy variables in the cache
-				deleted := make(map[string]bool, 0)
+
+				this.deploymentNeedsUpdate = false
+
+				// Remember which variables are in the cache, to see if any is NOT present in the deployment
+				cachedVariablePresentInDeployment := make(map[string]bool, 0)
 				for _, v := range this.svcEnvCache.GetSorted() {
 					if v.Name == env.JAVA_OPTIONS_OPERATOR || v.Name == env.JAVA_OPTIONS_COMBINED {
-						continue // Do not delete, these are special internal-only env. variables.
-						// TODO: Consider refactoring this so the special case is no longer needed.
+						continue // Ignore, these are special internal-only env. variables.
 					}
-					deleted[v.Name] = true // deletes spec stuff as well
+					cachedVariablePresentInDeployment[v.Name] = false
 				}
 				for _, e := range deployment.Spec.Template.Spec.Containers[i].Env {
-
-					// Remove from deleted if in spec
-					delete(deleted, e.Name)
-
-					// If already marked as deleted, do not re-add them
-					if this.svcEnvCache.WasDeleted(e.Name) {
-						continue
+					// Mark as present:
+					cachedVariablePresentInDeployment[e.Name] = true
+					// Also ensure the other direction, each variable in deployment is present in the cache:
+					if _, exists := this.svcEnvCache.Get(e.Name); !exists {
+						_, combinedExists := this.svcEnvCache.Get(env.JAVA_OPTIONS_COMBINED)
+						if e.Name == env.JAVA_OPTIONS && combinedExists {
+							// We transform env.JAVA_OPTIONS_COMBINED into env.JAVA_OPTIONS, which may not be present in the cache beforehand.
+							this.log.Debugln("ignoring that variable " + env.JAVA_OPTIONS + " is in deployment but not in cache")
+						} else {
+							this.log.Debugln("variable is in deployment but not in cache", e.Name)
+							this.deploymentNeedsUpdate = true
+						}
 					}
-
-					if e.Name == env.JAVA_OPTIONS {
-						/*
-							Do not read this variable from deployment, we can't support this specific use-case anymore.
-							It has been deprecated for some time, and it's very unlikely someone relies on this behavior.
-						*/
-						continue
-					}
-
-					// Add to the cache
-					entryBuilder := env.NewEnvCacheEntryBuilder(&e).SetPriority(env.PRIORITY_DEPLOYMENT)
-					if prevName != "" {
-						entryBuilder.SetDependency(prevName)
-					}
-					this.svcEnvCache.Set(entryBuilder.Build())
-					prevName = e.Name
 				}
-				// Remove things from the cache that are not in the spec
-				// IF the cache was not changed already.
-				// This would otherwise prevent new things from being added.
-				if !this.svcEnvCache.IsChanged() {
-					for k, _ := range deleted {
-						this.svcEnvCache.DeleteByName(k)
+				// Check that all variables in the cache are present in the deployment:
+				for k, v := range cachedVariablePresentInDeployment {
+					if !v {
+						this.log.Debugln("variable is in cache but not in deployment", k)
+						this.deploymentNeedsUpdate = true
 					}
 				}
 			}
@@ -128,7 +112,11 @@ func (this *EnvApplyCF) Compare() bool {
 	// We have something to update
 	// Condition #2
 	// There is a deployment
-	return (this.envCacheUpdated || this.deploymentName != this.lastDeploymentName) && this.deploymentExists
+	this.log.Debugw("env apply compare", "this.envCacheUpdated", this.envCacheUpdated,
+		"this.deploymentExists", this.deploymentExists,
+		"this.deploymentNeedsUpdate", this.deploymentNeedsUpdate,
+	)
+	return this.deploymentExists && (this.envCacheUpdated || this.deploymentNeedsUpdate)
 }
 
 func (this *EnvApplyCF) Respond() {
@@ -147,6 +135,8 @@ func (this *EnvApplyCF) Respond() {
 					v, _ := env.GetEnv(sorted, env.JAVA_OPTIONS_COMBINED)
 					v.Name = env.JAVA_OPTIONS
 				}
+
+				this.log.Debugw("deployment env after", "env", sorted)
 				deployment.Spec.Template.Spec.Containers[i].Env = sorted
 			}
 		} // TODO report a problem if not found?
@@ -157,7 +147,6 @@ func (this *EnvApplyCF) Respond() {
 	// Do not clear the cache, but reset the change mark
 	this.svcEnvCache.ProcessAndAdvanceToNextPeriod()
 
-	this.lastDeploymentName = this.deploymentName
 }
 
 func (this *EnvApplyCF) Cleanup() bool {
