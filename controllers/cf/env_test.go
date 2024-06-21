@@ -139,16 +139,7 @@ func TestEnvOrdering(t *testing.T) {
 					Containers: []corev1.Container{
 						{
 							Name: factory.REGISTRY_CONTAINER_NAME,
-							Env: []corev1.EnvVar{
-								{
-									Name:  "DEPLOYMENT_VAR_1_NAME",
-									Value: "DEPLOYMENT_VAR_1_VALUE",
-								},
-								{
-									Name:  "DEPLOYMENT_VAR_2_NAME",
-									Value: "DEPLOYMENT_VAR_2_VALUE",
-								},
-							},
+							Env:  []corev1.EnvVar{},
 						},
 					},
 				},
@@ -202,15 +193,6 @@ func TestEnvOrdering(t *testing.T) {
 			Name:  "SPEC_VAR_3_NAME",
 			Value: "SPEC_VAR_3_VALUE",
 		})
-	c.AssertIsInOrder(t, sortedI,
-		corev1.EnvVar{
-			Name:  "DEPLOYMENT_VAR_1_NAME",
-			Value: "DEPLOYMENT_VAR_1_VALUE",
-		},
-		corev1.EnvVar{
-			Name:  "DEPLOYMENT_VAR_2_NAME",
-			Value: "DEPLOYMENT_VAR_2_VALUE",
-		})
 }
 
 func TestEnvPriority(t *testing.T) {
@@ -227,7 +209,11 @@ func TestEnvPriority(t *testing.T) {
 			Configuration: v1.ApicurioRegistrySpecConfiguration{
 				Env: []corev1.EnvVar{
 					{
-						Name:  "VAR_3_NAME",
+						Name:  "VAR_1_NAME",
+						Value: "SPEC",
+					},
+					{
+						Name:  "VAR_2_NAME",
 						Value: "SPEC",
 					},
 				},
@@ -238,8 +224,8 @@ func TestEnvPriority(t *testing.T) {
 	ctx.Finalize()
 	// TODO When overwriting an entry, previous dependencies are removed!
 	// Operator Managed
-	ctx.GetEnvCache().Set(env.NewSimpleEnvCacheEntryBuilder("VAR_2_NAME", "OPERATOR").Build())
 	ctx.GetEnvCache().Set(env.NewSimpleEnvCacheEntryBuilder("VAR_3_NAME", "OPERATOR").Build())
+	ctx.GetEnvCache().Set(env.NewSimpleEnvCacheEntryBuilder("VAR_2_NAME", "OPERATOR").SetDependency("VAR_3_NAME").Build())
 	loop.Run()
 	ctx.Finalize()
 	// Deployment - User Managed
@@ -253,20 +239,7 @@ func TestEnvPriority(t *testing.T) {
 					Containers: []corev1.Container{
 						{
 							Name: factory.REGISTRY_CONTAINER_NAME,
-							Env: []corev1.EnvVar{
-								{
-									Name:  "VAR_1_NAME",
-									Value: "DEPLOYMENT",
-								},
-								{
-									Name:  "VAR_2_NAME",
-									Value: "DEPLOYMENT",
-								},
-								{
-									Name:  "VAR_3_NAME",
-									Value: "DEPLOYMENT",
-								},
-							},
+							Env:  []corev1.EnvVar{},
 						},
 					},
 				},
@@ -280,7 +253,7 @@ func TestEnvPriority(t *testing.T) {
 	sortedI := convert(sorted)
 	c.AssertSliceContains(t, sortedI, corev1.EnvVar{
 		Name:  "VAR_1_NAME",
-		Value: "DEPLOYMENT",
+		Value: "SPEC",
 	})
 	c.AssertSliceContains(t, sortedI, corev1.EnvVar{
 		Name:  "VAR_2_NAME",
@@ -293,19 +266,19 @@ func TestEnvPriority(t *testing.T) {
 	c.AssertIsInOrder(t, sortedI,
 		corev1.EnvVar{
 			Name:  "VAR_1_NAME",
-			Value: "DEPLOYMENT",
+			Value: "SPEC",
 		},
 		corev1.EnvVar{
-			Name:  "VAR_2_NAME",
+			Name:  "VAR_3_NAME",
 			Value: "OPERATOR",
 		})
 	c.AssertIsInOrder(t, sortedI,
 		corev1.EnvVar{
-			Name:  "VAR_1_NAME",
-			Value: "DEPLOYMENT",
+			Name:  "VAR_3_NAME",
+			Value: "OPERATOR",
 		},
 		corev1.EnvVar{
-			Name:  "VAR_3_NAME",
+			Name:  "VAR_2_NAME",
 			Value: "OPERATOR",
 		})
 }
