@@ -81,7 +81,7 @@ func (this *loopContext) Finalize() (bool, time.Duration) {
 		this.requeueDelay = 0
 	}()
 	if this.reconcileSequence == math.MaxInt64 {
-		panic("int64 counter overflow. Restarting to reset.") // This will probably never happen
+		panic("int64 counter overflow. Restarting to reset.") // This will never happen
 	}
 	this.reconcileSequence += 1
 	return this.requeue, this.requeueDelay

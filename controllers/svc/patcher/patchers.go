@@ -102,7 +102,8 @@ func patchGeneric(
 			// Optimization: Check if the patch is empty
 			var patchJson map[string]interface{}
 			if err := json.Unmarshal(patchData, &patchJson); err != nil {
-				panic(err) // TODO
+				ctx.GetLog().Sugar().Error(err)
+				panic("Could not patch a resource: " + typeString)
 			}
 			if patchJson == nil || len(patchJson) == 0 {
 				//ctx.GetLog().WithValues("resource", typeString, "name", name, "patch", string(patchData)).

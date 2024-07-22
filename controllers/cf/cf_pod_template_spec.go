@@ -219,11 +219,11 @@ func SanitizeBasePodSpec(log *zap.SugaredLogger, base *ar.ApicurioRegistryPodTem
 	}
 	currentContainer := common.GetContainerByName(current.Spec.Containers, f.REGISTRY_CONTAINER_NAME)
 	if currentContainer == nil {
-		panic("could not find current registry container")
+		panic("Could not find the registry container in the current Deployment.")
 	}
 	factoryContainer := common.GetContainerByName(factory.Spec.Containers, f.REGISTRY_CONTAINER_NAME)
 	if factoryContainer == nil {
-		panic("could not find factory registry container")
+		panic("Could not find the registry container in the initial Deployment.")
 	}
 
 	if len(base.Spec.Containers) > 0 && baseContainer != nil {

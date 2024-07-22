@@ -38,11 +38,11 @@ func (this *KubeFactory) GetLabels() map[string]string {
 
 	registryVersion := os.Getenv(ENV_REGISTRY_VERSION)
 	if registryVersion == "" {
-		panic("Could not determine registry version. Environment variable '" + ENV_REGISTRY_VERSION + "' is empty.")
+		panic("Could not determine Registry version. Environment variable '" + ENV_REGISTRY_VERSION + "' is empty.")
 	}
 	operatorName := os.Getenv(ENV_OPERATOR_NAME)
 	if operatorName == "" {
-		panic("Could not determine operator name. Environment variable '" + ENV_OPERATOR_NAME + "' is empty.")
+		panic("Could not determine Operator name. Environment variable '" + ENV_OPERATOR_NAME + "' is empty.")
 	}
 	app := this.ctx.GetAppName().Str()
 
@@ -180,7 +180,7 @@ func (this *KubeFactory) CreateService() *core.Service {
 
 func (this *KubeFactory) CreateIngress(serviceName string) *networking.Ingress {
 	if serviceName == "" {
-		panic("Required argument.")
+		panic("Required argument, Ingress name, is empty.")
 	}
 	metaData := this.createObjectMeta("ingress")
 	metaData.Annotations = map[string]string{

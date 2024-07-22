@@ -57,7 +57,7 @@ func (this *KubePatcher) patchApicurioRegistry() { // TODO move to separate file
 		"ar.ApicurioRegistry",
 		func(owner meta.Object, namespace c.Namespace, value interface{}) (interface{}, error) {
 			// This should be not used (at the moment)
-			panic("Unsupported operation.")
+			panic("unsupported operation")
 		},
 		func(namespace c.Namespace, name c.Name, data []byte) (interface{}, error) {
 			return this.ctx.GetClients().CRD().PatchApicurioRegistry(namespace, name, data)
@@ -97,7 +97,7 @@ func (this *KubePatcher) patchApicurioRegistryStatus() {
 		"ar.ApicurioRegistryStatus",
 		func(owner meta.Object, namespace c.Namespace, value interface{}) (interface{}, error) {
 			// This should be not used (at the moment)
-			panic("Unsupported operation.")
+			panic("unsupported operation")
 		},
 		func(namespace c.Namespace, name c.Name, data []byte) (interface{}, error) {
 			return this.ctx.GetClients().CRD().PatchApicurioRegistryStatus(namespace, name, data)

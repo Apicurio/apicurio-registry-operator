@@ -84,7 +84,7 @@ func (this *envCacheEntryBuilder) SetPriority(priority Priority) EnvCacheEntryBu
 
 func (this *envCacheEntryBuilder) Build() EnvCacheEntry {
 	if strings.TrimSpace(this.entry.GetName()) == "" {
-		panic("Environment variable can not be empty nor whitespace")
+		panic("Environment variable name cannot be empty nor contain only whitespace.")
 	}
 	return this.entry
 }
@@ -202,7 +202,10 @@ func (this *envCache) computeSorted() {
 
 func (this *envCache) processWithDependencies(depth int, processed map[string]bool, val EnvCacheEntry) {
 	if depth > len(this.cache) {
-		panic("Cycle detected during the processing of environment variables.")
+		panic("Cycle detected during the processing of environment variables (at " + val.GetName() + "), make sure that every env. variable is define once. " +
+			"Explanation: Ordering of the env. variables is significant, because some variables can reference others using interpolation. " +
+			"As a result, the operator tries to keep the order consistent (e.g. as defined in the CR). " +
+			"This error occurs when the operator could not order the variables correctly.")
 	}
 	if _, exists := processed[val.GetName()]; !exists && !this.WasDeleted(val.GetName()) { // Was not yet processed
 		for _, dependencyName := range val.GetDependencies() { // Process & add deps first
