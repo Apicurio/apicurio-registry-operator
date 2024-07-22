@@ -47,20 +47,20 @@ func (this *LoopContextMock) GetAppNamespace() c.Namespace {
 }
 
 func (this *LoopContextMock) SetRequeueNow() {
-	panic("Not implemented")
+	panic("not implemented")
 }
 
 func (this *LoopContextMock) SetRequeueDelaySoon() {
-	panic("Not implemented")
+	panic("not implemented")
 }
 
 func (this *LoopContextMock) SetRequeueDelaySec(delay uint) {
-	panic("Not implemented")
+	panic("not implemented")
 }
 
 func (this *LoopContextMock) Finalize() (bool, time.Duration) {
 	if this.reconcileSequence == math.MaxInt64 {
-		panic("int64 counter overflow. Restarting to reset.") // This will probably never happen
+		panic("int64 counter overflow. Restarting to reset.") // This will never happen
 	}
 	this.reconcileSequence += 1
 	return false, 0
@@ -71,7 +71,7 @@ func (this *LoopContextMock) GetResourceCache() resources.ResourceCache {
 }
 
 func (this *LoopContextMock) GetClients() *client.Clients {
-	panic("Not implemented")
+	panic("not implemented")
 }
 
 func (this *LoopContextMock) GetEnvCache() env.EnvCache {
@@ -87,11 +87,11 @@ func (this *LoopContextMock) GetAttempts() int {
 }
 
 func (this *LoopContextMock) GetTestingSupport() *c.TestSupport {
-	panic("Not implemented")
+	panic("not implemented")
 }
 
 func (this *LoopContextMock) GetSupportedFeatures() *c.SupportedFeatures {
-	panic("Not implemented")
+	panic("not implemented")
 }
 
 func (this *LoopContextMock) GetReconcileSequence() int64 {

@@ -37,7 +37,8 @@ func NewCRDClient(log *zap.Logger, scheme *runtime.Scheme, config *rest.Config) 
 
 	c, err := rest.UnversionedRESTClientFor(config2)
 	if err != nil {
-		panic("Could not create CRD client.")
+		log.Sugar().Error(err)
+		panic("Could not create Kubernetes client for ApicurioRegistry CRD.")
 	}
 	return &CRDClient{
 		client: c,
@@ -97,14 +98,16 @@ func (this *CRDClient) PatchApicurioRegistryStatus(namespace common.Namespace, n
 	// Add "status" prefix to the patch path
 	var original map[string]interface{}
 	if err := json.Unmarshal(patchData, &original); err != nil {
-		panic(err) // TODO
+		this.log.Sugar().Error(err)
+		panic("Could not patch ApicurioRegistry status.")
 	}
 	extended := map[string]interface{}{
 		"status": original,
 	}
 	extendedPatchData, err := json.Marshal(extended)
 	if err != nil {
-		panic(err) // TODO
+		this.log.Sugar().Error(err)
+		panic("Could not patch ApicurioRegistry status.")
 	}
 
 	result := &ar.ApicurioRegistry{}

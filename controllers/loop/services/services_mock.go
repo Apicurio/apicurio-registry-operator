@@ -29,21 +29,21 @@ func (this *LoopServicesMock) AfterRun() {
 }
 
 func (this *LoopServicesMock) GetPatchers() *patcher.Patchers {
-	panic("Not implemented")
+	panic("not implemented")
 }
 
 func (this *LoopServicesMock) GetKubeFactory() *factory.KubeFactory {
-	panic("Not implemented")
+	panic("not implemented")
 }
 
 func (this *LoopServicesMock) GetMonitoringFactory() *factory.MonitoringFactory {
-	panic("Not implemented")
+	panic("not implemented")
 }
 
 func (this *LoopServicesMock) GetConditionManager() conditions.ConditionManager {
-	panic("Not implemented")
+	panic("not implemented")
 }
 
 func (this *LoopServicesMock) GetStatus() *status.Status {
-	panic("Not implemented")
+	panic("not implemented")
 }

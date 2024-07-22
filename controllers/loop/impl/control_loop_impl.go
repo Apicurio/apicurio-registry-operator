@@ -64,7 +64,10 @@ func (this *controlLoopImpl) Run() {
 		}
 	}
 	if attempt == maxAttempts {
-		panic("control loop stabilization limit exceeded")
+		panic("Control loop stabilization limit exceeded. Explanation: The operator is separated into multiple functions, " +
+			"that are each responsible for a single task, such as applying env. variables to a Deployment. " +
+			"They are each executed until the desired state of the cached resource (e.g. the Deployment) is reached, and can be updated on the cluster. " +
+			"This error occurs when the functions could not reach the desired state within a limited number of attempts.")
 	}
 
 	this.services.AfterRun()

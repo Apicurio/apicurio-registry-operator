@@ -29,7 +29,7 @@ func (this *condition) GetData() *metav1.Condition {
 
 func (this *condition) Reset() {
 	if this.ctype == "" {
-		panic("Condition type not set!")
+		panic("Condition type is empty.")
 	}
 	if this.data == nil {
 		this.data = &metav1.Condition{

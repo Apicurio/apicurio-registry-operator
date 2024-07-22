@@ -58,7 +58,7 @@ func (this *Status) init() {
 func (this *Status) set(mapp map[string]string, key string, value string) {
 	ptr := &value
 	if key == "" {
-		panic("Fatal: Empty key for " + *ptr)
+		panic("Status key is empty for value: " + *ptr)
 	}
 	mapp[key] = *ptr
 }
@@ -81,7 +81,7 @@ func (this *Status) SetConfigInt32P(key string, value *int32) {
 func (this *Status) GetConfig(key string) string {
 	v, ok := this.config[key]
 	if !ok {
-		panic("Fatal: Status key '" + key + "' not found.")
+		panic("Value that belongs to status key " + key + " not found.")
 	}
 	return v
 }
