@@ -177,8 +177,8 @@ func (this *HttpsCF) Sense() {
 	// Observation #5
 	// Find out if Java options is set
 	this.targetJavaOptions = map[string]string{
-		"-Dquarkus.http.ssl.certificate.file":     "/certs/tls.crt",
-		"-Dquarkus.http.ssl.certificate.key-file": "/certs/tls.key",
+		"-Dquarkus.http.ssl.certificate.files":     "/certs/tls.crt",
+		"-Dquarkus.http.ssl.certificate.key-files": "/certs/tls.key",
 	}
 
 	var err error = nil
