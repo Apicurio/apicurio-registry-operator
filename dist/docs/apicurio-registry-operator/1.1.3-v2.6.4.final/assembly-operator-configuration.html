@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Apicurio Registry Operator configuration reference :: Apicurio Registry Operator PREVIEW</title>
+    <link rel="canonical" href="https://www.apicur.io/registry/docs/apicurio-registry-operator/1.1.3-v2.6.4.final/assembly-operator-configuration.html">
+    <meta name="generator" content="Antora 3.1.9">
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Open+Sans" />
+    <link rel="stylesheet" href="../../_/css/site.css">
+    <link rel="stylesheet" href="https://www.apicur.io/css/rhbar.css">
+    <link rel="shortcut icon" href="https://www.apicur.io/images/favicon.ico" type="image/x-icon" integrity="sha384-if9KH+NQ2dMhdrWu+INnJTcvG6riRakUAnbhecX5a7voubrapo7ouFGS+GYZ/N4P" crossorigin="anonymous"/>
+  </head>
+  <body class="article">
+<div class="masthead-wrapper">
+    <div class="search-box">
+        <input id="search-input" type="text" placeholder="Search docs">
+    </div>
+    <div class="masthead">
+        <div class="logo-wrapper">
+            <a href="/"><img src="https://www.apicur.io/images/apicurio_headerlogo.png" class="project-logo"
+                    title="Apicurio"></a>
+        </div>
+        <div class="menu-wrapper">
+            <ul id="menu" class="menu">
+                <li>
+                    <a href="/studio/" id="menu-item-studio">Studio</a>
+                </li>
+                <li>
+                    <a href="/registry/" id="menu-item-registry">Registry</a>
+                </li>
+                <li>
+                    <a href="/datamodels/">Data Models</a>
+                </li>
+                <li>
+                    <a href="/apicurito/">Apicurito</a>
+                </li>
+                <li>
+                    <a href="/blog/">Blog</a>
+                </li>
+                <li>
+                    <a href="/contact/">Contact</a>
+                </li>
+                <li>
+                    <a href="https://github.com/apicurio">Fork</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<script>
+    var currentURL = window.location.href;
+    var studioAnchor = document.getElementById("menu-item-studio");
+    var registryAnchor = document.getElementById("menu-item-registry");
+
+    if (currentURL.includes("studio")) {
+        studioAnchor.classList.add("active");
+    } else if (currentURL.includes("registry")) {
+        registryAnchor.classList.add("active");
+    }
+</script>
+<div class="body">
+<div class="nav-container" data-component="apicurio-registry-operator" data-version="1.1.3-v2.6.4.final">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="index.html">Apicurio Registry Operator</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="assembly-operator-quickstart.html">Apicurio Registry Operator quickstart</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="assembly-operator-installation.html">Installing Apicurio Registry Operator using the OperatorHub</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="assembly-registry-storage.html">Configuring Apicurio Registry storage</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="assembly-registry-maintenance.html">Configuring and managing Apicurio Registry deployment</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="assembly-operator-configuration.html">Apicurio Registry Operator configuration reference</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Apicurio Registry Operator</span>
+    <span class="version">1.1.3-v2.6.4.final</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <span class="title">Apicurio Registry Operator</span>
+      <ul class="versions">
+        <li class="version is-current">
+          <a href="index.html">1.1.3-v2.6.4.final</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="index.html">Apicurio Registry Operator</a></li>
+    <li><a href="assembly-operator-configuration.html">Apicurio Registry Operator configuration reference</a></li>
+  </ul>
+</nav>
+  <div class="edit-this-page"><a href="https://github.com/Apicurio/apicurio-registry-operator/tree/main/docs">Edit this Page</a></div>
+  </div>
+  <div class="content">
+<article class="doc">
+<h1 class="page">Apicurio Registry Operator configuration reference</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>This chapter provides detailed information on the custom resource used to configure the Apicurio Registry Operator to deploy Apicurio Registry:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#apicurio-registry-custom-resource">Apicurio Registry Custom Resource</a></p>
+</li>
+<li>
+<p><a href="#spec">Apicurio Registry CR spec</a></p>
+</li>
+<li>
+<p><a href="#status">Apicurio Registry CR status</a></p>
+</li>
+<li>
+<p><a href="#managed-resources">Apicurio Registry managed resources</a></p>
+</li>
+<li>
+<p><a href="#registry-labels">Apicurio Registry Operator labels</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="apicurio-registry-custom-resource"><a class="anchor" href="#apicurio-registry-custom-resource"></a>Apicurio Registry Custom Resource</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The Apicurio Registry Operator defines an <code>ApicurioRegistry</code> <a href="https://docs.openshift.com/container-platform/latest/operators/understanding/crds/crd-extending-api-with-crds.html">custom resource (CR)</a> that represents a single deployment of Apicurio Registry on OpenShift.</p>
+</div>
+<div class="paragraph">
+<p>These resource objects are created and maintained by users to instruct the Apicurio Registry Operator how to deploy and configure Apicurio Registry.</p>
+</div>
+<div class="paragraph">
+<div class="title">Example ApicurioRegistry CR</div>
+<p>The following command displays the <code>ApicurioRegistry</code> resource:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get apicurioregistry
+kubectl edit apicurioregistry example-apicurioregistry</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: registry.apicur.io/v1
+kind: ApicurioRegistry
+metadata:
+  name: example-apicurioregistry
+  namespace: demo-kafka
+  # ...
+spec:
+  configuration:
+    persistence: kafkasql
+    kafkasql:
+      bootstrapServers: 'my-cluster-kafka-bootstrap.demo-kafka.svc:9092'
+  deployment:
+    host: &gt;-
+      example-apicurioregistry.demo-kafka.example.com
+status:
+  conditions:
+  - lastTransitionTime: "2021-05-03T10:47:11Z"
+    message: ""
+    reason: Reconciled
+    status: "True"
+    type: Ready
+  info:
+    host: example-apicurioregistry.demo-kafka.example.com
+  managedResources:
+  - kind: Deployment
+    name: example-apicurioregistry-deployment
+    namespace: demo-kafka
+  - kind: Service
+    name: example-apicurioregistry-service
+    namespace: demo-kafka
+  - kind: Ingress
+    name: example-apicurioregistry-ingress
+    namespace: demo-kafka</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+By default, the Apicurio Registry Operator watches its own project namespace only.
+Therefore, you must create the <code>ApicurioRegistry</code> CR in the same namespace, if you are deploying the Operator manually.
+You can modify this behavior by updating <code>WATCH_NAMESPACE</code> environment variable in the Operator <code>Deployment</code> resource.
+</td>
+</tr>
+</table>
+</div>
+<div class="ulist">
+<div class="title">Additional resources</div>
+<ul>
+<li>
+<p><a href="https://docs.openshift.com/container-platform/4.6/operators/understanding/crds/crd-extending-api-with-crds.html">Extending the Kubernetes API with Custom Resource Definitions</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="spec"><a class="anchor" href="#spec"></a>Apicurio Registry CR spec</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>spec</code> is the part of the <code>ApicurioRegistry</code> CR that is used to provide the desired state or configuration for the Operator to achieve.</p>
+</div>
+<div class="paragraph">
+<div class="title">ApicurioRegistry CR spec contents</div>
+<p>The following example block contains the full tree of possible <code>spec</code> configuration options.
+Some fields might not be required or should not be defined at the same time.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">spec:
+  configuration:
+    persistence: &lt;string&gt;
+    sql:
+      dataSource:
+        url: &lt;string&gt;
+        userName: &lt;string&gt;
+        password: &lt;string&gt;
+    kafkasql:
+      bootstrapServers: &lt;string&gt;
+      security:
+        tls:
+          truststoreSecretName: &lt;string&gt;
+          keystoreSecretName: &lt;string&gt;
+        scram:
+          mechanism: &lt;string&gt;
+          truststoreSecretName: &lt;string&gt;
+          user: &lt;string&gt;
+          passwordSecretName: &lt;string&gt;
+    ui:
+      readOnly: &lt;string&gt;
+    logLevel: &lt;string&gt;
+    registryLogLevel: &lt;string&gt;
+    security:
+      keycloak:
+        url: &lt;string&gt;
+        realm: &lt;string&gt;
+        apiClientId: &lt;string&gt;
+        uiClientId: &lt;string&gt;
+      https:
+        disableHttp: &lt;bool&gt;
+        secretName: &lt;string&gt;
+    env: &lt;k8s.io/api/core/v1 []EnvVar&gt;
+  deployment:
+    replicas: &lt;int32&gt;
+    host: &lt;string&gt;
+    affinity: &lt;k8s.io/api/core/v1 Affinity&gt;
+    tolerations: &lt;k8s.io/api/core/v1 []Toleration&gt;
+    imagePullSecrets: &lt;k8s.io/api/core/v1 []LocalObjectReference&gt;
+    metadata:
+      annotations: &lt;map[string]string&gt;
+      labels: &lt;map[string]string&gt;
+    image: &lt;string&gt;
+    managedResources:
+      disableIngress: &lt;bool&gt;
+      disableNetworkPolicy: &lt;bool&gt;
+	  disablePodDisruptionBudget: &lt;bool&gt;
+    podTemplateSpecPreview: &lt;k8s.io/api/core/v1 PodTemplateSpec&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The following table describes each configuration option:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 1. ApicurioRegistry CR spec configuration options</caption>
+<colgroup>
+<col style="width: 36.3636%;">
+<col style="width: 18.1818%;">
+<col style="width: 18.1818%;">
+<col style="width: 27.2728%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Configuration option</th>
+<th class="tableblock halign-left valign-top">type</th>
+<th class="tableblock halign-left valign-top">Default value</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Section for configuration of Apicurio Registry application</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/persistence</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>mem</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Storage backend. One of <code>mem</code>, <code>sql</code>, <code>kafkasql</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/sql</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SQL storage backend configuration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/sql/dataSource</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Database connection configuration for SQL storage backend</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/sql/dataSource/url</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>required</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Database connection URL string</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/sql/dataSource/userName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>required</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Database connection user</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/sql/dataSource/password</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>empty</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Database connection password</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/kafkasql</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kafka storage backend configuration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/kafkasql/bootstrapServers</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>required</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kafka bootstrap server URL, for Streams storage backend</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/kafkasql/security/tls</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Section to configure TLS authentication for Kafka storage backend</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/kafkasql/security/tls/truststoreSecretName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>required</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of a secret containing TLS truststore for Kafka</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/kafkasql/security/tls/keystoreSecretName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>required</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of a secret containing user TLS keystore</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/kafkasql/security/scram/truststoreSecretName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>required</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of a secret containing TLS truststore for Kafka</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/kafkasql/security/scram/user</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>required</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SCRAM user name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/kafkasql/security/scram/passwordSecretName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>required</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of a secret containing SCRAM user password</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/kafkasql/security/scram/mechanism</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>SCRAM-SHA-512</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SASL mechanism</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/ui</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apicurio Registry web console settings</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/ui/readOnly</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set Apicurio Registry web console to read-only mode</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/logLevel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>INFO</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apicurio Registry log level, for non-Apicurio components and libraries. One of <code>INFO</code>, <code>DEBUG</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/registryLogLevel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>INFO</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apicurio Registry log level, for Apicurio application components (excludes non-Apicurio components and libraries). One of <code>INFO</code>, <code>DEBUG</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/security</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apicurio Registry web console and REST API security settings</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/security/keycloak</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Web console and REST API security configuration using Keycloak</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/security/keycloak/url</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>required</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Keycloak URL</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/security/keycloak/realm</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>required</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Keycloak realm</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/security/keycloak/apiClientId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>registry-client-api</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Keycloak client for REST API</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/security/keycloak/uiClientId</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>registry-client-ui</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Keycloak client for web console</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/security/https</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configuration for HTTPS. For more details, see <a href="assembly-registry-maintenance.html#registry-https-in-cluster" class="xref page">Configuring an HTTPS connection to Apicurio Registry from inside the OpenShift cluster</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/security/https/sercretName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>empty</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of a Kubernetes Secret that contains the HTTPS certificate and key, which must be named <code>tls.crt</code> and <code>tls.key</code>, respectively. Setting this field enables HTTPS, and vice versa.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/security/https/disableHttp</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bool</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Disable HTTP port and Ingress. HTTPS must be enabled as a prerequisite.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>configuration/env</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">k8s.io/api/core/v1 []EnvVar</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>empty</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configure a list of environment variables to be provided to the Apicurio Registry pod. For more details, see <a href="assembly-registry-maintenance.html#manage-registry-environment-variables" class="xref page">Managing Apicurio Registry environment variables</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>deployment</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Section for Apicurio Registry deployment settings</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>deployment/replicas</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">positive integer</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>1</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of Apicurio Registry pods to deploy</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>deployment/host</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>auto-generated</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Host/URL where the Apicurio Registry console and API are available. If possible, Apicurio Registry Operator attempts to determine the correct value based on the settings of your cluster router. The value is auto-generated only once, so user can override it afterwards.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>deployment/affinity</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">k8s.io/api/core/v1 Affinity</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>empty</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apicurio Registry deployment affinity configuration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>deployment/tolerations</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">k8s.io/api/core/v1 []Toleration</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>empty</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Apicurio Registry deployment tolerations configuration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>deployment/imagePullSecrets</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">k8s.io/api/core/v1 []LocalObjectReference</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>empty</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configure image pull secrets for Apicurio Registry deployment</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>deployment/metadata</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configure a set of labels or annotations for the Apicurio Registry pod.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>deployment/metadata/labels</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">map[string]string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>empty</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configure a set of labels for Apicurio Registry pod</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>deployment/metadata/annotations</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">map[string]string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>empty</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configure a set of annotations for Apicurio Registry pod</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>deployment/image</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>empty</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Override the default image being used to deploy Apicurio Registry</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>deployment/managedResources</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Section to configure how the Apicurio Registry Operator manages Kubernetes resources. For more details, see <a href="#managed-resources">Apicurio Registry managed resources</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>deployment/managedResources/disableIngress</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bool</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set, the operator will not create and manage an <code>Ingress</code> resource for Apicurio Registry deployment.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>deployment/managedResources/disableNetworkPolicy</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bool</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set, the operator will not create and manage a <code>NetworkPolicy</code> resource for Apicurio Registry deployment.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>deployment/managedResources/disablePodDisruptionBudget</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bool</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">If set, the operator will not create and manage an <code>PodDisruptionBudget</code> resource for Apicurio Registry deployment.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>deployment/podTemplateSpecPreview</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">k8s.io/api/core/v1 PodTemplateSpec</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>empty</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configure parts of the Apicurio Registry deployment resource. For more details, see <a href="assembly-registry-maintenance.html#pod-spec" class="xref page">Configuring Apicurio Registry deployment using PodTemplate</a>.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If an option is marked as <em>required</em>, it might be conditional on other configuration options being enabled.
+Empty values might be accepted, but the Operator does not perform the specified action.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="status"><a class="anchor" href="#status"></a>Apicurio Registry CR status</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>status</code> is the section of the CR managed by the Apicurio Registry Operator that contains a description of the current deployment and application state.</p>
+</div>
+<div class="paragraph">
+<div class="title">ApicurioRegistry CR status contents</div>
+<p>The <code>status</code> section contains the following fields:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">status:
+  info:
+    host: &lt;string&gt;
+  conditions: &lt;list of:&gt;
+  - type: &lt;string&gt;
+    status: &lt;string, one of: True, False, Unknown&gt;
+    reason: &lt;string&gt;
+    message: &lt;string&gt;
+    lastTransitionTime: &lt;string, RFC-3339 timestamp&gt;
+  managedResources: &lt;list of:&gt;
+  - kind: &lt;string&gt;
+    namespace: &lt;string&gt;
+    name: &lt;string&gt;</code></pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 2. ApicurioRegistry CR status fields</caption>
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 16.6666%;">
+<col style="width: 50.0001%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Status field</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>info</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Section with information about the deployed Apicurio Registry.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>info/host</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">URL where the Apicurio Registry UI and REST API are accessible.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>conditions</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of conditions that report the status of the Apicurio Registry, or the Operator with respect to that deployment.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>conditions/type</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Type of the condition.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>conditions/status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Status of the condition, one of <code>True</code>, <code>False</code>, <code>Unknown</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>conditions/reason</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A programmatic identifier indicating the reason for the condition&#8217;s last transition.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>conditions/message</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A human-readable message indicating details about the transition.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>conditions/lastTransitionTime</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The last time the condition transitioned from one status to another.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>managedResources</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of Kubernetes resources managed by Apicurio Registry Operator</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>managedResources/kind</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Resource kind.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>managedResources/namespace</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Resource namespace.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>managedResources/name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Resource name.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="managed-resources"><a class="anchor" href="#managed-resources"></a>Apicurio Registry managed resources</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The resources managed by the Apicurio Registry Operator when deploying Apicurio Registry are as follows:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>Deployment</code></p>
+</li>
+<li>
+<p><code>Ingress</code></p>
+</li>
+<li>
+<p><code>NetworkPolicy</code></p>
+</li>
+<li>
+<p><code>PodDisruptionBudget</code></p>
+</li>
+<li>
+<p><code>Service</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>You can disable the Apicurio Registry Operator from creating and managing some resources, so they can be configured manually.
+This provides greater flexibility when using features that the Apicurio Registry Operator does not currently support.</p>
+</div>
+<div class="paragraph">
+<p>If you disable a resource type, its existing instance is deleted.
+If you enable a resource, the Apicurio Registry Operator attempts to find a resource using the <code>app</code> label, for example, <code>app=example-apicurioregistry</code>, and starts managing it. Otherwise, the Operator creates a new instance.</p>
+</div>
+<div class="paragraph">
+<p>You can disable the following resource types in this way:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>Ingress</code></p>
+</li>
+<li>
+<p><code>NetworkPolicy</code></p>
+</li>
+<li>
+<p><code>PodDisruptionBudget</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: registry.apicur.io/v1
+kind: ApicurioRegistry
+metadata:
+  name: example-apicurioregistry
+spec:
+  deployment:
+    managedResources:
+      disableIngress: true
+      disableNetworkPolicy: true
+      disablePodDisruptionBudget: false # Can be omitted</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="registry-labels"><a class="anchor" href="#registry-labels"></a>Apicurio Registry Operator labels</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Resources managed by the Apicurio Registry Operator are usually labeled as follows:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 3. Apicurio Registry Operator labels for managed resources</caption>
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Label</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>app</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of the Apicurio Registry deployment that the resource belongs to, based on the name of the specified <code>ApicurioRegistry</code> CR.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>apicur.io/type</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Type of the deployment: <code>apicurio-registry</code> or <code>operator</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>apicur.io/name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of the deployment: same value as <code>app</code> or <code>apicurio-registry-operator</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>apicur.io/version</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Version of the Apicurio Registry or the Apicurio Registry Operator</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>app.kubernetes.io/*</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A set of recommended Kubernetes labels for application deployments.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<div class="title">Custom labels and annotations</div>
+<p>You can provide custom labels and annotation for the Apicurio Registry pod, using the <code>spec.deployment.metadata.labels</code> and <code>spec.deployment.metadata.annotations</code> fields, for example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">apiVersion: registry.apicur.io/v1
+kind: ApicurioRegistry
+metadata:
+  name: example-apicurioregistry
+spec:
+  configuration:
+    # ...
+  deployment:
+    metadata:
+      labels:
+        example.com/environment: staging
+      annotations:
+        example.com/owner: my-team</code></pre>
+</div>
+</div>
+<div class="ulist">
+<div class="title">Additional resources</div>
+<ul>
+<li>
+<p><a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/">Recommended Kubernetes labels for application deployments</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</article>
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>Copyright © 2020 Red Hat, Inc. All rights reserved.</p>
+</footer>
+<script src="../../_/js/site.js"></script>
+<script async src="../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
