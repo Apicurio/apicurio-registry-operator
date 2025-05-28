@@ -283,6 +283,8 @@ func (this *ApicurioRegistryReconciler) createNewLoop(appName c.Name, appNamespa
 		result.AddControlFunction(cf.NewHostInitRouteOcpCF(ctx))
 	}
 	result.AddControlFunction(cf.NewHostCF(ctx, loopServices))
+	result.AddControlFunction(cf.NewIngressAnnotationsCF(ctx))
+	result.AddControlFunction(cf.NewIngressClassNameCF(ctx))
 
 	// Other / Dependent on everything :)
 	result.AddControlFunction(cf.NewLabelsCF(ctx, loopServices))

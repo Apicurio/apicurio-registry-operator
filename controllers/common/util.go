@@ -311,16 +311,41 @@ func LabelsEqual(target map[string]string, source map[string]string) bool {
 	return true
 }
 
-func LabelsUpdate(target *map[string]string, source map[string]string) {
+func LabelsDeleteUpdate(target *map[string]string, deleted map[string]string, updated map[string]string) {
 	if *target == nil {
 		*target = make(map[string]string)
 	}
-	for sourceKey, sourceValue := range source {
-		targetValue, targetExists := (*target)[sourceKey]
-		if !targetExists || sourceValue != targetValue {
-			(*target)[sourceKey] = sourceValue
+	if deleted != nil {
+		for deletedKey, _ := range deleted {
+			if _, targetExists := (*target)[deletedKey]; targetExists {
+				delete(*target, deletedKey)
+			}
 		}
 	}
+	if updated != nil {
+		for updatedKey, updatedValue := range updated {
+			targetValue, targetExists := (*target)[updatedKey]
+			if !targetExists || updatedValue != targetValue {
+				(*target)[updatedKey] = updatedValue
+			}
+		}
+	}
+}
+
+func LabelsUpdate(target *map[string]string, updated map[string]string) {
+	LabelsDeleteUpdate(target, nil, updated)
+}
+
+func LabelsDelete(target *map[string]string, deleted map[string]string) {
+	LabelsDeleteUpdate(target, deleted, nil)
+}
+
+func Copy[K comparable, V any](source map[K]V) map[K]V {
+	c := make(map[K]V)
+	for k, v := range source {
+		c[k] = v
+	}
+	return c
 }
 
 func GetContainerByName(containers []core.Container, name string) *core.Container {

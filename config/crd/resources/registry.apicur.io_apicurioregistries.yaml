@@ -1190,6 +1190,24 @@ spec:
                         type: object
                         x-kubernetes-map-type: atomic
                       type: array
+                    ingress:
+                      description: Additional configuration for the operator-managed Ingress.
+                      properties:
+                        annotations:
+                          additionalProperties:
+                            type: string
+                          description: Additional annotations for the operator-managed Ingress.
+                          type: object
+                        ingressClassName:
+                          description: |-
+                            Name of an IngressClass cluster resource. Ingress
+                            controller implementations use this field to know whether they should be
+                            serving this Ingress resource, by a transitive connection
+                            (controller -> IngressClass -> Ingress resource).
+
+                            See https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class
+                          type: string
+                      type: object
                     managedResources:
                       description: |-
                         Apicurio Registry managed resources:

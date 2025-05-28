@@ -220,6 +220,21 @@ type ApicurioRegistrySpecDeployment struct {
 	// This feature provides greater configuration flexibility, without the need for the Operator to natively support each use case.
 	// WARNING: This feature is a Technology Preview feature only.
 	PodTemplateSpecPreview ApicurioRegistryPodTemplateSpec `json:"podTemplateSpecPreview,omitempty"`
+	// Additional configuration for the operator-managed Ingress.
+	Ingress ApicurioRegistrySpecDeploymentIngress `json:"ingress,omitempty"`
+}
+
+type ApicurioRegistrySpecDeploymentIngress struct {
+	// Additional annotations for the operator-managed Ingress.
+	Annotations map[string]string `json:"annotations,omitempty"`
+
+	// Name of an IngressClass cluster resource. Ingress
+	// controller implementations use this field to know whether they should be
+	// serving this Ingress resource, by a transitive connection
+	// (controller -> IngressClass -> Ingress resource).
+	//
+	// See https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class
+	IngressClassName string `json:"ingressClassName,omitempty"`
 }
 
 type ApicurioRegistrySpecDeploymentManagedResources struct {
